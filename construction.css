@@ -1,0 +1,40 @@
+* {
+    box-sizing: border-box;
+}
+
+
+html,
+body {
+    width: 100%;
+    min-height: 100%;
+
+    margin: 0;
+
+    background-color: black;
+}
+
+
+.landing-page {
+    width: 100%;
+    min-height: 100vh;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+}
+
+
+.landing-video {
+    display: block;
+
+    width: 1000px;
+    max-width: 80vw;
+
+    height: auto;
+
+    border: none;
+    outline: none;
+}
