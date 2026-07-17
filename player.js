@@ -31,13 +31,14 @@ const progressBar =
     document.getElementById("progress-bar");
 
 
+/* Monochrome text symbols rather than emoji */
+
+const playSymbol = "\u25B6\uFE0E";
+const pauseSymbol = "II";
+
 
 /* -------------------------
    TRACK LIST
-
-   Change these filenames,
-   artist names and titles
-   to match your real music.
 ------------------------- */
 
 const tracks = [
@@ -63,9 +64,38 @@ const tracks = [
 ];
 
 
-
 let currentTrackIndex = 0;
 
+
+/* -------------------------
+   UPDATE PLAY BUTTON
+------------------------- */
+
+function updatePlayButton(isPlaying) {
+
+    if (isPlaying) {
+
+        playButton.textContent =
+            pauseSymbol;
+
+        playButton.setAttribute(
+            "aria-label",
+            "Pause"
+        );
+
+    } else {
+
+        playButton.textContent =
+            playSymbol;
+
+        playButton.setAttribute(
+            "aria-label",
+            "Play"
+        );
+
+    }
+
+}
 
 
 /* -------------------------
@@ -87,13 +117,18 @@ function loadTrack(index) {
     trackTitle.textContent =
         track.title;
 
-    progressBar.style.width = "0%";
+    progressBar.style.width =
+        "0%";
 
-    currentTimeDisplay.textContent = "00:00";
+    currentTimeDisplay.textContent =
+        "00:00";
 
-    durationDisplay.textContent = "00:00";
+    durationDisplay.textContent =
+        "00:00";
+
+    updatePlayButton(false);
+
 }
-
 
 
 /* -------------------------
@@ -105,17 +140,19 @@ function togglePlay() {
     if (audio.paused) {
 
         audio.play()
-            .then(function() {
+            .then(function () {
 
-                playButton.textContent = "II";
+                updatePlayButton(true);
 
             })
-            .catch(function(error) {
+            .catch(function (error) {
 
                 console.log(
                     "Audio could not play:",
                     error
                 );
+
+                updatePlayButton(false);
 
             });
 
@@ -123,12 +160,37 @@ function togglePlay() {
 
         audio.pause();
 
-        playButton.textContent = "▶";
+        updatePlayButton(false);
 
     }
 
 }
 
+
+/* -------------------------
+   PLAY CURRENT TRACK
+------------------------- */
+
+function playCurrentTrack() {
+
+    audio.play()
+        .then(function () {
+
+            updatePlayButton(true);
+
+        })
+        .catch(function (error) {
+
+            console.log(
+                "Audio could not play:",
+                error
+            );
+
+            updatePlayButton(false);
+
+        });
+
+}
 
 
 /* -------------------------
@@ -149,11 +211,9 @@ function nextTrack() {
 
     loadTrack(currentTrackIndex);
 
-    audio.play();
+    playCurrentTrack();
 
-    playButton.textContent = "II";
 }
-
 
 
 /* -------------------------
@@ -175,11 +235,9 @@ function previousTrack() {
 
     loadTrack(currentTrackIndex);
 
-    audio.play();
+    playCurrentTrack();
 
-    playButton.textContent = "II";
 }
-
 
 
 /* -------------------------
@@ -213,14 +271,13 @@ function formatTime(seconds) {
 }
 
 
-
 /* -------------------------
    UPDATE PROGRESS
 ------------------------- */
 
 audio.addEventListener(
     "timeupdate",
-    function() {
+    function () {
 
         if (
             !Number.isFinite(audio.duration)
@@ -249,14 +306,13 @@ audio.addEventListener(
 );
 
 
-
 /* -------------------------
    TRACK DURATION
 ------------------------- */
 
 audio.addEventListener(
     "loadedmetadata",
-    function() {
+    function () {
 
         durationDisplay.textContent =
             formatTime(audio.duration);
@@ -265,6 +321,28 @@ audio.addEventListener(
 );
 
 
+/* -------------------------
+   KEEP BUTTON IN SYNC
+------------------------- */
+
+audio.addEventListener(
+    "play",
+    function () {
+
+        updatePlayButton(true);
+
+    }
+);
+
+audio.addEventListener(
+    "pause",
+    function () {
+
+        updatePlayButton(false);
+
+    }
+);
+
 
 /* -------------------------
    CLICK PROGRESS BAR
@@ -272,7 +350,7 @@ audio.addEventListener(
 
 progressContainer.addEventListener(
     "click",
-    function(event) {
+    function (event) {
 
         if (
             !Number.isFinite(audio.duration)
@@ -298,7 +376,6 @@ progressContainer.addEventListener(
 );
 
 
-
 /* -------------------------
    BUTTONS
 ------------------------- */
@@ -319,7 +396,6 @@ previousButton.addEventListener(
 );
 
 
-
 /* -------------------------
    AUTOMATIC NEXT TRACK
 ------------------------- */
@@ -328,7 +404,6 @@ audio.addEventListener(
     "ended",
     nextTrack
 );
-
 
 
 /* -------------------------
