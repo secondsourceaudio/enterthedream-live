@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>SECOND SOURCE</title>
+
+    <link rel="stylesheet" href="./style.css">
+</head>
+
+
+<body class="main-site">
+
+    <!-- HEADER -->
+
+    <header class="site-header">
+
+        <a
+            class="site-logo"
+            href="./index.html"
+        >
+            SECOND SOURCE
+        </a>
+
+
+        <nav class="main-nav">
+
+            <a href="#moving-image">
+                VIDEO
+            </a>
+
+            <a href="#about">
+                ABOUT
+            </a>
+
+            <a href="./dream.html">
+                THE DREAM
+            </a>
+
+        </nav>
+
+    </header>
+
+
+
+    <!-- MAIN CONTENT -->
+
+    <main class="site-main">
+
+
+        <!-- CURRENT RELEASE -->
+
+        <section class="lead-release">
+
+            <div class="lead-media">
+
+                <video
+                    autoplay
+                    loop
+                    muted
+                    playsinline
+                >
+                    <source
+                        src="./videos/sourcelogo_2.webm"
+                        type="video/webm"
+                    >
+                </video>
+
+            </div>
+
+
+            <div class="lead-information">
+
+                <p class="section-label">
+                    CURRENT RELEASE
+                </p>
+
+                <h1>
+                    ARTIST NAME
+                </h1>
+
+                <h2>
+                    RELEASE TITLE
+                </h2>
+
+                <p class="release-number">
+                    SECOND SOURCE / SS001
+                </p>
+
+                <p class="lead-description">
+                    New music from Second Source.
+                    Available digitally and physically.
+                </p>
+
+
+                <div class="release-links">
+
+                    <a
+                        href="https://secondsource.bandcamp.com"
+                        target="_blank"
+                    >
+                        LISTEN / BUY
+                    </a>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- MOVING IMAGE -->
+
+        <section
+            id="moving-image"
+            class="site-section moving-image-section"
+        >
+
+            <div class="film-window">
+
+                <video
+                    autoplay
+                    loop
+                    muted
+                    playsinline
+                >
+                    <source
+                        src="./videos/ps2_loop.mp4"
+                        type="video/mp4"
+                    >
+                </video>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- ABOUT -->
+
+        <section
+            id="about"
+            class="site-section about-section"
+        >
+
+            <div class="section-heading">
+
+                <p class="section-label">
+                    INFORMATION
+                </p>
+
+                <h2>
+                    SECOND SOURCE
+                </h2>
+
+            </div>
+
+
+            <div class="about-text">
+
+                <p>
+                    Second Source is an independent record label
+                    and platform for music, image and sound.
+                </p>
+
+                <p>
+                    Releases, films and other material
+                    appear here as they are made.
+                </p>
+
+            </div>
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- FOOTER -->
+
+    <footer class="site-footer">
+
+        <p>
+            SECOND SOURCE AUDIO
+        </p>
+
+        <p>
+            P &amp; C BUBS N PELLETS AS
+        </p>
+
+        <a
+            class="dream-entry"
+            href="./dream.html"
+        >
+            ENTER THE DREAM
+        </a>
+
+    </footer>
+
+
+
+    <!-- AUDIO PLAYER -->
+
+    <div
+        id="audio-player"
+        class="audio-player"
+    >
+
+        <div class="player-top">
+
+            <span class="player-title">
+                SECOND SOURCE AUDIO
+            </span>
+
+            <span class="player-status">
+                ONLINE
+            </span>
+
+        </div>
+
+
+        <div class="player-screen">
+
+            <div
+                id="track-number"
+                class="track-number"
+            >
+                01
+            </div>
+
+
+            <div class="track-information">
+
+                <div
+                    id="track-artist"
+                    class="track-artist"
+                >
+                    ARTIST NAME
+                </div>
+
+                <div
+                    id="track-title"
+                    class="track-title"
+                >
+                    TRACK TITLE
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="player-time">
+
+            <span id="current-time">
+                00:00
+            </span>
+
+
+            <div
+                id="progress-container"
+                class="progress-container"
+            >
+
+                <div
+                    id="progress-bar"
+                    class="progress-bar"
+                >
+                </div>
+
+            </div>
+
+
+            <span id="duration">
+                00:00
+            </span>
+
+        </div>
+
+
+        <div class="player-controls">
+
+            <button
+                id="previous-button"
+                type="button"
+                aria-label="Previous track"
+            >
+                |&lt;
+            </button>
+
+
+            <button
+                id="play-button"
+                type="button"
+                aria-label="Play"
+            >
+                ▶
+            </button>
+
+
+            <button
+                id="next-button"
+                type="button"
+                aria-label="Next track"
+            >
+                &gt;|
+            </button>
+
+        </div>
+
+
+        <audio id="audio-element"></audio>
+
+    </div>
+
+
+
+    <script src="./player.js"></script>
+
+</body>
+
+</html>

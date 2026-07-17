@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>THE GAME</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <h1 id="game-title">ENTER THE GAME.</h1>
+
+    <p>Score: <span id="score">0</span></p>
+
+    <div id="game-area">
+
+        <div id="player"></div>
+
+        <div id="food"></div>
+
+
+        <!-- GAME OVER POPUP -->
+
+        <div id="game-over-menu" class="hidden">
+
+            <div id="game-over-box">
+
+                <h2>MORE SAUSAGE?</h2>
+
+                <p>
+                    Final score:
+                    <span id="final-score">0</span>
+                </p>
+
+                <button id="retry-button">
+                    RETRY
+                </button>
+
+                <p class="restart-message">
+                    THE DOG IS HUNGRY.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <p>
+        <a href="index.html">
+            Return to the dream.
+        </a>
+    </p>
+
+    <script src="game.js"></script>
+
+</body>
+</html>
