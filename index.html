@@ -2,38 +2,57 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>THE DREAM</title>
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
-   <link rel="stylesheet" href="./construction.css?v=2">
+    <title>SECOND SOURCE</title>
+
+    <link
+        rel="stylesheet"
+        href="./construction.css?v=4"
+    >
 </head>
 
 <body>
+
     <main class="landing-page">
 
         <video
             class="landing-video"
-            src="./videos/sourcelogo_2.webm"
             autoplay
             muted
             loop
             playsinline
             preload="auto"
-        ></video>
+        >
+            <source
+                src="./videos/sourcelogo_2.webm"
+                type="video/webm"
+            >
 
-        <p class="construction-message">
-            BUILDING THE DREAM.
-        </p>
+            <source
+                src="./videos/ps2_loop.mp4"
+                type="video/mp4"
+            >
+        </video>
 
     </main>
 
+
     <aside class="dream-access">
+
         <p class="dream-access-title">
             ENTER THE CURRENT DREAM.
         </p>
 
-        <form id="dream-form" class="dream-form">
+        <form
+            id="dream-form"
+            class="dream-form"
+        >
+
             <input
                 id="dream-password"
                 class="dream-password"
@@ -43,32 +62,68 @@
                 aria-label="Password"
             >
 
-            <button class="dream-button" type="submit">
+            <button
+                class="dream-button"
+                type="submit"
+            >
                 ENTER
             </button>
+
         </form>
 
-        <p id="dream-error" class="dream-error" aria-live="polite"></p>
+        <p
+            id="dream-error"
+            class="dream-error"
+            aria-live="polite"
+        ></p>
+
     </aside>
 
+
     <script>
-        const dreamForm = document.querySelector("#dream-form");
-        const passwordInput = document.querySelector("#dream-password");
-        const errorMessage = document.querySelector("#dream-error");
+        const dreamForm =
+            document.getElementById("dream-form");
 
-        const correctPassword = "currentdream";
+        const passwordInput =
+            document.getElementById("dream-password");
 
-        dreamForm.addEventListener("submit", function (event) {
-            event.preventDefault();
+        const errorMessage =
+            document.getElementById("dream-error");
 
-            if (passwordInput.value === correctPassword) {
-                window.location.href = "./index-full.html";
-            } else {
-                errorMessage.textContent = "ACCESS DENIED";
-                passwordInput.value = "";
-                passwordInput.focus();
+
+        const correctPassword =
+            "currentdream";
+
+
+        dreamForm.addEventListener(
+            "submit",
+            function (event) {
+
+                event.preventDefault();
+
+                if (
+                    passwordInput.value ===
+                    correctPassword
+                ) {
+
+                    window.location.href =
+                        "./index-full.html";
+
+                } else {
+
+                    errorMessage.textContent =
+                        "ACCESS DENIED";
+
+                    passwordInput.value =
+                        "";
+
+                    passwordInput.focus();
+
+                }
+
             }
-        });
+        );
     </script>
+
 </body>
 </html>
