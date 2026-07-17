@@ -14,36 +14,18 @@
 
         <video
             class="landing-video"
+            src="./videos/ps2_loop.mp4"
             autoplay
             muted
             loop
             playsinline
             preload="auto"
-        >
-            <source src="./videos/ps2_loop.mp4" type="video/mp4">
-            Your browser does not support video playback.
-        </video>
+        ></video>
 
         <p class="construction-message">
             BUILDING THE DREAM.
         </p>
 
     </main>
-
-    <script>
-        const video = document.querySelector(".landing-video");
-
-        video.muted = true;
-
-        function startVideo() {
-            video.play().catch(() => {
-                // Some browsers may require the visitor to tap the page first.
-            });
-        }
-
-        window.addEventListener("load", startVideo);
-        document.addEventListener("touchstart", startVideo, { once: true });
-        document.addEventListener("click", startVideo, { once: true });
-    </script>
 </body>
 </html>
