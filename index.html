@@ -3,16 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE DREAM</title>
+
+    <title>SECOND SOURCE</title>
+
     <link rel="stylesheet" href="./construction.css">
 </head>
+
 <body>
     <main class="landing-page">
-        <video class="landing-video" autoplay loop muted playsinline>
-            <source src="./videos/sourcelogo_2.webm" type="video/mp4">
+
+        <video
+            class="landing-video"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="auto"
+        >
+            <source src="./videos/ps2_loop.mp4" type="video/mp4">
+            Your browser does not support video playback.
         </video>
 
-        <p class="construction-message">BUILDING THE DREAM.</p>
+        <p class="construction-message">
+            BUILDING THE DREAM.
+        </p>
+
     </main>
+
+    <script>
+        const video = document.querySelector(".landing-video");
+
+        video.muted = true;
+
+        function startVideo() {
+            video.play().catch(() => {
+                // Some browsers may require the visitor to tap the page first.
+            });
+        }
+
+        window.addEventListener("load", startVideo);
+        document.addEventListener("touchstart", startVideo, { once: true });
+        document.addEventListener("click", startVideo, { once: true });
+    </script>
 </body>
 </html>
