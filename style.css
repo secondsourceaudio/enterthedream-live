@@ -1469,3 +1469,153 @@ video {
     }
 
 }
+/* ==================================================
+   COMPACT MOBILE AUDIO PLAYER
+================================================== */
+
+@media (max-width: 750px) {
+
+    .audio-player {
+        position: fixed;
+
+        left: 12px;
+        right: 12px;
+        bottom: calc(12px + env(safe-area-inset-bottom));
+
+        width: auto;
+        height: 56px;
+
+        display: grid;
+        grid-template-columns: 56px minmax(0, 1fr);
+        align-items: stretch;
+
+        background: rgba(12, 12, 12, 0.92);
+
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 8px;
+
+        box-shadow:
+            0 5px 20px rgba(0, 0, 0, 0.45);
+
+        overflow: hidden;
+
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
+
+
+    /* Hide the large sections on mobile */
+
+    .audio-player .player-top,
+    .audio-player .player-time,
+    .audio-player .track-number {
+        display: none;
+    }
+
+
+    /* Track information */
+
+    .audio-player .player-screen {
+        grid-column: 2;
+        grid-row: 1;
+
+        min-height: 0;
+        height: 56px;
+
+        display: flex;
+        align-items: center;
+
+        padding: 8px 12px;
+
+        background: transparent;
+        border: none;
+    }
+
+
+    .audio-player .track-information {
+        width: 100%;
+        min-width: 0;
+    }
+
+
+    .audio-player .track-artist {
+        margin: 0 0 4px;
+
+        color: rgba(255, 255, 255, 0.9);
+
+        font-size: 9px;
+        letter-spacing: 0.13em;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+
+    .audio-player .track-title {
+        color: rgba(255, 255, 255, 0.48);
+
+        font-size: 8px;
+        letter-spacing: 0.1em;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+
+    /* Controls area */
+
+    .audio-player .player-controls {
+        grid-column: 1;
+        grid-row: 1;
+
+        width: 56px;
+        height: 56px;
+
+        display: block;
+
+        border: none;
+        border-right: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+
+    /* Hide previous and next on mobile */
+
+    .audio-player #previous-button,
+    .audio-player #next-button {
+        display: none;
+    }
+
+
+    /* Keep only play/pause */
+
+    .audio-player #play-button {
+        display: block;
+
+        width: 100%;
+        height: 100%;
+
+        padding: 0;
+
+        color: rgba(255, 255, 255, 0.9);
+        background: transparent;
+
+        border: none;
+        border-radius: 0;
+
+        font-family: Arial, sans-serif;
+        font-size: 15px;
+
+        cursor: pointer;
+    }
+
+
+    .audio-player #play-button:hover,
+    .audio-player #play-button:active {
+        color: white;
+        background: rgba(255, 255, 255, 0.07);
+
+        box-shadow: none;
+    }
+}
