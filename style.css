@@ -1056,30 +1056,21 @@ video {
         white;
 }
 
-
 /* ==================================================
    CUSTOM AUDIO PLAYER
 ================================================== */
 
 .audio-player {
-    position:
-        fixed;
+    position: fixed;
 
-    left:
-        25px;
+    left: 25px;
+    bottom: 25px;
 
-    bottom:
-        25px;
+    width: 360px;
 
-    width:
-        360px;
+    background: #111111;
 
-    background:
-        #111111;
-
-    border:
-        1px solid
-        #555555;
+    border: 1px solid #555555;
 
     box-shadow:
         8px
@@ -1092,8 +1083,7 @@ video {
             0.4
         );
 
-    z-index:
-        1000;
+    z-index: 1000;
 
     font-family:
         "Microgramma",
@@ -1105,48 +1095,34 @@ video {
 /* TOP BAR */
 
 .player-top {
-    height:
-        25px;
+    height: 25px;
 
     padding:
         0
         8px;
 
-    display:
-        flex;
+    display: flex;
 
-    justify-content:
-        space-between;
+    justify-content: space-between;
+    align-items: center;
 
-    align-items:
-        center;
-
-    background:
-        #2a2a2a;
+    background: #2a2a2a;
 
     border-bottom:
         1px solid
         #555555;
 
-    font-size:
-        8px;
-
-    letter-spacing:
-        1px;
+    font-size: 8px;
+    letter-spacing: 1px;
 }
 
 
 .player-status {
-    color:
-        #777777;
+    color: #777777;
 }
 
 
-/* SCREEN */
-
-/* -------------------------
-   PLAYER SCREEN
-------------------------- */
+/* PLAYER SCREEN */
 
 .player-screen {
     min-height: 80px;
@@ -1175,7 +1151,6 @@ video {
     width: 36px;
 
     font-size: 22px;
-
     line-height: 1;
 
     color: #888888;
@@ -1192,32 +1167,30 @@ video {
 
 
 .track-artist {
-    font-size: 14px;
+    margin-bottom: 8px;
 
     color: #eeeeee;
 
-    margin-bottom: 8px;
+    font-size: 14px;
 
     white-space: nowrap;
-
     overflow: hidden;
-
     text-overflow: ellipsis;
 }
 
 
 .track-title {
-    font-size: 12px;
-
     color: #999999;
 
+    font-size: 12px;
+
     white-space: nowrap;
-
     overflow: hidden;
-
     text-overflow: ellipsis;
 }
 
+
+/* TIME AND PROGRESS */
 
 .player-time {
     display: grid;
@@ -1238,34 +1211,26 @@ video {
 
 
 .progress-container {
-    height:
-        5px;
+    height: 5px;
 
-    background:
-        #333333;
+    background: #333333;
 
-    cursor:
-        pointer;
+    cursor: pointer;
 }
 
 
 .progress-bar {
-    width:
-        0%;
+    width: 0%;
+    height: 100%;
 
-    height:
-        100%;
-
-    background:
-        #cccccc;
+    background: #cccccc;
 }
 
 
 /* CONTROLS */
 
 .player-controls {
-    display:
-        flex;
+    display: flex;
 
     border-top:
         1px solid
@@ -1274,49 +1239,37 @@ video {
 
 
 .player-controls button {
-    flex:
-        1;
+    flex: 1;
 
-    height:
-        35px;
+    height: 35px;
 
-    background:
-        #181818;
+    background: #181818;
+    color: #cccccc;
 
-    color:
-        #cccccc;
-
-    border:
-        none;
+    border: none;
 
     border-right:
         1px solid
         #333333;
 
-    cursor:
-        pointer;
+    cursor: pointer;
 
     font-family:
         Arial,
         sans-serif;
 
-    font-size:
-        12px;
+    font-size: 12px;
 }
 
 
 .player-controls button:last-child {
-    border-right:
-        none;
+    border-right: none;
 }
 
 
 .player-controls button:hover {
-    background:
-        #303030;
-
-    color:
-        white;
+    color: white;
+    background: #303030;
 }
 
 
@@ -1324,46 +1277,34 @@ video {
    MOBILE
 ================================================== */
 
-@media (
-    max-width: 750px
-) {
+@media (max-width: 750px) {
 
     .site-header {
-        min-height:
-            120px;
+        min-height: 120px;
 
-        flex-direction:
-            column;
+        flex-direction: column;
 
-        justify-content:
-            center;
+        justify-content: center;
 
-        gap:
-            25px;
+        gap: 25px;
     }
 
 
     .main-nav {
-        gap:
-            15px;
+        gap: 15px;
 
-        flex-wrap:
-            wrap;
+        flex-wrap: wrap;
 
-        justify-content:
-            center;
+        justify-content: center;
     }
 
 
     .lead-release {
-        grid-template-columns:
-            1fr;
+        grid-template-columns: 1fr;
 
-        gap:
-            40px;
+        gap: 40px;
 
-        padding-top:
-            50px;
+        padding-top: 50px;
     }
 
 
@@ -1375,41 +1316,20 @@ video {
 
 
     .release-title {
-        grid-column:
-            2;
+        grid-column: 2;
     }
 
 
     .release-year {
-        display:
-            none;
+        display: none;
     }
 
 
     .site-footer a {
-        margin-left:
-            0;
+        margin-left: 0;
     }
-
-
-    .audio-player {
-        position:
-            fixed;
-
-        left:
-            10px;
-
-        right:
-            10px;
-
-        bottom:
-            10px;
-
-        width:
-            auto;
-    }
-
 }
+
 /* -------------------------
    ENTER THE DREAM
 ------------------------- */
@@ -1469,6 +1389,7 @@ video {
     }
 
 }
+
 /* ==================================================
    COMPACT MOBILE AUDIO PLAYER
 ================================================== */
@@ -1480,31 +1401,48 @@ video {
 
         left: 12px;
         right: 12px;
-        bottom: calc(12px + env(safe-area-inset-bottom));
+
+        bottom:
+            calc(
+                12px
+                +
+                env(safe-area-inset-bottom)
+            );
 
         width: auto;
-        height: 56px;
+        height: 58px;
 
         display: grid;
-        grid-template-columns: 56px minmax(0, 1fr);
+
+        grid-template-columns:
+            58px
+            minmax(0, 1fr);
+
         align-items: stretch;
 
-        background: rgba(12, 12, 12, 0.92);
+        background:
+            rgba(17, 17, 17, 0.94);
 
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        border-radius: 8px;
+        border:
+            1px solid
+            rgba(130, 125, 115, 0.7);
+
+        border-radius: 2px;
 
         box-shadow:
-            0 5px 20px rgba(0, 0, 0, 0.45);
+            5px
+            5px
+            0
+            rgba(0, 0, 0, 0.35);
 
         overflow: hidden;
 
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
     }
 
 
-    /* Hide the large sections on mobile */
+    /* Hide the large player sections */
 
     .audio-player .player-top,
     .audio-player .player-time,
@@ -1520,14 +1458,15 @@ video {
         grid-row: 1;
 
         min-height: 0;
-        height: 56px;
+        height: 58px;
 
         display: flex;
         align-items: center;
 
-        padding: 8px 12px;
+        padding: 8px 13px;
 
         background: transparent;
+
         border: none;
     }
 
@@ -1535,16 +1474,19 @@ video {
     .audio-player .track-information {
         width: 100%;
         min-width: 0;
+
+        overflow: hidden;
     }
 
 
     .audio-player .track-artist {
-        margin: 0 0 4px;
+        margin: 0 0 5px;
 
-        color: rgba(255, 255, 255, 0.9);
+        color:
+            rgba(238, 238, 238, 0.92);
 
         font-size: 9px;
-        letter-spacing: 0.13em;
+        letter-spacing: 0.14em;
 
         white-space: nowrap;
         overflow: hidden;
@@ -1553,10 +1495,11 @@ video {
 
 
     .audio-player .track-title {
-        color: rgba(255, 255, 255, 0.48);
+        color:
+            rgba(170, 170, 170, 0.72);
 
         font-size: 8px;
-        letter-spacing: 0.1em;
+        letter-spacing: 0.11em;
 
         white-space: nowrap;
         overflow: hidden;
@@ -1564,19 +1507,26 @@ video {
     }
 
 
-    /* Controls area */
+    /* Mobile control area */
 
     .audio-player .player-controls {
         grid-column: 1;
         grid-row: 1;
 
-        width: 56px;
-        height: 56px;
+        width: 58px;
+        height: 58px;
 
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: #111111;
 
         border: none;
-        border-right: 1px solid rgba(255, 255, 255, 0.14);
+
+        border-right:
+            1px solid
+            rgba(130, 125, 115, 0.65);
     }
 
 
@@ -1588,34 +1538,78 @@ video {
     }
 
 
-    /* Keep only play/pause */
+    /* Original technical-style play button */
 
     .audio-player #play-button {
-        display: block;
+        flex: none;
 
-        width: 100%;
-        height: 100%;
+        width: 36px;
+        height: 36px;
 
         padding: 0;
 
-        color: rgba(255, 255, 255, 0.9);
-        background: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
-        border: none;
-        border-radius: 0;
+        color: #d6d6d6;
+        background: #181818;
 
-        font-family: Arial, sans-serif;
-        font-size: 15px;
+        border:
+            1px solid
+            #555555;
+
+        border-radius: 2px;
+
+        box-shadow:
+            inset
+            0
+            1px
+            0
+            rgba(255, 255, 255, 0.08),
+
+            2px
+            2px
+            0
+            rgba(0, 0, 0, 0.45);
+
+        font-family:
+            Arial,
+            Helvetica,
+            sans-serif;
+
+        font-size: 12px;
+        font-weight: 400;
+        line-height: 1;
+
+        appearance: none;
+        -webkit-appearance: none;
 
         cursor: pointer;
+
+        transition:
+            background 0.15s ease,
+            color 0.15s ease,
+            border-color 0.15s ease;
     }
 
 
-    .audio-player #play-button:hover,
-    .audio-player #play-button:active {
+    .audio-player #play-button:hover {
         color: white;
-        background: rgba(255, 255, 255, 0.07);
+        background: #292929;
 
-        box-shadow: none;
+        border-color: #777777;
+    }
+
+
+    .audio-player #play-button:active {
+        background: #0d0d0d;
+
+        box-shadow:
+            inset
+            2px
+            2px
+            3px
+            rgba(0, 0, 0, 0.65);
     }
 }
