@@ -430,3 +430,12 @@ body::before {
         letter-spacing: 0.18em;
     }
 }
+@media (min-width: 900px) {
+    body {
+        background: black;
+    }
+
+    body::before {
+        background: none;
+    }
+}
