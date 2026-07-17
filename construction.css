@@ -2,39 +2,44 @@
     box-sizing: border-box;
 }
 
-
 html,
 body {
     width: 100%;
     min-height: 100%;
-
     margin: 0;
-
     background-color: black;
 }
-
 
 .landing-page {
     width: 100%;
     min-height: 100vh;
+    padding: 40px 20px;
 
     display: flex;
-
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 24px;
 
     overflow: hidden;
 }
 
-
 .landing-video {
     display: block;
-
-    width: 1000px;
+    width: 800px;
     max-width: 80vw;
-
     height: auto;
-
     border: none;
     outline: none;
+}
+
+.construction-message {
+    margin: 0;
+    color: white;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0.35em;
+    text-align: center;
 }
