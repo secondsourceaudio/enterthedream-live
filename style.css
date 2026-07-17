@@ -1613,3 +1613,81 @@ video {
             rgba(0, 0, 0, 0.65);
     }
 }
+/* ==================================================
+   DESKTOP PLAYER MINIMIZE BUTTON
+================================================== */
+
+.player-top-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+
+.player-toggle-button {
+    width: 20px;
+    height: 18px;
+
+    padding: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #cccccc;
+    background: #181818;
+
+    border: 1px solid #555555;
+
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+
+.player-toggle-button:hover {
+    color: white;
+    background: #303030;
+}
+
+
+/* Desktop-only collapsed state */
+
+@media (min-width: 751px) {
+
+    .audio-player {
+        transition:
+            width 0.18s ease;
+    }
+
+
+    .audio-player.is-collapsed {
+        width: 285px;
+    }
+
+
+    .audio-player.is-collapsed .player-screen,
+    .audio-player.is-collapsed .player-time,
+    .audio-player.is-collapsed .player-controls {
+        display: none;
+    }
+
+
+    .audio-player.is-collapsed .player-top {
+        border-bottom: none;
+    }
+
+}
+
+
+/* Mobile already uses its own compact player */
+
+@media (max-width: 750px) {
+
+    .player-toggle-button {
+        display: none;
+    }
+
+}

@@ -1,4 +1,11 @@
-const audio = document.getElementById("audio-element");
+const audio =
+    document.getElementById("audio-element");
+
+const audioPlayer =
+    document.getElementById("audio-player");
+
+const playerToggleButton =
+    document.getElementById("player-toggle-button");
 
 const playButton =
     document.getElementById("play-button");
@@ -31,10 +38,11 @@ const progressBar =
     document.getElementById("progress-bar");
 
 
-/* Monochrome text symbols rather than emoji */
+const playSymbol =
+    "\u25B6\uFE0E";
 
-const playSymbol = "\u25B6\uFE0E";
-const pauseSymbol = "II";
+const pauseSymbol =
+    "II";
 
 
 /* -------------------------
@@ -65,6 +73,69 @@ const tracks = [
 
 
 let currentTrackIndex = 0;
+
+
+/* -------------------------
+   MINIMIZE / EXPAND PLAYER
+------------------------- */
+
+function setPlayerCollapsed(collapsed) {
+
+    audioPlayer.classList.toggle(
+        "is-collapsed",
+        collapsed
+    );
+
+    if (collapsed) {
+
+        playerToggleButton.textContent =
+            "+";
+
+        playerToggleButton.setAttribute(
+            "aria-label",
+            "Expand audio player"
+        );
+
+        playerToggleButton.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+
+    } else {
+
+        playerToggleButton.textContent =
+            "−";
+
+        playerToggleButton.setAttribute(
+            "aria-label",
+            "Minimize audio player"
+        );
+
+        playerToggleButton.setAttribute(
+            "aria-expanded",
+            "true"
+        );
+
+    }
+
+}
+
+
+playerToggleButton.addEventListener(
+    "click",
+    function () {
+
+        const isCollapsed =
+            audioPlayer.classList.contains(
+                "is-collapsed"
+            );
+
+        setPlayerCollapsed(
+            !isCollapsed
+        );
+
+    }
+);
 
 
 /* -------------------------
@@ -104,12 +175,17 @@ function updatePlayButton(isPlaying) {
 
 function loadTrack(index) {
 
-    const track = tracks[index];
+    const track =
+        tracks[index];
 
-    audio.src = track.file;
+    audio.src =
+        track.file;
 
     trackNumber.textContent =
-        String(index + 1).padStart(2, "0");
+        String(index + 1).padStart(
+            2,
+            "0"
+        );
 
     trackArtist.textContent =
         track.artist;
@@ -334,6 +410,7 @@ audio.addEventListener(
     }
 );
 
+
 audio.addEventListener(
     "pause",
     function () {
@@ -407,7 +484,11 @@ audio.addEventListener(
 
 
 /* -------------------------
-   INITIAL TRACK
+   INITIAL STATE
 ------------------------- */
 
 loadTrack(currentTrackIndex);
+
+/* Always begin minimized on desktop */
+
+setPlayerCollapsed(true);
