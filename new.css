@@ -76,22 +76,62 @@ body {
 }
 
 
-.material-link {
+/* =========================================
+   NAVIGATION
+========================================= */
+
+.site-nav {
+    display: flex;
+
+    align-items: center;
+
+    gap: 34px;
+}
+
+
+.site-nav a {
+    position: relative;
+
     color: #ffffff;
 
     font-size: 9px;
 
-    letter-spacing: 0.3em;
+    letter-spacing: 0.26em;
 
     text-decoration: none;
+
+    white-space: nowrap;
 
     transition:
         opacity 0.2s ease;
 }
 
 
-.material-link:hover {
-    opacity: 0.65;
+.site-nav a::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    bottom: -7px;
+
+    width: 0;
+    height: 1px;
+
+    background: #ffffff;
+
+    transition:
+        width 0.25s ease;
+}
+
+
+.site-nav a:hover {
+    opacity: 0.75;
+}
+
+
+.site-nav a:hover::after {
+    width: calc(100% - 0.26em);
 }
 
 
@@ -275,11 +315,6 @@ body {
 }
 
 
-/*
-   The WEBM contains lots of empty black space.
-   This window crops that space away.
-*/
-
 .logo-window {
     position: relative;
 
@@ -291,11 +326,6 @@ body {
     overflow: hidden;
 }
 
-
-/*
-   Zoom deeply into the center of the WEBM
-   so the actual Second Source logo is large.
-*/
 
 .spinning-logo {
     position: absolute;
@@ -452,10 +482,20 @@ body {
     }
 
 
-    .material-link {
-        font-size: 8px;
+    .site-nav {
+        gap: 16px;
+    }
 
-        letter-spacing: 0.2em;
+
+    .site-nav a {
+        font-size: 7px;
+
+        letter-spacing: 0.15em;
+    }
+
+
+    .site-nav a::after {
+        bottom: -5px;
     }
 
 
