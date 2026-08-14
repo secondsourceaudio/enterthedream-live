@@ -68,6 +68,10 @@ const playerTime =
     );
 
 
+/* =========================================
+   INITIAL AUDIO STATE
+========================================= */
+
 let selectedVolume =
     0.35;
 
@@ -89,7 +93,7 @@ audio.muted =
 
 
 /* =========================================
-   HELPERS
+   GENERAL HELPERS
 ========================================= */
 
 function clamp(
@@ -263,9 +267,8 @@ function attemptPlayback() {
 
 
 /*
-   Request autoplay.
-
-   Browsers may defer this until a gesture.
+   Browser may block this until a user
+   interacts with the page.
 */
 
 attemptPlayback();
@@ -376,7 +379,7 @@ soundButton.addEventListener(
 
 
 /* =========================================
-   SMOOTH VOLUME SLIDER
+   SMOOTH VOLUME
 ========================================= */
 
 function setVolume(
@@ -399,9 +402,12 @@ function setVolume(
         selectedVolume > 0
     ) {
 
-        muted = false;
+        muted =
+            false;
 
-        audio.muted = false;
+
+        audio.muted =
+            false;
 
     }
 
@@ -439,9 +445,7 @@ volumeSlider.addEventListener(
 
 
 /* =========================================
-   VERTICAL VOLUME DRAG ON DESKTOP
-
-   Drag the percentage upward/downward.
+   VERTICAL VOLUME DRAG
 ========================================= */
 
 let volumeDragging =
@@ -506,11 +510,6 @@ volumePercent.addEventListener(
             -
             event.clientY;
 
-
-        /*
-           220px vertical movement
-           covers the full 0–100 range.
-        */
 
         setVolume(
 
@@ -676,9 +675,10 @@ const interactionMessage =
 
 
 /* =========================================
-   INTERNAL PINCH ZOOM
+   ARTWORK ZOOM
 
-   This zooms ONLY the artwork, never the page.
+   Pinch zoom affects only the artwork,
+   never the whole page.
 ========================================= */
 
 let viewScale =
@@ -741,17 +741,27 @@ let panning =
     false;
 
 
+/* =========================================
+   LIMIT PANNING
+========================================= */
+
 function limitViewPan() {
 
     if (
         viewScale <= 1
     ) {
 
-        viewScale = 1;
+        viewScale =
+            1;
 
-        viewX = 0;
 
-        viewY = 0;
+        viewX =
+            0;
+
+
+        viewY =
+            0;
+
 
         return;
 
@@ -796,6 +806,10 @@ function limitViewPan() {
 }
 
 
+/* =========================================
+   APPLY ZOOM
+========================================= */
+
 function updateViewTransform() {
 
     limitViewPan();
@@ -815,6 +829,10 @@ function updateViewTransform() {
 
 }
 
+
+/* =========================================
+   PINCH HELPERS
+========================================= */
 
 function viewPointerDistance() {
 
@@ -873,8 +891,8 @@ function viewPointerMidpoint() {
 
 
 /*
-   Browser double-click/double-tap zoom
-   is deliberately disabled on the artwork.
+   Prevent browser double-click zoom from
+   changing the entire page.
 */
 
 container.addEventListener(
@@ -910,7 +928,7 @@ if (!gl) {
 
 
 /* =========================================
-   WEBGL SHADER
+   SHADERS
 ========================================= */
 
 if (gl) {
@@ -944,205 +962,602 @@ if (gl) {
     `;
 
 
-const fragmentShaderSource = `
+    const fragmentShaderSource = `
 
-    precision mediump float;
+        precision mediump float;
 
-    varying vec2 v_uv;
 
-    uniform sampler2D u_texture;
-    uniform vec2 u_pointer;
-    uniform vec2 u_velocity;
-    uniform float u_time;
-    uniform float u_motion;
+        varying vec2 v_uv;
 
-    float randomValue(float value) {
-        return fract(
-            sin(value * 12.9898) * 43758.5453
-        );
-    }
 
-    void main() {
+        uniform sampler2D u_texture;
 
-        vec2 baseUV = v_uv;
-        vec2 uv = baseUV;
+        uniform vec2 u_pointer;
 
-        /* =================================
-           1) ALWAYS-BUBBLING CENTER
-        ================================= */
+        uniform vec2 u_velocity;
 
-        vec2 center = vec2(0.5, 0.5);
-        vec2 centerDelta = baseUV - center;
-        float centerDistance = length(centerDelta);
-        vec2 centerDirection = normalize(centerDelta + vec2(0.0001));
+        uniform vec2 u_dripCenter;
 
-        float bubbleOne =
-            sin(centerDistance * 50.0 - u_time * 3.2);
+        uniform float u_time;
 
-        float bubbleTwo =
-            sin(centerDistance * 28.0 - u_time * 2.1);
+        uniform float u_motion;
 
-        float bubbleThree =
-            sin(centerDistance * 76.0 - u_time * 4.3);
+        uniform float u_dripAge;
 
-        float centerBubble =
-            bubbleOne * 0.50 +
-            bubbleTwo * 0.32 +
-            bubbleThree * 0.18;
 
-        float centerInfluence =
-            smoothstep(0.76, 0.03, centerDistance);
+        void main() {
 
-        uv +=
-            centerDirection *
-            centerBubble *
-            centerInfluence *
-            0.0055;
+            vec2 baseUV =
+                v_uv;
 
-        /* =================================
-           2) SOFT WATER BREATHING
-        ================================= */
 
-        uv.x +=
-            sin(uv.y * 10.0 + u_time * 0.6) * 0.0022;
+            vec2 uv =
+                baseUV;
 
-        uv.y +=
-            cos(uv.x * 9.0 - u_time * 0.45) * 0.0018;
 
-        /* =================================
-           3) WINDOWS 95 / 98 STYLE LOGO WAVE
-           Subtle "cloth / banner" motion
-        ================================= */
+            /* =================================
+               1. CONSTANT CENTER BUBBLING
+            ================================= */
 
-        float logoWaveX =
-            sin((baseUV.y * 9.0) - (u_time * 1.4)) * 0.0065;
 
-        float logoWaveY =
-            cos((baseUV.x * 7.0) - (u_time * 1.1)) * 0.0040;
+            vec2 center =
+                vec2(
+                    0.5,
+                    0.5
+                );
 
-        float logoWaveDetail =
-            sin((baseUV.y * 18.0) + (u_time * 2.0)) * 0.0018;
 
-        uv.x += logoWaveX + logoWaveDetail;
-        uv.y += logoWaveY;
+            vec2 centerDelta =
+                baseUV
+                -
+                center;
 
-        /* =================================
-           4) POINTER LIQUID RIPPLE
-        ================================= */
 
-        vec2 pointerDelta = baseUV - u_pointer;
-        float pointerDistance = length(pointerDelta);
+            float centerDistance =
+                length(
+                    centerDelta
+                );
 
-        float pointerInfluence =
-            smoothstep(0.38, 0.0, pointerDistance);
 
-        vec2 pointerDirection =
-            normalize(pointerDelta + vec2(0.0001));
+            vec2 centerDirection =
+                normalize(
+                    centerDelta
+                    +
+                    vec2(
+                        0.0001
+                    )
+                );
 
-        float pointerWave =
-            sin(pointerDistance * 60.0 - u_time * 7.0);
 
-        float pointerWaveTwo =
-            sin(pointerDistance * 27.0 - u_time * 4.0);
+            /*
+               Multiple overlapping waves make
+               the center feel alive rather than
+               like one perfect digital circle.
+            */
 
-        float combinedWave =
-            pointerWave * 0.68 +
-            pointerWaveTwo * 0.32;
 
-        uv +=
-            pointerDirection *
-            combinedWave *
-            pointerInfluence *
-            (0.007 + u_motion * 0.03);
+            float bubbleOne =
+                sin(
+                    centerDistance
+                    *
+                    50.0
+                    -
+                    u_time
+                    *
+                    3.1
+                );
 
-        /* =================================
-           5) SMEAR WHEN MOVING
-        ================================= */
 
-        uv -=
-            u_velocity *
-            pointerInfluence *
-            (0.20 + u_motion * 0.55);
+            float bubbleTwo =
+                sin(
+                    centerDistance
+                    *
+                    29.0
+                    -
+                    u_time
+                    *
+                    2.0
+                );
 
-        /* =================================
-           6) TV-LIKE HORIZONTAL TEARING
-           No random colours, only geometry
-        ================================= */
 
-        float frame = floor(u_time * 11.0);
-        float row = floor(baseUV.y * 48.0);
+            float bubbleThree =
+                sin(
+                    centerDistance
+                    *
+                    76.0
+                    -
+                    u_time
+                    *
+                    4.1
+                );
 
-        float noise =
-            randomValue(row + frame * 17.0);
 
-        float tearGate =
-            step(0.93 - u_motion * 0.17, noise);
+            float centerBubble =
+                bubbleOne
+                *
+                0.50
 
-        float tearAmount =
-            (noise - 0.5) *
-            tearGate *
-            (0.006 + u_motion * 0.055);
+                +
 
-        uv.x += tearAmount;
+                bubbleTwo
+                *
+                0.32
 
-        uv.x +=
-            sin(baseUV.y * 220.0 + u_time * 8.0) *
-            u_motion *
-            0.0025;
+                +
 
-        /* =================================
-           7) SAFE TEXTURE AREA
-        ================================= */
+                bubbleThree
+                *
+                0.18;
 
-        uv = clamp(
-            uv,
-            vec2(0.002),
-            vec2(0.998)
-        );
 
-        /* =================================
-           8) SAMPLE IMAGE
-        ================================= */
+            float centerInfluence =
+                smoothstep(
+                    0.75,
+                    0.03,
+                    centerDistance
+                );
 
-        vec4 mainSample =
-            texture2D(u_texture, uv);
 
-        vec4 smearSample =
-            texture2D(
-                u_texture,
-                clamp(
-                    uv - u_velocity * pointerInfluence * 0.9,
-                    vec2(0.002),
-                    vec2(0.998)
+            uv +=
+                centerDirection
+                *
+                centerBubble
+                *
+                centerInfluence
+                *
+                0.0048;
+
+
+            /* =================================
+               2. SUBTLE 90s LOGO WAVE
+
+               Gentle cloth / flag movement.
+               This should remain secondary.
+            ================================= */
+
+
+            float waveX =
+                sin(
+                    baseUV.y
+                    *
+                    8.0
+                    -
+                    u_time
+                    *
+                    1.15
                 )
-            );
+                *
+                0.0042;
 
-        float smearAmount =
-            clamp(
-                u_motion * pointerInfluence * 0.35,
-                0.0,
-                0.35
-            );
 
-        vec4 finalSample =
-            mix(mainSample, smearSample, smearAmount);
+            float waveY =
+                cos(
+                    baseUV.x
+                    *
+                    6.5
+                    -
+                    u_time
+                    *
+                    0.9
+                )
+                *
+                0.0024;
 
-        /* =================================
-           9) VERY LIGHT SCAN-LINE SHADE
-           Keeps original colours
-        ================================= */
 
-        float lineShade =
-            0.985 +
-            0.015 * sin(baseUV.y * 700.0);
+            float fineWave =
+                sin(
+                    baseUV.y
+                    *
+                    16.0
+                    +
+                    u_time
+                    *
+                    1.6
+                )
+                *
+                0.0011;
 
-        finalSample.rgb *= lineShade;
 
-        gl_FragColor = finalSample;
-    }
+            uv.x +=
+                waveX
+                +
+                fineWave;
 
-`;
 
+            uv.y +=
+                waveY;
+
+
+            /* =================================
+               3. SLOW WATER BREATHING
+            ================================= */
+
+
+            uv.x +=
+                sin(
+                    uv.y
+                    *
+                    10.0
+                    +
+                    u_time
+                    *
+                    0.45
+                )
+                *
+                0.0015;
+
+
+            uv.y +=
+                cos(
+                    uv.x
+                    *
+                    9.0
+                    -
+                    u_time
+                    *
+                    0.38
+                )
+                *
+                0.0013;
+
+
+            /* =================================
+               4. CURSOR / FINGER WATER
+            ================================= */
+
+
+            vec2 pointerDelta =
+                baseUV
+                -
+                u_pointer;
+
+
+            float pointerDistance =
+                length(
+                    pointerDelta
+                );
+
+
+            float pointerInfluence =
+                smoothstep(
+                    0.38,
+                    0.0,
+                    pointerDistance
+                );
+
+
+            vec2 pointerDirection =
+                normalize(
+                    pointerDelta
+                    +
+                    vec2(
+                        0.0001
+                    )
+                );
+
+
+            float pointerWaveOne =
+                sin(
+                    pointerDistance
+                    *
+                    59.0
+                    -
+                    u_time
+                    *
+                    6.8
+                );
+
+
+            float pointerWaveTwo =
+                sin(
+                    pointerDistance
+                    *
+                    27.0
+                    -
+                    u_time
+                    *
+                    3.8
+                );
+
+
+            float pointerWave =
+                pointerWaveOne
+                *
+                0.68
+
+                +
+
+                pointerWaveTwo
+                *
+                0.32;
+
+
+            uv +=
+                pointerDirection
+                *
+                pointerWave
+                *
+                pointerInfluence
+                *
+                (
+                    0.006
+                    +
+                    u_motion
+                    *
+                    0.026
+                );
+
+
+            /* =================================
+               5. LIQUID DRAG
+            ================================= */
+
+
+            uv -=
+                u_velocity
+                *
+                pointerInfluence
+                *
+                (
+                    0.16
+                    +
+                    u_motion
+                    *
+                    0.42
+                );
+
+
+            /* =================================
+               6. THE DRIP
+
+               Click/tap creates one strong,
+               expanding water ring.
+
+               This is deliberately much stronger
+               than the background animation.
+            ================================= */
+
+
+            vec2 dripDelta =
+                baseUV
+                -
+                u_dripCenter;
+
+
+            float dripDistance =
+                length(
+                    dripDelta
+                );
+
+
+            vec2 dripDirection =
+                normalize(
+                    dripDelta
+                    +
+                    vec2(
+                        0.0001
+                    )
+                );
+
+
+            /*
+               Ripple expands from the exact
+               point where the artwork was hit.
+            */
+
+
+            float dripRadius =
+                u_dripAge
+                *
+                0.33;
+
+
+            /*
+               Ripple dies gradually after
+               roughly 2.6 seconds.
+            */
+
+
+            float dripLife =
+                clamp(
+                    1.0
+                    -
+                    u_dripAge
+                    /
+                    2.6,
+                    0.0,
+                    1.0
+                );
+
+
+            /*
+               Main water ring.
+            */
+
+
+            float dripRing =
+                exp(
+                    -abs(
+                        dripDistance
+                        -
+                        dripRadius
+                    )
+                    *
+                    58.0
+                )
+                *
+                dripLife;
+
+
+            /*
+               Secondary smaller trailing ring.
+               Gives the click more of a real
+               drop-in-water quality.
+            */
+
+
+            float secondRadius =
+                max(
+                    0.0,
+                    dripRadius
+                    -
+                    0.055
+                );
+
+
+            float secondRing =
+                exp(
+                    -abs(
+                        dripDistance
+                        -
+                        secondRadius
+                    )
+                    *
+                    72.0
+                )
+                *
+                dripLife
+                *
+                0.45;
+
+
+            /*
+               Small central depression immediately
+               after clicking/tapping.
+            */
+
+
+            float impact =
+                exp(
+                    -dripDistance
+                    *
+                    24.0
+                )
+                *
+                exp(
+                    -u_dripAge
+                    *
+                    4.0
+                );
+
+
+            uv +=
+                dripDirection
+                *
+                dripRing
+                *
+                0.050;
+
+
+            uv +=
+                dripDirection
+                *
+                secondRing
+                *
+                0.022;
+
+
+            uv -=
+                dripDelta
+                *
+                impact
+                *
+                0.10;
+
+
+            /* =================================
+               7. SAFE TEXTURE AREA
+            ================================= */
+
+
+            uv =
+                clamp(
+                    uv,
+                    vec2(
+                        0.002
+                    ),
+                    vec2(
+                        0.998
+                    )
+                );
+
+
+            /* =================================
+               8. IMAGE
+
+               Original colours only.
+            ================================= */
+
+
+            vec4 mainSample =
+                texture2D(
+                    u_texture,
+                    uv
+                );
+
+
+            /*
+               One subtle delayed sample during
+               active cursor movement gives the
+               surface viscosity without glitching.
+            */
+
+
+            vec4 draggedSample =
+                texture2D(
+
+                    u_texture,
+
+                    clamp(
+
+                        uv
+                        -
+                        u_velocity
+                        *
+                        pointerInfluence
+                        *
+                        0.65,
+
+                        vec2(
+                            0.002
+                        ),
+
+                        vec2(
+                            0.998
+                        )
+
+                    )
+
+                );
+
+
+            float dragBlend =
+                clamp(
+                    u_motion
+                    *
+                    pointerInfluence
+                    *
+                    0.20,
+                    0.0,
+                    0.20
+                );
+
+
+            gl_FragColor =
+                mix(
+                    mainSample,
+                    draggedSample,
+                    dragBlend
+                );
+
+        }
+
+    `;
+
+
+    /* =========================================
+       CREATE SHADER
+    ========================================== */
 
     function createShader(
         type,
@@ -1244,7 +1659,7 @@ const fragmentShaderSource = `
 
 
             /* =================================
-               PLANE
+               FULLSCREEN PLANE
             ================================= */
 
 
@@ -1320,6 +1735,13 @@ const fragmentShaderSource = `
                 );
 
 
+            const dripCenterUniform =
+                gl.getUniformLocation(
+                    program,
+                    "u_dripCenter"
+                );
+
+
             const timeUniform =
                 gl.getUniformLocation(
                     program,
@@ -1331,6 +1753,13 @@ const fragmentShaderSource = `
                 gl.getUniformLocation(
                     program,
                     "u_motion"
+                );
+
+
+            const dripAgeUniform =
+                gl.getUniformLocation(
+                    program,
+                    "u_dripAge"
                 );
 
 
@@ -1396,11 +1825,10 @@ const fragmentShaderSource = `
 
 
             /* =================================
-               USE THE IMAGE THAT IS ALREADY
-               ON THE PAGE.
+               LOAD EXISTING ARTWORK IMAGE
 
-               This avoids creating another
-               duplicate image decode.
+               Reuse the IMG already displayed
+               underneath WebGL.
             ================================= */
 
 
@@ -1559,7 +1987,7 @@ const fragmentShaderSource = `
 
 
             /* =================================
-               SHADER POINTER STATE
+               POINTER STATE
             ================================= */
 
 
@@ -1595,9 +2023,30 @@ const fragmentShaderSource = `
                 0;
 
 
+            /*
+               DRIP starts inactive.
+            */
+
+
+            let dripX =
+                0.5;
+
+
+            let dripY =
+                0.5;
+
+
+            let dripStarted =
+                -10000;
+
+
             let interacted =
                 false;
 
+
+/* =========================================
+   UPDATE POINTER
+========================================= */
 
             function updateShaderPointer(
                 clientX,
@@ -1655,9 +2104,9 @@ const fragmentShaderSource = `
                     clamp(
                         deltaX
                         *
-                        2.8,
-                        -0.08,
-                        0.08
+                        2.6,
+                        -0.075,
+                        0.075
                     );
 
 
@@ -1665,9 +2114,9 @@ const fragmentShaderSource = `
                     clamp(
                         deltaY
                         *
-                        2.8,
-                        -0.08,
-                        0.08
+                        2.6,
+                        -0.075,
+                        0.075
                     );
 
 
@@ -1679,7 +2128,7 @@ const fragmentShaderSource = `
                             deltaY
                         )
                         *
-                        55
+                        52
                     );
 
 
@@ -1687,7 +2136,8 @@ const fragmentShaderSource = `
                     !interacted
                 ) {
 
-                    interacted = true;
+                    interacted =
+                        true;
 
 
                     interactionMessage
@@ -1697,6 +2147,49 @@ const fragmentShaderSource = `
                         );
 
                 }
+
+            }
+
+
+            /* =================================
+               CREATE DRIP
+            ================================= */
+
+
+            function createDrip(
+                clientX,
+                clientY
+            ) {
+
+                const rect =
+                    container
+                        .getBoundingClientRect();
+
+
+                dripX =
+                    (
+                        clientX
+                        -
+                        rect.left
+                    )
+                    /
+                    rect.width;
+
+
+                dripY =
+                    1
+                    -
+                    (
+                        clientY
+                        -
+                        rect.top
+                    )
+                    /
+                    rect.height;
+
+
+                dripStarted =
+                    performance.now();
 
             }
 
@@ -1729,6 +2222,35 @@ const fragmentShaderSource = `
                     }
 
                     catch (error) {
+                    }
+
+
+                    /*
+                       A single click/touch creates
+                       the DRIP immediately.
+
+                       Once a second finger arrives,
+                       interaction becomes pinch zoom.
+                    */
+
+
+                    if (
+                        viewPointers.size === 1
+                        &&
+                        viewScale === 1
+                    ) {
+
+                        updateShaderPointer(
+                            event.clientX,
+                            event.clientY
+                        );
+
+
+                        createDrip(
+                            event.clientX,
+                            event.clientY
+                        );
+
                     }
 
 
@@ -1796,16 +2318,6 @@ const fragmentShaderSource = `
                     }
 
 
-                    else {
-
-                        updateShaderPointer(
-                            event.clientX,
-                            event.clientY
-                        );
-
-                    }
-
-
                     if (
                         audio.paused
                         &&
@@ -1842,6 +2354,11 @@ const fragmentShaderSource = `
                         );
 
                     }
+
+
+                    /*
+                       PINCH
+                    */
 
 
                     if (
@@ -1901,6 +2418,11 @@ const fragmentShaderSource = `
                     }
 
 
+                    /*
+                       PAN WHILE ZOOMED
+                    */
+
+
                     if (
                         panning
                         &&
@@ -1935,6 +2457,11 @@ const fragmentShaderSource = `
                     }
 
 
+                    /*
+                       WATER INTERACTION
+                    */
+
+
                     if (
                         viewScale === 1
                         &&
@@ -1960,6 +2487,11 @@ const fragmentShaderSource = `
 
                 }
             );
+
+
+            /* =================================
+               RELEASE POINTER
+            ================================= */
 
 
             function releasePointer(
@@ -2006,7 +2538,7 @@ const fragmentShaderSource = `
 
 
             /* =================================
-               RESIZE
+               CANVAS SIZE
             ================================= */
 
 
@@ -2070,7 +2602,7 @@ const fragmentShaderSource = `
 
 
             /* =================================
-               RENDER LOOP
+               RENDER
             ================================= */
 
 
@@ -2113,6 +2645,11 @@ const fragmentShaderSource = `
                     0.14;
 
 
+                /*
+                   Gradual liquid decay.
+                */
+
+
                 targetVelocityX *=
                     0.87;
 
@@ -2125,11 +2662,25 @@ const fragmentShaderSource = `
                     0.90;
 
 
+                const now =
+                    performance.now();
+
+
                 const time =
                     (
-                        performance.now()
+                        now
                         -
                         start
+                    )
+                    /
+                    1000;
+
+
+                const dripAge =
+                    (
+                        now
+                        -
+                        dripStarted
                     )
                     /
                     1000;
@@ -2153,6 +2704,13 @@ const fragmentShaderSource = `
                     );
 
 
+                    gl.uniform2f(
+                        dripCenterUniform,
+                        dripX,
+                        dripY
+                    );
+
+
                     gl.uniform1f(
                         timeUniform,
                         time
@@ -2162,6 +2720,12 @@ const fragmentShaderSource = `
                     gl.uniform1f(
                         motionUniform,
                         motion
+                    );
+
+
+                    gl.uniform1f(
+                        dripAgeUniform,
+                        dripAge
                     );
 
 
