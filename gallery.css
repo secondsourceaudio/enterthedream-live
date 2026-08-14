@@ -57,8 +57,10 @@ body.lightbox-open {
 .site-header {
     width: 100%;
 
+    min-height: 72px;
+
     padding:
-        26px
+        0
         32px;
 
     display: flex;
@@ -73,6 +75,8 @@ body.lightbox-open {
 
 
 .site-logo {
+    display: inline-block;
+
     color: #ffffff;
 
     font-size: 11px;
@@ -80,6 +84,16 @@ body.lightbox-open {
     letter-spacing: 0.3em;
 
     text-decoration: none;
+
+    white-space: nowrap;
+
+    transition:
+        opacity 0.2s ease;
+}
+
+
+.site-logo:hover {
+    opacity: 0.7;
 }
 
 
@@ -294,7 +308,7 @@ body.lightbox-open {
 
 
 /* =========================================
-   ARTWORK INFORMATION
+   ARTWORK INFO
 ========================================= */
 
 .artwork-information {
@@ -316,53 +330,9 @@ body.lightbox-open {
 }
 
 
-.artwork-number {
-    color: #ffffff;
-}
-
-
+.artwork-number,
 .artwork-title {
     color: #ffffff;
-}
-
-
-/* =========================================
-   CORNER LOGO
-========================================= */
-
-.corner-logo {
-    position: fixed;
-
-    right: 22px;
-    bottom: 22px;
-
-    width: 170px;
-    height: 105px;
-
-    z-index: 100;
-
-    overflow: hidden;
-
-    pointer-events: none;
-}
-
-
-.corner-logo-video {
-    position: absolute;
-
-    top: 50%;
-    left: 50%;
-
-    width: 170px;
-    height: auto;
-
-    display: block;
-
-    transform:
-        translate(-50%, -50%)
-        scale(6);
-
-    transform-origin: center;
 }
 
 
@@ -375,15 +345,12 @@ body.lightbox-open {
 
     padding:
         28px
-        225px
         32px
         32px;
 
     border-top:
         1px solid
         rgba(255, 255, 255, 0.18);
-
-    color: #ffffff;
 }
 
 
@@ -393,6 +360,8 @@ body.lightbox-open {
 
 
 .copyright-line {
+    color: #ffffff;
+
     font-size: 7px;
 
     letter-spacing: 0.22em;
@@ -420,7 +389,7 @@ body.lightbox-open {
 
 
 /* =========================================
-   LIGHTBOX
+   FULLSCREEN VIEWER
 ========================================= */
 
 .lightbox {
@@ -432,14 +401,12 @@ body.lightbox-open {
 
     display: none;
 
-    padding: 35px;
-
     background:
         rgba(
             0,
             0,
             0,
-            0.97
+            0.98
         );
 }
 
@@ -453,8 +420,13 @@ body.lightbox-open {
 
 
 .lightbox-content {
-    width: 100%;
+    width: calc(100% - 180px);
     height: 100%;
+
+    padding:
+        55px
+        30px
+        35px;
 
     display: flex;
 
@@ -468,26 +440,34 @@ body.lightbox-open {
 .lightbox-image {
     display: block;
 
-    max-width: 90vw;
-    max-height: 82vh;
+    max-width: 100%;
+    max-height: calc(100vh - 150px);
 
     width: auto;
     height: auto;
+
+    object-fit: contain;
 }
 
 
+/* =========================================
+   VIEWER INFORMATION
+========================================= */
+
 .lightbox-information {
-    width:
-        min(
-            90vw,
-            1200px
-        );
+    width: 100%;
+    max-width: 1200px;
 
     margin-top: 18px;
 
-    display: flex;
+    display: grid;
 
-    justify-content: space-between;
+    grid-template-columns:
+        auto
+        1fr
+        auto;
+
+    gap: 20px;
 
     color: #ffffff;
 
@@ -497,13 +477,92 @@ body.lightbox-open {
 }
 
 
+.lightbox-title {
+    text-align: center;
+}
+
+
+/* =========================================
+   PREVIOUS / NEXT ARROWS
+========================================= */
+
+.lightbox-arrow {
+    position: absolute;
+
+    top: 50%;
+
+    transform:
+        translateY(-50%);
+
+    width: 80px;
+    height: 120px;
+
+    padding: 0;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff;
+
+    background: transparent;
+
+    border: none;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    font-size: 36px;
+
+    cursor: pointer;
+
+    opacity: 0.6;
+
+    transition:
+        opacity 0.2s ease,
+        background 0.2s ease;
+}
+
+
+.lightbox-arrow:hover {
+    opacity: 1;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.04
+        );
+}
+
+
+.lightbox-previous {
+    left: 0;
+}
+
+
+.lightbox-next {
+    right: 0;
+}
+
+
+/* =========================================
+   CLOSE
+========================================= */
+
 .lightbox-close {
     position: absolute;
 
     top: 24px;
     right: 28px;
 
-    padding: 0;
+    z-index: 10;
+
+    padding: 8px;
 
     color: #ffffff;
     background: transparent;
@@ -524,40 +583,7 @@ body.lightbox-open {
 
 
 .lightbox-close:hover {
-    opacity: 0.7;
-}
-
-
-/* =========================================
-   LARGE DESKTOP
-========================================= */
-
-@media (min-width: 1400px) {
-
-    .gallery-main {
-        padding-left: 55px;
-        padding-right: 55px;
-    }
-
-
-    .corner-logo {
-        right: 30px;
-        bottom: 24px;
-
-        width: 200px;
-        height: 120px;
-    }
-
-
-    .corner-logo-video {
-        width: 200px;
-    }
-
-
-    .legal-footer {
-        padding-right: 270px;
-    }
-
+    opacity: 0.65;
 }
 
 
@@ -579,25 +605,6 @@ body.lightbox-open {
             28px;
     }
 
-
-    .corner-logo {
-        width: 140px;
-        height: 90px;
-
-        right: 15px;
-        bottom: 15px;
-    }
-
-
-    .corner-logo-video {
-        width: 140px;
-    }
-
-
-    .legal-footer {
-        padding-right: 180px;
-    }
-
 }
 
 
@@ -607,43 +614,64 @@ body.lightbox-open {
 
 @media (max-width: 750px) {
 
+    /* HEADER */
+
     .site-header {
+        min-height: 0;
+
         padding:
-            22px
+            24px
             20px;
 
-        flex-direction: column;
-
-        align-items: flex-start;
-
-        gap: 18px;
+        display: block;
     }
 
 
     .site-logo {
+        display: inline-block;
+
+        margin-bottom: 28px;
+
         font-size: 10px;
+
+        letter-spacing: 0.3em;
     }
 
 
     .site-nav {
-        gap: 18px;
+        width: 100%;
 
-        flex-wrap: wrap;
+        display: flex;
+
+        align-items: center;
+
+        justify-content: flex-start;
+
+        gap: 26px;
     }
 
 
     .site-nav a {
-        font-size: 7px;
+        display: block;
 
-        letter-spacing: 0.15em;
+        font-size: 8px;
+
+        letter-spacing: 0.16em;
     }
 
+
+    .site-nav a::after {
+        display: none;
+    }
+
+
+    /* GALLERY */
 
     .gallery-main {
         padding:
             45px
             16px
-            90px;
+            80px;
     }
 
 
@@ -693,26 +721,77 @@ body.lightbox-open {
     }
 
 
-    .corner-logo {
-        width: 110px;
-        height: 70px;
+    /* FULLSCREEN VIEWER */
 
-        right: 8px;
-        bottom: 8px;
+    .lightbox-content {
+        width: 100%;
+        height: 100%;
+
+        padding:
+            65px
+            48px
+            35px;
     }
 
 
-    .corner-logo-video {
-        width: 110px;
+    .lightbox-image {
+        max-width: 100%;
+        max-height: calc(100vh - 170px);
     }
 
+
+    .lightbox-information {
+        margin-top: 15px;
+
+        gap: 8px;
+
+        font-size: 7px;
+
+        letter-spacing: 0.12em;
+    }
+
+
+    /* BIG TAP AREAS */
+
+    .lightbox-arrow {
+        top: 0;
+
+        transform: none;
+
+        width: 48px;
+        height: 100%;
+
+        font-size: 28px;
+
+        opacity: 0.85;
+    }
+
+
+    .lightbox-previous {
+        left: 0;
+    }
+
+
+    .lightbox-next {
+        right: 0;
+    }
+
+
+    .lightbox-close {
+        top: 15px;
+        right: 14px;
+
+        font-size: 7px;
+    }
+
+
+    /* LEGAL */
 
     .legal-footer {
         padding:
-            24px
-            140px
-            28px
-            20px;
+            26px
+            20px
+            30px;
     }
 
 
@@ -727,33 +806,6 @@ body.lightbox-open {
         font-size: 6px;
 
         line-height: 1.8;
-    }
-
-
-    .lightbox {
-        padding:
-            55px
-            14px
-            20px;
-    }
-
-
-    .lightbox-image {
-        max-width: 100%;
-        max-height: 78vh;
-    }
-
-
-    .lightbox-information {
-        width: 100%;
-
-        font-size: 7px;
-    }
-
-
-    .lightbox-close {
-        top: 20px;
-        right: 18px;
     }
 
 }

@@ -13,7 +13,7 @@
 
     <link
         rel="stylesheet"
-        href="./gallery.css?v=5"
+        href="./gallery.css?v=6"
     >
 </head>
 
@@ -44,7 +44,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
             >
-                BANDCAMP ↗
+                BANDCAMP ↗︎
             </a>
 
         </nav>
@@ -84,29 +84,6 @@
 
 
     <!-- =========================================
-         FIXED CORNER LOGO
-    ========================================== -->
-
-    <div class="corner-logo">
-
-        <video
-            class="corner-logo-video"
-            autoplay
-            muted
-            loop
-            playsinline
-            preload="auto"
-        >
-            <source
-                src="./videos/sourcelogo_2.webm"
-                type="video/webm"
-            >
-        </video>
-
-    </div>
-
-
-    <!-- =========================================
          LEGAL FOOTER
     ========================================== -->
 
@@ -127,7 +104,7 @@
 
 
     <!-- =========================================
-         FULLSCREEN ARTWORK VIEW
+         FULLSCREEN ARTWORK VIEWER
     ========================================== -->
 
     <div
@@ -146,6 +123,16 @@
         </button>
 
 
+        <button
+            id="lightbox-previous"
+            class="lightbox-arrow lightbox-previous"
+            type="button"
+            aria-label="Previous artwork"
+        >
+            ←
+        </button>
+
+
         <div class="lightbox-content">
 
             <img
@@ -158,13 +145,34 @@
 
             <div class="lightbox-information">
 
-                <span id="lightbox-title"></span>
+                <span
+                    id="lightbox-number"
+                    class="lightbox-number"
+                ></span>
 
-                <span id="lightbox-number"></span>
+                <span
+                    id="lightbox-title"
+                    class="lightbox-title"
+                ></span>
+
+                <span
+                    id="lightbox-total"
+                    class="lightbox-total"
+                ></span>
 
             </div>
 
         </div>
+
+
+        <button
+            id="lightbox-next"
+            class="lightbox-arrow lightbox-next"
+            type="button"
+            aria-label="Next artwork"
+        >
+            →
+        </button>
 
     </div>
 
@@ -229,7 +237,7 @@
 
 
         /* =========================================
-           BUILD GALLERY
+           GALLERY
         ========================================== */
 
         const gallery =
@@ -277,11 +285,6 @@
                     "lazy";
 
 
-                imageButton.appendChild(
-                    image
-                );
-
-
                 const information =
                     document.createElement("div");
 
@@ -319,6 +322,11 @@
                 );
 
 
+                imageButton.appendChild(
+                    image
+                );
+
+
                 item.appendChild(
                     imageButton
                 );
@@ -332,10 +340,7 @@
                     "click",
                     function () {
 
-                        openLightbox(
-                            artwork,
-                            index
-                        );
+                        openLightbox(index);
 
                     }
                 );
@@ -365,14 +370,27 @@
         const lightboxNumber =
             document.getElementById("lightbox-number");
 
+        const lightboxTotal =
+            document.getElementById("lightbox-total");
+
         const lightboxClose =
             document.getElementById("lightbox-close");
 
+        const previousButton =
+            document.getElementById("lightbox-previous");
 
-        function openLightbox(
-            artwork,
-            index
-        ) {
+        const nextButton =
+            document.getElementById("lightbox-next");
+
+
+        let currentArtworkIndex = 0;
+
+
+        function updateLightbox() {
+
+            const artwork =
+                artworks[currentArtworkIndex];
+
 
             lightboxImage.src =
                 artwork.image;
@@ -380,12 +398,40 @@
             lightboxImage.alt =
                 artwork.title;
 
+
             lightboxTitle.textContent =
                 artwork.title;
 
+
             lightboxNumber.textContent =
-                String(index + 1)
-                    .padStart(2, "0");
+                String(
+                    currentArtworkIndex + 1
+                ).padStart(
+                    2,
+                    "0"
+                );
+
+
+            lightboxTotal.textContent =
+                "/ "
+                +
+                String(
+                    artworks.length
+                ).padStart(
+                    2,
+                    "0"
+                );
+
+        }
+
+
+        function openLightbox(index) {
+
+            currentArtworkIndex =
+                index;
+
+
+            updateLightbox();
 
 
             lightbox.classList.add(
@@ -426,11 +472,72 @@
         }
 
 
+        function previousArtwork() {
+
+            currentArtworkIndex--;
+
+
+            if (
+                currentArtworkIndex < 0
+            ) {
+
+                currentArtworkIndex =
+                    artworks.length - 1;
+
+            }
+
+
+            updateLightbox();
+
+        }
+
+
+        function nextArtwork() {
+
+            currentArtworkIndex++;
+
+
+            if (
+                currentArtworkIndex
+                >=
+                artworks.length
+            ) {
+
+                currentArtworkIndex = 0;
+
+            }
+
+
+            updateLightbox();
+
+        }
+
+
+        /* =========================================
+           BUTTON EVENTS
+        ========================================== */
+
         lightboxClose.addEventListener(
             "click",
             closeLightbox
         );
 
+
+        previousButton.addEventListener(
+            "click",
+            previousArtwork
+        );
+
+
+        nextButton.addEventListener(
+            "click",
+            nextArtwork
+        );
+
+
+        /* =========================================
+           CLICK BACKGROUND TO CLOSE
+        ========================================== */
 
         lightbox.addEventListener(
             "click",
@@ -448,15 +555,48 @@
         );
 
 
+        /* =========================================
+           KEYBOARD
+        ========================================== */
+
         document.addEventListener(
             "keydown",
             function (event) {
+
+                if (
+                    !lightbox.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    return;
+
+                }
+
 
                 if (
                     event.key === "Escape"
                 ) {
 
                     closeLightbox();
+
+                }
+
+
+                if (
+                    event.key === "ArrowLeft"
+                ) {
+
+                    previousArtwork();
+
+                }
+
+
+                if (
+                    event.key === "ArrowRight"
+                ) {
+
+                    nextArtwork();
 
                 }
 
