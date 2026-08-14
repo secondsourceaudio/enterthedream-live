@@ -944,496 +944,204 @@ if (gl) {
     `;
 
 
-    const fragmentShaderSource = `
+const fragmentShaderSource = `
 
-        precision mediump float;
+    precision mediump float;
 
+    varying vec2 v_uv;
 
-        varying vec2 v_uv;
+    uniform sampler2D u_texture;
+    uniform vec2 u_pointer;
+    uniform vec2 u_velocity;
+    uniform float u_time;
+    uniform float u_motion;
 
+    float randomValue(float value) {
+        return fract(
+            sin(value * 12.9898) * 43758.5453
+        );
+    }
 
-        uniform sampler2D u_texture;
+    void main() {
 
-        uniform vec2 u_pointer;
+        vec2 baseUV = v_uv;
+        vec2 uv = baseUV;
 
-        uniform vec2 u_velocity;
+        /* =================================
+           1) ALWAYS-BUBBLING CENTER
+        ================================= */
 
-        uniform float u_time;
+        vec2 center = vec2(0.5, 0.5);
+        vec2 centerDelta = baseUV - center;
+        float centerDistance = length(centerDelta);
+        vec2 centerDirection = normalize(centerDelta + vec2(0.0001));
 
-        uniform float u_motion;
+        float bubbleOne =
+            sin(centerDistance * 50.0 - u_time * 3.2);
 
+        float bubbleTwo =
+            sin(centerDistance * 28.0 - u_time * 2.1);
 
-        float randomValue(
-            float value
-        ) {
+        float bubbleThree =
+            sin(centerDistance * 76.0 - u_time * 4.3);
 
-            return fract(
+        float centerBubble =
+            bubbleOne * 0.50 +
+            bubbleTwo * 0.32 +
+            bubbleThree * 0.18;
 
-                sin(
-                    value
-                    *
-                    12.9898
+        float centerInfluence =
+            smoothstep(0.76, 0.03, centerDistance);
+
+        uv +=
+            centerDirection *
+            centerBubble *
+            centerInfluence *
+            0.0055;
+
+        /* =================================
+           2) SOFT WATER BREATHING
+        ================================= */
+
+        uv.x +=
+            sin(uv.y * 10.0 + u_time * 0.6) * 0.0022;
+
+        uv.y +=
+            cos(uv.x * 9.0 - u_time * 0.45) * 0.0018;
+
+        /* =================================
+           3) WINDOWS 95 / 98 STYLE LOGO WAVE
+           Subtle "cloth / banner" motion
+        ================================= */
+
+        float logoWaveX =
+            sin((baseUV.y * 9.0) - (u_time * 1.4)) * 0.0065;
+
+        float logoWaveY =
+            cos((baseUV.x * 7.0) - (u_time * 1.1)) * 0.0040;
+
+        float logoWaveDetail =
+            sin((baseUV.y * 18.0) + (u_time * 2.0)) * 0.0018;
+
+        uv.x += logoWaveX + logoWaveDetail;
+        uv.y += logoWaveY;
+
+        /* =================================
+           4) POINTER LIQUID RIPPLE
+        ================================= */
+
+        vec2 pointerDelta = baseUV - u_pointer;
+        float pointerDistance = length(pointerDelta);
+
+        float pointerInfluence =
+            smoothstep(0.38, 0.0, pointerDistance);
+
+        vec2 pointerDirection =
+            normalize(pointerDelta + vec2(0.0001));
+
+        float pointerWave =
+            sin(pointerDistance * 60.0 - u_time * 7.0);
+
+        float pointerWaveTwo =
+            sin(pointerDistance * 27.0 - u_time * 4.0);
+
+        float combinedWave =
+            pointerWave * 0.68 +
+            pointerWaveTwo * 0.32;
+
+        uv +=
+            pointerDirection *
+            combinedWave *
+            pointerInfluence *
+            (0.007 + u_motion * 0.03);
+
+        /* =================================
+           5) SMEAR WHEN MOVING
+        ================================= */
+
+        uv -=
+            u_velocity *
+            pointerInfluence *
+            (0.20 + u_motion * 0.55);
+
+        /* =================================
+           6) TV-LIKE HORIZONTAL TEARING
+           No random colours, only geometry
+        ================================= */
+
+        float frame = floor(u_time * 11.0);
+        float row = floor(baseUV.y * 48.0);
+
+        float noise =
+            randomValue(row + frame * 17.0);
+
+        float tearGate =
+            step(0.93 - u_motion * 0.17, noise);
+
+        float tearAmount =
+            (noise - 0.5) *
+            tearGate *
+            (0.006 + u_motion * 0.055);
+
+        uv.x += tearAmount;
+
+        uv.x +=
+            sin(baseUV.y * 220.0 + u_time * 8.0) *
+            u_motion *
+            0.0025;
+
+        /* =================================
+           7) SAFE TEXTURE AREA
+        ================================= */
+
+        uv = clamp(
+            uv,
+            vec2(0.002),
+            vec2(0.998)
+        );
+
+        /* =================================
+           8) SAMPLE IMAGE
+        ================================= */
+
+        vec4 mainSample =
+            texture2D(u_texture, uv);
+
+        vec4 smearSample =
+            texture2D(
+                u_texture,
+                clamp(
+                    uv - u_velocity * pointerInfluence * 0.9,
+                    vec2(0.002),
+                    vec2(0.998)
                 )
-
-                *
-
-                43758.5453
-
             );
 
-        }
-
-
-        void main() {
-
-            vec2 baseUV =
-                v_uv;
-
-
-            vec2 uv =
-                baseUV;
-
-
-            /* =================================
-               ALWAYS BUBBLING FROM CENTER
-            ================================= */
-
-
-            vec2 center =
-                vec2(
-                    0.5,
-                    0.5
-                );
-
-
-            vec2 centerDelta =
-                baseUV
-                -
-                center;
-
-
-            float centerDistance =
-                length(
-                    centerDelta
-                );
-
-
-            vec2 centerDirection =
-                normalize(
-                    centerDelta
-                    +
-                    vec2(
-                        0.0001
-                    )
-                );
-
-
-            float bubbleOne =
-                sin(
-                    centerDistance
-                    *
-                    50.0
-                    -
-                    u_time
-                    *
-                    3.2
-                );
-
-
-            float bubbleTwo =
-                sin(
-                    centerDistance
-                    *
-                    28.0
-                    -
-                    u_time
-                    *
-                    2.1
-                );
-
-
-            float bubbleThree =
-                sin(
-                    centerDistance
-                    *
-                    76.0
-                    -
-                    u_time
-                    *
-                    4.3
-                );
-
-
-            float centerBubble =
-                bubbleOne
-                *
-                0.50
-
-                +
-
-                bubbleTwo
-                *
-                0.32
-
-                +
-
-                bubbleThree
-                *
-                0.18;
-
-
-            float centerInfluence =
-                smoothstep(
-                    0.76,
-                    0.03,
-                    centerDistance
-                );
-
-
-            uv +=
-                centerDirection
-                *
-                centerBubble
-                *
-                centerInfluence
-                *
-                0.0055;
-
-
-            /* =================================
-               WATER BREATHING
-            ================================= */
-
-
-            uv.x +=
-                sin(
-                    uv.y
-                    *
-                    10.0
-                    +
-                    u_time
-                    *
-                    0.6
-                )
-                *
-                0.0022;
-
-
-            uv.y +=
-                cos(
-                    uv.x
-                    *
-                    9.0
-                    -
-                    u_time
-                    *
-                    0.45
-                )
-                *
-                0.0018;
-
-
-            /* =================================
-               POINTER LIQUID
-            ================================= */
-
-
-            vec2 pointerDelta =
-                baseUV
-                -
-                u_pointer;
-
-
-            float pointerDistance =
-                length(
-                    pointerDelta
-                );
-
-
-            float pointerInfluence =
-                smoothstep(
-                    0.38,
-                    0.0,
-                    pointerDistance
-                );
-
-
-            vec2 pointerDirection =
-                normalize(
-                    pointerDelta
-                    +
-                    vec2(
-                        0.0001
-                    )
-                );
-
-
-            float pointerWave =
-                sin(
-                    pointerDistance
-                    *
-                    60.0
-                    -
-                    u_time
-                    *
-                    7.0
-                );
-
-
-            float pointerWaveTwo =
-                sin(
-                    pointerDistance
-                    *
-                    27.0
-                    -
-                    u_time
-                    *
-                    4.0
-                );
-
-
-            float combinedWave =
-                pointerWave
-                *
-                0.68
-
-                +
-
-                pointerWaveTwo
-                *
-                0.32;
-
-
-            uv +=
-                pointerDirection
-                *
-                combinedWave
-                *
-                pointerInfluence
-                *
-                (
-                    0.007
-                    +
-                    u_motion
-                    *
-                    0.03
-                );
-
-
-            /* =================================
-               SMEAR WHEN MOVING
-            ================================= */
-
-
-            uv -=
-                u_velocity
-                *
-                pointerInfluence
-                *
-                (
-                    0.20
-                    +
-                    u_motion
-                    *
-                    0.55
-                );
-
-
-            /* =================================
-               TV-LIKE HORIZONTAL TEARING
-
-               Same image colour.
-               NO RGB SPLITTING.
-               NO RANDOM COLOUR.
-            ================================= */
-
-
-            float frame =
-                floor(
-                    u_time
-                    *
-                    11.0
-                );
-
-
-            float row =
-                floor(
-                    baseUV.y
-                    *
-                    48.0
-                );
-
-
-            float noise =
-                randomValue(
-                    row
-                    +
-                    frame
-                    *
-                    17.0
-                );
-
-
-            float tearGate =
-                step(
-                    0.93
-                    -
-                    u_motion
-                    *
-                    0.17,
-                    noise
-                );
-
-
-            float tearAmount =
-                (
-                    noise
-                    -
-                    0.5
-                )
-                *
-                tearGate
-                *
-                (
-                    0.006
-                    +
-                    u_motion
-                    *
-                    0.055
-                );
-
-
-            uv.x +=
-                tearAmount;
-
-
-            /*
-               Fine television-style line wobble.
-               Geometry only — no colour shift.
-            */
-
-
-            uv.x +=
-                sin(
-                    baseUV.y
-                    *
-                    220.0
-                    +
-                    u_time
-                    *
-                    8.0
-                )
-                *
-                u_motion
-                *
-                0.0025;
-
-
-            /* =================================
-               SAFE TEXTURE AREA
-            ================================= */
-
-
-            uv =
-                clamp(
-                    uv,
-                    vec2(
-                        0.002
-                    ),
-                    vec2(
-                        0.998
-                    )
-                );
-
-
-            /* =================================
-               ORIGINAL COLOUR
-            ================================= */
-
-
-            vec4 mainSample =
-                texture2D(
-                    u_texture,
-                    uv
-                );
-
-
-            vec4 smearSample =
-                texture2D(
-
-                    u_texture,
-
-                    clamp(
-
-                        uv
-                        -
-                        u_velocity
-                        *
-                        pointerInfluence
-                        *
-                        0.9,
-
-                        vec2(
-                            0.002
-                        ),
-
-                        vec2(
-                            0.998
-                        )
-
-                    )
-
-                );
-
-
-            float smearAmount =
-                clamp(
-                    u_motion
-                    *
-                    pointerInfluence
-                    *
-                    0.35,
-                    0.0,
-                    0.35
-                );
-
-
-            vec4 finalSample =
-                mix(
-                    mainSample,
-                    smearSample,
-                    smearAmount
-                );
-
-
-            /*
-               Tiny scan-line brightness variation,
-               still preserving original colours.
-            */
-
-
-            float lineShade =
-                0.985
-                +
-                0.015
-                *
-                sin(
-                    baseUV.y
-                    *
-                    700.0
-                );
-
-
-            finalSample.rgb *=
-                lineShade;
-
-
-            gl_FragColor =
-                finalSample;
-
-        }
-
-    `;
+        float smearAmount =
+            clamp(
+                u_motion * pointerInfluence * 0.35,
+                0.0,
+                0.35
+            );
+
+        vec4 finalSample =
+            mix(mainSample, smearSample, smearAmount);
+
+        /* =================================
+           9) VERY LIGHT SCAN-LINE SHADE
+           Keeps original colours
+        ================================= */
+
+        float lineShade =
+            0.985 +
+            0.015 * sin(baseUV.y * 700.0);
+
+        finalSample.rgb *= lineShade;
+
+        gl_FragColor = finalSample;
+    }
+
+`;
 
 
     function createShader(
