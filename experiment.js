@@ -7,22 +7,14 @@
 const canvas =
     document.getElementById("visual");
 
-
 const container =
     document.getElementById("visual-container");
-
-
-const fallbackImage =
-    document.getElementById("fallback-image");
-
 
 const interactionMessage =
     document.getElementById("interaction-message");
 
-
 const audio =
     document.getElementById("experiment-audio");
-
 
 const soundButton =
     document.getElementById("sound-button");
@@ -30,46 +22,46 @@ const soundButton =
 
 /* =========================================
    AUDIO
+
+   Kept completely separate from WebGL.
 ========================================= */
 
-let audioStarted = false;
-
-let userMuted = false;
-
-
-audio.volume =
-    0.7;
+let soundRequested =
+    true;
 
 
 /*
-   Update the speaker icon.
+   Update the icon according to what is
+   ACTUALLY happening, not just what we
+   requested.
 */
 
-function updateSoundButton() {
+function updateSoundIcon() {
 
-    const muted =
-        userMuted
-        ||
-        audio.muted;
+    const audible =
+        soundRequested
+        &&
+        !audio.paused
+        &&
+        !audio.muted;
 
 
     soundButton.classList.toggle(
         "is-muted",
-        muted
+        !audible
     );
 
 
-    if (muted) {
+    if (audible) {
 
         soundButton.setAttribute(
             "aria-label",
-            "Unmute sound"
+            "Mute sound"
         );
-
 
         soundButton.setAttribute(
             "title",
-            "Unmute sound"
+            "Mute sound"
         );
 
     }
@@ -78,13 +70,12 @@ function updateSoundButton() {
 
         soundButton.setAttribute(
             "aria-label",
-            "Mute sound"
+            "Play sound"
         );
-
 
         soundButton.setAttribute(
             "title",
-            "Mute sound"
+            "Play sound"
         );
 
     }
@@ -93,95 +84,50 @@ function updateSoundButton() {
 
 
 /*
-   Try audible autoplay immediately.
+   Attempt to start the music.
 
-   Some browsers allow this.
-   Others will reject it until the
-   visitor interacts with the page.
+   This works immediately when the browser
+   permits autoplay, and after a user gesture
+   when autoplay was blocked.
 */
 
-async function attemptAutoplay() {
+function startSound() {
 
-    try {
-
-        audio.muted =
-            false;
-
-
-        await audio.play();
-
-
-        audioStarted =
-            true;
-
-
-        updateSoundButton();
-
-    }
-
-    catch (error) {
-
-        /*
-           Browser blocked audible autoplay.
-
-           Keep the intended state as sound ON,
-           but start it on the first interaction.
-        */
-
-        audioStarted =
-            false;
-
-
-        console.log(
-            "Audible autoplay blocked by browser."
-        );
-
-    }
-
-}
-
-
-/*
-   Called after a click/touch if autoplay
-   was initially blocked.
-*/
-
-async function ensureAudioStarted() {
-
-    if (
-        audioStarted
-        ||
-        userMuted
-    ) {
+    if (!soundRequested) {
 
         return;
 
     }
 
 
-    try {
-
-        audio.muted =
-            false;
+    audio.muted =
+        false;
 
 
-        await audio.play();
+    const promise =
+        audio.play();
 
 
-        audioStarted =
-            true;
+    if (promise !== undefined) {
 
+        promise
+            .then(function () {
 
-        updateSoundButton();
+                updateSoundIcon();
 
-    }
+            })
+            .catch(function () {
 
-    catch (error) {
+                /*
+                   Audible autoplay was blocked.
 
-        console.log(
-            "Audio could not start:",
-            error
-        );
+                   This isn't an error in the site;
+                   first click/touch will retry it.
+                */
+
+                updateSoundIcon();
+
+            });
 
     }
 
@@ -189,101 +135,149 @@ async function ensureAudioStarted() {
 
 
 /*
-   Speaker button.
+   SOUND BUTTON
+
+   This intentionally does not rely on any
+   WebGL state.
 */
 
 soundButton.addEventListener(
-    "pointerdown",
+    "click",
     function (event) {
 
-        /*
-           Prevent this click from also
-           creating a visual ripple.
-        */
-
-        event.stopPropagation();
-
-    }
-);
-
-
-soundButton.addEventListener(
-    "click",
-    async function (event) {
+        event.preventDefault();
 
         event.stopPropagation();
 
 
-        if (userMuted) {
+        const currentlyAudible =
+            !audio.paused
+            &&
+            !audio.muted;
+
+
+        if (currentlyAudible) {
 
             /*
-               TURN SOUND ON
+               MUTE
             */
 
-            userMuted =
+            soundRequested =
                 false;
 
 
             audio.muted =
-                false;
+                true;
 
 
-            try {
-
-                await audio.play();
-
-
-                audioStarted =
-                    true;
-
-            }
-
-            catch (error) {
-
-                console.log(
-                    "Audio could not start:",
-                    error
-                );
-
-            }
+            updateSoundIcon();
 
         }
 
         else {
 
             /*
-               TURN SOUND OFF
+               UNMUTE / START
             */
 
-            userMuted =
+            soundRequested =
                 true;
 
 
             audio.muted =
-                true;
+                false;
+
+
+            const promise =
+                audio.play();
+
+
+            if (promise !== undefined) {
+
+                promise
+                    .then(
+                        updateSoundIcon
+                    )
+                    .catch(
+                        updateSoundIcon
+                    );
+
+            }
 
         }
-
-
-        updateSoundButton();
 
     }
 );
 
 
+audio.addEventListener(
+    "play",
+    updateSoundIcon
+);
+
+
+audio.addEventListener(
+    "pause",
+    updateSoundIcon
+);
+
+
+audio.addEventListener(
+    "volumechange",
+    updateSoundIcon
+);
+
+
 /*
-   Initial visual state:
-   speaker is shown as ON.
+   Try autoplay immediately.
 */
 
-updateSoundButton();
+startSound();
+
+updateSoundIcon();
 
 
 /*
-   Request autoplay as soon as the page loads.
+   If autoplay was blocked, the first click
+   or touch anywhere on the experiment starts
+   the track.
+
+   Muting with the speaker disables this,
+   because soundRequested becomes false.
 */
 
-attemptAutoplay();
+document.addEventListener(
+    "pointerdown",
+    function (event) {
+
+        if (
+            event.target.closest(
+                "#sound-button"
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        if (
+            soundRequested
+            &&
+            (
+                audio.paused
+                ||
+                audio.muted
+            )
+        ) {
+
+            startSound();
+
+        }
+
+    },
+    true
+);
 
 
 /* =========================================
@@ -300,34 +294,19 @@ const gl =
     );
 
 
-function showFallback() {
+if (!gl) {
 
     canvas.style.display =
         "none";
-
-
-    fallbackImage.style.display =
-        "block";
-
-}
-
-
-if (!gl) {
-
-    showFallback();
 
 }
 
 
 /* =========================================
-   WEBGL EXPERIMENT
+   WEBGL PROGRAM
 ========================================= */
 
 if (gl) {
-
-    /* =========================================
-       VERTEX SHADER
-    ========================================== */
 
     const vertexShaderSource = `
 
@@ -354,13 +333,9 @@ if (gl) {
     `;
 
 
-    /* =========================================
-       FRAGMENT SHADER
-    ========================================== */
-
     const fragmentShaderSource = `
 
-        precision mediump float;
+        precision highp float;
 
 
         varying vec2 v_uv;
@@ -374,11 +349,15 @@ if (gl) {
 
         uniform vec2 u_imageResolution;
 
+        uniform vec2 u_pointerVelocity;
+
         uniform float u_time;
 
         uniform float u_strength;
 
-        uniform float u_pulse;
+        uniform float u_motion;
+
+        uniform float u_pulseAge;
 
 
         void main() {
@@ -393,6 +372,337 @@ if (gl) {
                 u_resolution.y;
 
 
+            /*
+               =================================
+               GLOBAL LIQUID FLOW
+               =================================
+            */
+
+
+            float flowA =
+                sin(
+                    uv.y
+                    *
+                    11.0
+                    +
+                    u_time
+                    *
+                    0.75
+                    +
+                    sin(
+                        uv.x
+                        *
+                        7.0
+                        -
+                        u_time
+                        *
+                        0.35
+                    )
+                );
+
+
+            float flowB =
+                cos(
+                    uv.x
+                    *
+                    9.0
+                    -
+                    u_time
+                    *
+                    0.55
+                    +
+                    sin(
+                        uv.y
+                        *
+                        6.0
+                        +
+                        u_time
+                        *
+                        0.25
+                    )
+                );
+
+
+            vec2 flow =
+                vec2(
+                    flowA,
+                    flowB
+                );
+
+
+            vec2 warpedUV =
+                uv;
+
+
+            /*
+               Calm when idle, much more fluid
+               while the pointer is moving.
+            */
+
+            warpedUV +=
+                flow
+                *
+                (
+                    0.0015
+                    +
+                    u_strength
+                    *
+                    0.008
+                    +
+                    u_motion
+                    *
+                    0.022
+                );
+
+
+            /*
+               =================================
+               POINTER FIELD
+               =================================
+            */
+
+
+            vec2 delta =
+                uv
+                -
+                u_mouse;
+
+
+            delta.x *=
+                screenAspect;
+
+
+            float distanceFromMouse =
+                length(
+                    delta
+                );
+
+
+            float influence =
+                smoothstep(
+                    0.40,
+                    0.0,
+                    distanceFromMouse
+                );
+
+
+            /*
+               =================================
+               SWIRL
+               =================================
+            */
+
+
+            float swirlAngle =
+                influence
+                *
+                (
+                    u_strength
+                    *
+                    0.75
+                    +
+                    u_motion
+                    *
+                    2.8
+                );
+
+
+            float cosineAngle =
+                cos(
+                    swirlAngle
+                );
+
+
+            float sineAngle =
+                sin(
+                    swirlAngle
+                );
+
+
+            mat2 rotation =
+                mat2(
+                    cosineAngle,
+                    -sineAngle,
+                    sineAngle,
+                    cosineAngle
+                );
+
+
+            vec2 rotatedDelta =
+                rotation
+                *
+                delta;
+
+
+            vec2 swirlOffset =
+                rotatedDelta
+                -
+                delta;
+
+
+            swirlOffset.x /=
+                screenAspect;
+
+
+            warpedUV +=
+                swirlOffset
+                *
+                0.55;
+
+
+            /*
+               =================================
+               POINTER DRAG
+
+               Fast movement pulls the image
+               behind the cursor.
+               =================================
+            */
+
+
+            warpedUV -=
+                u_pointerVelocity
+                *
+                influence
+                *
+                (
+                    0.15
+                    +
+                    u_motion
+                    *
+                    0.5
+                );
+
+
+            /*
+               =================================
+               ACTIVE WAVES
+               =================================
+            */
+
+
+            float waveOne =
+                sin(
+                    distanceFromMouse
+                    *
+                    55.0
+                    -
+                    u_time
+                    *
+                    8.0
+                );
+
+
+            float waveTwo =
+                sin(
+                    distanceFromMouse
+                    *
+                    24.0
+                    +
+                    u_time
+                    *
+                    4.0
+                );
+
+
+            float activeWave =
+                (
+                    waveOne
+                    *
+                    0.65
+                    +
+                    waveTwo
+                    *
+                    0.35
+                )
+                *
+                influence;
+
+
+            vec2 radialDirection =
+                normalize(
+                    delta
+                    +
+                    vec2(
+                        0.0001
+                    )
+                );
+
+
+            radialDirection.x /=
+                screenAspect;
+
+
+            warpedUV +=
+                radialDirection
+                *
+                activeWave
+                *
+                (
+                    0.004
+                    +
+                    u_motion
+                    *
+                    0.018
+                );
+
+
+            /*
+               =================================
+               CLICK / TOUCH RIPPLE
+
+               Ripple travels outward instead
+               of simply vibrating in place.
+               =================================
+            */
+
+
+            float pulseLife =
+                max(
+                    0.0,
+                    1.0
+                    -
+                    u_pulseAge
+                    /
+                    2.2
+                );
+
+
+            float pulseRadius =
+                u_pulseAge
+                *
+                0.32;
+
+
+            float pulseRing =
+                exp(
+                    -abs(
+                        distanceFromMouse
+                        -
+                        pulseRadius
+                    )
+                    *
+                    70.0
+                )
+                *
+                pulseLife;
+
+
+            warpedUV +=
+                radialDirection
+                *
+                pulseRing
+                *
+                0.045;
+
+
+            /*
+               =================================
+               OBJECT-FIT: CONTAIN
+               =================================
+            */
+
+
             float imageAspect =
                 u_imageResolution.x
                 /
@@ -400,12 +710,8 @@ if (gl) {
 
 
             vec2 imageUV =
-                uv;
+                warpedUV;
 
-
-            /*
-               OBJECT-FIT: CONTAIN
-            */
 
             if (
                 screenAspect
@@ -421,7 +727,7 @@ if (gl) {
 
                 imageUV.x =
                     (
-                        uv.x
+                        warpedUV.x
                         -
                         0.5
                     )
@@ -442,7 +748,7 @@ if (gl) {
 
                 imageUV.y =
                     (
-                        uv.y
+                        warpedUV.y
                         -
                         0.5
                     )
@@ -455,7 +761,7 @@ if (gl) {
 
 
             /*
-               BLACK OUTSIDE ARTWORK
+               Black outside the image.
             */
 
             if (
@@ -481,186 +787,80 @@ if (gl) {
             }
 
 
-            /* =====================================
-               POINTER
-            ===================================== */
+            /*
+               =================================
+               CHROMATIC LIQUID SEPARATION
 
-            vec2 delta =
-                uv
-                -
-                u_mouse;
-
-
-            delta.x *=
-                screenAspect;
+               Very subtle while idle, stronger
+               during quick movement.
+               =================================
+            */
 
 
-            float distanceFromMouse =
-                length(
-                    delta
-                );
-
-
-            float influence =
-                smoothstep(
-                    0.32,
-                    0.0,
-                    distanceFromMouse
-                );
-
-
-            /* =====================================
-               LIQUID WAVES
-            ===================================== */
-
-            float wave1 =
-                sin(
-                    distanceFromMouse
-                    *
-                    38.0
-                    -
-                    u_time
-                    *
-                    4.0
-                );
-
-
-            float wave2 =
-                sin(
-                    distanceFromMouse
-                    *
-                    17.0
+            vec2 chromaticOffset =
+                flow
+                *
+                (
+                    0.0005
                     +
-                    u_time
+                    u_motion
                     *
-                    2.0
+                    0.0028
                 );
 
 
-            float wave =
-                wave1
-                *
-                0.65
-                +
-                wave2
-                *
-                0.35;
-
-
-            float distortion =
-                wave
-                *
-                influence
-                *
-                0.018
-                *
-                u_strength;
-
-
-            /* =====================================
-               CLICK / TOUCH RIPPLE
-            ===================================== */
-
-            float pulseWave =
-                sin(
-                    distanceFromMouse
-                    *
-                    50.0
-                    -
-                    u_pulse
-                    *
-                    11.0
-                );
-
-
-            float pulseEnvelope =
-                exp(
-                    -distanceFromMouse
-                    *
-                    5.0
-                );
-
-
-            distortion +=
-                pulseWave
-                *
-                pulseEnvelope
-                *
-                0.028
-                *
-                u_pulse;
-
-
-            /* =====================================
-               DISTORT TEXTURE
-            ===================================== */
-
-            vec2 direction =
-                normalize(
-                    delta
-                    +
+            vec2 safeUV =
+                clamp(
+                    imageUV,
                     vec2(
-                        0.0001,
-                        0.0001
+                        0.002
+                    ),
+                    vec2(
+                        0.998
                     )
                 );
 
 
-            direction.x /=
-                screenAspect;
-
-
-            imageUV +=
-                direction
-                *
-                distortion;
-
-
-            /* =====================================
-               SUBTLE MOTION
-            ===================================== */
-
-            imageUV.x +=
-                sin(
-                    imageUV.y
-                    *
-                    9.0
-                    +
-                    u_time
-                    *
-                    0.4
-                )
-                *
-                0.0015;
-
-
-            imageUV.y +=
-                sin(
-                    imageUV.x
-                    *
-                    7.0
-                    -
-                    u_time
-                    *
-                    0.25
-                )
-                *
-                0.0008;
-
-
-            /* =====================================
-               FINAL IMAGE
-            ===================================== */
-
-            vec4 colour =
+            float red =
                 texture2D(
                     u_texture,
-                    imageUV
-                );
+                    clamp(
+                        safeUV
+                        +
+                        chromaticOffset,
+                        vec2(0.002),
+                        vec2(0.998)
+                    )
+                ).r;
+
+
+            float green =
+                texture2D(
+                    u_texture,
+                    safeUV
+                ).g;
+
+
+            float blue =
+                texture2D(
+                    u_texture,
+                    clamp(
+                        safeUV
+                        -
+                        chromaticOffset,
+                        vec2(0.002),
+                        vec2(0.998)
+                    )
+                ).b;
 
 
             gl_FragColor =
-                colour;
+                vec4(
+                    red,
+                    green,
+                    blue,
+                    1.0
+                );
 
         }
 
@@ -668,7 +868,7 @@ if (gl) {
 
 
     /* =========================================
-       CREATE SHADER
+       SHADER COMPILATION
     ========================================== */
 
     function createShader(
@@ -677,7 +877,9 @@ if (gl) {
     ) {
 
         const shader =
-            gl.createShader(type);
+            gl.createShader(
+                type
+            );
 
 
         gl.shaderSource(
@@ -699,13 +901,9 @@ if (gl) {
         ) {
 
             console.error(
-                "Shader error:",
-                gl.getShaderInfoLog(shader)
-            );
-
-
-            gl.deleteShader(
-                shader
+                gl.getShaderInfoLog(
+                    shader
+                )
             );
 
 
@@ -732,21 +930,6 @@ if (gl) {
             fragmentShaderSource
         );
 
-
-    if (
-        !vertexShader
-        ||
-        !fragmentShader
-    ) {
-
-        showFallback();
-
-    }
-
-
-    /* =========================================
-       PROGRAM
-    ========================================== */
 
     if (
         vertexShader
@@ -776,24 +959,11 @@ if (gl) {
 
 
         if (
-            !gl.getProgramParameter(
+            gl.getProgramParameter(
                 program,
                 gl.LINK_STATUS
             )
         ) {
-
-            console.error(
-                "Program error:",
-                gl.getProgramInfoLog(program)
-            );
-
-
-            showFallback();
-
-        }
-
-
-        else {
 
             gl.useProgram(
                 program
@@ -801,7 +971,7 @@ if (gl) {
 
 
             /* =====================================
-               FULLSCREEN PLANE
+               PLANE
             ===================================== */
 
             const positionBuffer =
@@ -882,6 +1052,13 @@ if (gl) {
                 );
 
 
+            const velocityLocation =
+                gl.getUniformLocation(
+                    program,
+                    "u_pointerVelocity"
+                );
+
+
             const timeLocation =
                 gl.getUniformLocation(
                     program,
@@ -896,10 +1073,17 @@ if (gl) {
                 );
 
 
-            const pulseLocation =
+            const motionLocation =
                 gl.getUniformLocation(
                     program,
-                    "u_pulse"
+                    "u_motion"
+                );
+
+
+            const pulseAgeLocation =
+                gl.getUniformLocation(
+                    program,
+                    "u_pulseAge"
                 );
 
 
@@ -964,7 +1148,7 @@ if (gl) {
 
 
             /* =====================================
-               LOAD DRIP IMAGE
+               LOAD ARTWORK
             ===================================== */
 
             const image =
@@ -987,34 +1171,22 @@ if (gl) {
                 1;
 
 
-            image.onerror =
-                function () {
-
-                    console.error(
-                        "Could not load drip_cover_front.jpg"
-                    );
-
-
-                    showFallback();
-
-                };
-
-
             image.onload =
                 function () {
 
                     /*
-                       Resize internally if the
-                       artwork exceeds the GPU's
-                       safe texture dimensions.
+                       Resize the print-resolution
+                       source internally.
+
+                       Your JPG itself is unchanged.
                     */
 
-                    const maximumTextureSize =
+                    const maxSize =
                         Math.min(
                             gl.getParameter(
                                 gl.MAX_TEXTURE_SIZE
                             ),
-                            4096
+                            2048
                         );
 
 
@@ -1026,7 +1198,7 @@ if (gl) {
                         image.naturalHeight;
 
 
-                    const longestSide =
+                    const longest =
                         Math.max(
                             width,
                             height
@@ -1034,15 +1206,15 @@ if (gl) {
 
 
                     if (
-                        longestSide
+                        longest
                         >
-                        maximumTextureSize
+                        maxSize
                     ) {
 
                         const scale =
-                            maximumTextureSize
+                            maxSize
                             /
-                            longestSide;
+                            longest;
 
 
                         width =
@@ -1077,13 +1249,13 @@ if (gl) {
                         height;
 
 
-                    const textureContext =
+                    const context =
                         textureCanvas.getContext(
                             "2d"
                         );
 
 
-                    textureContext.drawImage(
+                    context.drawImage(
                         image,
                         0,
                         0,
@@ -1100,20 +1272,15 @@ if (gl) {
                         height;
 
 
-                    gl.activeTexture(
-                        gl.TEXTURE0
+                    gl.pixelStorei(
+                        gl.UNPACK_FLIP_Y_WEBGL,
+                        true
                     );
 
 
                     gl.bindTexture(
                         gl.TEXTURE_2D,
                         texture
-                    );
-
-
-                    gl.pixelStorei(
-                        gl.UNPACK_FLIP_Y_WEBGL,
-                        true
                     );
 
 
@@ -1134,45 +1301,36 @@ if (gl) {
                     );
 
 
-                    const error =
-                        gl.getError();
-
-
-                    if (
-                        error
-                        !==
-                        gl.NO_ERROR
-                    ) {
-
-                        console.error(
-                            "WebGL texture error:",
-                            error
-                        );
-
-
-                        showFallback();
-
-
-                        return;
-
-                    }
-
-
                     imageLoaded =
                         true;
+
+
+                    canvas.classList.add(
+                        "is-ready"
+                    );
 
                 };
 
 
+            image.onerror =
+                function () {
+
+                    console.error(
+                        "DRIP image failed to load."
+                    );
+
+            };
+
+
             /* =====================================
-               POINTER STATE
+               POINTER / TOUCH STATE
             ===================================== */
 
-            let mouseX =
+            let pointerX =
                 0.5;
 
 
-            let mouseY =
+            let pointerY =
                 0.5;
 
 
@@ -1180,20 +1338,63 @@ if (gl) {
                 0;
 
 
-            let currentStrength =
+            let strength =
                 0;
 
 
-            let pulse =
+            let targetVelocityX =
                 0;
+
+
+            let targetVelocityY =
+                0;
+
+
+            let velocityX =
+                0;
+
+
+            let velocityY =
+                0;
+
+
+            let targetMotion =
+                0;
+
+
+            let motion =
+                0;
+
+
+            let pulseStarted =
+                -10000;
 
 
             let hasInteracted =
                 false;
 
 
+            function clamp(
+                value,
+                minimum,
+                maximum
+            ) {
+
+                return Math.max(
+                    minimum,
+                    Math.min(
+                        maximum,
+                        value
+                    )
+                );
+
+            }
+
+
             /* =====================================
-               POINTER POSITION
+               UPDATE POINTER
+
+               Works for mouse and touch.
             ===================================== */
 
             function updatePointer(
@@ -1202,10 +1403,11 @@ if (gl) {
             ) {
 
                 const rect =
-                    container.getBoundingClientRect();
+                    container
+                        .getBoundingClientRect();
 
 
-                mouseX =
+                const newX =
                     (
                         clientX
                         -
@@ -1215,7 +1417,7 @@ if (gl) {
                     rect.width;
 
 
-                mouseY =
+                const newY =
                     1
                     -
                     (
@@ -1225,6 +1427,58 @@ if (gl) {
                     )
                     /
                     rect.height;
+
+
+                const deltaX =
+                    newX
+                    -
+                    pointerX;
+
+
+                const deltaY =
+                    newY
+                    -
+                    pointerY;
+
+
+                pointerX =
+                    newX;
+
+
+                pointerY =
+                    newY;
+
+
+                targetVelocityX =
+                    clamp(
+                        deltaX
+                        *
+                        2.8,
+                        -0.08,
+                        0.08
+                    );
+
+
+                targetVelocityY =
+                    clamp(
+                        deltaY
+                        *
+                        2.8,
+                        -0.08,
+                        0.08
+                    );
+
+
+                targetMotion =
+                    Math.min(
+                        1,
+                        Math.hypot(
+                            deltaX,
+                            deltaY
+                        )
+                        *
+                        40
+                    );
 
 
                 targetStrength =
@@ -1237,9 +1491,11 @@ if (gl) {
                         true;
 
 
-                    interactionMessage.classList.add(
-                        "is-hidden"
-                    );
+                    interactionMessage
+                        .classList
+                        .add(
+                            "is-hidden"
+                        );
 
                 }
 
@@ -1247,8 +1503,54 @@ if (gl) {
 
 
             /* =====================================
-               POINTER EVENTS
+               POINTER / TOUCH EVENTS
             ===================================== */
+
+            container.addEventListener(
+                "pointerdown",
+                function (event) {
+
+                    if (
+                        event.target.closest(
+                            "#sound-button"
+                        )
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    /*
+                       Keeps finger movement attached
+                       to the artwork on mobile.
+                    */
+
+                    try {
+
+                        container
+                            .setPointerCapture(
+                                event.pointerId
+                            );
+
+                    }
+
+                    catch (error) {
+                    }
+
+
+                    updatePointer(
+                        event.clientX,
+                        event.clientY
+                    );
+
+
+                    pulseStarted =
+                        performance.now();
+
+                }
+            );
+
 
             container.addEventListener(
                 "pointermove",
@@ -1258,17 +1560,6 @@ if (gl) {
                         event.clientX,
                         event.clientY
                     );
-
-                }
-            );
-
-
-            container.addEventListener(
-                "pointerenter",
-                function () {
-
-                    targetStrength =
-                        1;
 
                 }
             );
@@ -1285,55 +1576,17 @@ if (gl) {
             );
 
 
-            container.addEventListener(
-                "pointerdown",
-                function (event) {
-
-                    /*
-                       Ignore speaker-button clicks.
-                    */
-
-                    if (
-                        event.target.closest(
-                            ".sound-button"
-                        )
-                    ) {
-
-                        return;
-
-                    }
-
-
-                    updatePointer(
-                        event.clientX,
-                        event.clientY
-                    );
-
-
-                    pulse =
-                        1;
-
-
-                    /*
-                       If autoplay was blocked,
-                       first interaction starts sound.
-                    */
-
-                    ensureAudioStarted();
-
-                }
-            );
-
-
             /* =====================================
-               CANVAS SIZE
+               RESIZE
             ===================================== */
 
-            function resizeWebGLCanvas() {
+            function resizeCanvas() {
 
                 const pixelRatio =
                     Math.min(
-                        window.devicePixelRatio || 1,
+                        window.devicePixelRatio
+                        ||
+                        1,
                         2
                     );
 
@@ -1355,9 +1608,13 @@ if (gl) {
 
 
                 if (
-                    canvas.width !== width
+                    canvas.width
+                    !==
+                    width
                     ||
-                    canvas.height !== height
+                    canvas.height
+                    !==
+                    height
                 ) {
 
                     canvas.width =
@@ -1380,14 +1637,8 @@ if (gl) {
             }
 
 
-            window.addEventListener(
-                "resize",
-                resizeWebGLCanvas
-            );
-
-
             /* =====================================
-               RENDER
+               ANIMATION
             ===================================== */
 
             const startTime =
@@ -1396,32 +1647,93 @@ if (gl) {
 
             function render() {
 
-                resizeWebGLCanvas();
+                resizeCanvas();
 
 
-                currentStrength +=
+                /*
+                   Smooth everything rather than
+                   making it snap to the pointer.
+                */
+
+                strength +=
                     (
                         targetStrength
                         -
-                        currentStrength
+                        strength
                     )
                     *
-                    0.06;
+                    0.08;
+
+
+                velocityX +=
+                    (
+                        targetVelocityX
+                        -
+                        velocityX
+                    )
+                    *
+                    0.2;
+
+
+                velocityY +=
+                    (
+                        targetVelocityY
+                        -
+                        velocityY
+                    )
+                    *
+                    0.2;
+
+
+                motion +=
+                    (
+                        targetMotion
+                        -
+                        motion
+                    )
+                    *
+                    0.15;
+
+
+                /*
+                   Motion trails decay gradually.
+                */
+
+                targetVelocityX *=
+                    0.82;
+
+
+                targetVelocityY *=
+                    0.82;
+
+
+                targetMotion *=
+                    0.88;
 
 
                 targetStrength *=
-                    0.985;
+                    0.992;
 
 
-                pulse *=
-                    0.94;
+                const now =
+                    performance.now();
 
 
                 const time =
                     (
-                        performance.now()
+                        now
                         -
                         startTime
+                    )
+                    /
+                    1000;
+
+
+                const pulseAge =
+                    (
+                        now
+                        -
+                        pulseStarted
                     )
                     /
                     1000;
@@ -1442,8 +1754,8 @@ if (gl) {
 
                     gl.uniform2f(
                         mouseLocation,
-                        mouseX,
-                        mouseY
+                        pointerX,
+                        pointerY
                     );
 
 
@@ -1461,6 +1773,13 @@ if (gl) {
                     );
 
 
+                    gl.uniform2f(
+                        velocityLocation,
+                        velocityX,
+                        velocityY
+                    );
+
+
                     gl.uniform1f(
                         timeLocation,
                         time
@@ -1469,13 +1788,19 @@ if (gl) {
 
                     gl.uniform1f(
                         strengthLocation,
-                        currentStrength
+                        strength
                     );
 
 
                     gl.uniform1f(
-                        pulseLocation,
-                        pulse
+                        motionLocation,
+                        motion
+                    );
+
+
+                    gl.uniform1f(
+                        pulseAgeLocation,
+                        pulseAge
                     );
 
 
@@ -1496,6 +1821,16 @@ if (gl) {
 
 
             render();
+
+        }
+
+        else {
+
+            console.error(
+                gl.getProgramInfoLog(
+                    program
+                )
+            );
 
         }
 

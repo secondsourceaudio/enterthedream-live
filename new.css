@@ -559,3 +559,16 @@ body {
     }
 
 }
+.site-nav {
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: flex-start;
+
+    gap: 18px;
+
+    flex-wrap: wrap;
+}

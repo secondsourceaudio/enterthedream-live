@@ -93,9 +93,6 @@ body {
     text-decoration: none;
 
     white-space: nowrap;
-
-    transition:
-        opacity 0.2s ease;
 }
 
 
@@ -118,9 +115,6 @@ body {
     text-decoration: none;
 
     white-space: nowrap;
-
-    transition:
-        opacity 0.2s ease;
 }
 
 
@@ -173,7 +167,14 @@ body {
 }
 
 
-.visual-canvas {
+/*
+   The normal image stays underneath WebGL.
+
+   This means the artwork remains visible even
+   while WebGL is loading or if WebGL fails.
+*/
+
+.fallback-image {
     position: absolute;
 
     inset: 0;
@@ -182,26 +183,34 @@ body {
 
     width: 100%;
     height: 100%;
-}
-
-
-/* =========================================
-   FALLBACK IMAGE
-========================================= */
-
-.fallback-image {
-    position: absolute;
-
-    inset: 0;
-
-    display: none;
-
-    width: 100%;
-    height: 100%;
 
     object-fit: contain;
 
     background: #050505;
+}
+
+
+.visual-canvas {
+    position: absolute;
+
+    inset: 0;
+
+    z-index: 2;
+
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    opacity: 0;
+
+    transition:
+        opacity 0.5s ease;
+}
+
+
+.visual-canvas.is-ready {
+    opacity: 1;
 }
 
 
@@ -221,7 +230,7 @@ body {
     z-index: 5;
 
     color:
-        rgba(255, 255, 255, 0.8);
+        rgba(255, 255, 255, 0.85);
 
     font-size: 8px;
 
@@ -244,14 +253,14 @@ body {
 
 
 /* =========================================
-   SOUND BUTTON
+   SOUND
 ========================================= */
 
 .sound-button {
     position: absolute;
 
-    right: 20px;
-    bottom: 18px;
+    right: 18px;
+    bottom: 17px;
 
     z-index: 20;
 
@@ -265,14 +274,14 @@ body {
     align-items: center;
     justify-content: center;
 
-    background:
-        rgba(5, 5, 5, 0.55);
-
     color: #ffffff;
+
+    background:
+        rgba(5, 5, 5, 0.6);
 
     border:
         1px solid
-        rgba(255, 255, 255, 0.25);
+        rgba(255, 255, 255, 0.3);
 
     border-radius: 50%;
 
@@ -280,26 +289,13 @@ body {
 
     transition:
         opacity 0.2s ease,
-        border-color 0.2s ease,
-        background 0.2s ease;
+        border-color 0.2s ease;
 }
 
 
 .sound-button:hover {
     border-color:
-        rgba(255, 255, 255, 0.7);
-
-    background:
-        rgba(5, 5, 5, 0.8);
-}
-
-
-.sound-button:focus-visible {
-    outline:
-        1px solid
-        #ffffff;
-
-    outline-offset: 3px;
+        rgba(255, 255, 255, 0.8);
 }
 
 
@@ -321,11 +317,6 @@ body {
 }
 
 
-.speaker-shape {
-    fill: none;
-}
-
-
 .sound-wave {
     display: block;
 }
@@ -335,8 +326,6 @@ body {
     display: none;
 }
 
-
-/* muted state */
 
 .sound-button.is-muted .sound-wave {
     display: none;
@@ -439,13 +428,13 @@ body {
 
 
     .sound-button {
-        right: 12px;
-        bottom: 12px;
+        right: 10px;
+        bottom: 10px;
 
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
 
-        padding: 7px;
+        padding: 8px;
     }
 
 
