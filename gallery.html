@@ -13,7 +13,7 @@
 
     <link
         rel="stylesheet"
-        href="./gallery.css?v=2"
+        href="./gallery.css?v=4"
     >
 </head>
 
@@ -47,6 +47,25 @@
         ></div>
 
     </main>
+
+
+    <footer class="legal-footer">
+
+        <p class="copyright-line">
+            © 2026 SECOND SOURCE AUDIO. ALL RIGHTS RESERVED.
+        </p>
+
+        <p class="legal-line">
+            ORIGINAL CONTENT ON THIS SITE, INCLUDING MUSIC, ARTWORK,
+            IMAGES, TEXT AND GRAPHIC DESIGN, MAY NOT BE COPIED,
+            REPRODUCED, DISTRIBUTED, MODIFIED OR USED COMMERCIALLY
+            WITHOUT PRIOR WRITTEN PERMISSION FROM THE APPLICABLE
+            RIGHTS HOLDER, EXCEPT AS PERMITTED BY LAW.
+            THIRD-PARTY WORKS, TRADEMARKS AND OTHER RIGHTS REMAIN
+            WITH THEIR RESPECTIVE OWNERS.
+        </p>
+
+    </footer>
 
 
     <!-- FULLSCREEN ARTWORK VIEW -->
@@ -91,17 +110,6 @@
 
 
     <script>
-
-        /* =========================================
-           ARTWORK ARCHIVE
-
-           To add another artwork later:
-
-           {
-               image: "./images/gallery/filename.png",
-               title: "TITLE"
-           }
-        ========================================= */
 
         const artworks = [
 
@@ -155,10 +163,6 @@
 
         ];
 
-
-        /* =========================================
-           BUILD GALLERY
-        ========================================= */
 
         const gallery =
             document.getElementById("gallery");
@@ -276,10 +280,6 @@
             }
         );
 
-
-        /* =========================================
-           LIGHTBOX
-        ========================================= */
 
         const lightbox =
             document.getElementById("lightbox");
