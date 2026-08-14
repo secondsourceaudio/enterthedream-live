@@ -76,7 +76,7 @@ body {
 }
 
 
-.gallery-link {
+.material-link {
     color: #ffffff;
 
     font-size: 9px;
@@ -85,17 +85,13 @@ body {
 
     text-decoration: none;
 
-    opacity: 0.85;
-
     transition:
         opacity 0.2s ease;
 }
 
 
-.gallery-link:hover {
-    opacity: 1;
-
-    text-decoration: underline;
+.material-link:hover {
+    opacity: 0.65;
 }
 
 
@@ -111,7 +107,7 @@ body {
     padding:
         55px
         40px
-        90px;
+        100px;
 }
 
 
@@ -268,9 +264,9 @@ body {
     width: 100%;
 
     padding:
-        25px
         20px
-        70px;
+        20px
+        90px;
 
     display: flex;
 
@@ -282,14 +278,14 @@ body {
 .spinning-logo {
     display: block;
 
-    width: 135px;
-    max-width: 30vw;
+    width: 320px;
+    max-width: 50vw;
 
     height: auto;
 
     margin: 0;
 
-    opacity: 0.9;
+    opacity: 1;
 }
 
 
@@ -369,7 +365,7 @@ body {
 
 
     .spinning-logo {
-        width: 150px;
+        width: 380px;
     }
 
 }
@@ -399,6 +395,11 @@ body {
         font-size: 12px;
     }
 
+
+    .spinning-logo {
+        width: 260px;
+    }
+
 }
 
 
@@ -420,10 +421,10 @@ body {
     }
 
 
-    .gallery-link {
+    .material-link {
         font-size: 8px;
 
-        letter-spacing: 0.24em;
+        letter-spacing: 0.2em;
     }
 
 
@@ -431,7 +432,7 @@ body {
         padding:
             32px
             16px
-            65px;
+            70px;
     }
 
 
@@ -505,15 +506,13 @@ body {
         padding:
             10px
             20px
-            55px;
+            65px;
     }
 
 
     .spinning-logo {
-        width: 100px;
-        max-width: 32vw;
-
-        opacity: 0.9;
+        width: 190px;
+        max-width: 65vw;
     }
 
 
