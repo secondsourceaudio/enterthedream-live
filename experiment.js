@@ -7,17 +7,25 @@
 const canvas =
     document.getElementById("visual");
 
+
 const container =
     document.getElementById("visual-container");
+
 
 const fallbackImage =
     document.getElementById("fallback-image");
 
+
 const interactionMessage =
     document.getElementById("interaction-message");
 
+
 const audio =
     document.getElementById("experiment-audio");
+
+
+const soundButton =
+    document.getElementById("sound-button");
 
 
 /* =========================================
@@ -26,51 +34,256 @@ const audio =
 
 let audioStarted = false;
 
+let userMuted = false;
 
-if (audio) {
 
-    audio.volume = 0.7;
+audio.volume =
+    0.7;
+
+
+/*
+   Update the speaker icon.
+*/
+
+function updateSoundButton() {
+
+    const muted =
+        userMuted
+        ||
+        audio.muted;
+
+
+    soundButton.classList.toggle(
+        "is-muted",
+        muted
+    );
+
+
+    if (muted) {
+
+        soundButton.setAttribute(
+            "aria-label",
+            "Unmute sound"
+        );
+
+
+        soundButton.setAttribute(
+            "title",
+            "Unmute sound"
+        );
+
+    }
+
+    else {
+
+        soundButton.setAttribute(
+            "aria-label",
+            "Mute sound"
+        );
+
+
+        soundButton.setAttribute(
+            "title",
+            "Mute sound"
+        );
+
+    }
 
 }
 
 
-function startAudio() {
+/*
+   Try audible autoplay immediately.
 
-    if (!audio || audioStarted) {
+   Some browsers allow this.
+   Others will reject it until the
+   visitor interacts with the page.
+*/
+
+async function attemptAutoplay() {
+
+    try {
+
+        audio.muted =
+            false;
+
+
+        await audio.play();
+
+
+        audioStarted =
+            true;
+
+
+        updateSoundButton();
+
+    }
+
+    catch (error) {
+
+        /*
+           Browser blocked audible autoplay.
+
+           Keep the intended state as sound ON,
+           but start it on the first interaction.
+        */
+
+        audioStarted =
+            false;
+
+
+        console.log(
+            "Audible autoplay blocked by browser."
+        );
+
+    }
+
+}
+
+
+/*
+   Called after a click/touch if autoplay
+   was initially blocked.
+*/
+
+async function ensureAudioStarted() {
+
+    if (
+        audioStarted
+        ||
+        userMuted
+    ) {
 
         return;
 
     }
 
 
-    const playPromise =
-        audio.play();
+    try {
+
+        audio.muted =
+            false;
 
 
-    if (playPromise !== undefined) {
+        await audio.play();
 
-        playPromise
-            .then(function () {
 
-                audioStarted = true;
+        audioStarted =
+            true;
 
-                interactionMessage.classList.add(
-                    "is-hidden"
-                );
 
-            })
-            .catch(function (error) {
+        updateSoundButton();
 
-                console.log(
-                    "Audio waiting for interaction:",
-                    error
-                );
+    }
 
-            });
+    catch (error) {
+
+        console.log(
+            "Audio could not start:",
+            error
+        );
 
     }
 
 }
+
+
+/*
+   Speaker button.
+*/
+
+soundButton.addEventListener(
+    "pointerdown",
+    function (event) {
+
+        /*
+           Prevent this click from also
+           creating a visual ripple.
+        */
+
+        event.stopPropagation();
+
+    }
+);
+
+
+soundButton.addEventListener(
+    "click",
+    async function (event) {
+
+        event.stopPropagation();
+
+
+        if (userMuted) {
+
+            /*
+               TURN SOUND ON
+            */
+
+            userMuted =
+                false;
+
+
+            audio.muted =
+                false;
+
+
+            try {
+
+                await audio.play();
+
+
+                audioStarted =
+                    true;
+
+            }
+
+            catch (error) {
+
+                console.log(
+                    "Audio could not start:",
+                    error
+                );
+
+            }
+
+        }
+
+        else {
+
+            /*
+               TURN SOUND OFF
+            */
+
+            userMuted =
+                true;
+
+
+            audio.muted =
+                true;
+
+        }
+
+
+        updateSoundButton();
+
+    }
+);
+
+
+/*
+   Initial visual state:
+   speaker is shown as ON.
+*/
+
+updateSoundButton();
+
+
+/*
+   Request autoplay as soon as the page loads.
+*/
+
+attemptAutoplay();
 
 
 /* =========================================
@@ -91,6 +304,7 @@ function showFallback() {
 
     canvas.style.display =
         "none";
+
 
     fallbackImage.style.display =
         "block";
@@ -378,7 +592,7 @@ if (gl) {
 
 
             /* =====================================
-               DISTORT TEXTURE COORDINATES
+               DISTORT TEXTURE
             ===================================== */
 
             vec2 direction =
@@ -403,7 +617,7 @@ if (gl) {
 
 
             /* =====================================
-               SUBTLE CONSTANT MOTION
+               SUBTLE MOTION
             ===================================== */
 
             imageUV.x +=
@@ -531,7 +745,7 @@ if (gl) {
 
 
     /* =========================================
-       CREATE PROGRAM
+       PROGRAM
     ========================================== */
 
     if (
@@ -790,12 +1004,9 @@ if (gl) {
                 function () {
 
                     /*
-                       The source artwork may be a
-                       very large print-resolution JPG.
-
-                       We resize a COPY internally for
-                       WebGL without changing your
-                       original file.
+                       Resize internally if the
+                       artwork exceeds the GPU's
+                       safe texture dimensions.
                     */
 
                     const maximumTextureSize =
@@ -852,31 +1063,27 @@ if (gl) {
                     }
 
 
-                    /*
-                       Create temporary browser canvas.
-                    */
-
-                    const resizeCanvas =
+                    const textureCanvas =
                         document.createElement(
                             "canvas"
                         );
 
 
-                    resizeCanvas.width =
+                    textureCanvas.width =
                         width;
 
 
-                    resizeCanvas.height =
+                    textureCanvas.height =
                         height;
 
 
-                    const resizeContext =
-                        resizeCanvas.getContext(
+                    const textureContext =
+                        textureCanvas.getContext(
                             "2d"
                         );
 
 
-                    resizeContext.drawImage(
+                    textureContext.drawImage(
                         image,
                         0,
                         0,
@@ -892,10 +1099,6 @@ if (gl) {
                     textureHeight =
                         height;
 
-
-                    /*
-                       Upload smaller copy to GPU.
-                    */
 
                     gl.activeTexture(
                         gl.TEXTURE0
@@ -926,7 +1129,7 @@ if (gl) {
 
                         gl.UNSIGNED_BYTE,
 
-                        resizeCanvas
+                        textureCanvas
 
                     );
 
@@ -958,14 +1161,6 @@ if (gl) {
                     imageLoaded =
                         true;
 
-
-                    console.log(
-                        "DRIP texture loaded:",
-                        textureWidth,
-                        "x",
-                        textureHeight
-                    );
-
                 };
 
 
@@ -991,6 +1186,10 @@ if (gl) {
 
             let pulse =
                 0;
+
+
+            let hasInteracted =
+                false;
 
 
             /* =====================================
@@ -1030,6 +1229,19 @@ if (gl) {
 
                 targetStrength =
                     1;
+
+
+                if (!hasInteracted) {
+
+                    hasInteracted =
+                        true;
+
+
+                    interactionMessage.classList.add(
+                        "is-hidden"
+                    );
+
+                }
 
             }
 
@@ -1077,6 +1289,21 @@ if (gl) {
                 "pointerdown",
                 function (event) {
 
+                    /*
+                       Ignore speaker-button clicks.
+                    */
+
+                    if (
+                        event.target.closest(
+                            ".sound-button"
+                        )
+                    ) {
+
+                        return;
+
+                    }
+
+
                     updatePointer(
                         event.clientX,
                         event.clientY
@@ -1087,14 +1314,19 @@ if (gl) {
                         1;
 
 
-                    startAudio();
+                    /*
+                       If autoplay was blocked,
+                       first interaction starts sound.
+                    */
+
+                    ensureAudioStarted();
 
                 }
             );
 
 
             /* =====================================
-               CANVAS RESIZE
+               CANVAS SIZE
             ===================================== */
 
             function resizeWebGLCanvas() {

@@ -14,13 +14,17 @@
 
     <link
         rel="stylesheet"
-        href="./experiment.css?v=2"
+        href="./experiment.css?v=3"
     >
 
 </head>
 
 
 <body>
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
 
     <header class="experiment-header">
 
@@ -50,6 +54,10 @@
     </header>
 
 
+    <!-- =========================================
+         EXPERIMENT
+    ========================================== -->
+
     <main class="experiment-main">
 
         <div
@@ -75,13 +83,65 @@
                 id="interaction-message"
                 class="interaction-message"
             >
-                CLICK / TOUCH FOR SOUND
+                MOVE / TOUCH
             </div>
+
+
+            <!-- =================================
+                 SOUND CONTROL
+            ================================== -->
+
+            <button
+                id="sound-button"
+                class="sound-button"
+                type="button"
+                aria-label="Mute sound"
+                title="Mute sound"
+            >
+
+                <svg
+                    class="sound-icon"
+                    viewBox="0 0 32 32"
+                    aria-hidden="true"
+                >
+
+                    <path
+                        class="speaker-shape"
+                        d="M5 12H10L16 7V25L10 20H5Z"
+                    ></path>
+
+                    <path
+                        class="sound-wave sound-wave-one"
+                        d="M20 12C22 14 22 18 20 20"
+                    ></path>
+
+                    <path
+                        class="sound-wave sound-wave-two"
+                        d="M24 9C28 13 28 19 24 23"
+                    ></path>
+
+                    <path
+                        class="mute-line"
+                        d="M20 11L28 21"
+                    ></path>
+
+                    <path
+                        class="mute-line"
+                        d="M28 11L20 21"
+                    ></path>
+
+                </svg>
+
+            </button>
 
         </div>
 
     </main>
 
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
 
     <footer class="experiment-footer">
 
@@ -102,17 +162,20 @@
 
     <audio
         id="experiment-audio"
+        autoplay
         loop
-        preload="metadata"
+        preload="auto"
     >
+
         <source
             src="./audio/3. Sage Counsel (24B_48KHz_MST)_timeitemstudio DIGI.wav"
             type="audio/wav"
         >
+
     </audio>
 
 
-    <script src="./experiment.js?v=4"></script>
+    <script src="./experiment.js?v=5"></script>
 
 </body>
 

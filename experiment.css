@@ -221,7 +221,7 @@ body {
     z-index: 5;
 
     color:
-        rgba(255, 255, 255, 0.85);
+        rgba(255, 255, 255, 0.8);
 
     font-size: 8px;
 
@@ -240,6 +240,111 @@ body {
 
 .interaction-message.is-hidden {
     opacity: 0;
+}
+
+
+/* =========================================
+   SOUND BUTTON
+========================================= */
+
+.sound-button {
+    position: absolute;
+
+    right: 20px;
+    bottom: 18px;
+
+    z-index: 20;
+
+    width: 38px;
+    height: 38px;
+
+    padding: 7px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background:
+        rgba(5, 5, 5, 0.55);
+
+    color: #ffffff;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.25);
+
+    border-radius: 50%;
+
+    cursor: pointer;
+
+    transition:
+        opacity 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease;
+}
+
+
+.sound-button:hover {
+    border-color:
+        rgba(255, 255, 255, 0.7);
+
+    background:
+        rgba(5, 5, 5, 0.8);
+}
+
+
+.sound-button:focus-visible {
+    outline:
+        1px solid
+        #ffffff;
+
+    outline-offset: 3px;
+}
+
+
+.sound-icon {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.5;
+
+    stroke-linecap: round;
+
+    stroke-linejoin: round;
+}
+
+
+.speaker-shape {
+    fill: none;
+}
+
+
+.sound-wave {
+    display: block;
+}
+
+
+.mute-line {
+    display: none;
+}
+
+
+/* muted state */
+
+.sound-button.is-muted .sound-wave {
+    display: none;
+}
+
+
+.sound-button.is-muted .mute-line {
+    display: block;
 }
 
 
@@ -330,6 +435,17 @@ body {
         font-size: 7px;
 
         letter-spacing: 0.22em;
+    }
+
+
+    .sound-button {
+        right: 12px;
+        bottom: 12px;
+
+        width: 36px;
+        height: 36px;
+
+        padding: 7px;
     }
 
 
