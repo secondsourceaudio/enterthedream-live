@@ -260,7 +260,7 @@ body {
    SPINNING LOGO
 ========================================= */
 
-.bottom-logo {
+.logo-section {
     width: 100%;
 
     padding:
@@ -275,17 +275,46 @@ body {
 }
 
 
+/*
+   The WEBM contains lots of empty black space.
+   This window crops that space away.
+*/
+
+.logo-window {
+    position: relative;
+
+    width: 520px;
+    height: 260px;
+
+    max-width: 80vw;
+
+    overflow: hidden;
+}
+
+
+/*
+   Zoom deeply into the center of the WEBM
+   so the actual Second Source logo is large.
+*/
+
 .spinning-logo {
-    display: block;
+    position: absolute;
 
-    width: 320px;
-    max-width: 50vw;
+    top: 50%;
+    left: 50%;
 
+    width: 100%;
     height: auto;
 
     margin: 0;
 
-    opacity: 1;
+    transform:
+        translate(-50%, -50%)
+        scale(5);
+
+    transform-origin: center;
+
+    pointer-events: none;
 }
 
 
@@ -364,8 +393,9 @@ body {
     }
 
 
-    .spinning-logo {
-        width: 380px;
+    .logo-window {
+        width: 650px;
+        height: 300px;
     }
 
 }
@@ -396,8 +426,9 @@ body {
     }
 
 
-    .spinning-logo {
-        width: 260px;
+    .logo-window {
+        width: 460px;
+        height: 230px;
     }
 
 }
@@ -500,19 +531,28 @@ body {
     }
 
 
-    /* SPINNING LOGO MOBILE */
+    /* LOGO MOBILE */
 
-    .bottom-logo {
+    .logo-section {
         padding:
             10px
-            20px
-            65px;
+            10px
+            60px;
+    }
+
+
+    .logo-window {
+        width: 330px;
+        height: 180px;
+
+        max-width: 90vw;
     }
 
 
     .spinning-logo {
-        width: 190px;
-        max-width: 65vw;
+        transform:
+            translate(-50%, -50%)
+            scale(5);
     }
 
 
