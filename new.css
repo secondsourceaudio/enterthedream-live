@@ -136,7 +136,7 @@ body {
 
 
 /* =========================================
-   MAIN LANDING
+   MAIN
 ========================================= */
 
 .landing {
@@ -150,10 +150,6 @@ body {
         90px;
 }
 
-
-/* =========================================
-   RELEASE LAYOUT
-========================================= */
 
 .release {
     width: 100%;
@@ -207,7 +203,7 @@ body {
 
 
 /* =========================================
-   RELEASE INFORMATION
+   RELEASE INFO
 ========================================= */
 
 .release-information {
@@ -297,11 +293,7 @@ body {
 
 
 /* =========================================
-   FIXED CORNER LOGO
-
-   The WEBM contains a large black canvas.
-   The outer box crops that canvas.
-   The video itself is heavily zoomed.
+   DESKTOP CORNER LOGO
 ========================================= */
 
 .corner-logo {
@@ -310,8 +302,8 @@ body {
     right: 22px;
     bottom: 22px;
 
-    width: 170px;
-    height: 105px;
+    width: 180px;
+    height: 110px;
 
     z-index: 100;
 
@@ -327,7 +319,7 @@ body {
     top: 50%;
     left: 50%;
 
-    width: 170px;
+    width: 180px;
     height: auto;
 
     display: block;
@@ -337,13 +329,11 @@ body {
         scale(6);
 
     transform-origin: center;
-
-    pointer-events: none;
 }
 
 
 /* =========================================
-   LEGAL FOOTER
+   LEGAL
 ========================================= */
 
 .legal-footer {
@@ -351,15 +341,13 @@ body {
 
     padding:
         28px
-        225px
+        240px
         32px
         32px;
 
     border-top:
         1px solid
         rgba(255, 255, 255, 0.18);
-
-    color: #ffffff;
 }
 
 
@@ -417,79 +405,6 @@ body {
         gap: 65px;
     }
 
-
-    .corner-logo {
-        right: 30px;
-        bottom: 24px;
-
-        width: 200px;
-        height: 120px;
-    }
-
-
-    .corner-logo-video {
-        width: 200px;
-
-        transform:
-            translate(-50%, -50%)
-            scale(6);
-    }
-
-
-    .legal-footer {
-        padding-right: 270px;
-    }
-
-}
-
-
-/* =========================================
-   TABLET
-========================================= */
-
-@media (max-width: 1000px) {
-
-    .release {
-        grid-template-columns:
-            minmax(0, 1fr)
-            230px;
-
-        gap: 35px;
-    }
-
-
-    .release-status {
-        font-size: 11px;
-    }
-
-
-    .catalogue {
-        font-size: 12px;
-    }
-
-
-    .corner-logo {
-        width: 140px;
-        height: 90px;
-
-        right: 15px;
-        bottom: 15px;
-    }
-
-
-    .corner-logo-video {
-        width: 140px;
-
-        transform:
-            translate(-50%, -50%)
-            scale(6);
-    }
-
-
-    .legal-footer {
-        padding-right: 180px;
-    }
-
 }
 
 
@@ -501,33 +416,48 @@ body {
 
     .site-header {
         padding:
-            22px
+            24px
             20px;
 
-        flex-direction: column;
-
-        align-items: flex-start;
-
-        gap: 18px;
+        display: block;
     }
 
 
     .site-logo {
         font-size: 10px;
+
+        margin-bottom: 28px;
     }
 
 
-    .site-nav {
-        gap: 18px;
+    /*
+       Keep both links clearly visible.
+    */
 
-        flex-wrap: wrap;
+    .site-nav {
+        width: 100%;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: flex-start;
+
+        gap: 26px;
     }
 
 
     .site-nav a {
-        font-size: 7px;
+        display: block;
 
-        letter-spacing: 0.15em;
+        font-size: 8px;
+
+        letter-spacing: 0.16em;
+    }
+
+
+    .site-nav a::after {
+        display: none;
     }
 
 
@@ -603,34 +533,21 @@ body {
     }
 
 
-    /* CORNER LOGO MOBILE */
+    /*
+       Hide video logo on mobile.
+       Brave otherwise displays its own play overlay.
+    */
 
     .corner-logo {
-        width: 110px;
-        height: 70px;
-
-        right: 8px;
-        bottom: 8px;
+        display: none;
     }
 
-
-    .corner-logo-video {
-        width: 110px;
-
-        transform:
-            translate(-50%, -50%)
-            scale(6);
-    }
-
-
-    /* COPYRIGHT MOBILE */
 
     .legal-footer {
         padding:
-            24px
-            140px
-            28px
-            20px;
+            26px
+            20px
+            30px;
     }
 
 
