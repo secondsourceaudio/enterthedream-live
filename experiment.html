@@ -75,7 +75,7 @@
                 id="interaction-message"
                 class="interaction-message"
             >
-                MOVE / TOUCH
+                CLICK / TOUCH FOR SOUND
             </div>
 
         </div>
@@ -96,7 +96,23 @@
     </footer>
 
 
-    <script src="./experiment.js?v=2"></script>
+    <!-- =========================================
+         AUDIO
+    ========================================== -->
+
+    <audio
+        id="experiment-audio"
+        loop
+        preload="metadata"
+    >
+        <source
+            src="./audio/3. Sage Counsel (24B_48KHz_MST)_timeitemstudio DIGI.wav"
+            type="audio/wav"
+        >
+    </audio>
+
+
+    <script src="./experiment.js?v=3"></script>
 
 </body>
 

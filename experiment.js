@@ -20,6 +20,74 @@ const interactionMessage =
     document.getElementById("interaction-message");
 
 
+const audio =
+    document.getElementById("experiment-audio");
+
+
+
+/* =========================================
+   AUDIO
+========================================= */
+
+let audioStarted =
+    false;
+
+
+audio.volume =
+    0.7;
+
+
+function startAudio() {
+
+    if (audioStarted) {
+
+        return;
+
+    }
+
+
+    const playPromise =
+        audio.play();
+
+
+    if (
+        playPromise
+        !==
+        undefined
+    ) {
+
+        playPromise
+            .then(
+                function () {
+
+                    audioStarted =
+                        true;
+
+
+                    interactionMessage
+                        .classList
+                        .add(
+                            "is-hidden"
+                        );
+
+                }
+            )
+            .catch(
+                function (error) {
+
+                    console.log(
+                        "Audio waiting for interaction:",
+                        error
+                    );
+
+                }
+            );
+
+    }
+
+}
+
+
 
 /* =========================================
    WEBGL
@@ -108,8 +176,7 @@ if (gl) {
 
 
             /*
-               Match the behaviour of
-               object-fit: contain
+               Match object-fit: contain
             */
 
             float screenAspect =
@@ -176,8 +243,7 @@ if (gl) {
 
 
             /*
-               Keep the area outside
-               the artwork black.
+               Outside artwork stays black
             */
 
             if (
@@ -204,7 +270,7 @@ if (gl) {
 
 
             /*
-               Pointer position
+               Pointer
             */
 
             vec2 mouse =
@@ -228,7 +294,7 @@ if (gl) {
 
 
             /*
-               Area influenced by pointer
+               Pointer influence
             */
 
             float radius =
@@ -244,8 +310,7 @@ if (gl) {
 
 
             /*
-               Two overlapping waves make
-               the motion less mechanical.
+               Liquid waves
             */
 
             float waveOne =
@@ -283,7 +348,7 @@ if (gl) {
 
 
             /*
-               Normal cursor distortion
+               Cursor distortion
             */
 
             float distortion =
@@ -297,7 +362,7 @@ if (gl) {
 
 
             /*
-               Click / tap ripple
+               Click / touch ripple
             */
 
             float pulseWave =
@@ -331,7 +396,7 @@ if (gl) {
 
 
             /*
-               Direction away from pointer
+               Direction from pointer
             */
 
             vec2 direction =
@@ -355,8 +420,7 @@ if (gl) {
 
 
             /*
-               Very subtle constant
-               movement in the image.
+               Subtle continuous movement
             */
 
             imageUV.x +=
@@ -377,7 +441,7 @@ if (gl) {
 
 
             /*
-               Read final pixel
+               Final image
             */
 
             vec4 colour =
@@ -745,10 +809,6 @@ if (gl) {
         0;
 
 
-    let hasInteracted =
-        false;
-
-
 
     /* =========================================
        POINTER POSITION
@@ -788,30 +848,12 @@ if (gl) {
         targetStrength =
             1;
 
-
-        if (
-            !hasInteracted
-        ) {
-
-            hasInteracted =
-                true;
-
-
-            interactionMessage.classList.add(
-                "is-hidden"
-            );
-
-        }
-
     }
 
 
 
     /* =========================================
        POINTER EVENTS
-
-       Works with mouse, trackpad,
-       touch and stylus.
     ========================================== */
 
     container.addEventListener(
@@ -861,6 +903,14 @@ if (gl) {
 
             pulse =
                 1;
+
+
+            /*
+               Start music on first
+               click or touch.
+            */
+
+            startAudio();
 
         }
     );
@@ -947,10 +997,6 @@ if (gl) {
         resizeCanvas();
 
 
-        /*
-           Smooth interaction response
-        */
-
         currentStrength +=
             (
                 targetStrength
@@ -961,17 +1007,9 @@ if (gl) {
             0.06;
 
 
-        /*
-           Gradually settle after movement
-        */
-
         targetStrength *=
             0.985;
 
-
-        /*
-           Fade click ripple
-        */
 
         pulse *=
             0.94;
