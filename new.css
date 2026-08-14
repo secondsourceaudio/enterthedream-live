@@ -1,36 +1,103 @@
+@font-face {
+    font-family: "Microgramma";
+
+    src:
+        url("./fonts/microgrammanormal.ttf")
+        format("truetype");
+
+    font-weight: normal;
+    font-style: normal;
+}
+
+
 /* =========================================
-   LANDING
+   RESET
+========================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+
+html,
+body {
+    width: 100%;
+    min-height: 100%;
+
+    margin: 0;
+
+    background: #050505;
+    color: #eeeeee;
+}
+
+
+body {
+    min-height: 100vh;
+
+    font-family:
+        "Microgramma",
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.site-header {
+    width: 100%;
+
+    padding:
+        26px
+        32px;
+
+    border-bottom:
+        1px solid
+        rgba(255, 255, 255, 0.08);
+}
+
+
+.site-logo {
+    color:
+        rgba(255, 255, 255, 0.88);
+
+    font-size: 11px;
+
+    letter-spacing: 0.3em;
+}
+
+
+/* =========================================
+   MAIN LANDING
 ========================================= */
 
 .landing {
-    flex: 1;
-
     width: 100%;
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
     padding:
-        45px
-        35px
+        55px
+        40px
         70px;
 }
 
 
 /* =========================================
-   RELEASE
+   RELEASE LAYOUT
 ========================================= */
 
 .release {
     width: 100%;
-    max-width: 1750px;
+    max-width: 1800px;
+
+    margin: 0 auto;
 
     display: grid;
 
     grid-template-columns:
         minmax(0, 1fr)
-        280px;
+        270px;
 
     gap: 55px;
 
@@ -42,20 +109,22 @@
    ARTWORK
 ========================================= */
 
-.artwork-frame {
+.artwork-area {
     width: 100%;
 
-    background: #050505;
+    padding: 18px;
+
+    background: #0a0a0a;
 
     border:
         1px solid
-        rgba(255, 255, 255, 0.08);
+        rgba(255, 255, 255, 0.12);
 
     box-shadow:
         0
-        20px
+        22px
         60px
-        rgba(0, 0, 0, 0.45);
+        rgba(0, 0, 0, 0.65);
 }
 
 
@@ -74,18 +143,228 @@
 ========================================= */
 
 .release-information {
-    padding:
-        0
-        0
-        10px;
-
-    align-self: end;
+    padding-bottom: 12px;
 }
-@media (min-width: 1200px) {
 
-    .artwork-frame {
-        width: calc(100vw - 390px);
-        max-width: 1450px;
+
+.release-status {
+    margin:
+        0
+        0
+        42px;
+
+    color: #8b8b8b;
+
+    font-size: 13px;
+
+    letter-spacing: 0.28em;
+}
+
+
+.catalogue {
+    margin:
+        0
+        0
+        24px;
+
+    color: #a0a0a0;
+
+    font-size: 14px;
+
+    letter-spacing: 0.2em;
+}
+
+
+.release-information h1 {
+    margin: 0;
+
+    color: #f0f0f0;
+
+    font-size:
+        clamp(
+            25px,
+            2.5vw,
+            42px
+        );
+
+    font-weight: normal;
+
+    letter-spacing: 0.06em;
+}
+
+
+.release-information h2 {
+    margin:
+        12px
+        0
+        0;
+
+    color: #f0f0f0;
+
+    font-size:
+        clamp(
+            42px,
+            4.5vw,
+            72px
+        );
+
+    font-weight: normal;
+
+    letter-spacing: 0.04em;
+}
+
+
+.coming-soon {
+    margin:
+        48px
+        0
+        0;
+
+    color: #777777;
+
+    font-size: 10px;
+
+    letter-spacing: 0.3em;
+}
+
+
+/* =========================================
+   LARGE DESKTOP
+========================================= */
+
+@media (min-width: 1400px) {
+
+    .landing {
+        padding-left: 55px;
+        padding-right: 55px;
+    }
+
+
+    .release {
+        grid-template-columns:
+            minmax(0, 1fr)
+            300px;
+
+        gap: 65px;
+    }
+
+}
+
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 1000px) {
+
+    .release {
+        grid-template-columns:
+            minmax(0, 1fr)
+            230px;
+
+        gap: 35px;
+    }
+
+
+    .release-status {
+        font-size: 11px;
+    }
+
+
+    .catalogue {
+        font-size: 12px;
+    }
+
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 750px) {
+
+    .site-header {
+        padding:
+            22px
+            20px;
+    }
+
+
+    .site-logo {
+        font-size: 10px;
+    }
+
+
+    .landing {
+        padding:
+            32px
+            16px
+            60px;
+    }
+
+
+    .release {
+        display: flex;
+
+        flex-direction: column;
+
+        gap: 38px;
+    }
+
+
+    .artwork-area {
+        width: 100%;
+
+        padding: 8px;
+
+        box-shadow:
+            0
+            12px
+            35px
+            rgba(0, 0, 0, 0.65);
+    }
+
+
+    .release-information {
+        width: 100%;
+
+        padding:
+            0
+            4px;
+    }
+
+
+    .release-status {
+        margin-bottom: 30px;
+
+        font-size: 10px;
+    }
+
+
+    .catalogue {
+        margin-bottom: 18px;
+
+        font-size: 11px;
+    }
+
+
+    .release-information h1 {
+        font-size: 22px;
+    }
+
+
+    .release-information h2 {
+        margin-top: 8px;
+
+        font-size: 42px;
+    }
+
+
+    .coming-soon {
+        margin-top: 35px;
+
+        font-size: 8px;
     }
 
 }
