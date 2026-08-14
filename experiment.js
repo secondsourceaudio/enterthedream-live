@@ -266,11 +266,6 @@ function attemptPlayback() {
 }
 
 
-/*
-   Browser may block this until a user
-   interacts with the page.
-*/
-
 attemptPlayback();
 
 
@@ -675,10 +670,7 @@ const interactionMessage =
 
 
 /* =========================================
-   ARTWORK ZOOM
-
-   Pinch zoom affects only the artwork,
-   never the whole page.
+   PINCH ZOOM
 ========================================= */
 
 let viewScale =
@@ -742,7 +734,7 @@ let panning =
 
 
 /* =========================================
-   LIMIT PANNING
+   LIMIT PAN
 ========================================= */
 
 function limitViewPan() {
@@ -891,8 +883,7 @@ function viewPointerMidpoint() {
 
 
 /*
-   Prevent browser double-click zoom from
-   changing the entire page.
+   Prevent browser double-click zoom.
 */
 
 container.addEventListener(
@@ -984,6 +975,34 @@ if (gl) {
 
         uniform float u_dripAge;
 
+        uniform float u_dragging;
+
+
+        mat2 rotate2D(
+            float angle
+        ) {
+
+            float sineValue =
+                sin(
+                    angle
+                );
+
+
+            float cosineValue =
+                cos(
+                    angle
+                );
+
+
+            return mat2(
+                cosineValue,
+                -sineValue,
+                sineValue,
+                cosineValue
+            );
+
+        }
+
 
         void main() {
 
@@ -1027,13 +1046,6 @@ if (gl) {
                         0.0001
                     )
                 );
-
-
-            /*
-               Multiple overlapping waves make
-               the center feel alive rather than
-               like one perfect digital circle.
-            */
 
 
             float bubbleOne =
@@ -1109,10 +1121,7 @@ if (gl) {
 
 
             /* =================================
-               2. SUBTLE 90s LOGO WAVE
-
-               Gentle cloth / flag movement.
-               This should remain secondary.
+               2. SUBTLE 90s WAVE
             ================================= */
 
 
@@ -1169,40 +1178,7 @@ if (gl) {
 
 
             /* =================================
-               3. SLOW WATER BREATHING
-            ================================= */
-
-
-            uv.x +=
-                sin(
-                    uv.y
-                    *
-                    10.0
-                    +
-                    u_time
-                    *
-                    0.45
-                )
-                *
-                0.0015;
-
-
-            uv.y +=
-                cos(
-                    uv.x
-                    *
-                    9.0
-                    -
-                    u_time
-                    *
-                    0.38
-                )
-                *
-                0.0013;
-
-
-            /* =================================
-               4. CURSOR / FINGER WATER
+               3. POINTER FIELD
             ================================= */
 
 
@@ -1220,7 +1196,7 @@ if (gl) {
 
             float pointerInfluence =
                 smoothstep(
-                    0.38,
+                    0.42,
                     0.0,
                     pointerDistance
                 );
@@ -1234,6 +1210,105 @@ if (gl) {
                         0.0001
                     )
                 );
+
+
+            /* =================================
+               4. WHIRL WHILE DRAGGING
+            ================================= */
+
+
+            /*
+               The whirl only comes alive while
+               the mouse/finger is actually held.
+
+               Faster dragging creates a deeper,
+               more aggressive vortex.
+            */
+
+
+            float velocityMagnitude =
+                min(
+                    length(
+                        u_velocity
+                    )
+                    *
+                    18.0,
+                    1.0
+                );
+
+
+            float whirlDirection =
+                sign(
+
+                    u_velocity.x
+                    -
+                    u_velocity.y
+                    +
+                    0.0001
+
+                );
+
+
+            float whirlFade =
+                exp(
+                    -pointerDistance
+                    *
+                    3.2
+                );
+
+
+            float whirlAngle =
+                whirlDirection
+                *
+                u_dragging
+                *
+                whirlFade
+                *
+                (
+                    0.20
+                    +
+                    u_motion
+                    *
+                    1.8
+                    +
+                    velocityMagnitude
+                    *
+                    1.1
+                );
+
+
+            vec2 whirledDelta =
+                rotate2D(
+                    whirlAngle
+                )
+                *
+                pointerDelta;
+
+
+            /*
+               Blend the rotated coordinate field
+               into the normal image.
+
+               This creates the vortex rather than
+               rotating the entire square.
+            */
+
+
+            uv +=
+                (
+                    whirledDelta
+                    -
+                    pointerDelta
+                )
+                *
+                pointerInfluence
+                *
+                0.60;
+
+
+            /* =================================
+               5. POINTER WATER RIPPLE
+            ================================= */
 
 
             float pointerWaveOne =
@@ -1289,7 +1364,7 @@ if (gl) {
 
 
             /* =================================
-               5. LIQUID DRAG
+               6. LIQUID DRAG
             ================================= */
 
 
@@ -1308,13 +1383,7 @@ if (gl) {
 
 
             /* =================================
-               6. THE DRIP
-
-               Click/tap creates one strong,
-               expanding water ring.
-
-               This is deliberately much stronger
-               than the background animation.
+               7. DRIP ON CLICK / TAP
             ================================= */
 
 
@@ -1340,22 +1409,10 @@ if (gl) {
                 );
 
 
-            /*
-               Ripple expands from the exact
-               point where the artwork was hit.
-            */
-
-
             float dripRadius =
                 u_dripAge
                 *
                 0.33;
-
-
-            /*
-               Ripple dies gradually after
-               roughly 2.6 seconds.
-            */
 
 
             float dripLife =
@@ -1371,7 +1428,7 @@ if (gl) {
 
 
             /*
-               Main water ring.
+               Main expanding ring.
             */
 
 
@@ -1390,9 +1447,7 @@ if (gl) {
 
 
             /*
-               Secondary smaller trailing ring.
-               Gives the click more of a real
-               drop-in-water quality.
+               Smaller trailing ring.
             */
 
 
@@ -1422,8 +1477,7 @@ if (gl) {
 
 
             /*
-               Small central depression immediately
-               after clicking/tapping.
+               Initial impact depression.
             */
 
 
@@ -1466,7 +1520,7 @@ if (gl) {
 
 
             /* =================================
-               7. SAFE TEXTURE AREA
+               8. SAFE TEXTURE
             ================================= */
 
 
@@ -1483,9 +1537,7 @@ if (gl) {
 
 
             /* =================================
-               8. IMAGE
-
-               Original colours only.
+               9. ORIGINAL IMAGE COLOURS
             ================================= */
 
 
@@ -1497,9 +1549,7 @@ if (gl) {
 
 
             /*
-               One subtle delayed sample during
-               active cursor movement gives the
-               surface viscosity without glitching.
+               Subtle viscous trailing sample.
             */
 
 
@@ -1659,7 +1709,7 @@ if (gl) {
 
 
             /* =================================
-               FULLSCREEN PLANE
+               PLANE
             ================================= */
 
 
@@ -1763,6 +1813,13 @@ if (gl) {
                 );
 
 
+            const draggingUniform =
+                gl.getUniformLocation(
+                    program,
+                    "u_dragging"
+                );
+
+
             const textureUniform =
                 gl.getUniformLocation(
                     program,
@@ -1825,10 +1882,7 @@ if (gl) {
 
 
             /* =================================
-               LOAD EXISTING ARTWORK IMAGE
-
-               Reuse the IMG already displayed
-               underneath WebGL.
+               ARTWORK TEXTURE
             ================================= */
 
 
@@ -2024,8 +2078,23 @@ if (gl) {
 
 
             /*
-               DRIP starts inactive.
+               Smooth dragging value means
+               the vortex eases in/out rather
+               than snapping.
             */
+
+
+            let draggingAmount =
+                0;
+
+
+            let targetDraggingAmount =
+                0;
+
+
+            /* =================================
+               DRIP STATE
+            ================================= */
 
 
             let dripX =
@@ -2044,9 +2113,10 @@ if (gl) {
                 false;
 
 
-/* =========================================
-   UPDATE POINTER
-========================================= */
+            /* =================================
+               POINTER UPDATE
+            ================================= */
+
 
             function updateShaderPointer(
                 clientX,
@@ -2195,7 +2265,7 @@ if (gl) {
 
 
             /* =================================
-               POINTER / TOUCH / PINCH
+               POINTER DOWN
             ================================= */
 
 
@@ -2226,11 +2296,8 @@ if (gl) {
 
 
                     /*
-                       A single click/touch creates
-                       the DRIP immediately.
-
-                       Once a second finger arrives,
-                       interaction becomes pinch zoom.
+                       First finger / mouse button:
+                       activate water + DRIP + whirl.
                     */
 
 
@@ -2251,12 +2318,26 @@ if (gl) {
                             event.clientY
                         );
 
+
+                        targetDraggingAmount =
+                            1;
+
                     }
+
+
+                    /*
+                       Second finger:
+                       immediately switch to pinch.
+                    */
 
 
                     if (
                         viewPointers.size === 2
                     ) {
+
+                        targetDraggingAmount =
+                            0;
+
 
                         pinchStartDistance =
                             viewPointerDistance();
@@ -2296,6 +2377,10 @@ if (gl) {
                         viewScale > 1
                     ) {
 
+                        targetDraggingAmount =
+                            0;
+
+
                         panning =
                             true;
 
@@ -2334,6 +2419,11 @@ if (gl) {
             );
 
 
+            /* =================================
+               POINTER MOVE
+            ================================= */
+
+
             container.addEventListener(
                 "pointermove",
                 function (event) {
@@ -2356,14 +2446,18 @@ if (gl) {
                     }
 
 
-                    /*
+                    /* =================================
                        PINCH
-                    */
+                    ================================= */
 
 
                     if (
                         viewPointers.size === 2
                     ) {
+
+                        targetDraggingAmount =
+                            0;
+
 
                         const distance =
                             viewPointerDistance();
@@ -2418,9 +2512,9 @@ if (gl) {
                     }
 
 
-                    /*
+                    /* =================================
                        PAN WHILE ZOOMED
-                    */
+                    ================================= */
 
 
                     if (
@@ -2428,6 +2522,10 @@ if (gl) {
                         &&
                         viewScale > 1
                     ) {
+
+                        targetDraggingAmount =
+                            0;
+
 
                         viewX =
                             panOriginalX
@@ -2457,31 +2555,65 @@ if (gl) {
                     }
 
 
-                    /*
-                       WATER INTERACTION
-                    */
+                    /* =================================
+                       NORMAL WATER MOVEMENT
+                    ================================= */
 
 
                     if (
                         viewScale === 1
-                        &&
-                        (
+                    ) {
+
+                        /*
+                           Mouse without button:
+                           ordinary ripple only.
+                        */
+
+
+                        if (
                             event.pointerType
                             ===
                             "mouse"
+                            &&
+                            !viewPointers.has(
+                                event.pointerId
+                            )
+                        ) {
 
-                            ||
+                            targetDraggingAmount =
+                                0;
 
+
+                            updateShaderPointer(
+                                event.clientX,
+                                event.clientY
+                            );
+
+                        }
+
+
+                        /*
+                           Mouse button / finger held:
+                           whirl + water.
+                        */
+
+
+                        if (
                             viewPointers.has(
                                 event.pointerId
                             )
-                        )
-                    ) {
+                        ) {
 
-                        updateShaderPointer(
-                            event.clientX,
-                            event.clientY
-                        );
+                            targetDraggingAmount =
+                                1;
+
+
+                            updateShaderPointer(
+                                event.clientX,
+                                event.clientY
+                            );
+
+                        }
 
                     }
 
@@ -2519,6 +2651,10 @@ if (gl) {
 
                     panning =
                         false;
+
+
+                    targetDraggingAmount =
+                        0;
 
                 }
 
@@ -2573,9 +2709,7 @@ if (gl) {
                     canvas.width
                     !==
                     width
-
                     ||
-
                     canvas.height
                     !==
                     height
@@ -2645,8 +2779,18 @@ if (gl) {
                     0.14;
 
 
+                draggingAmount +=
+                    (
+                        targetDraggingAmount
+                        -
+                        draggingAmount
+                    )
+                    *
+                    0.16;
+
+
                 /*
-                   Gradual liquid decay.
+                   Gradual water / vortex decay.
                 */
 
 
@@ -2726,6 +2870,12 @@ if (gl) {
                     gl.uniform1f(
                         dripAgeUniform,
                         dripAge
+                    );
+
+
+                    gl.uniform1f(
+                        draggingUniform,
+                        draggingAmount
                     );
 
 
