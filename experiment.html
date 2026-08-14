@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>SECOND SOURCE — DRIP</title>
+    <title>SECOND SOURCE</title>
 
     <link
         rel="preload"
@@ -25,7 +25,7 @@
 
     <link
         rel="stylesheet"
-        href="./experiment.css?v=12"
+        href="./experiment.css?v=13"
     >
 
 </head>
@@ -37,7 +37,7 @@
          HEADER
     ========================================== -->
 
-    <header class="site-header">
+    <header class="site-header experiment-header">
 
         <a
             class="site-logo"
@@ -47,97 +47,37 @@
         </a>
 
 
-        <nav class="site-nav">
+        <div class="experiment-controls">
 
-            <a href="./gallery.html">
-                CONCEPT ARCHIVE
-            </a>
+            <!-- =================================
+                 SOUND
+            ================================== -->
 
-            <a
-                href="https://secondsource.bandcamp.com"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                BANDCAMP ↗
-            </a>
+            <div class="compact-player">
 
-            <a href="./index.html">
-                RETURN
-            </a>
-
-        </nav>
-
-    </header>
-
-
-    <!-- =========================================
-         MINI PLAYER
-    ========================================== -->
-
-    <section class="player-strip">
-
-        <div class="mini-player">
-
-            <button
-                id="play-button"
-                class="player-button"
-                type="button"
-                aria-label="Play"
-            >
-                <span id="play-symbol">
-                    ▶
-                </span>
-            </button>
-
-
-            <div class="player-main">
-
-                <div class="player-information">
-
-                    <span class="player-track">
-                        SAGE COUNSEL
-                    </span>
-
-                    <span
-                        id="player-time"
-                        class="player-time"
-                    >
-                        0:00 / 0:00
-                    </span>
-
-                </div>
-
-
-                <div
-                    id="progress-track"
-                    class="progress-track"
+                <button
+                    id="play-button"
+                    class="player-button"
+                    type="button"
+                    aria-label="Play"
                 >
-
-                    <div
-                        id="progress-fill"
-                        class="progress-fill"
-                    ></div>
-
-                </div>
-
-            </div>
+                    <span id="play-symbol">
+                        ▶
+                    </span>
+                </button>
 
 
-            <button
-                id="sound-button"
-                class="sound-button"
-                type="button"
-                aria-label="Mute"
-            >
+                <button
+                    id="sound-button"
+                    class="sound-button"
+                    type="button"
+                    aria-label="Mute"
+                >
+                    <span id="speaker-symbol">
+                        ◖))
+                    </span>
+                </button>
 
-                <span id="speaker-symbol">
-                    ◖))
-                </span>
-
-            </button>
-
-
-            <div class="volume-control">
 
                 <input
                     id="volume-slider"
@@ -161,98 +101,86 @@
 
             </div>
 
+
+            <a
+                class="return-link"
+                href="./index.html"
+            >
+                RETURN
+            </a>
+
         </div>
 
-    </section>
+    </header>
 
 
     <!-- =========================================
-         MAIN
+         ARTWORK
     ========================================== -->
 
     <main class="experiment-main">
 
-        <section class="experiment-heading">
-
-            <p class="experiment-label">
-                SRC001 / INTERACTIVE ARTWORK
-            </p>
-
-            <h1>
-                DRIP
-            </h1>
-
-            <h2>
-                MARTIN SOLLI
-            </h2>
-
-        </section>
-
-
-        <section class="experiment-artwork">
+        <div
+            id="visual-container"
+            class="visual-container"
+        >
 
             <div
-                id="visual-container"
-                class="visual-container"
+                id="visual-media"
+                class="visual-media"
             >
 
-                <div
-                    id="visual-media"
-                    class="visual-media"
+                <img
+                    id="fallback-image"
+                    class="fallback-image"
+                    src="./images/drip_cover_front.jpg"
+                    alt="Artwork"
+                    fetchpriority="high"
+                    decoding="async"
+                    draggable="false"
                 >
 
-                    <img
-                        id="fallback-image"
-                        class="fallback-image"
-                        src="./images/drip_cover_front.jpg"
-                        alt="Martin Solli — Drip"
-                        fetchpriority="high"
-                        decoding="async"
-                        draggable="false"
-                    >
 
-
-                    <canvas
-                        id="visual"
-                        class="visual-canvas"
-                    ></canvas>
-
-                </div>
-
-
-                <div
-                    id="interaction-message"
-                    class="interaction-message"
-                >
-                    MOVE / TOUCH / PINCH
-                </div>
+                <canvas
+                    id="visual"
+                    class="visual-canvas"
+                ></canvas>
 
             </div>
 
-        </section>
+
+            <div
+                id="interaction-message"
+                class="interaction-message"
+            >
+                TOUCH / MOVE
+            </div>
+
+        </div>
 
     </main>
 
 
     <!-- =========================================
-         FOOTER
+         HIDDEN PLAYER SUPPORT
+
+         JS still uses these elements.
     ========================================== -->
 
-    <footer class="experiment-footer">
+    <div
+        class="player-support"
+        aria-hidden="true"
+    >
 
-        <span>
-            SECOND SOURCE
+        <div id="progress-track">
+            <div id="progress-fill"></div>
+        </div>
+
+        <span id="player-time">
+            0:00 / 0:00
         </span>
 
-        <span>
-            SRC001 / MARTIN SOLLI / DRIP
-        </span>
-
-        <span>
-            2026
-        </span>
-
-    </footer>
+    </div>
 
 
     <!-- =========================================
