@@ -7,39 +7,36 @@
 const canvas =
     document.getElementById("visual");
 
-
 const container =
     document.getElementById("visual-container");
-
 
 const fallbackImage =
     document.getElementById("fallback-image");
 
-
 const interactionMessage =
     document.getElementById("interaction-message");
 
-
 const audio =
     document.getElementById("experiment-audio");
-
 
 
 /* =========================================
    AUDIO
 ========================================= */
 
-let audioStarted =
-    false;
+let audioStarted = false;
 
 
-audio.volume =
-    0.7;
+if (audio) {
+
+    audio.volume = 0.7;
+
+}
 
 
 function startAudio() {
 
-    if (audioStarted) {
+    if (!audio || audioStarted) {
 
         return;
 
@@ -50,43 +47,30 @@ function startAudio() {
         audio.play();
 
 
-    if (
-        playPromise
-        !==
-        undefined
-    ) {
+    if (playPromise !== undefined) {
 
         playPromise
-            .then(
-                function () {
+            .then(function () {
 
-                    audioStarted =
-                        true;
+                audioStarted = true;
 
+                interactionMessage.classList.add(
+                    "is-hidden"
+                );
 
-                    interactionMessage
-                        .classList
-                        .add(
-                            "is-hidden"
-                        );
+            })
+            .catch(function (error) {
 
-                }
-            )
-            .catch(
-                function (error) {
+                console.log(
+                    "Audio waiting for interaction:",
+                    error
+                );
 
-                    console.log(
-                        "Audio waiting for interaction:",
-                        error
-                    );
-
-                }
-            );
+            });
 
     }
 
 }
-
 
 
 /* =========================================
@@ -98,12 +82,12 @@ const gl =
         "webgl",
         {
             antialias: true,
-            alpha: false
+            alpha: true
         }
     );
 
 
-if (!gl) {
+function showFallback() {
 
     canvas.style.display =
         "none";
@@ -114,12 +98,22 @@ if (!gl) {
 }
 
 
+if (!gl) {
+
+    showFallback();
+
+}
+
 
 /* =========================================
-   SHADERS
+   WEBGL EXPERIMENT
 ========================================= */
 
 if (gl) {
+
+    /* =========================================
+       VERTEX SHADER
+    ========================================== */
 
     const vertexShaderSource = `
 
@@ -146,9 +140,13 @@ if (gl) {
     `;
 
 
+    /* =========================================
+       FRAGMENT SHADER
+    ========================================== */
+
     const fragmentShaderSource = `
 
-        precision highp float;
+        precision mediump float;
 
 
         varying vec2 v_uv;
@@ -175,10 +173,6 @@ if (gl) {
                 v_uv;
 
 
-            /*
-               Match object-fit: contain
-            */
-
             float screenAspect =
                 u_resolution.x
                 /
@@ -195,13 +189,17 @@ if (gl) {
                 uv;
 
 
+            /*
+               OBJECT-FIT: CONTAIN
+            */
+
             if (
                 screenAspect
                 >
                 imageAspect
             ) {
 
-                float scale =
+                float visibleWidth =
                     imageAspect
                     /
                     screenAspect;
@@ -214,7 +212,7 @@ if (gl) {
                         0.5
                     )
                     /
-                    scale
+                    visibleWidth
                     +
                     0.5;
 
@@ -222,7 +220,7 @@ if (gl) {
 
             else {
 
-                float scale =
+                float visibleHeight =
                     screenAspect
                     /
                     imageAspect;
@@ -235,7 +233,7 @@ if (gl) {
                         0.5
                     )
                     /
-                    scale
+                    visibleHeight
                     +
                     0.5;
 
@@ -243,7 +241,7 @@ if (gl) {
 
 
             /*
-               Outside artwork stays black
+               BLACK OUTSIDE ARTWORK
             */
 
             if (
@@ -269,18 +267,14 @@ if (gl) {
             }
 
 
-            /*
-               Pointer
-            */
-
-            vec2 mouse =
-                u_mouse;
-
+            /* =====================================
+               POINTER
+            ===================================== */
 
             vec2 delta =
                 uv
                 -
-                mouse;
+                u_mouse;
 
 
             delta.x *=
@@ -293,31 +287,23 @@ if (gl) {
                 );
 
 
-            /*
-               Pointer influence
-            */
-
-            float radius =
-                0.32;
-
-
             float influence =
                 smoothstep(
-                    radius,
+                    0.32,
                     0.0,
                     distanceFromMouse
                 );
 
 
-            /*
-               Liquid waves
-            */
+            /* =====================================
+               LIQUID WAVES
+            ===================================== */
 
-            float waveOne =
+            float wave1 =
                 sin(
                     distanceFromMouse
                     *
-                    42.0
+                    38.0
                     -
                     u_time
                     *
@@ -325,55 +311,51 @@ if (gl) {
                 );
 
 
-            float waveTwo =
+            float wave2 =
                 sin(
                     distanceFromMouse
                     *
-                    19.0
+                    17.0
                     +
                     u_time
                     *
-                    2.2
+                    2.0
                 );
 
 
             float wave =
-                waveOne
+                wave1
                 *
                 0.65
                 +
-                waveTwo
+                wave2
                 *
                 0.35;
 
-
-            /*
-               Cursor distortion
-            */
 
             float distortion =
                 wave
                 *
                 influence
                 *
-                0.015
+                0.018
                 *
                 u_strength;
 
 
-            /*
-               Click / touch ripple
-            */
+            /* =====================================
+               CLICK / TOUCH RIPPLE
+            ===================================== */
 
             float pulseWave =
                 sin(
                     distanceFromMouse
                     *
-                    55.0
+                    50.0
                     -
                     u_pulse
                     *
-                    10.0
+                    11.0
                 );
 
 
@@ -381,7 +363,7 @@ if (gl) {
                 exp(
                     -distanceFromMouse
                     *
-                    6.0
+                    5.0
                 );
 
 
@@ -390,20 +372,21 @@ if (gl) {
                 *
                 pulseEnvelope
                 *
-                0.022
+                0.028
                 *
                 u_pulse;
 
 
-            /*
-               Direction from pointer
-            */
+            /* =====================================
+               DISTORT TEXTURE COORDINATES
+            ===================================== */
 
             vec2 direction =
                 normalize(
                     delta
                     +
                     vec2(
+                        0.0001,
                         0.0001
                     )
                 );
@@ -419,30 +402,41 @@ if (gl) {
                 distortion;
 
 
-            /*
-               Subtle continuous movement
-            */
+            /* =====================================
+               SUBTLE CONSTANT MOTION
+            ===================================== */
 
             imageUV.x +=
-
                 sin(
                     imageUV.y
                     *
-                    10.0
+                    9.0
                     +
                     u_time
                     *
-                    0.35
+                    0.4
                 )
-
                 *
+                0.0015;
 
-                0.0012;
+
+            imageUV.y +=
+                sin(
+                    imageUV.x
+                    *
+                    7.0
+                    -
+                    u_time
+                    *
+                    0.25
+                )
+                *
+                0.0008;
 
 
-            /*
-               Final image
-            */
+            /* =====================================
+               FINAL IMAGE
+            ===================================== */
 
             vec4 colour =
                 texture2D(
@@ -459,7 +453,6 @@ if (gl) {
     `;
 
 
-
     /* =========================================
        CREATE SHADER
     ========================================== */
@@ -470,9 +463,7 @@ if (gl) {
     ) {
 
         const shader =
-            gl.createShader(
-                type
-            );
+            gl.createShader(type);
 
 
         gl.shaderSource(
@@ -494,9 +485,8 @@ if (gl) {
         ) {
 
             console.error(
-                gl.getShaderInfoLog(
-                    shader
-                )
+                "Shader error:",
+                gl.getShaderInfoLog(shader)
             );
 
 
@@ -515,7 +505,6 @@ if (gl) {
     }
 
 
-
     const vertexShader =
         createShader(
             gl.VERTEX_SHADER,
@@ -530,224 +519,195 @@ if (gl) {
         );
 
 
-
-    /* =========================================
-       WEBGL PROGRAM
-    ========================================== */
-
-    const program =
-        gl.createProgram();
-
-
-    gl.attachShader(
-        program,
-        vertexShader
-    );
-
-
-    gl.attachShader(
-        program,
-        fragmentShader
-    );
-
-
-    gl.linkProgram(
-        program
-    );
-
-
     if (
-        !gl.getProgramParameter(
-            program,
-            gl.LINK_STATUS
-        )
+        !vertexShader
+        ||
+        !fragmentShader
     ) {
 
-        console.error(
-            gl.getProgramInfoLog(
-                program
-            )
-        );
+        showFallback();
 
     }
 
 
-    gl.useProgram(
-        program
-    );
-
-
-
     /* =========================================
-       FULLSCREEN PLANE
+       CREATE PROGRAM
     ========================================== */
 
-    const positionBuffer =
-        gl.createBuffer();
+    if (
+        vertexShader
+        &&
+        fragmentShader
+    ) {
+
+        const program =
+            gl.createProgram();
 
 
-    gl.bindBuffer(
-        gl.ARRAY_BUFFER,
-        positionBuffer
-    );
-
-
-    gl.bufferData(
-
-        gl.ARRAY_BUFFER,
-
-        new Float32Array([
-
-            -1, -1,
-
-             1, -1,
-
-            -1,  1,
-
-            -1,  1,
-
-             1, -1,
-
-             1,  1
-
-        ]),
-
-        gl.STATIC_DRAW
-
-    );
-
-
-    const positionLocation =
-        gl.getAttribLocation(
+        gl.attachShader(
             program,
-            "a_position"
+            vertexShader
         );
 
 
-    gl.enableVertexAttribArray(
-        positionLocation
-    );
-
-
-    gl.vertexAttribPointer(
-        positionLocation,
-        2,
-        gl.FLOAT,
-        false,
-        0,
-        0
-    );
-
-
-
-    /* =========================================
-       UNIFORMS
-    ========================================== */
-
-    const mouseLocation =
-        gl.getUniformLocation(
+        gl.attachShader(
             program,
-            "u_mouse"
+            fragmentShader
         );
 
 
-    const resolutionLocation =
-        gl.getUniformLocation(
-            program,
-            "u_resolution"
+        gl.linkProgram(
+            program
         );
 
 
-    const imageResolutionLocation =
-        gl.getUniformLocation(
-            program,
-            "u_imageResolution"
-        );
+        if (
+            !gl.getProgramParameter(
+                program,
+                gl.LINK_STATUS
+            )
+        ) {
+
+            console.error(
+                "Program error:",
+                gl.getProgramInfoLog(program)
+            );
 
 
-    const timeLocation =
-        gl.getUniformLocation(
-            program,
-            "u_time"
-        );
+            showFallback();
+
+        }
 
 
-    const strengthLocation =
-        gl.getUniformLocation(
-            program,
-            "u_strength"
-        );
+        else {
+
+            gl.useProgram(
+                program
+            );
 
 
-    const pulseLocation =
-        gl.getUniformLocation(
-            program,
-            "u_pulse"
-        );
+            /* =====================================
+               FULLSCREEN PLANE
+            ===================================== */
+
+            const positionBuffer =
+                gl.createBuffer();
 
 
-
-    /* =========================================
-       TEXTURE
-    ========================================== */
-
-    const texture =
-        gl.createTexture();
+            gl.bindBuffer(
+                gl.ARRAY_BUFFER,
+                positionBuffer
+            );
 
 
-    gl.bindTexture(
-        gl.TEXTURE_2D,
-        texture
-    );
+            gl.bufferData(
+
+                gl.ARRAY_BUFFER,
+
+                new Float32Array([
+
+                    -1, -1,
+                     1, -1,
+                    -1,  1,
+
+                    -1,  1,
+                     1, -1,
+                     1,  1
+
+                ]),
+
+                gl.STATIC_DRAW
+
+            );
 
 
-    gl.texParameteri(
-        gl.TEXTURE_2D,
-        gl.TEXTURE_WRAP_S,
-        gl.CLAMP_TO_EDGE
-    );
+            const positionLocation =
+                gl.getAttribLocation(
+                    program,
+                    "a_position"
+                );
 
 
-    gl.texParameteri(
-        gl.TEXTURE_2D,
-        gl.TEXTURE_WRAP_T,
-        gl.CLAMP_TO_EDGE
-    );
+            gl.enableVertexAttribArray(
+                positionLocation
+            );
 
 
-    gl.texParameteri(
-        gl.TEXTURE_2D,
-        gl.TEXTURE_MIN_FILTER,
-        gl.LINEAR
-    );
+            gl.vertexAttribPointer(
+                positionLocation,
+                2,
+                gl.FLOAT,
+                false,
+                0,
+                0
+            );
 
 
-    gl.texParameteri(
-        gl.TEXTURE_2D,
-        gl.TEXTURE_MAG_FILTER,
-        gl.LINEAR
-    );
+            /* =====================================
+               UNIFORMS
+            ===================================== */
+
+            const mouseLocation =
+                gl.getUniformLocation(
+                    program,
+                    "u_mouse"
+                );
 
 
-
-    /* =========================================
-       DRIP IMAGE
-    ========================================== */
-
-    const image =
-        new Image();
+            const resolutionLocation =
+                gl.getUniformLocation(
+                    program,
+                    "u_resolution"
+                );
 
 
-    image.src =
-        "./images/drip_cover_front.jpg";
+            const imageResolutionLocation =
+                gl.getUniformLocation(
+                    program,
+                    "u_imageResolution"
+                );
 
 
-    let imageLoaded =
-        false;
+            const timeLocation =
+                gl.getUniformLocation(
+                    program,
+                    "u_time"
+                );
 
 
-    image.onload =
-        function () {
+            const strengthLocation =
+                gl.getUniformLocation(
+                    program,
+                    "u_strength"
+                );
+
+
+            const pulseLocation =
+                gl.getUniformLocation(
+                    program,
+                    "u_pulse"
+                );
+
+
+            const textureLocation =
+                gl.getUniformLocation(
+                    program,
+                    "u_texture"
+                );
+
+
+            /* =====================================
+               TEXTURE
+            ===================================== */
+
+            const texture =
+                gl.createTexture();
+
+
+            gl.activeTexture(
+                gl.TEXTURE0
+            );
+
 
             gl.bindTexture(
                 gl.TEXTURE_2D,
@@ -755,335 +715,558 @@ if (gl) {
             );
 
 
-            gl.pixelStorei(
-                gl.UNPACK_FLIP_Y_WEBGL,
-                true
-            );
-
-
-            gl.texImage2D(
-
+            gl.texParameteri(
                 gl.TEXTURE_2D,
-
-                0,
-
-                gl.RGBA,
-
-                gl.RGBA,
-
-                gl.UNSIGNED_BYTE,
-
-                image
-
+                gl.TEXTURE_WRAP_S,
+                gl.CLAMP_TO_EDGE
             );
 
 
-            imageLoaded =
-                true;
-
-        };
-
-
-
-    /* =========================================
-       POINTER STATE
-    ========================================== */
-
-    let mouseX =
-        0.5;
-
-
-    let mouseY =
-        0.5;
-
-
-    let targetStrength =
-        0;
-
-
-    let currentStrength =
-        0;
-
-
-    let pulse =
-        0;
-
-
-
-    /* =========================================
-       POINTER POSITION
-    ========================================== */
-
-    function updatePointer(
-        clientX,
-        clientY
-    ) {
-
-        const rect =
-            container.getBoundingClientRect();
-
-
-        mouseX =
-            (
-                clientX
-                -
-                rect.left
-            )
-            /
-            rect.width;
-
-
-        mouseY =
-            1
-            -
-            (
-                clientY
-                -
-                rect.top
-            )
-            /
-            rect.height;
-
-
-        targetStrength =
-            1;
-
-    }
-
-
-
-    /* =========================================
-       POINTER EVENTS
-    ========================================== */
-
-    container.addEventListener(
-        "pointermove",
-        function (event) {
-
-            updatePointer(
-                event.clientX,
-                event.clientY
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_WRAP_T,
+                gl.CLAMP_TO_EDGE
             );
 
-        }
-    );
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_MIN_FILTER,
+                gl.LINEAR
+            );
 
 
-    container.addEventListener(
-        "pointerenter",
-        function () {
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_MAG_FILTER,
+                gl.LINEAR
+            );
 
-            targetStrength =
+
+            gl.uniform1i(
+                textureLocation,
+                0
+            );
+
+
+            /* =====================================
+               LOAD DRIP IMAGE
+            ===================================== */
+
+            const image =
+                new Image();
+
+
+            image.src =
+                "./images/drip_cover_front.jpg";
+
+
+            let imageLoaded =
+                false;
+
+
+            let textureWidth =
                 1;
 
-        }
-    );
+
+            let textureHeight =
+                1;
 
 
-    container.addEventListener(
-        "pointerleave",
-        function () {
+            image.onerror =
+                function () {
 
-            targetStrength =
+                    console.error(
+                        "Could not load drip_cover_front.jpg"
+                    );
+
+
+                    showFallback();
+
+                };
+
+
+            image.onload =
+                function () {
+
+                    /*
+                       The source artwork may be a
+                       very large print-resolution JPG.
+
+                       We resize a COPY internally for
+                       WebGL without changing your
+                       original file.
+                    */
+
+                    const maximumTextureSize =
+                        Math.min(
+                            gl.getParameter(
+                                gl.MAX_TEXTURE_SIZE
+                            ),
+                            4096
+                        );
+
+
+                    let width =
+                        image.naturalWidth;
+
+
+                    let height =
+                        image.naturalHeight;
+
+
+                    const longestSide =
+                        Math.max(
+                            width,
+                            height
+                        );
+
+
+                    if (
+                        longestSide
+                        >
+                        maximumTextureSize
+                    ) {
+
+                        const scale =
+                            maximumTextureSize
+                            /
+                            longestSide;
+
+
+                        width =
+                            Math.round(
+                                width
+                                *
+                                scale
+                            );
+
+
+                        height =
+                            Math.round(
+                                height
+                                *
+                                scale
+                            );
+
+                    }
+
+
+                    /*
+                       Create temporary browser canvas.
+                    */
+
+                    const resizeCanvas =
+                        document.createElement(
+                            "canvas"
+                        );
+
+
+                    resizeCanvas.width =
+                        width;
+
+
+                    resizeCanvas.height =
+                        height;
+
+
+                    const resizeContext =
+                        resizeCanvas.getContext(
+                            "2d"
+                        );
+
+
+                    resizeContext.drawImage(
+                        image,
+                        0,
+                        0,
+                        width,
+                        height
+                    );
+
+
+                    textureWidth =
+                        width;
+
+
+                    textureHeight =
+                        height;
+
+
+                    /*
+                       Upload smaller copy to GPU.
+                    */
+
+                    gl.activeTexture(
+                        gl.TEXTURE0
+                    );
+
+
+                    gl.bindTexture(
+                        gl.TEXTURE_2D,
+                        texture
+                    );
+
+
+                    gl.pixelStorei(
+                        gl.UNPACK_FLIP_Y_WEBGL,
+                        true
+                    );
+
+
+                    gl.texImage2D(
+
+                        gl.TEXTURE_2D,
+
+                        0,
+
+                        gl.RGBA,
+
+                        gl.RGBA,
+
+                        gl.UNSIGNED_BYTE,
+
+                        resizeCanvas
+
+                    );
+
+
+                    const error =
+                        gl.getError();
+
+
+                    if (
+                        error
+                        !==
+                        gl.NO_ERROR
+                    ) {
+
+                        console.error(
+                            "WebGL texture error:",
+                            error
+                        );
+
+
+                        showFallback();
+
+
+                        return;
+
+                    }
+
+
+                    imageLoaded =
+                        true;
+
+
+                    console.log(
+                        "DRIP texture loaded:",
+                        textureWidth,
+                        "x",
+                        textureHeight
+                    );
+
+                };
+
+
+            /* =====================================
+               POINTER STATE
+            ===================================== */
+
+            let mouseX =
+                0.5;
+
+
+            let mouseY =
+                0.5;
+
+
+            let targetStrength =
                 0;
 
-        }
-    );
+
+            let currentStrength =
+                0;
 
 
-    container.addEventListener(
-        "pointerdown",
-        function (event) {
+            let pulse =
+                0;
 
-            updatePointer(
-                event.clientX,
-                event.clientY
+
+            /* =====================================
+               POINTER POSITION
+            ===================================== */
+
+            function updatePointer(
+                clientX,
+                clientY
+            ) {
+
+                const rect =
+                    container.getBoundingClientRect();
+
+
+                mouseX =
+                    (
+                        clientX
+                        -
+                        rect.left
+                    )
+                    /
+                    rect.width;
+
+
+                mouseY =
+                    1
+                    -
+                    (
+                        clientY
+                        -
+                        rect.top
+                    )
+                    /
+                    rect.height;
+
+
+                targetStrength =
+                    1;
+
+            }
+
+
+            /* =====================================
+               POINTER EVENTS
+            ===================================== */
+
+            container.addEventListener(
+                "pointermove",
+                function (event) {
+
+                    updatePointer(
+                        event.clientX,
+                        event.clientY
+                    );
+
+                }
             );
 
 
-            pulse =
-                1;
+            container.addEventListener(
+                "pointerenter",
+                function () {
 
+                    targetStrength =
+                        1;
 
-            /*
-               Start music on first
-               click or touch.
-            */
-
-            startAudio();
-
-        }
-    );
-
-
-
-    /* =========================================
-       CANVAS SIZE
-    ========================================== */
-
-    function resizeCanvas() {
-
-        const pixelRatio =
-            Math.min(
-                window.devicePixelRatio || 1,
-                2
+                }
             );
 
 
-        const width =
-            Math.floor(
-                container.clientWidth
-                *
-                pixelRatio
+            container.addEventListener(
+                "pointerleave",
+                function () {
+
+                    targetStrength =
+                        0;
+
+                }
             );
 
 
-        const height =
-            Math.floor(
-                container.clientHeight
-                *
-                pixelRatio
+            container.addEventListener(
+                "pointerdown",
+                function (event) {
+
+                    updatePointer(
+                        event.clientX,
+                        event.clientY
+                    );
+
+
+                    pulse =
+                        1;
+
+
+                    startAudio();
+
+                }
             );
 
 
-        if (
-            canvas.width
-            !==
-            width
-            ||
-            canvas.height
-            !==
-            height
-        ) {
+            /* =====================================
+               CANVAS RESIZE
+            ===================================== */
 
-            canvas.width =
-                width;
+            function resizeWebGLCanvas() {
 
-
-            canvas.height =
-                height;
+                const pixelRatio =
+                    Math.min(
+                        window.devicePixelRatio || 1,
+                        2
+                    );
 
 
-            gl.viewport(
-                0,
-                0,
-                width,
-                height
+                const width =
+                    Math.floor(
+                        container.clientWidth
+                        *
+                        pixelRatio
+                    );
+
+
+                const height =
+                    Math.floor(
+                        container.clientHeight
+                        *
+                        pixelRatio
+                    );
+
+
+                if (
+                    canvas.width !== width
+                    ||
+                    canvas.height !== height
+                ) {
+
+                    canvas.width =
+                        width;
+
+
+                    canvas.height =
+                        height;
+
+
+                    gl.viewport(
+                        0,
+                        0,
+                        width,
+                        height
+                    );
+
+                }
+
+            }
+
+
+            window.addEventListener(
+                "resize",
+                resizeWebGLCanvas
             );
+
+
+            /* =====================================
+               RENDER
+            ===================================== */
+
+            const startTime =
+                performance.now();
+
+
+            function render() {
+
+                resizeWebGLCanvas();
+
+
+                currentStrength +=
+                    (
+                        targetStrength
+                        -
+                        currentStrength
+                    )
+                    *
+                    0.06;
+
+
+                targetStrength *=
+                    0.985;
+
+
+                pulse *=
+                    0.94;
+
+
+                const time =
+                    (
+                        performance.now()
+                        -
+                        startTime
+                    )
+                    /
+                    1000;
+
+
+                if (imageLoaded) {
+
+                    gl.activeTexture(
+                        gl.TEXTURE0
+                    );
+
+
+                    gl.bindTexture(
+                        gl.TEXTURE_2D,
+                        texture
+                    );
+
+
+                    gl.uniform2f(
+                        mouseLocation,
+                        mouseX,
+                        mouseY
+                    );
+
+
+                    gl.uniform2f(
+                        resolutionLocation,
+                        canvas.width,
+                        canvas.height
+                    );
+
+
+                    gl.uniform2f(
+                        imageResolutionLocation,
+                        textureWidth,
+                        textureHeight
+                    );
+
+
+                    gl.uniform1f(
+                        timeLocation,
+                        time
+                    );
+
+
+                    gl.uniform1f(
+                        strengthLocation,
+                        currentStrength
+                    );
+
+
+                    gl.uniform1f(
+                        pulseLocation,
+                        pulse
+                    );
+
+
+                    gl.drawArrays(
+                        gl.TRIANGLES,
+                        0,
+                        6
+                    );
+
+                }
+
+
+                requestAnimationFrame(
+                    render
+                );
+
+            }
+
+
+            render();
 
         }
 
     }
-
-
-
-    window.addEventListener(
-        "resize",
-        resizeCanvas
-    );
-
-
-
-    /* =========================================
-       ANIMATION
-    ========================================== */
-
-    const startTime =
-        performance.now();
-
-
-    function render() {
-
-        resizeCanvas();
-
-
-        currentStrength +=
-            (
-                targetStrength
-                -
-                currentStrength
-            )
-            *
-            0.06;
-
-
-        targetStrength *=
-            0.985;
-
-
-        pulse *=
-            0.94;
-
-
-        const time =
-            (
-                performance.now()
-                -
-                startTime
-            )
-            /
-            1000;
-
-
-        if (
-            imageLoaded
-        ) {
-
-            gl.uniform2f(
-                mouseLocation,
-                mouseX,
-                mouseY
-            );
-
-
-            gl.uniform2f(
-                resolutionLocation,
-                canvas.width,
-                canvas.height
-            );
-
-
-            gl.uniform2f(
-                imageResolutionLocation,
-                image.width,
-                image.height
-            );
-
-
-            gl.uniform1f(
-                timeLocation,
-                time
-            );
-
-
-            gl.uniform1f(
-                strengthLocation,
-                currentStrength
-            );
-
-
-            gl.uniform1f(
-                pulseLocation,
-                pulse
-            );
-
-
-            gl.drawArrays(
-                gl.TRIANGLES,
-                0,
-                6
-            );
-
-        }
-
-
-        requestAnimationFrame(
-            render
-        );
-
-    }
-
-
-    render();
 
 }
