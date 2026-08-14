@@ -10,11 +10,17 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>SECOND SOURCE — SRC001</title>
+    <title>SECOND SOURCE — DRIP</title>
+
+    <link
+        rel="preload"
+        as="image"
+        href="./images/drip_cover_front.jpg"
+    >
 
     <link
         rel="stylesheet"
-        href="./experiment.css?v=8"
+        href="./experiment.css?v=10"
     >
 
 </head>
@@ -26,60 +32,35 @@
          HEADER
     ========================================== -->
 
-    <header class="experiment-header">
+    <header class="site-header">
 
         <a
-            class="second-source"
+            class="site-logo"
             href="./index.html"
         >
             SECOND SOURCE
         </a>
 
 
-        <div class="header-right">
+        <nav class="site-nav">
 
-            <!-- =================================
-                 MINI PLAYER
-            ================================== -->
-
-            <div
-                id="mini-player"
-                class="mini-player"
-            >
+            <div class="mini-player">
 
                 <button
                     id="play-button"
-                    class="play-button"
+                    class="player-button"
                     type="button"
                     aria-label="Play"
                 >
-
-                    <svg
-                        id="play-icon"
-                        class="player-icon"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                    >
-                        <path d="M8 5L19 12L8 19Z"></path>
-                    </svg>
-
-
-                    <svg
-                        id="pause-icon"
-                        class="player-icon is-hidden"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                    >
-                        <path d="M8 5V19"></path>
-                        <path d="M16 5V19"></path>
-                    </svg>
-
+                    <span id="play-symbol">
+                        ▶
+                    </span>
                 </button>
 
 
-                <div class="player-information">
+                <div class="player-main">
 
-                    <div class="player-topline">
+                    <div class="player-information">
 
                         <span class="player-track">
                             SAGE COUNSEL
@@ -95,10 +76,7 @@
                     </div>
 
 
-                    <div
-                        id="progress-track"
-                        class="progress-track"
-                    >
+                    <div class="progress-track">
 
                         <div
                             id="progress-fill"
@@ -110,55 +88,30 @@
                 </div>
 
 
-                <!-- VOLUME -->
-
-                <div
-                    id="volume-control"
-                    class="volume-control"
-                    title="Drag up/down to change volume"
+                <button
+                    id="sound-button"
+                    class="speaker-button"
+                    type="button"
+                    aria-label="Mute"
                 >
+                    <span id="speaker-symbol">
+                        ◖))
+                    </span>
+                </button>
 
-                    <button
-                        id="sound-button"
-                        class="sound-button"
-                        type="button"
-                        aria-label="Mute"
+
+                <div class="volume-area">
+
+                    <input
+                        id="volume-slider"
+                        class="volume-slider"
+                        type="range"
+                        min="0"
+                        max="100"
+                        value="35"
+                        step="1"
+                        aria-label="Volume"
                     >
-
-                        <svg
-                            class="sound-icon"
-                            viewBox="0 0 32 32"
-                            aria-hidden="true"
-                        >
-
-                            <path
-                                d="M5 12H10L16 7V25L10 20H5Z"
-                            ></path>
-
-                            <path
-                                class="sound-wave"
-                                d="M20 12C22 14 22 18 20 20"
-                            ></path>
-
-                            <path
-                                class="sound-wave"
-                                d="M24 9C28 13 28 19 24 23"
-                            ></path>
-
-                            <path
-                                class="mute-line"
-                                d="M21 11L28 21"
-                            ></path>
-
-                            <path
-                                class="mute-line"
-                                d="M28 11L21 21"
-                            ></path>
-
-                        </svg>
-
-                    </button>
-
 
                     <span
                         id="volume-percent"
@@ -179,7 +132,7 @@
                 RETURN
             </a>
 
-        </div>
+        </nav>
 
     </header>
 
@@ -190,51 +143,56 @@
 
     <main class="experiment-main">
 
+        <section class="experiment-heading">
 
-        <div class="experiment-meta">
-
-            <p>
-                SRC001
+            <p class="page-label">
+                SRC001 / INTERACTIVE ARTWORK
             </p>
 
             <h1>
-                MARTIN SOLLI — DRIP
+                DRIP
             </h1>
 
-        </div>
+            <h2>
+                MARTIN SOLLI
+            </h2>
+
+        </section>
 
 
-        <!-- =====================================
-             INTERACTIVE ARTWORK
-        ====================================== -->
-
-        <div
-            id="visual-container"
-            class="visual-container"
-        >
-
-            <img
-                id="fallback-image"
-                class="fallback-image"
-                src="./images/drip_cover_front.jpg"
-                alt="Martin Solli — Drip"
-            >
-
-
-            <canvas
-                id="visual"
-                class="visual-canvas"
-            ></canvas>
-
+        <section class="artwork-section">
 
             <div
-                id="interaction-message"
-                class="interaction-message"
+                id="visual-container"
+                class="visual-container"
             >
-                MOVE / TOUCH
+
+                <img
+                    id="fallback-image"
+                    class="fallback-image"
+                    src="./images/drip_cover_front.jpg"
+                    alt="Martin Solli — Drip"
+                    fetchpriority="high"
+                    decoding="async"
+                >
+
+
+                <canvas
+                    id="visual"
+                    class="visual-canvas"
+                ></canvas>
+
+
+                <div
+                    id="interaction-message"
+                    class="interaction-message"
+                >
+                    MOVE / TOUCH
+                </div>
+
             </div>
 
-        </div>
+        </section>
 
     </main>
 
@@ -262,14 +220,10 @@
 
     <!-- =========================================
          AUDIO
-
-         Both filenames are included so this works
-         whether or not you renamed the WAV.
     ========================================== -->
 
     <audio
         id="experiment-audio"
-        autoplay
         loop
         preload="auto"
     >
@@ -287,7 +241,7 @@
     </audio>
 
 
-    <script src="./experiment.js?v=9"></script>
+    <script src="./experiment.js?v=11"></script>
 
 </body>
 

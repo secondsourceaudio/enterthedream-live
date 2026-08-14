@@ -11,6 +11,28 @@
 
 
 /* =========================================
+   TYPOGRAPHIC SYSTEM
+
+   Keep these values matched with new.css.
+========================================= */
+
+:root {
+    --brand-size: 11px;
+    --nav-size: 9px;
+
+    --label-size: 10px;
+
+    --h1-size: 68px;
+    --h2-size: 38px;
+
+    --body-size: 9px;
+    --small-size: 8px;
+
+    --footer-size: 9px;
+}
+
+
+/* =========================================
    RESET
 ========================================= */
 
@@ -49,7 +71,7 @@ body {
    HEADER
 ========================================= */
 
-.experiment-header {
+.site-header {
     width: 100%;
     min-height: 72px;
 
@@ -67,10 +89,11 @@ body {
 }
 
 
-.second-source {
+.site-logo {
     color: #ffffff;
 
-    font-size: 11px;
+    font-size:
+        var(--brand-size);
 
     letter-spacing: 0.3em;
 
@@ -80,30 +103,31 @@ body {
 }
 
 
-.second-source:hover {
+.site-logo:hover {
     opacity: 0.65;
 }
 
 
 /* =========================================
-   HEADER RIGHT
+   NAVIGATION
 ========================================= */
 
-.header-right {
+.site-nav {
     margin-left: auto;
 
     display: flex;
 
     align-items: center;
 
-    gap: 34px;
+    gap: 30px;
 }
 
 
 .return-link {
     color: #ffffff;
 
-    font-size: 9px;
+    font-size:
+        var(--nav-size);
 
     letter-spacing: 0.26em;
 
@@ -123,10 +147,10 @@ body {
 ========================================= */
 
 .mini-player {
-    height: 40px;
+    min-height: 46px;
 
     padding:
-        0
+        7px
         11px;
 
     display: flex;
@@ -137,27 +161,21 @@ body {
 
     border:
         1px solid
-        rgba(255, 255, 255, 0.18);
+        rgba(255, 255, 255, 0.22);
 
-    background:
-        rgba(255, 255, 255, 0.015);
+    background: #050505;
 }
 
 
 /* =========================================
-   PLAY / PAUSE
+   PLAYER BUTTONS
 ========================================= */
 
-.play-button {
-    width: 24px;
-    height: 24px;
+.player-button,
+.speaker-button {
+    flex: 0 0 auto;
 
-    padding: 3px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
+    padding: 0;
 
     color: #ffffff;
 
@@ -165,33 +183,32 @@ body {
 
     border: none;
 
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
     cursor: pointer;
 }
 
 
-.player-icon {
-    width: 18px;
-    height: 18px;
+.player-button {
+    width: 24px;
 
-    fill: none;
-
-    stroke: currentColor;
-
-    stroke-width: 1.4;
-
-    stroke-linecap: round;
-    stroke-linejoin: round;
+    font-size: 12px;
 }
 
 
-#play-icon {
-    fill: currentColor;
-    stroke: none;
+.speaker-button {
+    width: 32px;
+
+    font-size: 11px;
 }
 
 
-.player-icon.is-hidden {
-    display: none;
+.player-button:hover,
+.speaker-button:hover {
+    opacity: 0.65;
 }
 
 
@@ -199,25 +216,25 @@ body {
    PLAYER INFORMATION
 ========================================= */
 
-.player-information {
-    width: 180px;
+.player-main {
+    width: 205px;
 }
 
 
-.player-topline {
-    margin-bottom: 6px;
+.player-information {
+    margin-bottom: 7px;
 
     display: flex;
 
     justify-content: space-between;
 
-    gap: 14px;
+    gap: 15px;
 
     color: #ffffff;
 
-    font-size: 6px;
+    font-size: 8px;
 
-    letter-spacing: 0.15em;
+    letter-spacing: 0.1em;
 
     white-space: nowrap;
 }
@@ -236,9 +253,11 @@ body {
         Helvetica,
         sans-serif;
 
-    letter-spacing: 0.03em;
+    font-size: 9px;
 
-    opacity: 0.75;
+    letter-spacing: 0;
+
+    opacity: 0.85;
 }
 
 
@@ -250,40 +269,20 @@ body {
     position: relative;
 
     width: 100%;
-    height: 6px;
+    height: 3px;
 
-    cursor: pointer;
-}
-
-
-.progress-track::before {
-    content: "";
-
-    position: absolute;
-
-    top: 2px;
-    left: 0;
-
-    width: 100%;
-    height: 1px;
+    overflow: hidden;
 
     background:
-        rgba(255, 255, 255, 0.25);
+        rgba(255, 255, 255, 0.22);
 }
 
 
 .progress-fill {
-    position: absolute;
-
-    top: 2px;
-    left: 0;
-
     width: 0%;
-    height: 1px;
+    height: 100%;
 
     background: #ffffff;
-
-    pointer-events: none;
 }
 
 
@@ -291,83 +290,26 @@ body {
    VOLUME
 ========================================= */
 
-.volume-control {
-    height: 30px;
-
-    padding-left: 8px;
-
+.volume-area {
     display: flex;
 
     align-items: center;
 
-    gap: 3px;
-
-    border-left:
-        1px solid
-        rgba(255, 255, 255, 0.17);
-
-    cursor: ns-resize;
-
-    user-select: none;
-
-    touch-action: none;
+    gap: 8px;
 }
 
 
-.sound-button {
-    width: 25px;
-    height: 25px;
+.volume-slider {
+    width: 80px;
 
-    padding: 3px;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
-    color: #ffffff;
-
-    background: transparent;
-
-    border: none;
+    accent-color: #ffffff;
 
     cursor: pointer;
 }
 
 
-.sound-icon {
-    width: 20px;
-    height: 20px;
-
-    fill: none;
-
-    stroke: currentColor;
-
-    stroke-width: 1.4;
-
-    stroke-linecap: round;
-
-    stroke-linejoin: round;
-}
-
-
-.mute-line {
-    display: none;
-}
-
-
-.sound-button.is-muted .sound-wave {
-    display: none;
-}
-
-
-.sound-button.is-muted .mute-line {
-    display: block;
-}
-
-
 .volume-percent {
-    min-width: 29px;
+    min-width: 34px;
 
     color: #ffffff;
 
@@ -376,13 +318,9 @@ body {
         Helvetica,
         sans-serif;
 
-    font-size: 8px;
-
-    letter-spacing: 0.03em;
+    font-size: 10px;
 
     text-align: right;
-
-    pointer-events: none;
 }
 
 
@@ -396,9 +334,9 @@ body {
     width: 100%;
 
     padding:
-        50px
+        55px
         32px
-        70px;
+        80px;
 
     display: flex;
 
@@ -409,48 +347,74 @@ body {
 
 
 /* =========================================
-   META
+   HEADING
 ========================================= */
 
-.experiment-meta {
+.experiment-heading {
     width: 100%;
 
-    margin-bottom: 28px;
+    margin-bottom: 36px;
 
     text-align: center;
 }
 
 
-.experiment-meta p {
+.page-label {
     margin:
         0
         0
-        12px;
+        24px;
 
-    color: #ffffff;
+    font-size:
+        var(--label-size);
 
-    font-size: 8px;
-
-    letter-spacing: 0.27em;
+    letter-spacing: 0.28em;
 }
 
 
-.experiment-meta h1 {
+.experiment-heading h1 {
     margin: 0;
 
-    color: #ffffff;
-
-    font-size: 11px;
+    font-size:
+        var(--h1-size);
 
     font-weight: normal;
 
-    letter-spacing: 0.22em;
+    line-height: 1;
+
+    letter-spacing: 0.05em;
+}
+
+
+.experiment-heading h2 {
+    margin:
+        10px
+        0
+        0;
+
+    font-size:
+        var(--h2-size);
+
+    font-weight: normal;
+
+    line-height: 1;
+
+    letter-spacing: 0.08em;
 }
 
 
 /* =========================================
    ARTWORK
 ========================================= */
+
+.artwork-section {
+    width: 100%;
+
+    display: flex;
+
+    justify-content: center;
+}
+
 
 .visual-container {
     position: relative;
@@ -459,11 +423,10 @@ body {
         min(
             76vh,
             820px,
-            80vw
+            86vw
         );
 
-    aspect-ratio:
-        1 / 1;
+    aspect-ratio: 1 / 1;
 
     overflow: hidden;
 
@@ -471,17 +434,9 @@ body {
 
     border:
         1px solid
-        rgba(255, 255, 255, 0.15);
+        rgba(255, 255, 255, 0.16);
 
     touch-action: none;
-
-    cursor: default;
-
-    box-shadow:
-        0
-        25px
-        70px
-        rgba(0, 0, 0, 0.5);
 }
 
 
@@ -514,7 +469,7 @@ body {
     opacity: 0;
 
     transition:
-        opacity 0.4s ease;
+        opacity 0.35s ease;
 }
 
 
@@ -531,26 +486,23 @@ body {
     position: absolute;
 
     left: 50%;
-    bottom: 16px;
+    bottom: 15px;
 
     transform:
         translateX(-50%);
 
-    z-index: 4;
+    z-index: 5;
 
-    color:
-        rgba(255, 255, 255, 0.8);
+    font-size: 7px;
 
-    font-size: 6px;
-
-    letter-spacing: 0.28em;
+    letter-spacing: 0.3em;
 
     white-space: nowrap;
 
     pointer-events: none;
 
     transition:
-        opacity 0.6s ease;
+        opacity 0.7s ease;
 }
 
 
@@ -561,13 +513,11 @@ body {
 
 /* =========================================
    FOOTER
-
-   Intentionally larger than before.
 ========================================= */
 
 .experiment-footer {
     width: 100%;
-    min-height: 66px;
+    min-height: 72px;
 
     padding:
         0
@@ -586,11 +536,10 @@ body {
         1px solid
         rgba(255, 255, 255, 0.18);
 
-    color: #ffffff;
+    font-size:
+        var(--footer-size);
 
-    font-size: 9px;
-
-    letter-spacing: 0.24em;
+    letter-spacing: 0.22em;
 }
 
 
@@ -615,108 +564,109 @@ body {
 
 @media (max-width: 750px) {
 
-    .experiment-header {
-        min-height: 64px;
+    :root {
+        --brand-size: 10px;
+        --nav-size: 8px;
+
+        --label-size: 8px;
+
+        --h1-size: 44px;
+        --h2-size: 22px;
+
+        --footer-size: 7px;
+    }
+
+
+    .site-header {
+        min-height: 0;
 
         padding:
-            0
-            18px;
+            20px;
+
+        display: block;
     }
 
 
-    .second-source {
-        font-size: 9px;
+    .site-logo {
+        display: inline-block;
 
-        letter-spacing: 0.22em;
+        margin-bottom: 20px;
     }
 
 
-    .header-right {
-        gap: 14px;
+    .site-nav {
+        width: 100%;
+
+        margin-left: 0;
+
+        display: flex;
+
+        align-items: center;
+
+        justify-content: space-between;
+
+        gap: 12px;
     }
 
-
-    .return-link {
-        font-size: 7px;
-
-        letter-spacing: 0.18em;
-    }
-
-
-    /*
-       Compact player on mobile.
-    */
 
     .mini-player {
-        height: 34px;
+        flex: 1;
+
+        min-width: 0;
+
+        min-height: 44px;
 
         padding:
-            0
-            7px;
+            6px
+            8px;
 
-        gap: 5px;
+        gap: 7px;
     }
 
 
-    .player-information {
+    .player-main {
         display: none;
     }
 
 
-    .play-button {
-        width: 22px;
-        height: 22px;
+    .volume-area {
+        flex: 1;
+
+        min-width: 0;
     }
 
 
-    .volume-control {
-        height: 24px;
+    .volume-slider {
+        flex: 1;
 
-        padding-left: 5px;
-    }
+        width: auto;
 
-
-    .sound-button {
-        width: 22px;
-        height: 22px;
-    }
-
-
-    .sound-icon {
-        width: 18px;
-        height: 18px;
+        min-width: 60px;
     }
 
 
     .volume-percent {
-        min-width: 25px;
+        min-width: 31px;
 
-        font-size: 7px;
+        font-size: 9px;
     }
 
 
     .experiment-main {
         padding:
-            38px
+            40px
             12px
             55px;
     }
 
 
-    .experiment-meta {
-        margin-bottom: 24px;
+    .experiment-heading {
+        margin-bottom: 28px;
     }
 
 
-    .experiment-meta p {
-        font-size: 7px;
-    }
-
-
-    .experiment-meta h1 {
-        font-size: 8px;
-
-        line-height: 1.6;
+    .page-label {
+        margin-bottom: 20px;
     }
 
 
@@ -724,33 +674,15 @@ body {
         width: 100%;
 
         max-width: 600px;
-
-        aspect-ratio:
-            1 / 1;
     }
 
-
-    .interaction-message {
-        bottom: 12px;
-
-        font-size: 6px;
-    }
-
-
-    /*
-       Larger footer type on mobile too.
-    */
 
     .experiment-footer {
-        min-height: 62px;
+        min-height: 66px;
 
         padding:
             0
             18px;
-
-        font-size: 7px;
-
-        letter-spacing: 0.17em;
     }
 
 

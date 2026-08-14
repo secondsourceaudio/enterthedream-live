@@ -4,20 +4,8 @@
 ========================================= */
 
 
-const canvas =
-    document.getElementById("visual");
-
-
-const container =
-    document.getElementById("visual-container");
-
-
-const interactionMessage =
-    document.getElementById("interaction-message");
-
-
 /* =========================================
-   AUDIO PLAYER
+   AUDIO
 ========================================= */
 
 const audio =
@@ -28,28 +16,24 @@ const playButton =
     document.getElementById("play-button");
 
 
-const playIcon =
-    document.getElementById("play-icon");
-
-
-const pauseIcon =
-    document.getElementById("pause-icon");
+const playSymbol =
+    document.getElementById("play-symbol");
 
 
 const soundButton =
     document.getElementById("sound-button");
 
 
-const volumeControl =
-    document.getElementById("volume-control");
+const speakerSymbol =
+    document.getElementById("speaker-symbol");
+
+
+const volumeSlider =
+    document.getElementById("volume-slider");
 
 
 const volumePercent =
     document.getElementById("volume-percent");
-
-
-const progressTrack =
-    document.getElementById("progress-track");
 
 
 const progressFill =
@@ -60,23 +44,16 @@ const playerTime =
     document.getElementById("player-time");
 
 
-/* =========================================
-   INITIAL AUDIO STATE
-
-   Previous setting was 70%.
-   Half of that = 35%.
-========================================= */
-
-let preferredVolume =
+let selectedVolume =
     0.35;
 
 
-let userMuted =
+let muted =
     false;
 
 
 audio.volume =
-    preferredVolume;
+    selectedVolume;
 
 
 audio.muted =
@@ -84,25 +61,8 @@ audio.muted =
 
 
 /* =========================================
-   HELPERS
+   AUDIO HELPERS
 ========================================= */
-
-function clamp(
-    value,
-    minimum,
-    maximum
-) {
-
-    return Math.max(
-        minimum,
-        Math.min(
-            maximum,
-            value
-        )
-    );
-
-}
-
 
 function formatTime(seconds) {
 
@@ -121,7 +81,7 @@ function formatTime(seconds) {
         );
 
 
-    const remainingSeconds =
+    const secondsLeft =
         Math.floor(
             seconds % 60
         );
@@ -133,7 +93,7 @@ function formatTime(seconds) {
         ":"
         +
         String(
-            remainingSeconds
+            secondsLeft
         ).padStart(
             2,
             "0"
@@ -143,73 +103,27 @@ function formatTime(seconds) {
 }
 
 
-/* =========================================
-   PLAYER DISPLAY
-========================================= */
+function updatePlayer() {
 
-function updatePlayButton() {
-
-    const playing =
-        !audio.paused;
+    playSymbol.textContent =
+        audio.paused
+            ? "▶"
+            : "Ⅱ";
 
 
-    playIcon.classList.toggle(
-        "is-hidden",
-        playing
-    );
-
-
-    pauseIcon.classList.toggle(
-        "is-hidden",
-        !playing
-    );
-
-
-    playButton.setAttribute(
-        "aria-label",
-        playing
-            ? "Pause"
-            : "Play"
-    );
-
-}
-
-
-function updateVolumeDisplay() {
-
-    const percentage =
-        Math.round(
-            preferredVolume
-            *
-            100
-        );
+    speakerSymbol.textContent =
+        muted
+            ? "×"
+            : "◖))";
 
 
     volumePercent.textContent =
-        percentage
+        Math.round(
+            selectedVolume * 100
+        )
         +
         "%";
 
-
-    soundButton.classList.toggle(
-        "is-muted",
-        userMuted
-        ||
-        audio.muted
-    );
-
-
-    soundButton.setAttribute(
-        "aria-label",
-        userMuted
-            ? "Unmute"
-            : "Mute"
-    );
-
-}
-
-
-function updateProgress() {
 
     if (
         Number.isFinite(
@@ -219,18 +133,14 @@ function updateProgress() {
         audio.duration > 0
     ) {
 
-        const progress =
+        progressFill.style.width =
             (
                 audio.currentTime
                 /
                 audio.duration
+                *
+                100
             )
-            *
-            100;
-
-
-        progressFill.style.width =
-            progress
             +
             "%";
 
@@ -255,9 +165,9 @@ function updateProgress() {
    START AUDIO
 ========================================= */
 
-function tryToPlayAudio() {
+function startAudio() {
 
-    if (userMuted) {
+    if (muted) {
 
         return;
 
@@ -268,45 +178,31 @@ function tryToPlayAudio() {
         false;
 
 
-    const promise =
-        audio.play();
+    audio.volume =
+        selectedVolume;
 
 
-    if (promise !== undefined) {
+    audio.play()
+        .then(
+            updatePlayer
+        )
+        .catch(function () {
 
-        promise
-            .then(function () {
+            /*
+               Normal browser autoplay restriction.
 
-                updatePlayButton();
-                updateVolumeDisplay();
+               First interaction will try again.
+            */
 
-            })
-            .catch(function () {
+            updatePlayer();
 
-                /*
-                   Browser blocked autoplay.
-
-                   First click / touch will retry.
-                */
-
-                updatePlayButton();
-
-            });
-
-    }
+        });
 
 }
 
 
-/*
-   Initial autoplay attempt.
-*/
-
-tryToPlayAudio();
-
-
 /* =========================================
-   PLAY / PAUSE
+   PLAY
 ========================================= */
 
 playButton.addEventListener(
@@ -315,7 +211,7 @@ playButton.addEventListener(
 
         if (audio.paused) {
 
-            userMuted =
+            muted =
                 false;
 
 
@@ -324,20 +220,7 @@ playButton.addEventListener(
 
 
             audio.play()
-                .then(function () {
-
-                    updatePlayButton();
-                    updateVolumeDisplay();
-
-                })
-                .catch(function (error) {
-
-                    console.error(
-                        "Audio could not play:",
-                        error
-                    );
-
-                });
+                .catch(function () {});
 
         }
 
@@ -347,31 +230,31 @@ playButton.addEventListener(
 
         }
 
+
+        updatePlayer();
+
     }
 );
 
 
 /* =========================================
-   SPEAKER CLICK = MUTE / UNMUTE
+   MUTE
 ========================================= */
 
 soundButton.addEventListener(
     "click",
-    function (event) {
+    function () {
 
-        event.stopPropagation();
-
-
-        userMuted =
-            !userMuted;
+        muted =
+            !muted;
 
 
         audio.muted =
-            userMuted;
+            muted;
 
 
         if (
-            !userMuted
+            !muted
             &&
             audio.paused
         ) {
@@ -382,156 +265,51 @@ soundButton.addEventListener(
         }
 
 
-        updateVolumeDisplay();
+        updatePlayer();
 
     }
 );
 
 
 /* =========================================
-   VERTICAL VOLUME DRAG
+   VOLUME
 
-   Drag upward = louder
-   Drag downward = quieter
+   Works naturally with mouse and touch.
 ========================================= */
 
-let volumeDragging =
-    false;
+volumeSlider.addEventListener(
+    "input",
+    function () {
 
-
-let volumeStartY =
-    0;
-
-
-let volumeStartValue =
-    preferredVolume;
-
-
-let volumeHasMoved =
-    false;
-
-
-volumeControl.addEventListener(
-    "pointerdown",
-    function (event) {
-
-        /*
-           Let a normal speaker click remain
-           a mute/unmute click unless the
-           pointer actually moves vertically.
-        */
-
-        volumeDragging =
-            true;
-
-
-        volumeHasMoved =
-            false;
-
-
-        volumeStartY =
-            event.clientY;
-
-
-        volumeStartValue =
-            preferredVolume;
-
-
-        try {
-
-            volumeControl.setPointerCapture(
-                event.pointerId
-            );
-
-        }
-
-        catch (error) {
-        }
-
-    }
-);
-
-
-volumeControl.addEventListener(
-    "pointermove",
-    function (event) {
-
-        if (!volumeDragging) {
-
-            return;
-
-        }
-
-
-        const movement =
-            volumeStartY
-            -
-            event.clientY;
-
-
-        if (
-            Math.abs(
-                movement
+        selectedVolume =
+            Number(
+                volumeSlider.value
             )
-            >
-            3
-        ) {
-
-            volumeHasMoved =
-                true;
-
-        }
-
-
-        if (!volumeHasMoved) {
-
-            return;
-
-        }
-
-
-        /*
-           About 140 pixels of movement
-           covers the full volume range.
-        */
-
-        const newVolume =
-            clamp(
-
-                volumeStartValue
-                +
-                movement
-                /
-                140,
-
-                0,
-                1
-
-            );
-
-
-        preferredVolume =
-            newVolume;
+            /
+            100;
 
 
         audio.volume =
-            preferredVolume;
+            selectedVolume;
 
 
-        /*
-           Adjusting volume means the user
-           intends to hear sound.
-        */
+        if (
+            selectedVolume > 0
+        ) {
 
-        userMuted =
-            false;
-
-
-        audio.muted =
-            false;
+            muted =
+                false;
 
 
-        if (audio.paused) {
+            audio.muted =
+                false;
+
+        }
+
+
+        if (
+            audio.paused
+        ) {
 
             audio.play()
                 .catch(function () {});
@@ -539,80 +317,7 @@ volumeControl.addEventListener(
         }
 
 
-        updateVolumeDisplay();
-
-    }
-);
-
-
-function finishVolumeDrag() {
-
-    volumeDragging =
-        false;
-
-}
-
-
-volumeControl.addEventListener(
-    "pointerup",
-    finishVolumeDrag
-);
-
-
-volumeControl.addEventListener(
-    "pointercancel",
-    finishVolumeDrag
-);
-
-
-/* =========================================
-   SEEKING
-========================================= */
-
-progressTrack.addEventListener(
-    "click",
-    function (event) {
-
-        if (
-            !Number.isFinite(
-                audio.duration
-            )
-        ) {
-
-            return;
-
-        }
-
-
-        const rect =
-            progressTrack
-                .getBoundingClientRect();
-
-
-        const percentage =
-            clamp(
-
-                (
-                    event.clientX
-                    -
-                    rect.left
-                )
-                /
-                rect.width,
-
-                0,
-                1
-
-            );
-
-
-        audio.currentTime =
-            percentage
-            *
-            audio.duration;
-
-
-        updateProgress();
+        updatePlayer();
 
     }
 );
@@ -624,81 +329,59 @@ progressTrack.addEventListener(
 
 audio.addEventListener(
     "timeupdate",
-    updateProgress
-);
-
-
-audio.addEventListener(
-    "durationchange",
-    updateProgress
+    updatePlayer
 );
 
 
 audio.addEventListener(
     "loadedmetadata",
-    updateProgress
+    updatePlayer
 );
 
 
 audio.addEventListener(
     "play",
-    updatePlayButton
+    updatePlayer
 );
 
 
 audio.addEventListener(
     "pause",
-    updatePlayButton
+    updatePlayer
 );
 
 
-audio.addEventListener(
-    "volumechange",
-    updateVolumeDisplay
-);
+updatePlayer();
 
 
-/* =========================================
-   AUTOPLAY UNLOCK
+/*
+   Request autoplay.
 
-   If Brave/Safari blocks autoplay,
-   first interaction with the artwork
-   starts it.
-========================================= */
+   Browser may defer this until first interaction.
+*/
 
-function unlockAudio() {
-
-    if (
-        audio.paused
-        &&
-        !userMuted
-    ) {
-
-        audio.play()
-            .catch(function () {});
-
-    }
-
-}
-
-
-container.addEventListener(
-    "pointerdown",
-    unlockAudio,
-    {
-        once: true
-    }
-);
-
-
-updatePlayButton();
-updateVolumeDisplay();
-updateProgress();
+startAudio();
 
 
 /* =========================================
    WEBGL
 ========================================= */
+
+const canvas =
+    document.getElementById("visual");
+
+
+const container =
+    document.getElementById(
+        "visual-container"
+    );
+
+
+const interactionMessage =
+    document.getElementById(
+        "interaction-message"
+    );
+
 
 const gl =
     canvas.getContext(
@@ -719,7 +402,7 @@ if (!gl) {
 
 
 /* =========================================
-   SHADERS
+   WEBGL
 ========================================= */
 
 if (gl) {
@@ -763,86 +446,151 @@ if (gl) {
 
         uniform vec2 u_velocity;
 
-        uniform vec2 u_pulseCenter;
-
         uniform float u_time;
 
         uniform float u_motion;
 
-        uniform float u_pulseAge;
-
-
-        float randomValue(float value) {
-
-            return fract(
-                sin(
-                    value
-                )
-                *
-                43758.5453123
-            );
-
-        }
-
-
-        mat2 rotate2D(float angle) {
-
-            float sineValue =
-                sin(angle);
-
-
-            float cosineValue =
-                cos(angle);
-
-
-            return mat2(
-                cosineValue,
-                -sineValue,
-                sineValue,
-                cosineValue
-            );
-
-        }
-
 
         void main() {
 
-            vec2 baseUV =
+            vec2 uv =
                 v_uv;
 
 
-            vec2 uv =
-                baseUV;
-
-
             /* =================================
-               LIQUID BASE FLOW
+               CONSTANT CENTER BUBBLING
             ================================= */
 
 
-            float flowX =
-                sin(
-                    uv.y
-                    *
-                    11.0
+            vec2 center =
+                vec2(
+                    0.5,
+                    0.5
+                );
+
+
+            vec2 centerDelta =
+                uv
+                -
+                center;
+
+
+            float centerDistance =
+                length(
+                    centerDelta
+                );
+
+
+            vec2 centerDirection =
+                normalize(
+                    centerDelta
                     +
-                    u_time
-                    *
-                    0.72
-                    +
-                    sin(
-                        uv.x
-                        *
-                        8.0
-                        -
-                        u_time
-                        *
-                        0.45
+                    vec2(
+                        0.0001
                     )
                 );
 
 
-            float flowY =
+            /*
+               Several waves travelling outward
+               continuously from the center.
+            */
+
+
+            float centerWave1 =
+                sin(
+                    centerDistance
+                    *
+                    48.0
+                    -
+                    u_time
+                    *
+                    3.2
+                );
+
+
+            float centerWave2 =
+                sin(
+                    centerDistance
+                    *
+                    27.0
+                    -
+                    u_time
+                    *
+                    2.1
+                );
+
+
+            float centerWave3 =
+                sin(
+                    centerDistance
+                    *
+                    76.0
+                    -
+                    u_time
+                    *
+                    4.4
+                );
+
+
+            float centerBubbles =
+                centerWave1
+                *
+                0.50
+                +
+                centerWave2
+                *
+                0.32
+                +
+                centerWave3
+                *
+                0.18;
+
+
+            /*
+               Strongest toward center,
+               gradually softer toward edges.
+            */
+
+
+            float centerInfluence =
+                smoothstep(
+                    0.72,
+                    0.04,
+                    centerDistance
+                );
+
+
+            uv +=
+                centerDirection
+                *
+                centerBubbles
+                *
+                centerInfluence
+                *
+                0.0048;
+
+
+            /* =================================
+               SLOW BREATHING / WATER MOTION
+            ================================= */
+
+
+            uv.x +=
+                sin(
+                    uv.y
+                    *
+                    10.0
+                    +
+                    u_time
+                    *
+                    0.55
+                )
+                *
+                0.0022;
+
+
+            uv.y +=
                 cos(
                     uv.x
                     *
@@ -850,46 +598,19 @@ if (gl) {
                     -
                     u_time
                     *
-                    0.60
-                    +
-                    cos(
-                        uv.y
-                        *
-                        8.0
-                        +
-                        u_time
-                        *
-                        0.38
-                    )
-                );
-
-
-            vec2 flow =
-                vec2(
-                    flowX,
-                    flowY
-                );
-
-
-            uv +=
-                flow
+                    0.42
+                )
                 *
-                (
-                    0.002
-                    +
-                    u_motion
-                    *
-                    0.018
-                );
+                0.0018;
 
 
             /* =================================
-               POINTER FIELD
+               POINTER RIPPLE
             ================================= */
 
 
             vec2 pointerDelta =
-                baseUV
+                v_uv
                 -
                 u_pointer;
 
@@ -900,309 +621,117 @@ if (gl) {
                 );
 
 
-            float influence =
+            float pointerInfluence =
                 smoothstep(
-                    0.48,
+                    0.34,
                     0.0,
                     pointerDistance
                 );
 
 
-            /* =================================
-               SWIRL
-            ================================= */
-
-
-            float swirl =
-                influence
-                *
-                (
-                    0.25
+            vec2 pointerDirection =
+                normalize(
+                    pointerDelta
                     +
-                    u_motion
-                    *
-                    3.5
-                )
-                *
-                sin(
-                    u_time
-                    *
-                    0.8
-                    +
-                    pointerDistance
-                    *
-                    8.0
+                    vec2(
+                        0.0001
+                    )
                 );
 
 
-            vec2 rotated =
-                rotate2D(
-                    swirl
-                )
+            float pointerWave1 =
+                sin(
+                    pointerDistance
+                    *
+                    58.0
+                    -
+                    u_time
+                    *
+                    7.0
+                );
+
+
+            float pointerWave2 =
+                sin(
+                    pointerDistance
+                    *
+                    29.0
+                    -
+                    u_time
+                    *
+                    4.0
+                );
+
+
+            float pointerWave =
+                pointerWave1
                 *
-                pointerDelta;
+                0.68
+                +
+                pointerWave2
+                *
+                0.32;
 
 
             uv +=
+                pointerDirection
+                *
+                pointerWave
+                *
+                pointerInfluence
+                *
                 (
-                    rotated
-                    -
-                    pointerDelta
-                )
-                *
-                influence
-                *
-                0.82;
+                    0.006
+                    +
+                    u_motion
+                    *
+                    0.025
+                );
 
 
             /* =================================
-               SMEAR
+               DRAGGING LIQUID
+
+               Faster movement pulls the artwork
+               slightly behind the pointer.
             ================================= */
 
 
             uv -=
                 u_velocity
                 *
-                influence
+                pointerInfluence
                 *
                 (
-                    0.28
+                    0.18
                     +
                     u_motion
                     *
-                    1.05
+                    0.45
                 );
 
 
             /* =================================
-               LIQUID RIPPLES
+               LOCAL LENS / BULGE
             ================================= */
 
 
-            vec2 radialDirection =
-                normalize(
-                    pointerDelta
-                    +
-                    vec2(
-                        0.0001
-                    )
-                );
-
-
-            float waveA =
-                sin(
-                    pointerDistance
-                    *
-                    65.0
-                    -
-                    u_time
-                    *
-                    9.0
-                );
-
-
-            float waveB =
-                sin(
-                    pointerDistance
-                    *
-                    26.0
-                    +
-                    u_time
-                    *
-                    4.2
-                );
-
-
-            float waves =
-                waveA
-                *
-                0.68
-                +
-                waveB
-                *
-                0.32;
-
-
-            uv +=
-                radialDirection
-                *
-                waves
-                *
-                influence
+            float bulge =
+                pointerInfluence
                 *
                 (
-                    0.005
+                    0.008
                     +
                     u_motion
                     *
-                    0.038
+                    0.018
                 );
 
 
-            /* =================================
-               HORIZONTAL DIGITAL TEARS
-            ================================= */
-
-
-            float glitchTime =
-                floor(
-                    u_time
-                    *
-                    10.0
-                );
-
-
-            float row =
-                floor(
-                    baseUV.y
-                    *
-                    38.0
-                );
-
-
-            float rowRandom =
-                randomValue(
-                    row
-                    *
-                    17.17
-                    +
-                    glitchTime
-                    *
-                    3.71
-                );
-
-
-            float glitchGate =
-                step(
-                    0.87
-                    -
-                    u_motion
-                    *
-                    0.18,
-                    rowRandom
-                );
-
-
-            float horizontalTear =
-                (
-                    randomValue(
-                        row
-                        *
-                        71.3
-                        +
-                        glitchTime
-                    )
-                    -
-                    0.5
-                )
+            uv -=
+                pointerDelta
                 *
-                glitchGate
-                *
-                (
-                    0.003
-                    +
-                    u_motion
-                    *
-                    0.065
-                );
-
-
-            uv.x +=
-                horizontalTear;
-
-
-            /* =================================
-               POINTER GLITCH BURST
-            ================================= */
-
-
-            float microBands =
-                sin(
-                    baseUV.y
-                    *
-                    240.0
-                    +
-                    u_time
-                    *
-                    19.0
-                );
-
-
-            uv.x +=
-                microBands
-                *
-                influence
-                *
-                u_motion
-                *
-                0.0035;
-
-
-            /* =================================
-               CLICK RIPPLE
-            ================================= */
-
-
-            vec2 pulseDelta =
-                baseUV
-                -
-                u_pulseCenter;
-
-
-            float pulseDistance =
-                length(
-                    pulseDelta
-                );
-
-
-            float pulseLife =
-                clamp(
-                    1.0
-                    -
-                    u_pulseAge
-                    /
-                    2.0,
-                    0.0,
-                    1.0
-                );
-
-
-            float pulseRadius =
-                u_pulseAge
-                *
-                0.36;
-
-
-            float ring =
-                exp(
-                    -abs(
-                        pulseDistance
-                        -
-                        pulseRadius
-                    )
-                    *
-                    72.0
-                )
-                *
-                pulseLife;
-
-
-            vec2 pulseDirection =
-                normalize(
-                    pulseDelta
-                    +
-                    vec2(
-                        0.0001
-                    )
-                );
-
-
-            uv +=
-                pulseDirection
-                *
-                ring
-                *
-                0.06;
+                bulge;
 
 
             /* =================================
@@ -1214,150 +743,28 @@ if (gl) {
                 clamp(
                     uv,
                     vec2(
-                        0.003
+                        0.002
                     ),
                     vec2(
-                        0.997
+                        0.998
                     )
                 );
 
 
             /* =================================
-               RGB SEPARATION
-
-               Comes alive mainly during movement.
+               IMAGE
             ================================= */
 
 
-            vec2 rgbOffset =
-                (
-                    u_velocity
-                    *
-                    1.6
-                    +
-                    flow
-                    *
-                    0.002
-                )
-                *
-                (
-                    0.18
-                    +
-                    u_motion
-                    *
-                    1.1
-                );
-
-
-            rgbOffset.x +=
-                horizontalTear
-                *
-                0.5;
-
-
-            vec2 redUV =
-                clamp(
-                    uv
-                    +
-                    rgbOffset,
-                    vec2(0.003),
-                    vec2(0.997)
-                );
-
-
-            vec2 blueUV =
-                clamp(
-                    uv
-                    -
-                    rgbOffset,
-                    vec2(0.003),
-                    vec2(0.997)
-                );
-
-
-            float red =
-                texture2D(
-                    u_texture,
-                    redUV
-                ).r;
-
-
-            float green =
+            vec4 colour =
                 texture2D(
                     u_texture,
                     uv
-                ).g;
-
-
-            float blue =
-                texture2D(
-                    u_texture,
-                    blueUV
-                ).b;
-
-
-            /* =================================
-               EXTRA SMEAR SAMPLE
-            ================================= */
-
-
-            vec4 smearSample =
-                texture2D(
-
-                    u_texture,
-
-                    clamp(
-
-                        uv
-                        -
-                        u_velocity
-                        *
-                        influence
-                        *
-                        1.2,
-
-                        vec2(0.003),
-
-                        vec2(0.997)
-
-                    )
-
-                );
-
-
-            vec3 glitchColour =
-                vec3(
-                    red,
-                    green,
-                    blue
-                );
-
-
-            float smearAmount =
-                clamp(
-                    influence
-                    *
-                    u_motion
-                    *
-                    0.35,
-                    0.0,
-                    0.35
-                );
-
-
-            vec3 finalColour =
-                mix(
-                    glitchColour,
-                    smearSample.rgb,
-                    smearAmount
                 );
 
 
             gl_FragColor =
-                vec4(
-                    finalColour,
-                    1.0
-                );
+                colour;
 
         }
 
@@ -1365,7 +772,7 @@ if (gl) {
 
 
     /* =========================================
-       SHADER CREATION
+       SHADERS
     ========================================== */
 
     function createShader(
@@ -1468,7 +875,7 @@ if (gl) {
 
 
             /* =================================
-               FULLSCREEN PLANE
+               PLANE
             ================================= */
 
 
@@ -1544,13 +951,6 @@ if (gl) {
                 );
 
 
-            const pulseCenterUniform =
-                gl.getUniformLocation(
-                    program,
-                    "u_pulseCenter"
-                );
-
-
             const timeUniform =
                 gl.getUniformLocation(
                     program,
@@ -1562,13 +962,6 @@ if (gl) {
                 gl.getUniformLocation(
                     program,
                     "u_motion"
-                );
-
-
-            const pulseAgeUniform =
-                gl.getUniformLocation(
-                    program,
-                    "u_pulseAge"
                 );
 
 
@@ -1634,7 +1027,7 @@ if (gl) {
 
 
             /* =================================
-               LOAD IMAGE
+               IMAGE
             ================================= */
 
 
@@ -1653,9 +1046,15 @@ if (gl) {
             image.onload =
                 function () {
 
+                    /*
+                       Resize internally.
+
+                       Original JPG stays untouched.
+                    */
+
                     const maximum =
                         Math.min(
-                            2048,
+                            1800,
                             gl.getParameter(
                                 gl.MAX_TEXTURE_SIZE
                             )
@@ -1678,12 +1077,10 @@ if (gl) {
 
 
                     if (
-                        longest
-                        >
-                        maximum
+                        longest > maximum
                     ) {
 
-                        const scale =
+                        const resizeScale =
                             maximum
                             /
                             longest;
@@ -1693,7 +1090,7 @@ if (gl) {
                             Math.round(
                                 width
                                 *
-                                scale
+                                resizeScale
                             );
 
 
@@ -1701,28 +1098,28 @@ if (gl) {
                             Math.round(
                                 height
                                 *
-                                scale
+                                resizeScale
                             );
 
                     }
 
 
-                    const temporaryCanvas =
+                    const textureCanvas =
                         document.createElement(
                             "canvas"
                         );
 
 
-                    temporaryCanvas.width =
+                    textureCanvas.width =
                         width;
 
 
-                    temporaryCanvas.height =
+                    textureCanvas.height =
                         height;
 
 
                     const context =
-                        temporaryCanvas.getContext(
+                        textureCanvas.getContext(
                             "2d"
                         );
 
@@ -1760,7 +1157,7 @@ if (gl) {
 
                         gl.UNSIGNED_BYTE,
 
-                        temporaryCanvas
+                        textureCanvas
 
                     );
 
@@ -1777,7 +1174,7 @@ if (gl) {
 
 
             /* =================================
-               POINTER STATE
+               POINTER
             ================================= */
 
 
@@ -1813,24 +1210,25 @@ if (gl) {
                 0;
 
 
-            let pulseX =
-                0.5;
-
-
-            let pulseY =
-                0.5;
-
-
-            let pulseStarted =
-                -10000;
-
-
-            const activePointers =
-                new Set();
-
-
-            let hasVisualInteraction =
+            let interacted =
                 false;
+
+
+            function clampValue(
+                value,
+                minimum,
+                maximum
+            ) {
+
+                return Math.max(
+                    minimum,
+                    Math.min(
+                        maximum,
+                        value
+                    )
+                );
+
+            }
 
 
             function updatePointer(
@@ -1886,22 +1284,18 @@ if (gl) {
 
 
                 targetVelocityX =
-                    clamp(
-                        deltaX
-                        *
-                        2.8,
-                        -0.085,
-                        0.085
+                    clampValue(
+                        deltaX * 2.5,
+                        -0.07,
+                        0.07
                     );
 
 
                 targetVelocityY =
-                    clamp(
-                        deltaY
-                        *
-                        2.8,
-                        -0.085,
-                        0.085
+                    clampValue(
+                        deltaY * 2.5,
+                        -0.07,
+                        0.07
                     );
 
 
@@ -1913,13 +1307,13 @@ if (gl) {
                             deltaY
                         )
                         *
-                        60
+                        50
                     );
 
 
-                if (!hasVisualInteraction) {
+                if (!interacted) {
 
-                    hasVisualInteraction =
+                    interacted =
                         true;
 
 
@@ -1935,8 +1329,12 @@ if (gl) {
 
 
             /* =================================
-               DESKTOP + MOBILE INPUT
+               MOUSE + TOUCH
             ================================= */
+
+
+            const activePointers =
+                new Set();
 
 
             container.addEventListener(
@@ -1946,6 +1344,31 @@ if (gl) {
                     activePointers.add(
                         event.pointerId
                     );
+
+
+                    updatePointer(
+                        event.clientX,
+                        event.clientY
+                    );
+
+
+                    /*
+                       First meaningful interaction
+                       can unlock browser audio.
+                    */
+
+                    if (
+                        audio.paused
+                        &&
+                        !muted
+                    ) {
+
+                        audio.play()
+                            .catch(
+                                function () {}
+                            );
+
+                    }
 
 
                     try {
@@ -1958,24 +1381,6 @@ if (gl) {
 
                     catch (error) {
                     }
-
-
-                    updatePointer(
-                        event.clientX,
-                        event.clientY
-                    );
-
-
-                    pulseX =
-                        pointerX;
-
-
-                    pulseY =
-                        pointerY;
-
-
-                    pulseStarted =
-                        performance.now();
 
                 }
             );
@@ -2092,7 +1497,7 @@ if (gl) {
 
 
             /* =================================
-               RENDER LOOP
+               RENDER
             ================================= */
 
 
@@ -2112,7 +1517,7 @@ if (gl) {
                         velocityX
                     )
                     *
-                    0.19;
+                    0.18;
 
 
                 velocityY +=
@@ -2122,7 +1527,7 @@ if (gl) {
                         velocityY
                     )
                     *
-                    0.19;
+                    0.18;
 
 
                 motion +=
@@ -2135,42 +1540,23 @@ if (gl) {
                     0.14;
 
 
-                /*
-                   Slow decay gives the image
-                   a lingering liquid/glitch trail.
-                */
-
                 targetVelocityX *=
-                    0.87;
+                    0.86;
 
 
                 targetVelocityY *=
-                    0.87;
+                    0.86;
 
 
                 targetMotion *=
                     0.90;
 
 
-                const now =
-                    performance.now();
-
-
                 const time =
                     (
-                        now
+                        performance.now()
                         -
                         start
-                    )
-                    /
-                    1000;
-
-
-                const pulseAge =
-                    (
-                        now
-                        -
-                        pulseStarted
                     )
                     /
                     1000;
@@ -2192,13 +1578,6 @@ if (gl) {
                     );
 
 
-                    gl.uniform2f(
-                        pulseCenterUniform,
-                        pulseX,
-                        pulseY
-                    );
-
-
                     gl.uniform1f(
                         timeUniform,
                         time
@@ -2208,12 +1587,6 @@ if (gl) {
                     gl.uniform1f(
                         motionUniform,
                         motion
-                    );
-
-
-                    gl.uniform1f(
-                        pulseAgeUniform,
-                        pulseAge
                     );
 
 
