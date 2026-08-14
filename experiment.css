@@ -1,87 +1,17 @@
-@font-face {
-    font-family: "Microgramma";
-
-    src:
-        url("./fonts/microgrammanormal.ttf")
-        format("truetype");
-
-    font-weight: normal;
-    font-style: normal;
-}
-
-
 /* =========================================
-   TYPOGRAPHIC SYSTEM
-
-   Keep these values matched with new.css.
+   PLAYER STRIP
 ========================================= */
 
-:root {
-    --brand-size: 11px;
-    --nav-size: 9px;
-
-    --label-size: 10px;
-
-    --h1-size: 68px;
-    --h2-size: 38px;
-
-    --body-size: 9px;
-    --small-size: 8px;
-
-    --footer-size: 9px;
-}
-
-
-/* =========================================
-   RESET
-========================================= */
-
-* {
-    box-sizing: border-box;
-}
-
-
-html,
-body {
+.player-strip {
     width: 100%;
-    min-height: 100%;
-
-    margin: 0;
-
-    background: #050505;
-    color: #ffffff;
-}
-
-
-body {
-    min-height: 100vh;
-
-    display: flex;
-    flex-direction: column;
-
-    font-family:
-        "Microgramma",
-        Arial,
-        Helvetica,
-        sans-serif;
-}
-
-
-/* =========================================
-   HEADER
-========================================= */
-
-.site-header {
-    width: 100%;
-    min-height: 72px;
 
     padding:
-        0
-        32px;
+        10px
+        18px;
 
     display: flex;
 
-    align-items: center;
+    justify-content: center;
 
     border-bottom:
         1px solid
@@ -89,81 +19,33 @@ body {
 }
 
 
-.site-logo {
-    color: #ffffff;
-
-    font-size:
-        var(--brand-size);
-
-    letter-spacing: 0.3em;
-
-    text-decoration: none;
-
-    white-space: nowrap;
-}
-
-
-.site-logo:hover {
-    opacity: 0.65;
-}
-
-
-/* =========================================
-   NAVIGATION
-========================================= */
-
-.site-nav {
-    margin-left: auto;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 30px;
-}
-
-
-.return-link {
-    color: #ffffff;
-
-    font-size:
-        var(--nav-size);
-
-    letter-spacing: 0.26em;
-
-    text-decoration: none;
-
-    white-space: nowrap;
-}
-
-
-.return-link:hover {
-    opacity: 0.65;
-}
-
-
-/* =========================================
-   MINI PLAYER
-========================================= */
-
 .mini-player {
-    min-height: 46px;
+    width: 100%;
+    max-width: 760px;
+
+    min-width: 0;
+
+    min-height: 50px;
 
     padding:
         7px
-        11px;
+        12px;
 
-    display: flex;
+    display: grid;
+
+    grid-template-columns:
+        32px
+        minmax(180px, 1fr)
+        34px
+        180px;
 
     align-items: center;
 
-    gap: 11px;
+    gap: 12px;
 
     border:
         1px solid
         rgba(255, 255, 255, 0.22);
-
-    background: #050505;
 }
 
 
@@ -172,8 +54,9 @@ body {
 ========================================= */
 
 .player-button,
-.speaker-button {
-    flex: 0 0 auto;
+.sound-button {
+    width: 30px;
+    height: 30px;
 
     padding: 0;
 
@@ -183,41 +66,36 @@ body {
 
     border: none;
 
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
     cursor: pointer;
 }
 
 
 .player-button {
-    width: 24px;
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
 
-    font-size: 12px;
+    font-size: 14px;
 }
 
 
-.speaker-button {
-    width: 32px;
+.sound-button {
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
 
-    font-size: 11px;
-}
-
-
-.player-button:hover,
-.speaker-button:hover {
-    opacity: 0.65;
+    font-size: 13px;
 }
 
 
 /* =========================================
-   PLAYER INFORMATION
+   TRACK INFORMATION
 ========================================= */
 
 .player-main {
-    width: 205px;
+    min-width: 0;
 }
 
 
@@ -228,36 +106,36 @@ body {
 
     justify-content: space-between;
 
-    gap: 15px;
+    gap: 14px;
 
-    color: #ffffff;
-
-    font-size: 8px;
+    font-size: 11px;
 
     letter-spacing: 0.1em;
+}
+
+
+.player-track {
+    min-width: 0;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
 
     white-space: nowrap;
 }
 
 
-.player-track {
-    overflow: hidden;
-
-    text-overflow: ellipsis;
-}
-
-
 .player-time {
+    flex: 0 0 auto;
+
     font-family:
         Arial,
         Helvetica,
         sans-serif;
 
-    font-size: 9px;
+    font-size: 10px;
 
     letter-spacing: 0;
-
-    opacity: 0.85;
 }
 
 
@@ -269,18 +147,36 @@ body {
     position: relative;
 
     width: 100%;
-    height: 3px;
+    height: 8px;
 
-    overflow: hidden;
+    cursor: pointer;
+}
+
+
+.progress-track::before {
+    content: "";
+
+    position: absolute;
+
+    top: 3px;
+    left: 0;
+
+    width: 100%;
+    height: 2px;
 
     background:
-        rgba(255, 255, 255, 0.22);
+        rgba(255, 255, 255, 0.24);
 }
 
 
 .progress-fill {
+    position: absolute;
+
+    top: 3px;
+    left: 0;
+
     width: 0%;
-    height: 100%;
+    height: 2px;
 
     background: #ffffff;
 }
@@ -290,42 +186,99 @@ body {
    VOLUME
 ========================================= */
 
-.volume-area {
-    display: flex;
+.volume-control {
+    min-width: 0;
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1fr)
+        42px;
 
     align-items: center;
 
-    gap: 8px;
+    gap: 10px;
 }
 
 
 .volume-slider {
-    width: 80px;
+    width: 100%;
 
-    accent-color: #ffffff;
+    margin: 0;
+
+    appearance: none;
+    -webkit-appearance: none;
+
+    height: 18px;
+
+    background: transparent;
 
     cursor: pointer;
 }
 
 
+.volume-slider::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 2px;
+
+    background:
+        rgba(255, 255, 255, 0.28);
+}
+
+
+.volume-slider::-webkit-slider-thumb {
+    width: 10px;
+    height: 10px;
+
+    margin-top: -4px;
+
+    appearance: none;
+    -webkit-appearance: none;
+
+    border-radius: 50%;
+
+    background: #ffffff;
+}
+
+
+.volume-slider::-moz-range-track {
+    height: 2px;
+
+    background:
+        rgba(255, 255, 255, 0.28);
+}
+
+
+.volume-slider::-moz-range-thumb {
+    width: 10px;
+    height: 10px;
+
+    border: none;
+
+    border-radius: 50%;
+
+    background: #ffffff;
+}
+
+
 .volume-percent {
-    min-width: 34px;
-
-    color: #ffffff;
-
     font-family:
         Arial,
         Helvetica,
         sans-serif;
 
-    font-size: 10px;
+    font-size: 11px;
 
     text-align: right;
+
+    user-select: none;
+
+    cursor: ns-resize;
 }
 
 
 /* =========================================
-   MAIN
+   EXPERIMENT MAIN
 ========================================= */
 
 .experiment-main {
@@ -334,8 +287,8 @@ body {
     width: 100%;
 
     padding:
-        55px
-        32px
+        58px
+        24px
         80px;
 
     display: flex;
@@ -353,53 +306,34 @@ body {
 .experiment-heading {
     width: 100%;
 
-    margin-bottom: 36px;
+    margin-bottom: 38px;
 
     text-align: center;
 }
 
 
-.page-label {
+.experiment-label {
     margin:
         0
         0
-        24px;
+        25px;
 
-    font-size:
-        var(--label-size);
+    font-size: var(--font-label);
 
-    letter-spacing: 0.28em;
+    letter-spacing: 0.23em;
 }
 
 
 .experiment-heading h1 {
     margin: 0;
-
-    font-size:
-        var(--h1-size);
-
-    font-weight: normal;
-
-    line-height: 1;
-
-    letter-spacing: 0.05em;
 }
 
 
 .experiment-heading h2 {
     margin:
-        10px
+        12px
         0
         0;
-
-    font-size:
-        var(--h2-size);
-
-    font-weight: normal;
-
-    line-height: 1;
-
-    letter-spacing: 0.08em;
 }
 
 
@@ -407,7 +341,7 @@ body {
    ARTWORK
 ========================================= */
 
-.artwork-section {
+.experiment-artwork {
     width: 100%;
 
     display: flex;
@@ -426,7 +360,10 @@ body {
             86vw
         );
 
-    aspect-ratio: 1 / 1;
+    max-width: 100%;
+
+    aspect-ratio:
+        1 / 1;
 
     overflow: hidden;
 
@@ -434,9 +371,27 @@ body {
 
     border:
         1px solid
-        rgba(255, 255, 255, 0.16);
+        rgba(255, 255, 255, 0.18);
 
     touch-action: none;
+
+    overscroll-behavior: contain;
+}
+
+
+.visual-media {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    transform-origin:
+        center
+        center;
+
+    will-change: transform;
 }
 
 
@@ -448,9 +403,12 @@ body {
     width: 100%;
     height: 100%;
 
-    display: block;
-
     object-fit: cover;
+
+    user-select: none;
+    -webkit-user-select: none;
+
+    -webkit-touch-callout: none;
 }
 
 
@@ -460,8 +418,6 @@ body {
     inset: 0;
 
     z-index: 2;
-
-    display: block;
 
     width: 100%;
     height: 100%;
@@ -479,30 +435,30 @@ body {
 
 
 /* =========================================
-   INTERACTION
+   INTERACTION LABEL
 ========================================= */
 
 .interaction-message {
     position: absolute;
 
     left: 50%;
-    bottom: 15px;
+    bottom: 16px;
 
     transform:
         translateX(-50%);
 
-    z-index: 5;
+    z-index: 10;
 
-    font-size: 7px;
+    font-size: var(--font-small);
 
-    letter-spacing: 0.3em;
+    letter-spacing: 0.2em;
 
     white-space: nowrap;
 
     pointer-events: none;
 
     transition:
-        opacity 0.7s ease;
+        opacity 0.6s ease;
 }
 
 
@@ -512,12 +468,14 @@ body {
 
 
 /* =========================================
-   FOOTER
+   EXPERIMENT FOOTER
+
+   Intentionally larger.
 ========================================= */
 
 .experiment-footer {
     width: 100%;
-    min-height: 72px;
+    min-height: 74px;
 
     padding:
         0
@@ -536,10 +494,9 @@ body {
         1px solid
         rgba(255, 255, 255, 0.18);
 
-    font-size:
-        var(--footer-size);
+    font-size: 11px;
 
-    letter-spacing: 0.22em;
+    letter-spacing: 0.2em;
 }
 
 
@@ -564,125 +521,113 @@ body {
 
 @media (max-width: 750px) {
 
-    :root {
-        --brand-size: 10px;
-        --nav-size: 8px;
-
-        --label-size: 8px;
-
-        --h1-size: 44px;
-        --h2-size: 22px;
-
-        --footer-size: 7px;
-    }
-
-
-    .site-header {
-        min-height: 0;
-
-        padding:
-            20px;
-
-        display: block;
-    }
-
-
-    .site-logo {
-        display: inline-block;
-
-        margin-bottom: 20px;
-    }
-
-
-    .site-nav {
+    .player-strip {
         width: 100%;
 
-        margin-left: 0;
-
-        display: flex;
-
-        align-items: center;
-
-        justify-content: space-between;
-
-        gap: 12px;
+        padding:
+            9px
+            10px;
     }
 
 
     .mini-player {
-        flex: 1;
+        width: 100%;
 
-        min-width: 0;
+        max-width: 100%;
 
-        min-height: 44px;
+        grid-template-columns:
+            30px
+            minmax(0, 1fr)
+            30px
+            minmax(110px, 0.8fr);
+
+        gap: 7px;
 
         padding:
-            6px
-            8px;
+            8px
+            9px;
+    }
+
+
+    .player-information {
+        font-size: 10px;
 
         gap: 7px;
     }
 
 
-    .player-main {
-        display: none;
-    }
-
-
-    .volume-area {
-        flex: 1;
-
-        min-width: 0;
-    }
-
-
-    .volume-slider {
-        flex: 1;
-
-        width: auto;
-
-        min-width: 60px;
-    }
-
-
-    .volume-percent {
-        min-width: 31px;
-
+    .player-time {
         font-size: 9px;
     }
 
 
+    .volume-control {
+        grid-template-columns:
+            minmax(60px, 1fr)
+            35px;
+
+        gap: 5px;
+    }
+
+
+    .volume-percent {
+        font-size: 10px;
+
+        cursor: default;
+    }
+
+
     .experiment-main {
+        width: 100%;
+
+        max-width: 100vw;
+
         padding:
-            40px
+            44px
             12px
-            55px;
+            60px;
     }
 
 
     .experiment-heading {
-        margin-bottom: 28px;
+        margin-bottom: 30px;
     }
 
 
-    .page-label {
-        margin-bottom: 20px;
+    .experiment-label {
+        margin-bottom: 22px;
     }
 
 
     .visual-container {
         width: 100%;
 
-        max-width: 600px;
+        max-width:
+            min(
+                600px,
+                calc(
+                    100vw
+                    -
+                    24px
+                )
+            );
+
+        margin:
+            0
+            auto;
     }
 
 
     .experiment-footer {
-        min-height: 66px;
+        min-height: 68px;
 
         padding:
             0
-            18px;
+            16px;
+
+        font-size: 9px;
+
+        letter-spacing: 0.14em;
     }
 
 

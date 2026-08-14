@@ -1,163 +1,10 @@
-@font-face {
-    font-family: "Microgramma";
-
-    src:
-        url("./fonts/microgrammanormal.ttf")
-        format("truetype");
-
-    font-weight: normal;
-    font-style: normal;
-}
-
-
-/* =========================================
-   RESET
-========================================= */
-
-* {
-    box-sizing: border-box;
-}
-
-
-html,
-body {
-    width: 100%;
-    min-height: 100%;
-
-    margin: 0;
-
-    background: #050505;
-    color: #ffffff;
-}
-
-
-body {
-    min-height: 100vh;
-
-    display: flex;
-    flex-direction: column;
-
-    font-family:
-        "Microgramma",
-        Arial,
-        Helvetica,
-        sans-serif;
-}
-
-
 body.lightbox-open {
     overflow: hidden;
 }
 
 
 /* =========================================
-   HEADER
-========================================= */
-
-.site-header {
-    width: 100%;
-
-    min-height: 72px;
-
-    padding:
-        0
-        32px;
-
-    display: flex;
-
-    justify-content: space-between;
-    align-items: center;
-
-    border-bottom:
-        1px solid
-        rgba(255, 255, 255, 0.18);
-}
-
-
-.site-logo {
-    display: inline-block;
-
-    color: #ffffff;
-
-    font-size: 11px;
-
-    letter-spacing: 0.3em;
-
-    text-decoration: none;
-
-    white-space: nowrap;
-
-    transition:
-        opacity 0.2s ease;
-}
-
-
-.site-logo:hover {
-    opacity: 0.7;
-}
-
-
-/* =========================================
-   NAVIGATION
-========================================= */
-
-.site-nav {
-    display: flex;
-
-    align-items: center;
-
-    gap: 34px;
-}
-
-
-.site-nav a {
-    position: relative;
-
-    color: #ffffff;
-
-    font-size: 9px;
-
-    letter-spacing: 0.26em;
-
-    text-decoration: none;
-
-    white-space: nowrap;
-
-    transition:
-        opacity 0.2s ease;
-}
-
-
-.site-nav a::after {
-    content: "";
-
-    position: absolute;
-
-    left: 0;
-    bottom: -7px;
-
-    width: 0;
-    height: 1px;
-
-    background: #ffffff;
-
-    transition:
-        width 0.25s ease;
-}
-
-
-.site-nav a:hover {
-    opacity: 0.7;
-}
-
-
-.site-nav a:hover::after {
-    width: 100%;
-}
-
-
-/* =========================================
-   GALLERY MAIN
+   GALLERY
 ========================================= */
 
 .gallery-main {
@@ -166,15 +13,11 @@ body.lightbox-open {
     width: 100%;
 
     padding:
-        70px
+        72px
         40px
         120px;
 }
 
-
-/* =========================================
-   ARCHIVE HEADER
-========================================= */
 
 .archive-header {
     width: 100%;
@@ -183,7 +26,9 @@ body.lightbox-open {
     margin:
         0
         auto
-        85px;
+        90px;
+
+    text-align: center;
 }
 
 
@@ -191,57 +36,42 @@ body.lightbox-open {
     margin:
         0
         0
-        30px;
+        28px;
 
-    color: #ffffff;
-
-    font-size: 9px;
-
-    letter-spacing: 0.28em;
-}
-
-
-.archive-header h1 {
-    margin: 0;
-
-    color: #ffffff;
-
-    font-size:
-        clamp(
-            32px,
-            5vw,
-            72px
-        );
-
-    font-weight: normal;
-
-    letter-spacing: 0.06em;
-}
-
-
-.archive-description {
-    margin:
-        22px
-        0
-        0;
-
-    color: #ffffff;
-
-    font-size: 8px;
+    font-size: var(--font-label);
 
     letter-spacing: 0.25em;
 }
 
 
+.archive-header h1 {
+    margin: 0;
+}
+
+
+.archive-description {
+    margin:
+        25px
+        0
+        0;
+
+    font-size: var(--font-small);
+
+    letter-spacing: 0.22em;
+}
+
+
 /* =========================================
-   GALLERY GRID
+   GRID
 ========================================= */
 
 .gallery-grid {
     width: 100%;
     max-width: 1800px;
 
-    margin: 0 auto;
+    margin:
+        0
+        auto;
 
     display: grid;
 
@@ -257,33 +87,23 @@ body.lightbox-open {
 }
 
 
-/* =========================================
-   ARTWORK
-========================================= */
-
 .gallery-item {
-    width: 100%;
+    min-width: 0;
 }
 
 
 .artwork-button {
-    display: block;
-
     width: 100%;
 
     padding: 12px;
+
+    display: block;
 
     background: #0a0a0a;
 
     border:
         1px solid
         rgba(255, 255, 255, 0.18);
-
-    box-shadow:
-        0
-        18px
-        45px
-        rgba(0, 0, 0, 0.55);
 
     cursor: pointer;
 }
@@ -294,22 +114,8 @@ body.lightbox-open {
 
     width: 100%;
     height: auto;
-
-    margin: 0;
-
-    transition:
-        opacity 0.25s ease;
 }
 
-
-.artwork-button:hover .artwork-image {
-    opacity: 0.82;
-}
-
-
-/* =========================================
-   ARTWORK INFO
-========================================= */
 
 .artwork-information {
     margin-top: 16px;
@@ -317,79 +123,19 @@ body.lightbox-open {
     display: grid;
 
     grid-template-columns:
-        42px
+        44px
         1fr;
 
     gap: 12px;
 
-    color: #ffffff;
+    font-size: var(--font-small);
 
-    font-size: 8px;
-
-    letter-spacing: 0.2em;
-}
-
-
-.artwork-number,
-.artwork-title {
-    color: #ffffff;
+    letter-spacing: 0.17em;
 }
 
 
 /* =========================================
-   LEGAL FOOTER
-========================================= */
-
-.legal-footer {
-    width: 100%;
-
-    padding:
-        28px
-        32px
-        32px;
-
-    border-top:
-        1px solid
-        rgba(255, 255, 255, 0.18);
-}
-
-
-.legal-footer p {
-    margin: 0;
-}
-
-
-.copyright-line {
-    color: #ffffff;
-
-    font-size: 7px;
-
-    letter-spacing: 0.22em;
-}
-
-
-.legal-line {
-    max-width: 950px;
-
-    margin-top: 10px !important;
-
-    color: #ffffff;
-
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-    font-size: 7px;
-
-    line-height: 1.7;
-
-    letter-spacing: 0.06em;
-}
-
-
-/* =========================================
-   FULLSCREEN VIEWER
+   LIGHTBOX
 ========================================= */
 
 .lightbox {
@@ -420,11 +166,17 @@ body.lightbox-open {
 
 
 .lightbox-content {
-    width: calc(100% - 180px);
+    width:
+        calc(
+            100%
+            -
+            180px
+        );
+
     height: 100%;
 
     padding:
-        55px
+        60px
         30px
         35px;
 
@@ -441,7 +193,12 @@ body.lightbox-open {
     display: block;
 
     max-width: 100%;
-    max-height: calc(100vh - 150px);
+    max-height:
+        calc(
+            100vh
+            -
+            160px
+        );
 
     width: auto;
     height: auto;
@@ -450,15 +207,11 @@ body.lightbox-open {
 }
 
 
-/* =========================================
-   VIEWER INFORMATION
-========================================= */
-
 .lightbox-information {
     width: 100%;
     max-width: 1200px;
 
-    margin-top: 18px;
+    margin-top: 20px;
 
     display: grid;
 
@@ -469,22 +222,16 @@ body.lightbox-open {
 
     gap: 20px;
 
-    color: #ffffff;
+    font-size: var(--font-small);
 
-    font-size: 8px;
-
-    letter-spacing: 0.22em;
+    letter-spacing: 0.18em;
 }
 
 
-.lightbox-title {
+.lightbox-information span:nth-child(2) {
     text-align: center;
 }
 
-
-/* =========================================
-   PREVIOUS / NEXT ARROWS
-========================================= */
 
 .lightbox-arrow {
     position: absolute;
@@ -497,13 +244,6 @@ body.lightbox-open {
     width: 80px;
     height: 120px;
 
-    padding: 0;
-
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
-
     color: #ffffff;
 
     background: transparent;
@@ -515,28 +255,9 @@ body.lightbox-open {
         Helvetica,
         sans-serif;
 
-    font-size: 36px;
+    font-size: 40px;
 
     cursor: pointer;
-
-    opacity: 0.6;
-
-    transition:
-        opacity 0.2s ease,
-        background 0.2s ease;
-}
-
-
-.lightbox-arrow:hover {
-    opacity: 1;
-
-    background:
-        rgba(
-            255,
-            255,
-            255,
-            0.04
-        );
 }
 
 
@@ -550,10 +271,6 @@ body.lightbox-open {
 }
 
 
-/* =========================================
-   CLOSE
-========================================= */
-
 .lightbox-close {
     position: absolute;
 
@@ -562,28 +279,17 @@ body.lightbox-open {
 
     z-index: 10;
 
-    padding: 8px;
-
     color: #ffffff;
+
     background: transparent;
 
     border: none;
 
-    font-family:
-        "Microgramma",
-        Arial,
-        sans-serif;
+    font-size: var(--font-small);
 
-    font-size: 8px;
-
-    letter-spacing: 0.25em;
+    letter-spacing: 0.2em;
 
     cursor: pointer;
-}
-
-
-.lightbox-close:hover {
-    opacity: 0.65;
 }
 
 
@@ -599,10 +305,6 @@ body.lightbox-open {
                 2,
                 minmax(0, 1fr)
             );
-
-        gap:
-            70px
-            28px;
     }
 
 }
@@ -614,118 +316,59 @@ body.lightbox-open {
 
 @media (max-width: 750px) {
 
-    /* HEADER */
-
-    .site-header {
-        min-height: 0;
-
-        padding:
-            24px
-            20px;
-
-        display: block;
-    }
-
-
-    .site-logo {
-        display: inline-block;
-
-        margin-bottom: 28px;
-
-        font-size: 10px;
-
-        letter-spacing: 0.3em;
-    }
-
-
-    .site-nav {
+    .gallery-main {
         width: 100%;
 
-        display: flex;
-
-        align-items: center;
-
-        justify-content: flex-start;
-
-        gap: 26px;
-    }
-
-
-    .site-nav a {
-        display: block;
-
-        font-size: 8px;
-
-        letter-spacing: 0.16em;
-    }
-
-
-    .site-nav a::after {
-        display: none;
-    }
-
-
-    /* GALLERY */
-
-    .gallery-main {
         padding:
-            45px
-            16px
-            80px;
+            48px
+            14px
+            85px;
     }
 
 
     .archive-header {
-        margin-bottom: 55px;
+        margin-bottom: 58px;
     }
 
 
     .archive-label {
         margin-bottom: 22px;
-
-        font-size: 8px;
-    }
-
-
-    .archive-header h1 {
-        font-size: 36px;
     }
 
 
     .archive-description {
-        font-size: 7px;
-
         line-height: 1.7;
     }
 
 
     .gallery-grid {
+        width: 100%;
+
         display: block;
     }
 
 
     .gallery-item {
-        margin-bottom: 65px;
+        width: 100%;
+
+        margin-bottom: 70px;
     }
 
 
     .artwork-button {
+        width: 100%;
+
         padding: 7px;
     }
 
 
     .artwork-information {
-        margin-top: 12px;
-
-        font-size: 7px;
+        margin-top: 14px;
     }
 
 
-    /* FULLSCREEN VIEWER */
-
     .lightbox-content {
         width: 100%;
-        height: 100%;
 
         padding:
             65px
@@ -733,25 +376,6 @@ body.lightbox-open {
             35px;
     }
 
-
-    .lightbox-image {
-        max-width: 100%;
-        max-height: calc(100vh - 170px);
-    }
-
-
-    .lightbox-information {
-        margin-top: 15px;
-
-        gap: 8px;
-
-        font-size: 7px;
-
-        letter-spacing: 0.12em;
-    }
-
-
-    /* BIG TAP AREAS */
 
     .lightbox-arrow {
         top: 0;
@@ -761,51 +385,7 @@ body.lightbox-open {
         width: 48px;
         height: 100%;
 
-        font-size: 28px;
-
-        opacity: 0.85;
-    }
-
-
-    .lightbox-previous {
-        left: 0;
-    }
-
-
-    .lightbox-next {
-        right: 0;
-    }
-
-
-    .lightbox-close {
-        top: 15px;
-        right: 14px;
-
-        font-size: 7px;
-    }
-
-
-    /* LEGAL */
-
-    .legal-footer {
-        padding:
-            26px
-            20px
-            30px;
-    }
-
-
-    .copyright-line {
-        font-size: 6px;
-
-        line-height: 1.7;
-    }
-
-
-    .legal-line {
-        font-size: 6px;
-
-        line-height: 1.8;
+        font-size: 30px;
     }
 
 }

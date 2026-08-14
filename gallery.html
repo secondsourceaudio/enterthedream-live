@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -13,9 +14,16 @@
 
     <link
         rel="stylesheet"
-        href="./gallery.css?v=6"
+        href="./site.css?v=1"
     >
+
+    <link
+        rel="stylesheet"
+        href="./gallery.css?v=8"
+    >
+
 </head>
+
 
 <body>
 
@@ -37,6 +45,10 @@
 
             <a href="./index.html">
                 HOME
+            </a>
+
+            <a href="./experiment.html">
+                EXPERIMENT
             </a>
 
             <a
@@ -84,7 +96,7 @@
 
 
     <!-- =========================================
-         LEGAL FOOTER
+         LEGAL
     ========================================== -->
 
     <footer class="legal-footer">
@@ -104,7 +116,7 @@
 
 
     <!-- =========================================
-         FULLSCREEN ARTWORK VIEWER
+         VIEWER
     ========================================== -->
 
     <div
@@ -117,7 +129,6 @@
             id="lightbox-close"
             class="lightbox-close"
             type="button"
-            aria-label="Close artwork"
         >
             CLOSE
         </button>
@@ -127,7 +138,6 @@
             id="lightbox-previous"
             class="lightbox-arrow lightbox-previous"
             type="button"
-            aria-label="Previous artwork"
         >
             ←
         </button>
@@ -145,20 +155,11 @@
 
             <div class="lightbox-information">
 
-                <span
-                    id="lightbox-number"
-                    class="lightbox-number"
-                ></span>
+                <span id="lightbox-number"></span>
 
-                <span
-                    id="lightbox-title"
-                    class="lightbox-title"
-                ></span>
+                <span id="lightbox-title"></span>
 
-                <span
-                    id="lightbox-total"
-                    class="lightbox-total"
-                ></span>
+                <span id="lightbox-total"></span>
 
             </div>
 
@@ -169,7 +170,6 @@
             id="lightbox-next"
             class="lightbox-arrow lightbox-next"
             type="button"
-            aria-label="Next artwork"
         >
             →
         </button>
@@ -178,10 +178,6 @@
 
 
     <script>
-
-        /* =========================================
-           ARTWORK LIST
-        ========================================== */
 
         const artworks = [
 
@@ -244,113 +240,115 @@
         ];
 
 
-        /* =========================================
-           GALLERY
-        ========================================== */
-
         const gallery =
-            document.getElementById("gallery");
+            document.getElementById(
+                "gallery"
+            );
 
 
         artworks.forEach(
-            function (artwork, index) {
+            function (
+                artwork,
+                index
+            ) {
 
                 const item =
-                    document.createElement("article");
+                    document.createElement(
+                        "article"
+                    );
+
 
                 item.className =
                     "gallery-item";
 
 
-                const imageButton =
-                    document.createElement("button");
+                const button =
+                    document.createElement(
+                        "button"
+                    );
 
-                imageButton.className =
+
+                button.className =
                     "artwork-button";
 
-                imageButton.type =
-                    "button";
 
-                imageButton.setAttribute(
-                    "aria-label",
-                    "View " + artwork.title
-                );
+                button.type =
+                    "button";
 
 
                 const image =
-                    document.createElement("img");
+                    document.createElement(
+                        "img"
+                    );
+
 
                 image.className =
                     "artwork-image";
 
+
                 image.src =
                     artwork.image;
 
+
                 image.alt =
                     artwork.title;
+
 
                 image.loading =
                     "lazy";
 
 
+                button.appendChild(
+                    image
+                );
+
+
                 const information =
-                    document.createElement("div");
+                    document.createElement(
+                        "div"
+                    );
+
 
                 information.className =
                     "artwork-information";
 
 
-                const number =
-                    document.createElement("span");
+                information.innerHTML =
+                    `
+                        <span>
+                            ${String(
+                                index + 1
+                            ).padStart(
+                                2,
+                                "0"
+                            )}
+                        </span>
 
-                number.className =
-                    "artwork-number";
-
-                number.textContent =
-                    String(index + 1)
-                        .padStart(2, "0");
-
-
-                const title =
-                    document.createElement("span");
-
-                title.className =
-                    "artwork-title";
-
-                title.textContent =
-                    artwork.title;
+                        <span>
+                            ${artwork.title}
+                        </span>
+                    `;
 
 
-                information.appendChild(
-                    number
-                );
-
-                information.appendChild(
-                    title
-                );
-
-
-                imageButton.appendChild(
-                    image
-                );
-
-
-                item.appendChild(
-                    imageButton
-                );
-
-                item.appendChild(
-                    information
-                );
-
-
-                imageButton.addEventListener(
+                button.addEventListener(
                     "click",
                     function () {
 
-                        openLightbox(index);
+                        openLightbox(
+                            index
+                        );
 
                     }
+                );
+
+
+                item.appendChild(
+                    button
+                );
+
+
+                item.appendChild(
+                    information
                 );
 
 
@@ -362,46 +360,50 @@
         );
 
 
-        /* =========================================
-           LIGHTBOX
-        ========================================== */
-
         const lightbox =
-            document.getElementById("lightbox");
+            document.getElementById(
+                "lightbox"
+            );
+
 
         const lightboxImage =
-            document.getElementById("lightbox-image");
+            document.getElementById(
+                "lightbox-image"
+            );
+
 
         const lightboxTitle =
-            document.getElementById("lightbox-title");
+            document.getElementById(
+                "lightbox-title"
+            );
+
 
         const lightboxNumber =
-            document.getElementById("lightbox-number");
+            document.getElementById(
+                "lightbox-number"
+            );
+
 
         const lightboxTotal =
-            document.getElementById("lightbox-total");
-
-        const lightboxClose =
-            document.getElementById("lightbox-close");
-
-        const previousButton =
-            document.getElementById("lightbox-previous");
-
-        const nextButton =
-            document.getElementById("lightbox-next");
+            document.getElementById(
+                "lightbox-total"
+            );
 
 
-        let currentArtworkIndex = 0;
+        let currentIndex = 0;
 
 
         function updateLightbox() {
 
             const artwork =
-                artworks[currentArtworkIndex];
+                artworks[
+                    currentIndex
+                ];
 
 
             lightboxImage.src =
                 artwork.image;
+
 
             lightboxImage.alt =
                 artwork.title;
@@ -413,7 +415,7 @@
 
             lightboxNumber.textContent =
                 String(
-                    currentArtworkIndex + 1
+                    currentIndex + 1
                 ).padStart(
                     2,
                     "0"
@@ -433,9 +435,11 @@
         }
 
 
-        function openLightbox(index) {
+        function openLightbox(
+            index
+        ) {
 
-            currentArtworkIndex =
+            currentIndex =
                 index;
 
 
@@ -444,12 +448,6 @@
 
             lightbox.classList.add(
                 "is-open"
-            );
-
-
-            lightbox.setAttribute(
-                "aria-hidden",
-                "false"
             );
 
 
@@ -467,12 +465,6 @@
             );
 
 
-            lightbox.setAttribute(
-                "aria-hidden",
-                "true"
-            );
-
-
             document.body.classList.remove(
                 "lightbox-open"
             );
@@ -480,40 +472,14 @@
         }
 
 
-        function previousArtwork() {
-
-            currentArtworkIndex--;
-
-
-            if (
-                currentArtworkIndex < 0
-            ) {
-
-                currentArtworkIndex =
-                    artworks.length - 1;
-
-            }
-
-
-            updateLightbox();
-
-        }
-
-
         function nextArtwork() {
 
-            currentArtworkIndex++;
-
-
-            if (
-                currentArtworkIndex
-                >=
-                artworks.length
-            ) {
-
-                currentArtworkIndex = 0;
-
-            }
+            currentIndex =
+                (
+                    currentIndex + 1
+                )
+                %
+                artworks.length;
 
 
             updateLightbox();
@@ -521,51 +487,54 @@
         }
 
 
-        /* =========================================
-           BUTTON EVENTS
-        ========================================== */
+        function previousArtwork() {
 
-        lightboxClose.addEventListener(
-            "click",
-            closeLightbox
-        );
-
-
-        previousButton.addEventListener(
-            "click",
-            previousArtwork
-        );
+            currentIndex =
+                (
+                    currentIndex
+                    -
+                    1
+                    +
+                    artworks.length
+                )
+                %
+                artworks.length;
 
 
-        nextButton.addEventListener(
-            "click",
-            nextArtwork
-        );
+            updateLightbox();
+
+        }
 
 
-        /* =========================================
-           CLICK BACKGROUND TO CLOSE
-        ========================================== */
-
-        lightbox.addEventListener(
-            "click",
-            function (event) {
-
-                if (
-                    event.target === lightbox
-                ) {
-
-                    closeLightbox();
-
-                }
-
-            }
-        );
+        document
+            .getElementById(
+                "lightbox-close"
+            )
+            .addEventListener(
+                "click",
+                closeLightbox
+            );
 
 
-        /* =========================================
-           KEYBOARD
-        ========================================== */
+        document
+            .getElementById(
+                "lightbox-next"
+            )
+            .addEventListener(
+                "click",
+                nextArtwork
+            );
+
+
+        document
+            .getElementById(
+                "lightbox-previous"
+            )
+            .addEventListener(
+                "click",
+                previousArtwork
+            );
+
 
         document.addEventListener(
             "keydown",
@@ -592,19 +561,19 @@
 
 
                 if (
-                    event.key === "ArrowLeft"
+                    event.key === "ArrowRight"
                 ) {
 
-                    previousArtwork();
+                    nextArtwork();
 
                 }
 
 
                 if (
-                    event.key === "ArrowRight"
+                    event.key === "ArrowLeft"
                 ) {
 
-                    nextArtwork();
+                    previousArtwork();
 
                 }
 

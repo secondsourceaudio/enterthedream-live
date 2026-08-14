@@ -1,0 +1,381 @@
+@font-face {
+    font-family: "Microgramma";
+
+    src:
+        url("./fonts/microgrammanormal.ttf")
+        format("truetype");
+
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+/* =========================================
+   SHARED TYPE SYSTEM
+
+   CHANGE THESE VALUES LATER AND ALL
+   THREE PAGES CHANGE TOGETHER.
+========================================= */
+
+:root {
+    --font-brand: 14px;
+    --font-nav: 12px;
+
+    --font-h1:
+        clamp(
+            52px,
+            4vw,
+            72px
+        );
+
+    --font-h2:
+        clamp(
+            32px,
+            2.5vw,
+            42px
+        );
+
+    --font-label: 12px;
+    --font-body: 11px;
+    --font-small: 10px;
+
+    --font-footer: 10px;
+    --font-legal: 9px;
+}
+
+
+/* =========================================
+   RESET
+========================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+
+html,
+body {
+    width: 100%;
+    min-width: 0;
+    min-height: 100%;
+
+    margin: 0;
+
+    overflow-x: hidden;
+
+    background: #050505;
+    color: #ffffff;
+}
+
+
+body {
+    min-height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+
+    font-family:
+        "Microgramma",
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+
+img,
+canvas,
+video {
+    max-width: 100%;
+}
+
+
+button,
+input {
+    font: inherit;
+}
+
+
+h1 {
+    font-size: var(--font-h1);
+
+    font-weight: normal;
+
+    line-height: 1;
+
+    letter-spacing: 0.05em;
+}
+
+
+h2 {
+    font-size: var(--font-h2);
+
+    font-weight: normal;
+
+    line-height: 1.1;
+
+    letter-spacing: 0.08em;
+}
+
+
+/* =========================================
+   SHARED HEADER
+========================================= */
+
+.site-header {
+    width: 100%;
+    min-height: 76px;
+
+    padding:
+        0
+        32px;
+
+    display: flex;
+
+    align-items: center;
+
+    border-bottom:
+        1px solid
+        rgba(255, 255, 255, 0.18);
+}
+
+
+.site-logo {
+    flex: 0 0 auto;
+
+    color: #ffffff;
+
+    font-size: var(--font-brand);
+
+    letter-spacing: 0.3em;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+
+    transition:
+        opacity 0.2s ease;
+}
+
+
+.site-logo:hover {
+    opacity: 0.65;
+}
+
+
+/* =========================================
+   SHARED NAVIGATION
+========================================= */
+
+.site-nav {
+    min-width: 0;
+
+    margin-left: auto;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 34px;
+}
+
+
+.site-nav a {
+    position: relative;
+
+    color: #ffffff;
+
+    font-size: var(--font-nav);
+
+    letter-spacing: 0.22em;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+
+    transition:
+        opacity 0.2s ease;
+}
+
+
+.site-nav a::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    bottom: -7px;
+
+    width: 0;
+    height: 1px;
+
+    background: #ffffff;
+
+    transition:
+        width 0.25s ease;
+}
+
+
+.site-nav a:hover {
+    opacity: 0.7;
+}
+
+
+.site-nav a:hover::after {
+    width: 100%;
+}
+
+
+/* =========================================
+   SHARED LEGAL FOOTER
+========================================= */
+
+.legal-footer {
+    width: 100%;
+
+    padding:
+        30px
+        32px
+        34px;
+
+    text-align: center;
+
+    border-top:
+        1px solid
+        rgba(255, 255, 255, 0.18);
+}
+
+
+.legal-footer p {
+    margin: 0;
+}
+
+
+.copyright-line {
+    color: #ffffff;
+
+    font-size: var(--font-footer);
+
+    letter-spacing: 0.2em;
+}
+
+
+.legal-line {
+    max-width: 980px;
+
+    margin:
+        12px
+        auto
+        0 !important;
+
+    color: #ffffff;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    font-size: var(--font-legal);
+
+    line-height: 1.7;
+
+    letter-spacing: 0.05em;
+}
+
+
+/* =========================================
+   MOBILE SHARED SYSTEM
+========================================= */
+
+@media (max-width: 750px) {
+
+    :root {
+        --font-brand: 13px;
+        --font-nav: 11px;
+
+        --font-h1: 48px;
+        --font-h2: 27px;
+
+        --font-label: 11px;
+        --font-body: 10px;
+        --font-small: 9px;
+
+        --font-footer: 9px;
+        --font-legal: 8px;
+    }
+
+
+    html,
+    body {
+        width: 100%;
+
+        max-width: 100vw;
+
+        overflow-x: hidden;
+    }
+
+
+    .site-header {
+        min-height: 0;
+
+        width: 100%;
+
+        padding:
+            24px
+            16px;
+
+        display: block;
+
+        text-align: center;
+    }
+
+
+    .site-logo {
+        display: inline-block;
+
+        margin:
+            0
+            auto
+            24px;
+
+        text-align: center;
+    }
+
+
+    .site-nav {
+        width: 100%;
+
+        margin: 0;
+
+        display: flex;
+
+        justify-content: center;
+
+        gap:
+            13px
+            20px;
+
+        flex-wrap: wrap;
+    }
+
+
+    .site-nav a {
+        font-size: var(--font-nav);
+
+        letter-spacing: 0.14em;
+    }
+
+
+    .site-nav a::after {
+        display: none;
+    }
+
+
+    .legal-footer {
+        padding:
+            28px
+            18px
+            32px;
+    }
+
+}
