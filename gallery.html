@@ -9,37 +9,71 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>SECOND SOURCE — SOURCE MATERIAL</title>
+    <title>SECOND SOURCE — CONCEPT ARCHIVE</title>
 
     <link
         rel="stylesheet"
-        href="./gallery.css?v=4"
+        href="./gallery.css?v=5"
     >
 </head>
 
 <body>
 
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
     <header class="site-header">
 
-        <div class="site-logo">
-            SECOND SOURCE
-        </div>
-
-        <div class="page-title">
-            SOURCE MATERIAL
-        </div>
-
         <a
-            class="return-link"
+            class="site-logo"
             href="./index.html"
         >
-            RETURN
+            SECOND SOURCE
         </a>
+
+
+        <nav class="site-nav">
+
+            <a href="./index.html">
+                HOME
+            </a>
+
+            <a
+                href="https://secondsource.bandcamp.com"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                BANDCAMP ↗
+            </a>
+
+        </nav>
 
     </header>
 
 
+    <!-- =========================================
+         GALLERY
+    ========================================== -->
+
     <main class="gallery-main">
+
+        <header class="archive-header">
+
+            <p class="archive-label">
+                SECOND SOURCE
+            </p>
+
+            <h1>
+                CONCEPT ARCHIVE
+            </h1>
+
+            <p class="archive-description">
+                VISUAL STUDIES / ARTWORK / SOURCE MATERIAL
+            </p>
+
+        </header>
+
 
         <div
             id="gallery"
@@ -48,6 +82,33 @@
 
     </main>
 
+
+    <!-- =========================================
+         FIXED CORNER LOGO
+    ========================================== -->
+
+    <div class="corner-logo">
+
+        <video
+            class="corner-logo-video"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="auto"
+        >
+            <source
+                src="./videos/sourcelogo_2.webm"
+                type="video/webm"
+            >
+        </video>
+
+    </div>
+
+
+    <!-- =========================================
+         LEGAL FOOTER
+    ========================================== -->
 
     <footer class="legal-footer">
 
@@ -65,7 +126,9 @@
     </footer>
 
 
-    <!-- FULLSCREEN ARTWORK VIEW -->
+    <!-- =========================================
+         FULLSCREEN ARTWORK VIEW
+    ========================================== -->
 
     <div
         id="lightbox"
@@ -107,6 +170,10 @@
 
 
     <script>
+
+        /* =========================================
+           ARTWORK LIST
+        ========================================== */
 
         const artworks = [
 
@@ -160,6 +227,10 @@
 
         ];
 
+
+        /* =========================================
+           BUILD GALLERY
+        ========================================== */
 
         const gallery =
             document.getElementById("gallery");
@@ -277,6 +348,10 @@
             }
         );
 
+
+        /* =========================================
+           LIGHTBOX
+        ========================================== */
 
         const lightbox =
             document.getElementById("lightbox");

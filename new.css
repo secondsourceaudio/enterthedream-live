@@ -126,12 +126,12 @@ body {
 
 
 .site-nav a:hover {
-    opacity: 0.75;
+    opacity: 0.7;
 }
 
 
 .site-nav a:hover::after {
-    width: calc(100% - 0.26em);
+    width: 100%;
 }
 
 
@@ -297,33 +297,48 @@ body {
 
 
 /* =========================================
-   CORNER LOGO
+   FIXED CORNER LOGO
+
+   The WEBM contains a large black canvas.
+   The outer box crops that canvas.
+   The video itself is heavily zoomed.
 ========================================= */
 
 .corner-logo {
     position: fixed;
 
-    right: 26px;
-    bottom: 26px;
+    right: 22px;
+    bottom: 22px;
 
-    width: 150px;
-    height: 150px;
+    width: 170px;
+    height: 105px;
 
-    z-index: 50;
+    z-index: 100;
+
+    overflow: hidden;
 
     pointer-events: none;
-
-    opacity: 0.95;
 }
 
 
 .corner-logo-video {
-    width: 100%;
-    height: 100%;
+    position: absolute;
 
-    object-fit: contain;
+    top: 50%;
+    left: 50%;
+
+    width: 170px;
+    height: auto;
 
     display: block;
+
+    transform:
+        translate(-50%, -50%)
+        scale(6);
+
+    transform-origin: center;
+
+    pointer-events: none;
 }
 
 
@@ -336,7 +351,7 @@ body {
 
     padding:
         28px
-        220px
+        225px
         32px
         32px;
 
@@ -404,16 +419,25 @@ body {
 
 
     .corner-logo {
-        width: 185px;
-        height: 185px;
+        right: 30px;
+        bottom: 24px;
 
-        right: 34px;
-        bottom: 28px;
+        width: 200px;
+        height: 120px;
+    }
+
+
+    .corner-logo-video {
+        width: 200px;
+
+        transform:
+            translate(-50%, -50%)
+            scale(6);
     }
 
 
     .legal-footer {
-        padding-right: 255px;
+        padding-right: 270px;
     }
 
 }
@@ -445,16 +469,25 @@ body {
 
 
     .corner-logo {
-        width: 120px;
-        height: 120px;
+        width: 140px;
+        height: 90px;
 
-        right: 18px;
-        bottom: 18px;
+        right: 15px;
+        bottom: 15px;
+    }
+
+
+    .corner-logo-video {
+        width: 140px;
+
+        transform:
+            translate(-50%, -50%)
+            scale(6);
     }
 
 
     .legal-footer {
-        padding-right: 165px;
+        padding-right: 180px;
     }
 
 }
@@ -472,7 +505,9 @@ body {
             20px;
 
         flex-direction: column;
+
         align-items: flex-start;
+
         gap: 18px;
     }
 
@@ -483,7 +518,7 @@ body {
 
 
     .site-nav {
-        gap: 16px;
+        gap: 18px;
 
         flex-wrap: wrap;
     }
@@ -493,11 +528,6 @@ body {
         font-size: 7px;
 
         letter-spacing: 0.15em;
-    }
-
-
-    .site-nav a::after {
-        bottom: -5px;
     }
 
 
@@ -573,22 +603,33 @@ body {
     }
 
 
+    /* CORNER LOGO MOBILE */
+
     .corner-logo {
-        width: 88px;
-        height: 88px;
+        width: 110px;
+        height: 70px;
 
-        right: 10px;
-        bottom: 10px;
-
-        opacity: 0.9;
+        right: 8px;
+        bottom: 8px;
     }
 
+
+    .corner-logo-video {
+        width: 110px;
+
+        transform:
+            translate(-50%, -50%)
+            scale(6);
+    }
+
+
+    /* COPYRIGHT MOBILE */
 
     .legal-footer {
         padding:
             24px
-            20px
-            110px
+            140px
+            28px
             20px;
     }
 
