@@ -7,9 +7,9 @@
 }
 
 
-/* --------------------------------
+/* =========================================
    RESET
--------------------------------- */
+========================================= */
 
 * {
     box-sizing: border-box;
@@ -20,11 +20,11 @@ html,
 body {
     margin: 0;
 
+    width: 100%;
     min-height: 100%;
 
     background: #050505;
-
-    color: #d8d8d8;
+    color: #eeeeee;
 }
 
 
@@ -35,26 +35,22 @@ body {
     flex-direction: column;
 
     font-family:
+        "Microgramma",
         Arial,
-        Helvetica,
         sans-serif;
 }
 
 
-/* --------------------------------
+/* =========================================
    HEADER
--------------------------------- */
+========================================= */
 
 .site-header {
     width: 100%;
 
     padding:
-        30px
-        36px;
-
-    display: flex;
-
-    align-items: center;
+        28px
+        34px;
 
     border-bottom:
         1px solid
@@ -63,50 +59,87 @@ body {
 
 
 .logo {
-    color: #eeeeee;
+    font-size: 11px;
 
-    font-family:
-        "Microgramma",
-        Arial,
-        sans-serif;
+    letter-spacing: 0.32em;
 
-    font-size: 13px;
-
-    letter-spacing: 0.28em;
-
-    text-decoration: none;
+    color:
+        rgba(255, 255, 255, 0.88);
 }
 
 
-/* --------------------------------
-   MAIN
--------------------------------- */
+/* =========================================
+   LANDING
+========================================= */
 
-.main-content {
+.landing {
     flex: 1;
 
     width: 100%;
 
     display: flex;
-
     align-items: center;
-
     justify-content: center;
 
     padding:
-        80px
-        30px;
+        70px
+        50px;
 }
 
+
+/* =========================================
+   RELEASE
+========================================= */
 
 .release {
     width: 100%;
+    max-width: 1350px;
 
-    max-width: 760px;
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.65fr)
+        minmax(260px, 0.55fr);
+
+    gap: 80px;
+
+    align-items: end;
 }
 
 
-.release-label {
+/* =========================================
+   ARTWORK
+========================================= */
+
+.artwork-frame {
+    width: 100%;
+
+    overflow: hidden;
+
+    background: black;
+}
+
+
+.release-artwork {
+    display: block;
+
+    width: 100%;
+    height: auto;
+
+    margin: 0;
+}
+
+
+/* =========================================
+   RELEASE INFORMATION
+========================================= */
+
+.release-information {
+    padding-bottom: 10px;
+}
+
+
+.release-status {
     margin:
         0
         0
@@ -114,32 +147,57 @@ body {
 
     color: #666666;
 
-    font-family:
-        "Microgramma",
-        Arial,
-        sans-serif;
+    font-size: 8px;
 
-    font-size: 9px;
-
-    letter-spacing: 0.3em;
+    letter-spacing: 0.32em;
 }
 
 
-.release h1 {
+.catalogue {
+    margin:
+        0
+        0
+        18px;
+
+    color: #666666;
+
+    font-size: 9px;
+
+    letter-spacing: 0.25em;
+}
+
+
+.release-information h1 {
     margin: 0;
 
     color: #eeeeee;
 
-    font-family:
-        "Microgramma",
-        Arial,
-        sans-serif;
+    font-size:
+        clamp(
+            24px,
+            3vw,
+            44px
+        );
+
+    font-weight: normal;
+
+    letter-spacing: 0.07em;
+}
+
+
+.release-information h2 {
+    margin:
+        12px
+        0
+        0;
+
+    color: #eeeeee;
 
     font-size:
         clamp(
-            28px,
+            36px,
             5vw,
-            58px
+            72px
         );
 
     font-weight: normal;
@@ -148,275 +206,110 @@ body {
 }
 
 
-.release h2 {
+.coming-soon {
     margin:
-        12px
+        55px
         0
         0;
 
-    color: #8d8d8d;
+    color: #666666;
 
-    font-family:
-        "Microgramma",
-        Arial,
-        sans-serif;
+    font-size: 8px;
 
-    font-size:
-        clamp(
-            18px,
-            3vw,
-            30px
-        );
-
-    font-weight: normal;
-
-    letter-spacing: 0.08em;
+    letter-spacing: 0.3em;
 }
 
 
-.catalogue {
-    margin:
-        22px
-        0
-        70px;
-
-    color: #555555;
-
-    font-size: 10px;
-
-    letter-spacing: 0.22em;
-}
-
-
-/* --------------------------------
-   PLAYER
--------------------------------- */
-
-.player {
-    min-height: 64px;
-
-    display: grid;
-
-    grid-template-columns:
-        100px
-        1fr;
-
-    align-items: center;
-
-    border-top:
-        1px solid
-        #333333;
-
-    border-bottom:
-        1px solid
-        #333333;
-}
-
-
-.play-button {
-    height: 64px;
-
-    padding: 0;
-
-    color: #dddddd;
-
-    background: transparent;
-
-    border: none;
-
-    border-right:
-        1px solid
-        #333333;
-
-    font-family:
-        "Microgramma",
-        Arial,
-        sans-serif;
-
-    font-size: 9px;
-
-    letter-spacing: 0.2em;
-
-    cursor: pointer;
-}
-
-
-.play-button:hover {
-    color: white;
-
-    background:
-        rgba(
-            255,
-            255,
-            255,
-            0.035
-        );
-}
-
-
-.track-info {
-    min-width: 0;
-
-    padding:
-        0
-        24px;
-
-    display: flex;
-
-    align-items: center;
-
-    gap: 30px;
-
-    font-family:
-        "Microgramma",
-        Arial,
-        sans-serif;
-
-    font-size: 10px;
-
-    letter-spacing: 0.16em;
-}
-
-
-.track-number {
-    color: #555555;
-}
-
-
-.track-name {
-    color: #aaaaaa;
-}
-
-
-/* --------------------------------
-   RELEASE LINKS
--------------------------------- */
-
-.release-links {
-    margin-top: 35px;
-}
-
-
-.release-links a {
-    color: #777777;
-
-    font-family:
-        "Microgramma",
-        Arial,
-        sans-serif;
-
-    font-size: 9px;
-
-    letter-spacing: 0.22em;
-
-    text-decoration: none;
-}
-
-
-.release-links a:hover {
-    color: white;
-}
-
-
-/* --------------------------------
+/* =========================================
    FOOTER
--------------------------------- */
+========================================= */
 
 .site-footer {
     width: 100%;
 
     padding:
-        24px
-        36px;
-
-    display: flex;
-
-    justify-content: space-between;
-
-    align-items: center;
+        22px
+        34px;
 
     border-top:
         1px solid
         rgba(255, 255, 255, 0.1);
 
-    color: #444444;
+    color: #3f3f3f;
 
-    font-family:
-        "Microgramma",
-        Arial,
-        sans-serif;
+    font-size: 7px;
 
-    font-size: 8px;
-
-    letter-spacing: 0.22em;
+    letter-spacing: 0.28em;
 }
 
 
-.site-footer a {
-    color: #555555;
-
-    text-decoration: none;
-}
-
-
-.site-footer a:hover {
-    color: #aaaaaa;
-}
-
-
-/* --------------------------------
+/* =========================================
    MOBILE
--------------------------------- */
+========================================= */
 
-@media (max-width: 650px) {
+@media (max-width: 750px) {
 
     .site-header {
         padding:
-            24px
+            22px
             20px;
     }
 
 
-    .main-content {
+    .landing {
         align-items: flex-start;
 
         padding:
-            90px
-            20px;
+            45px
+            20px
+            75px;
     }
 
 
-    .release-label {
-        margin-bottom: 40px;
+    .release {
+        display: flex;
+        flex-direction: column;
+
+        gap: 45px;
     }
 
 
-    .catalogue {
-        margin-bottom: 55px;
+    .artwork-frame {
+        width: 100%;
     }
 
 
-    .player {
-        grid-template-columns:
-            78px
-            1fr;
+    .release-information {
+        width: 100%;
+        padding: 0;
     }
 
 
-    .track-info {
-        padding:
-            0
-            16px;
+    .release-status {
+        margin-bottom: 35px;
+    }
 
-        gap: 15px;
 
-        font-size: 8px;
+    .release-information h1 {
+        font-size: 22px;
+    }
+
+
+    .release-information h2 {
+        margin-top: 8px;
+
+        font-size: 42px;
+    }
+
+
+    .coming-soon {
+        margin-top: 40px;
     }
 
 
     .site-footer {
         padding:
-            22px
+            20px
             20px;
     }
 

@@ -9,90 +9,59 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>SECOND SOURCE</title>
+    <title>SECOND SOURCE — DRIP</title>
 
     <link
         rel="stylesheet"
-        href="./new.css?v=1"
+        href="./new.css?v=3"
     >
 </head>
-
 
 <body>
 
     <header class="site-header">
-
-        <a
-            class="logo"
-            href="./new.html"
-        >
+        <div class="logo">
             SECOND SOURCE
-        </a>
-
+        </div>
     </header>
 
 
-    <main class="main-content">
+    <main class="landing">
 
         <section class="release">
 
-            <p class="release-label">
-                SECOND SOURCE AUDIO
-            </p>
+            <div class="artwork-frame">
 
-            <h1>
-                MARTIN SOLLI
-            </h1>
-
-            <h2>
-                SAGE COUNSEL
-            </h2>
-
-            <p class="catalogue">
-                SS001
-            </p>
-
-
-            <div class="player">
-
-                <button
-                    id="play-button"
-                    class="play-button"
-                    type="button"
+                <img
+                    class="release-artwork"
+                    src="./images/drip-cover.jpg"
+                    alt="Martin Solli — Drip"
                 >
-                    PLAY
-                </button>
-
-                <div class="track-info">
-
-                    <span class="track-number">
-                        01
-                    </span>
-
-                    <span class="track-name">
-                        SAGE COUNSEL
-                    </span>
-
-                </div>
 
             </div>
 
 
-            <audio
-                id="audio"
-                src="./audio/3. Sage Counsel (24B_48KHz_MST)_timeitemstudio DIGI.wav"
-            ></audio>
+            <div class="release-information">
 
+                <p class="release-status">
+                    NEXT RELEASE
+                </p>
 
-            <div class="release-links">
+                <p class="catalogue">
+                    SRC001
+                </p>
 
-                <a
-                    href="https://secondsource.bandcamp.com"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    BANDCAMP
-                </a>
+                <h1>
+                    MARTIN SOLLI
+                </h1>
+
+                <h2>
+                    DRIP
+                </h2>
+
+                <p class="coming-soon">
+                    COMING SOON
+                </p>
 
             </div>
 
@@ -102,60 +71,8 @@
 
 
     <footer class="site-footer">
-
-        <span>
-            SECOND SOURCE
-        </span>
-
-        <a href="./dream.html">
-            THE DREAM
-        </a>
-
+        SECOND SOURCE AUDIO
     </footer>
-
-
-    <script>
-        const audio =
-            document.getElementById("audio");
-
-        const playButton =
-            document.getElementById("play-button");
-
-
-        playButton.addEventListener(
-            "click",
-            function () {
-
-                if (audio.paused) {
-
-                    audio.play();
-
-                    playButton.textContent =
-                        "PAUSE";
-
-                } else {
-
-                    audio.pause();
-
-                    playButton.textContent =
-                        "PLAY";
-
-                }
-
-            }
-        );
-
-
-        audio.addEventListener(
-            "ended",
-            function () {
-
-                playButton.textContent =
-                    "PLAY";
-
-            }
-        );
-    </script>
 
 </body>
 
