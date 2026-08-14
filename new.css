@@ -1,0 +1,423 @@
+@font-face {
+    font-family: "Microgramma";
+
+    src:
+        url("./fonts/microgrammanormal.ttf")
+        format("truetype");
+}
+
+
+/* --------------------------------
+   RESET
+-------------------------------- */
+
+* {
+    box-sizing: border-box;
+}
+
+
+html,
+body {
+    margin: 0;
+
+    min-height: 100%;
+
+    background: #050505;
+
+    color: #d8d8d8;
+}
+
+
+body {
+    min-height: 100vh;
+
+    display: flex;
+    flex-direction: column;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+
+/* --------------------------------
+   HEADER
+-------------------------------- */
+
+.site-header {
+    width: 100%;
+
+    padding:
+        30px
+        36px;
+
+    display: flex;
+
+    align-items: center;
+
+    border-bottom:
+        1px solid
+        rgba(255, 255, 255, 0.1);
+}
+
+
+.logo {
+    color: #eeeeee;
+
+    font-family:
+        "Microgramma",
+        Arial,
+        sans-serif;
+
+    font-size: 13px;
+
+    letter-spacing: 0.28em;
+
+    text-decoration: none;
+}
+
+
+/* --------------------------------
+   MAIN
+-------------------------------- */
+
+.main-content {
+    flex: 1;
+
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding:
+        80px
+        30px;
+}
+
+
+.release {
+    width: 100%;
+
+    max-width: 760px;
+}
+
+
+.release-label {
+    margin:
+        0
+        0
+        55px;
+
+    color: #666666;
+
+    font-family:
+        "Microgramma",
+        Arial,
+        sans-serif;
+
+    font-size: 9px;
+
+    letter-spacing: 0.3em;
+}
+
+
+.release h1 {
+    margin: 0;
+
+    color: #eeeeee;
+
+    font-family:
+        "Microgramma",
+        Arial,
+        sans-serif;
+
+    font-size:
+        clamp(
+            28px,
+            5vw,
+            58px
+        );
+
+    font-weight: normal;
+
+    letter-spacing: 0.05em;
+}
+
+
+.release h2 {
+    margin:
+        12px
+        0
+        0;
+
+    color: #8d8d8d;
+
+    font-family:
+        "Microgramma",
+        Arial,
+        sans-serif;
+
+    font-size:
+        clamp(
+            18px,
+            3vw,
+            30px
+        );
+
+    font-weight: normal;
+
+    letter-spacing: 0.08em;
+}
+
+
+.catalogue {
+    margin:
+        22px
+        0
+        70px;
+
+    color: #555555;
+
+    font-size: 10px;
+
+    letter-spacing: 0.22em;
+}
+
+
+/* --------------------------------
+   PLAYER
+-------------------------------- */
+
+.player {
+    min-height: 64px;
+
+    display: grid;
+
+    grid-template-columns:
+        100px
+        1fr;
+
+    align-items: center;
+
+    border-top:
+        1px solid
+        #333333;
+
+    border-bottom:
+        1px solid
+        #333333;
+}
+
+
+.play-button {
+    height: 64px;
+
+    padding: 0;
+
+    color: #dddddd;
+
+    background: transparent;
+
+    border: none;
+
+    border-right:
+        1px solid
+        #333333;
+
+    font-family:
+        "Microgramma",
+        Arial,
+        sans-serif;
+
+    font-size: 9px;
+
+    letter-spacing: 0.2em;
+
+    cursor: pointer;
+}
+
+
+.play-button:hover {
+    color: white;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.035
+        );
+}
+
+
+.track-info {
+    min-width: 0;
+
+    padding:
+        0
+        24px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 30px;
+
+    font-family:
+        "Microgramma",
+        Arial,
+        sans-serif;
+
+    font-size: 10px;
+
+    letter-spacing: 0.16em;
+}
+
+
+.track-number {
+    color: #555555;
+}
+
+
+.track-name {
+    color: #aaaaaa;
+}
+
+
+/* --------------------------------
+   RELEASE LINKS
+-------------------------------- */
+
+.release-links {
+    margin-top: 35px;
+}
+
+
+.release-links a {
+    color: #777777;
+
+    font-family:
+        "Microgramma",
+        Arial,
+        sans-serif;
+
+    font-size: 9px;
+
+    letter-spacing: 0.22em;
+
+    text-decoration: none;
+}
+
+
+.release-links a:hover {
+    color: white;
+}
+
+
+/* --------------------------------
+   FOOTER
+-------------------------------- */
+
+.site-footer {
+    width: 100%;
+
+    padding:
+        24px
+        36px;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    border-top:
+        1px solid
+        rgba(255, 255, 255, 0.1);
+
+    color: #444444;
+
+    font-family:
+        "Microgramma",
+        Arial,
+        sans-serif;
+
+    font-size: 8px;
+
+    letter-spacing: 0.22em;
+}
+
+
+.site-footer a {
+    color: #555555;
+
+    text-decoration: none;
+}
+
+
+.site-footer a:hover {
+    color: #aaaaaa;
+}
+
+
+/* --------------------------------
+   MOBILE
+-------------------------------- */
+
+@media (max-width: 650px) {
+
+    .site-header {
+        padding:
+            24px
+            20px;
+    }
+
+
+    .main-content {
+        align-items: flex-start;
+
+        padding:
+            90px
+            20px;
+    }
+
+
+    .release-label {
+        margin-bottom: 40px;
+    }
+
+
+    .catalogue {
+        margin-bottom: 55px;
+    }
+
+
+    .player {
+        grid-template-columns:
+            78px
+            1fr;
+    }
+
+
+    .track-info {
+        padding:
+            0
+            16px;
+
+        gap: 15px;
+
+        font-size: 8px;
+    }
+
+
+    .site-footer {
+        padding:
+            22px
+            20px;
+    }
+
+}
