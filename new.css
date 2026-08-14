@@ -45,6 +45,11 @@ body {
 }
 
 
+body.viewer-open {
+    overflow: hidden;
+}
+
+
 /* =========================================
    HEADER
 ========================================= */
@@ -72,16 +77,13 @@ body {
 
     color: #ffffff;
 
-    font-size: 16px;
+    font-size: 11px;
 
     letter-spacing: 0.3em;
 
     text-decoration: none;
 
     white-space: nowrap;
-
-    transition:
-        opacity 0.2s ease;
 }
 
 
@@ -91,7 +93,7 @@ body {
 
 
 /* =========================================
-   NAVIGATION — TOP RIGHT
+   NAVIGATION
 ========================================= */
 
 .site-nav {
@@ -100,7 +102,6 @@ body {
     display: flex;
 
     align-items: center;
-
     justify-content: flex-end;
 
     gap: 34px;
@@ -119,9 +120,6 @@ body {
     text-decoration: none;
 
     white-space: nowrap;
-
-    transition:
-        opacity 0.2s ease;
 }
 
 
@@ -170,7 +168,7 @@ body {
 
 
 /* =========================================
-   RELEASE — CENTRAL AXIS
+   RELEASE
 ========================================= */
 
 .release {
@@ -205,9 +203,7 @@ body {
         0
         22px;
 
-    color: #ffffff;
-
-    font-size: 16px;
+    font-size: 10px;
 
     letter-spacing: 0.3em;
 }
@@ -219,9 +215,7 @@ body {
         0
         28px;
 
-    color: #ffffff;
-
-    font-size: 16px;
+    font-size: 11px;
 
     letter-spacing: 0.25em;
 }
@@ -229,8 +223,6 @@ body {
 
 .release-heading h1 {
     margin: 0;
-
-    color: #ffffff;
 
     font-size:
         clamp(
@@ -251,8 +243,6 @@ body {
         0
         0;
 
-    color: #ffffff;
-
     font-size:
         clamp(
             42px,
@@ -267,7 +257,7 @@ body {
 
 
 /* =========================================
-   ARTWORK — TRUE CENTER
+   ARTWORK
 ========================================= */
 
 .artwork-area {
@@ -278,6 +268,8 @@ body {
         auto;
 
     padding: 18px;
+
+    display: block;
 
     background: #0a0a0a;
 
@@ -290,6 +282,17 @@ body {
         22px
         60px
         rgba(0, 0, 0, 0.65);
+
+    cursor: zoom-in;
+
+    transition:
+        border-color 0.2s ease;
+}
+
+
+.artwork-area:hover {
+    border-color:
+        rgba(255, 255, 255, 0.5);
 }
 
 
@@ -303,6 +306,21 @@ body {
 }
 
 
+.artwork-instruction {
+    margin:
+        14px
+        0
+        0;
+
+    color:
+        rgba(255, 255, 255, 0.75);
+
+    font-size: 6px;
+
+    letter-spacing: 0.28em;
+}
+
+
 /* =========================================
    COMING SOON
 ========================================= */
@@ -313,9 +331,7 @@ body {
         0
         0;
 
-    color: #ffffff;
-
-    font-size: 16px;
+    font-size: 9px;
 
     letter-spacing: 0.32em;
 }
@@ -347,8 +363,6 @@ body {
 
 
 .copyright-line {
-    color: #ffffff;
-
     font-size: 7px;
 
     letter-spacing: 0.22em;
@@ -363,8 +377,6 @@ body {
         auto
         0 !important;
 
-    color: #ffffff;
-
     font-family:
         Arial,
         Helvetica,
@@ -375,6 +387,251 @@ body {
     line-height: 1.7;
 
     letter-spacing: 0.06em;
+}
+
+
+/* =========================================
+   FULLSCREEN ARTWORK VIEWER
+========================================= */
+
+.artwork-viewer {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 5000;
+
+    display: none;
+
+    grid-template-rows:
+        60px
+        minmax(0, 1fr)
+        64px;
+
+    background:
+        rgba(
+            0,
+            0,
+            0,
+            0.985
+        );
+}
+
+
+.artwork-viewer.is-open {
+    display: grid;
+}
+
+
+/* =========================================
+   VIEWER TOP BAR
+========================================= */
+
+.viewer-topbar {
+    width: 100%;
+
+    padding:
+        0
+        24px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: space-between;
+
+    border-bottom:
+        1px solid
+        rgba(255, 255, 255, 0.18);
+}
+
+
+.viewer-title {
+    font-size: 7px;
+
+    letter-spacing: 0.24em;
+}
+
+
+.viewer-text-button {
+    padding: 8px;
+
+    color: #ffffff;
+
+    background: transparent;
+
+    border: none;
+
+    font-family:
+        "Microgramma",
+        Arial,
+        sans-serif;
+
+    font-size: 7px;
+
+    letter-spacing: 0.25em;
+
+    cursor: pointer;
+}
+
+
+.viewer-text-button:hover {
+    opacity: 0.65;
+}
+
+
+/* =========================================
+   VIEWER STAGE
+========================================= */
+
+.viewer-stage {
+    position: relative;
+
+    min-width: 0;
+    min-height: 0;
+
+    overflow: hidden;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    touch-action: none;
+}
+
+
+.viewer-stage.is-zoomed {
+    cursor: grab;
+}
+
+
+.viewer-stage.is-dragging {
+    cursor: grabbing;
+}
+
+
+/* =========================================
+   VIEWER IMAGE
+========================================= */
+
+.viewer-image {
+    display: block;
+
+    max-width: 92%;
+    max-height: 92%;
+
+    width: auto;
+    height: auto;
+
+    object-fit: contain;
+
+    user-select: none;
+
+    transform-origin: center center;
+
+    will-change: transform;
+
+    cursor: zoom-in;
+}
+
+
+.viewer-stage.is-zoomed .viewer-image {
+    cursor: grab;
+}
+
+
+/* =========================================
+   VIEWER CONTROLS
+========================================= */
+
+.viewer-controls {
+    width: 100%;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 18px;
+
+    border-top:
+        1px solid
+        rgba(255, 255, 255, 0.18);
+}
+
+
+.viewer-control-button {
+    width: 32px;
+    height: 32px;
+
+    padding: 0;
+
+    color: #ffffff;
+
+    background: transparent;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.25);
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    font-size: 20px;
+
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+
+.viewer-control-button:hover {
+    border-color: #ffffff;
+}
+
+
+.zoom-value {
+    min-width: 50px;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    font-size: 8px;
+
+    text-align: center;
+}
+
+
+.viewer-reset {
+    padding: 7px 9px;
+
+    color: #ffffff;
+
+    background: transparent;
+
+    border: none;
+
+    font-family:
+        "Microgramma",
+        Arial,
+        sans-serif;
+
+    font-size: 6px;
+
+    letter-spacing: 0.22em;
+
+    cursor: pointer;
+}
+
+
+.viewer-reset:hover {
+    opacity: 0.65;
 }
 
 
@@ -491,6 +748,13 @@ body {
     }
 
 
+    .artwork-instruction {
+        margin-top: 12px;
+
+        font-size: 5px;
+    }
+
+
     .coming-soon {
         margin-top: 32px;
 
@@ -517,6 +781,58 @@ body {
         font-size: 6px;
 
         line-height: 1.8;
+    }
+
+
+    /* VIEWER MOBILE */
+
+    .artwork-viewer {
+        grid-template-rows:
+            54px
+            minmax(0, 1fr)
+            62px;
+    }
+
+
+    .viewer-topbar {
+        padding:
+            0
+            14px;
+    }
+
+
+    .viewer-title {
+        max-width: 70%;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+
+        white-space: nowrap;
+
+        font-size: 6px;
+    }
+
+
+    .viewer-stage {
+        padding: 8px;
+    }
+
+
+    .viewer-image {
+        max-width: 96%;
+        max-height: 96%;
+    }
+
+
+    .viewer-controls {
+        gap: 13px;
+    }
+
+
+    .viewer-control-button {
+        width: 34px;
+        height: 34px;
     }
 
 }

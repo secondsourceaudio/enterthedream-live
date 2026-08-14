@@ -14,7 +14,7 @@
 
     <link
         rel="stylesheet"
-        href="./experiment.css?v=7"
+        href="./experiment.css?v=8"
     >
 
 </head>
@@ -36,49 +36,140 @@
         </a>
 
 
-        <div class="experiment-actions">
+        <div class="header-right">
 
-            <button
-                id="sound-button"
-                class="sound-button is-muted"
-                type="button"
-                aria-label="Play sound"
-                title="Play sound"
+            <!-- =================================
+                 MINI PLAYER
+            ================================== -->
+
+            <div
+                id="mini-player"
+                class="mini-player"
             >
 
-                <svg
-                    class="sound-icon"
-                    viewBox="0 0 32 32"
-                    aria-hidden="true"
+                <button
+                    id="play-button"
+                    class="play-button"
+                    type="button"
+                    aria-label="Play"
                 >
 
-                    <path
-                        d="M5 12H10L16 7V25L10 20H5Z"
-                    ></path>
+                    <svg
+                        id="play-icon"
+                        class="player-icon"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                    >
+                        <path d="M8 5L19 12L8 19Z"></path>
+                    </svg>
 
-                    <path
-                        class="sound-wave"
-                        d="M20 12C22 14 22 18 20 20"
-                    ></path>
 
-                    <path
-                        class="sound-wave"
-                        d="M24 9C28 13 28 19 24 23"
-                    ></path>
+                    <svg
+                        id="pause-icon"
+                        class="player-icon is-hidden"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                    >
+                        <path d="M8 5V19"></path>
+                        <path d="M16 5V19"></path>
+                    </svg>
 
-                    <path
-                        class="mute-line"
-                        d="M21 11L28 21"
-                    ></path>
+                </button>
 
-                    <path
-                        class="mute-line"
-                        d="M28 11L21 21"
-                    ></path>
 
-                </svg>
+                <div class="player-information">
 
-            </button>
+                    <div class="player-topline">
+
+                        <span class="player-track">
+                            SAGE COUNSEL
+                        </span>
+
+                        <span
+                            id="player-time"
+                            class="player-time"
+                        >
+                            0:00 / 0:00
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        id="progress-track"
+                        class="progress-track"
+                    >
+
+                        <div
+                            id="progress-fill"
+                            class="progress-fill"
+                        ></div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- VOLUME -->
+
+                <div
+                    id="volume-control"
+                    class="volume-control"
+                    title="Drag up/down to change volume"
+                >
+
+                    <button
+                        id="sound-button"
+                        class="sound-button"
+                        type="button"
+                        aria-label="Mute"
+                    >
+
+                        <svg
+                            class="sound-icon"
+                            viewBox="0 0 32 32"
+                            aria-hidden="true"
+                        >
+
+                            <path
+                                d="M5 12H10L16 7V25L10 20H5Z"
+                            ></path>
+
+                            <path
+                                class="sound-wave"
+                                d="M20 12C22 14 22 18 20 20"
+                            ></path>
+
+                            <path
+                                class="sound-wave"
+                                d="M24 9C28 13 28 19 24 23"
+                            ></path>
+
+                            <path
+                                class="mute-line"
+                                d="M21 11L28 21"
+                            ></path>
+
+                            <path
+                                class="mute-line"
+                                d="M28 11L21 21"
+                            ></path>
+
+                        </svg>
+
+                    </button>
+
+
+                    <span
+                        id="volume-percent"
+                        class="volume-percent"
+                    >
+                        35%
+                    </span>
+
+                </div>
+
+            </div>
 
 
             <a
@@ -99,6 +190,7 @@
 
     <main class="experiment-main">
 
+
         <div class="experiment-meta">
 
             <p>
@@ -111,6 +203,10 @@
 
         </div>
 
+
+        <!-- =====================================
+             INTERACTIVE ARTWORK
+        ====================================== -->
 
         <div
             id="visual-container"
@@ -149,13 +245,26 @@
 
     <footer class="experiment-footer">
 
-        SRC001 / MARTIN SOLLI / DRIP
+        <span>
+            SECOND SOURCE
+        </span>
+
+        <span>
+            SRC001 / MARTIN SOLLI / DRIP
+        </span>
+
+        <span>
+            2026
+        </span>
 
     </footer>
 
 
     <!-- =========================================
          AUDIO
+
+         Both filenames are included so this works
+         whether or not you renamed the WAV.
     ========================================== -->
 
     <audio
@@ -164,14 +273,21 @@
         loop
         preload="auto"
     >
+
         <source
             src="./audio/sage-counsel.wav"
             type="audio/wav"
         >
+
+        <source
+            src="./audio/3. Sage Counsel (24B_48KHz_MST)_timeitemstudio DIGI.wav"
+            type="audio/wav"
+        >
+
     </audio>
 
 
-    <script src="./experiment.js?v=8"></script>
+    <script src="./experiment.js?v=9"></script>
 
 </body>
 

@@ -13,7 +13,7 @@
 
     <link
         rel="stylesheet"
-        href="./new.css?v=22"
+        href="./new.css?v=23"
     >
 </head>
 
@@ -85,7 +85,16 @@
             </div>
 
 
-            <div class="artwork-area">
+            <!-- =================================
+                 CLICKABLE ARTWORK
+            ================================== -->
+
+            <button
+                id="artwork-open"
+                class="artwork-area"
+                type="button"
+                aria-label="View DRIP artwork"
+            >
 
                 <img
                     class="release-artwork"
@@ -93,11 +102,16 @@
                     alt="Martin Solli — Drip"
                 >
 
-            </div>
+            </button>
+
+
+            <p class="artwork-instruction">
+                CLICK TO VIEW / ZOOM
+            </p>
 
 
             <p class="coming-soon">
-                TBA
+                COMING SOON
             </p>
 
         </section>
@@ -123,6 +137,568 @@
         </p>
 
     </footer>
+
+
+    <!-- =========================================
+         ARTWORK VIEWER
+    ========================================== -->
+
+    <div
+        id="artwork-viewer"
+        class="artwork-viewer"
+        aria-hidden="true"
+    >
+
+        <!-- TOP BAR -->
+
+        <div class="viewer-topbar">
+
+            <div class="viewer-title">
+                SRC001 / MARTIN SOLLI / DRIP
+            </div>
+
+
+            <button
+                id="viewer-close"
+                class="viewer-text-button"
+                type="button"
+            >
+                CLOSE
+            </button>
+
+        </div>
+
+
+        <!-- IMAGE AREA -->
+
+        <div
+            id="viewer-stage"
+            class="viewer-stage"
+        >
+
+            <img
+                id="viewer-image"
+                class="viewer-image"
+                src="./images/drip-cover.jpg"
+                alt="Martin Solli — Drip artwork"
+                draggable="false"
+            >
+
+        </div>
+
+
+        <!-- CONTROLS -->
+
+        <div class="viewer-controls">
+
+            <button
+                id="zoom-out"
+                class="viewer-control-button"
+                type="button"
+                aria-label="Zoom out"
+            >
+                −
+            </button>
+
+
+            <span
+                id="zoom-value"
+                class="zoom-value"
+            >
+                100%
+            </span>
+
+
+            <button
+                id="zoom-in"
+                class="viewer-control-button"
+                type="button"
+                aria-label="Zoom in"
+            >
+                +
+            </button>
+
+
+            <button
+                id="zoom-reset"
+                class="viewer-reset"
+                type="button"
+            >
+                RESET
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        /* =========================================
+           ARTWORK VIEWER
+        ========================================== */
+
+        const artworkOpen =
+            document.getElementById("artwork-open");
+
+        const viewer =
+            document.getElementById("artwork-viewer");
+
+        const viewerClose =
+            document.getElementById("viewer-close");
+
+        const viewerStage =
+            document.getElementById("viewer-stage");
+
+        const viewerImage =
+            document.getElementById("viewer-image");
+
+        const zoomInButton =
+            document.getElementById("zoom-in");
+
+        const zoomOutButton =
+            document.getElementById("zoom-out");
+
+        const zoomResetButton =
+            document.getElementById("zoom-reset");
+
+        const zoomValue =
+            document.getElementById("zoom-value");
+
+
+        let scale = 1;
+
+        let translateX = 0;
+
+        let translateY = 0;
+
+        let dragging = false;
+
+        let dragStartX = 0;
+
+        let dragStartY = 0;
+
+        let dragOriginalX = 0;
+
+        let dragOriginalY = 0;
+
+
+        /* =========================================
+           UPDATE IMAGE
+        ========================================== */
+
+        function updateViewerImage() {
+
+            viewerImage.style.transform =
+                `
+                    translate(
+                        ${translateX}px,
+                        ${translateY}px
+                    )
+                    scale(${scale})
+                `;
+
+
+            zoomValue.textContent =
+                Math.round(
+                    scale * 100
+                )
+                +
+                "%";
+
+
+            if (scale > 1) {
+
+                viewerStage.classList.add(
+                    "is-zoomed"
+                );
+
+            }
+
+            else {
+
+                viewerStage.classList.remove(
+                    "is-zoomed"
+                );
+
+            }
+
+        }
+
+
+        /* =========================================
+           OPEN
+        ========================================== */
+
+        function openViewer() {
+
+            viewer.classList.add(
+                "is-open"
+            );
+
+
+            viewer.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+
+            document.body.classList.add(
+                "viewer-open"
+            );
+
+
+            resetZoom();
+
+        }
+
+
+        /* =========================================
+           CLOSE
+        ========================================== */
+
+        function closeViewer() {
+
+            viewer.classList.remove(
+                "is-open"
+            );
+
+
+            viewer.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+
+            document.body.classList.remove(
+                "viewer-open"
+            );
+
+        }
+
+
+        /* =========================================
+           ZOOM
+        ========================================== */
+
+        function setZoom(newScale) {
+
+            scale =
+                Math.min(
+                    5,
+                    Math.max(
+                        1,
+                        newScale
+                    )
+                );
+
+
+            if (scale === 1) {
+
+                translateX = 0;
+
+                translateY = 0;
+
+            }
+
+
+            updateViewerImage();
+
+        }
+
+
+        function zoomIn() {
+
+            setZoom(
+                scale + 0.35
+            );
+
+        }
+
+
+        function zoomOut() {
+
+            setZoom(
+                scale - 0.35
+            );
+
+        }
+
+
+        function resetZoom() {
+
+            scale = 1;
+
+            translateX = 0;
+
+            translateY = 0;
+
+
+            updateViewerImage();
+
+        }
+
+
+        /* =========================================
+           BUTTONS
+        ========================================== */
+
+        artworkOpen.addEventListener(
+            "click",
+            openViewer
+        );
+
+
+        viewerClose.addEventListener(
+            "click",
+            closeViewer
+        );
+
+
+        zoomInButton.addEventListener(
+            "click",
+            zoomIn
+        );
+
+
+        zoomOutButton.addEventListener(
+            "click",
+            zoomOut
+        );
+
+
+        zoomResetButton.addEventListener(
+            "click",
+            resetZoom
+        );
+
+
+        /* =========================================
+           MOUSE WHEEL ZOOM
+        ========================================== */
+
+        viewerStage.addEventListener(
+            "wheel",
+            function (event) {
+
+                event.preventDefault();
+
+
+                if (event.deltaY < 0) {
+
+                    setZoom(
+                        scale + 0.2
+                    );
+
+                }
+
+                else {
+
+                    setZoom(
+                        scale - 0.2
+                    );
+
+                }
+
+            },
+            {
+                passive: false
+            }
+        );
+
+
+        /* =========================================
+           DOUBLE CLICK
+        ========================================== */
+
+        viewerImage.addEventListener(
+            "dblclick",
+            function () {
+
+                if (scale > 1) {
+
+                    resetZoom();
+
+                }
+
+                else {
+
+                    setZoom(2);
+
+                }
+
+            }
+        );
+
+
+        /* =========================================
+           DRAG / PAN
+
+           Works with mouse and touch.
+        ========================================== */
+
+        viewerStage.addEventListener(
+            "pointerdown",
+            function (event) {
+
+                if (scale <= 1) {
+
+                    return;
+
+                }
+
+
+                dragging = true;
+
+
+                dragStartX =
+                    event.clientX;
+
+
+                dragStartY =
+                    event.clientY;
+
+
+                dragOriginalX =
+                    translateX;
+
+
+                dragOriginalY =
+                    translateY;
+
+
+                viewerStage.classList.add(
+                    "is-dragging"
+                );
+
+
+                try {
+
+                    viewerStage.setPointerCapture(
+                        event.pointerId
+                    );
+
+                }
+
+                catch (error) {
+                }
+
+            }
+        );
+
+
+        viewerStage.addEventListener(
+            "pointermove",
+            function (event) {
+
+                if (!dragging) {
+
+                    return;
+
+                }
+
+
+                translateX =
+                    dragOriginalX
+                    +
+                    (
+                        event.clientX
+                        -
+                        dragStartX
+                    );
+
+
+                translateY =
+                    dragOriginalY
+                    +
+                    (
+                        event.clientY
+                        -
+                        dragStartY
+                    );
+
+
+                updateViewerImage();
+
+            }
+        );
+
+
+        function stopDragging() {
+
+            dragging = false;
+
+
+            viewerStage.classList.remove(
+                "is-dragging"
+            );
+
+        }
+
+
+        viewerStage.addEventListener(
+            "pointerup",
+            stopDragging
+        );
+
+
+        viewerStage.addEventListener(
+            "pointercancel",
+            stopDragging
+        );
+
+
+        /* =========================================
+           KEYBOARD
+        ========================================== */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    !viewer.classList.contains(
+                        "is-open"
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                if (
+                    event.key === "Escape"
+                ) {
+
+                    closeViewer();
+
+                }
+
+
+                if (
+                    event.key === "+"
+                    ||
+                    event.key === "="
+                ) {
+
+                    zoomIn();
+
+                }
+
+
+                if (
+                    event.key === "-"
+                ) {
+
+                    zoomOut();
+
+                }
+
+            }
+        );
+
+    </script>
 
 </body>
 

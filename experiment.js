@@ -1,6 +1,6 @@
 /* =========================================
    SECOND SOURCE
-   SRC001
+   SRC001 — DRIP
 ========================================= */
 
 
@@ -16,69 +16,251 @@ const interactionMessage =
     document.getElementById("interaction-message");
 
 
+/* =========================================
+   AUDIO PLAYER
+========================================= */
+
 const audio =
     document.getElementById("experiment-audio");
+
+
+const playButton =
+    document.getElementById("play-button");
+
+
+const playIcon =
+    document.getElementById("play-icon");
+
+
+const pauseIcon =
+    document.getElementById("pause-icon");
 
 
 const soundButton =
     document.getElementById("sound-button");
 
 
+const volumeControl =
+    document.getElementById("volume-control");
+
+
+const volumePercent =
+    document.getElementById("volume-percent");
+
+
+const progressTrack =
+    document.getElementById("progress-track");
+
+
+const progressFill =
+    document.getElementById("progress-fill");
+
+
+const playerTime =
+    document.getElementById("player-time");
+
+
 /* =========================================
-   AUDIO
+   INITIAL AUDIO STATE
+
+   Previous setting was 70%.
+   Half of that = 35%.
 ========================================= */
 
-let userMuted = false;
-
-let hasVisualInteraction = false;
-
-
-/*
-   Reflect ACTUAL sound state.
-*/
-
-function updateSoundButton() {
-
-    const soundIsOff =
-        userMuted
-        ||
-        audio.paused
-        ||
-        audio.muted;
+let preferredVolume =
+    0.35;
 
 
-    soundButton.classList.toggle(
-        "is-muted",
-        soundIsOff
-    );
+let userMuted =
+    false;
 
 
-    soundButton.setAttribute(
-        "aria-label",
-        soundIsOff
-            ? "Play sound"
-            : "Mute sound"
-    );
+audio.volume =
+    preferredVolume;
 
 
-    soundButton.setAttribute(
-        "title",
-        soundIsOff
-            ? "Play sound"
-            : "Mute sound"
+audio.muted =
+    false;
+
+
+/* =========================================
+   HELPERS
+========================================= */
+
+function clamp(
+    value,
+    minimum,
+    maximum
+) {
+
+    return Math.max(
+        minimum,
+        Math.min(
+            maximum,
+            value
+        )
     );
 
 }
 
 
-/*
-   Try to play immediately.
-*/
+function formatTime(seconds) {
 
-function requestSound() {
+    if (
+        !Number.isFinite(seconds)
+    ) {
+
+        return "0:00";
+
+    }
+
+
+    const minutes =
+        Math.floor(
+            seconds / 60
+        );
+
+
+    const remainingSeconds =
+        Math.floor(
+            seconds % 60
+        );
+
+
+    return (
+        minutes
+        +
+        ":"
+        +
+        String(
+            remainingSeconds
+        ).padStart(
+            2,
+            "0"
+        )
+    );
+
+}
+
+
+/* =========================================
+   PLAYER DISPLAY
+========================================= */
+
+function updatePlayButton() {
+
+    const playing =
+        !audio.paused;
+
+
+    playIcon.classList.toggle(
+        "is-hidden",
+        playing
+    );
+
+
+    pauseIcon.classList.toggle(
+        "is-hidden",
+        !playing
+    );
+
+
+    playButton.setAttribute(
+        "aria-label",
+        playing
+            ? "Pause"
+            : "Play"
+    );
+
+}
+
+
+function updateVolumeDisplay() {
+
+    const percentage =
+        Math.round(
+            preferredVolume
+            *
+            100
+        );
+
+
+    volumePercent.textContent =
+        percentage
+        +
+        "%";
+
+
+    soundButton.classList.toggle(
+        "is-muted",
+        userMuted
+        ||
+        audio.muted
+    );
+
+
+    soundButton.setAttribute(
+        "aria-label",
+        userMuted
+            ? "Unmute"
+            : "Mute"
+    );
+
+}
+
+
+function updateProgress() {
+
+    if (
+        Number.isFinite(
+            audio.duration
+        )
+        &&
+        audio.duration > 0
+    ) {
+
+        const progress =
+            (
+                audio.currentTime
+                /
+                audio.duration
+            )
+            *
+            100;
+
+
+        progressFill.style.width =
+            progress
+            +
+            "%";
+
+    }
+
+
+    playerTime.textContent =
+        formatTime(
+            audio.currentTime
+        )
+        +
+        " / "
+        +
+        formatTime(
+            audio.duration
+        );
+
+}
+
+
+/* =========================================
+   START AUDIO
+========================================= */
+
+function tryToPlayAudio() {
 
     if (userMuted) {
+
         return;
+
     }
 
 
@@ -86,44 +268,28 @@ function requestSound() {
         false;
 
 
-    const playPromise =
+    const promise =
         audio.play();
 
 
-    if (playPromise !== undefined) {
+    if (promise !== undefined) {
 
-        playPromise
+        promise
             .then(function () {
 
-                updateSoundButton();
-
-                if (!hasVisualInteraction) {
-
-                    interactionMessage.textContent =
-                        "MOVE / TOUCH";
-
-                }
+                updatePlayButton();
+                updateVolumeDisplay();
 
             })
-            .catch(function (error) {
+            .catch(function () {
 
                 /*
-                   Browser probably blocked autoplay.
+                   Browser blocked autoplay.
 
-                   The next click/touch retries.
+                   First click / touch will retry.
                 */
 
-                interactionMessage.textContent =
-                    "CLICK / TOUCH FOR SOUND";
-
-
-                updateSoundButton();
-
-
-                console.log(
-                    "Autoplay waiting for interaction:",
-                    error
-                );
+                updatePlayButton();
 
             });
 
@@ -133,46 +299,21 @@ function requestSound() {
 
 
 /*
-   Speaker button.
-
-   If audio is currently off for ANY reason,
-   clicking it explicitly starts playback.
-
-   If it is playing, clicking mutes it.
+   Initial autoplay attempt.
 */
 
-soundButton.addEventListener(
-    "pointerdown",
-    function (event) {
-
-        event.stopPropagation();
-
-    }
-);
+tryToPlayAudio();
 
 
-soundButton.addEventListener(
+/* =========================================
+   PLAY / PAUSE
+========================================= */
+
+playButton.addEventListener(
     "click",
-    function (event) {
+    function () {
 
-        event.preventDefault();
-
-        event.stopPropagation();
-
-
-        const currentlyOff =
-            userMuted
-            ||
-            audio.paused
-            ||
-            audio.muted;
-
-
-        if (currentlyOff) {
-
-            /*
-               TURN SOUND ON
-            */
+        if (audio.paused) {
 
             userMuted =
                 false;
@@ -182,108 +323,17 @@ soundButton.addEventListener(
                 false;
 
 
-            const playPromise =
-                audio.play();
-
-
-            if (playPromise !== undefined) {
-
-                playPromise
-                    .then(function () {
-
-                        interactionMessage.textContent =
-                            "MOVE / TOUCH";
-
-
-                        updateSoundButton();
-
-                    })
-                    .catch(function (error) {
-
-                        console.error(
-                            "Could not play audio:",
-                            error
-                        );
-
-
-                        updateSoundButton();
-
-                    });
-
-            }
-
-        }
-
-        else {
-
-            /*
-               TURN SOUND OFF
-            */
-
-            userMuted =
-                true;
-
-
-            audio.muted =
-                true;
-
-
-            updateSoundButton();
-
-        }
-
-    }
-);
-
-
-/*
-   Retry playback directly inside the first
-   genuine user gesture.
-*/
-
-function unlockSound(event) {
-
-    if (
-        event.target.closest(
-            "#sound-button"
-        )
-    ) {
-
-        return;
-
-    }
-
-
-    if (
-        !userMuted
-        &&
-        (
-            audio.paused
-            ||
-            audio.muted
-        )
-    ) {
-
-        audio.muted =
-            false;
-
-
-        const playPromise =
-            audio.play();
-
-
-        if (playPromise !== undefined) {
-
-            playPromise
+            audio.play()
                 .then(function () {
 
-                    updateSoundButton();
+                    updatePlayButton();
+                    updateVolumeDisplay();
 
                 })
                 .catch(function (error) {
 
                     console.error(
-                        "Audio unlock failed:",
+                        "Audio could not play:",
                         error
                     );
 
@@ -291,70 +341,359 @@ function unlockSound(event) {
 
         }
 
+        else {
+
+            audio.pause();
+
+        }
+
     }
+);
+
+
+/* =========================================
+   SPEAKER CLICK = MUTE / UNMUTE
+========================================= */
+
+soundButton.addEventListener(
+    "click",
+    function (event) {
+
+        event.stopPropagation();
+
+
+        userMuted =
+            !userMuted;
+
+
+        audio.muted =
+            userMuted;
+
+
+        if (
+            !userMuted
+            &&
+            audio.paused
+        ) {
+
+            audio.play()
+                .catch(function () {});
+
+        }
+
+
+        updateVolumeDisplay();
+
+    }
+);
+
+
+/* =========================================
+   VERTICAL VOLUME DRAG
+
+   Drag upward = louder
+   Drag downward = quieter
+========================================= */
+
+let volumeDragging =
+    false;
+
+
+let volumeStartY =
+    0;
+
+
+let volumeStartValue =
+    preferredVolume;
+
+
+let volumeHasMoved =
+    false;
+
+
+volumeControl.addEventListener(
+    "pointerdown",
+    function (event) {
+
+        /*
+           Let a normal speaker click remain
+           a mute/unmute click unless the
+           pointer actually moves vertically.
+        */
+
+        volumeDragging =
+            true;
+
+
+        volumeHasMoved =
+            false;
+
+
+        volumeStartY =
+            event.clientY;
+
+
+        volumeStartValue =
+            preferredVolume;
+
+
+        try {
+
+            volumeControl.setPointerCapture(
+                event.pointerId
+            );
+
+        }
+
+        catch (error) {
+        }
+
+    }
+);
+
+
+volumeControl.addEventListener(
+    "pointermove",
+    function (event) {
+
+        if (!volumeDragging) {
+
+            return;
+
+        }
+
+
+        const movement =
+            volumeStartY
+            -
+            event.clientY;
+
+
+        if (
+            Math.abs(
+                movement
+            )
+            >
+            3
+        ) {
+
+            volumeHasMoved =
+                true;
+
+        }
+
+
+        if (!volumeHasMoved) {
+
+            return;
+
+        }
+
+
+        /*
+           About 140 pixels of movement
+           covers the full volume range.
+        */
+
+        const newVolume =
+            clamp(
+
+                volumeStartValue
+                +
+                movement
+                /
+                140,
+
+                0,
+                1
+
+            );
+
+
+        preferredVolume =
+            newVolume;
+
+
+        audio.volume =
+            preferredVolume;
+
+
+        /*
+           Adjusting volume means the user
+           intends to hear sound.
+        */
+
+        userMuted =
+            false;
+
+
+        audio.muted =
+            false;
+
+
+        if (audio.paused) {
+
+            audio.play()
+                .catch(function () {});
+
+        }
+
+
+        updateVolumeDisplay();
+
+    }
+);
+
+
+function finishVolumeDrag() {
+
+    volumeDragging =
+        false;
 
 }
 
 
-document.addEventListener(
-    "pointerdown",
-    unlockSound,
-    true
+volumeControl.addEventListener(
+    "pointerup",
+    finishVolumeDrag
 );
 
 
-document.addEventListener(
+volumeControl.addEventListener(
+    "pointercancel",
+    finishVolumeDrag
+);
+
+
+/* =========================================
+   SEEKING
+========================================= */
+
+progressTrack.addEventListener(
     "click",
-    unlockSound,
-    true
+    function (event) {
+
+        if (
+            !Number.isFinite(
+                audio.duration
+            )
+        ) {
+
+            return;
+
+        }
+
+
+        const rect =
+            progressTrack
+                .getBoundingClientRect();
+
+
+        const percentage =
+            clamp(
+
+                (
+                    event.clientX
+                    -
+                    rect.left
+                )
+                /
+                rect.width,
+
+                0,
+                1
+
+            );
+
+
+        audio.currentTime =
+            percentage
+            *
+            audio.duration;
+
+
+        updateProgress();
+
+    }
+);
+
+
+/* =========================================
+   AUDIO EVENTS
+========================================= */
+
+audio.addEventListener(
+    "timeupdate",
+    updateProgress
 );
 
 
 audio.addEventListener(
-    "playing",
-    updateSoundButton
+    "durationchange",
+    updateProgress
+);
+
+
+audio.addEventListener(
+    "loadedmetadata",
+    updateProgress
+);
+
+
+audio.addEventListener(
+    "play",
+    updatePlayButton
 );
 
 
 audio.addEventListener(
     "pause",
-    updateSoundButton
+    updatePlayButton
 );
 
 
 audio.addEventListener(
     "volumechange",
-    updateSoundButton
+    updateVolumeDisplay
 );
 
 
-audio.addEventListener(
-    "error",
-    function () {
+/* =========================================
+   AUTOPLAY UNLOCK
 
-        console.error(
-            "Audio file could not be loaded.",
-            audio.error
-        );
+   If Brave/Safari blocks autoplay,
+   first interaction with the artwork
+   starts it.
+========================================= */
+
+function unlockAudio() {
+
+    if (
+        audio.paused
+        &&
+        !userMuted
+    ) {
+
+        audio.play()
+            .catch(function () {});
+
+    }
+
+}
 
 
-        interactionMessage.textContent =
-            "AUDIO FILE NOT FOUND";
-
-
-        updateSoundButton();
-
+container.addEventListener(
+    "pointerdown",
+    unlockAudio,
+    {
+        once: true
     }
 );
 
 
-/*
-   Initial attempt.
-*/
-
-requestSound();
-
-updateSoundButton();
+updatePlayButton();
+updateVolumeDisplay();
+updateProgress();
 
 
 /* =========================================
@@ -412,7 +751,7 @@ if (gl) {
 
     const fragmentShaderSource = `
 
-        precision mediump float;
+        precision highp float;
 
 
         varying vec2 v_uv;
@@ -433,20 +772,34 @@ if (gl) {
         uniform float u_pulseAge;
 
 
+        float randomValue(float value) {
+
+            return fract(
+                sin(
+                    value
+                )
+                *
+                43758.5453123
+            );
+
+        }
+
+
         mat2 rotate2D(float angle) {
 
-            float s =
+            float sineValue =
                 sin(angle);
 
-            float c =
+
+            float cosineValue =
                 cos(angle);
 
 
             return mat2(
-                c,
-                -s,
-                s,
-                c
+                cosineValue,
+                -sineValue,
+                sineValue,
+                cosineValue
             );
 
         }
@@ -463,7 +816,7 @@ if (gl) {
 
 
             /* =================================
-               CONSTANT VISCOUS FLOW
+               LIQUID BASE FLOW
             ================================= */
 
 
@@ -471,20 +824,20 @@ if (gl) {
                 sin(
                     uv.y
                     *
-                    10.0
+                    11.0
                     +
                     u_time
                     *
-                    0.55
+                    0.72
                     +
                     sin(
                         uv.x
                         *
-                        7.0
+                        8.0
                         -
                         u_time
                         *
-                        0.32
+                        0.45
                     )
                 );
 
@@ -497,7 +850,7 @@ if (gl) {
                     -
                     u_time
                     *
-                    0.48
+                    0.60
                     +
                     cos(
                         uv.y
@@ -506,7 +859,7 @@ if (gl) {
                         +
                         u_time
                         *
-                        0.25
+                        0.38
                     )
                 );
 
@@ -522,16 +875,16 @@ if (gl) {
                 flow
                 *
                 (
-                    0.0018
+                    0.002
                     +
                     u_motion
                     *
-                    0.014
+                    0.018
                 );
 
 
             /* =================================
-               LOCAL POINTER FIELD
+               POINTER FIELD
             ================================= */
 
 
@@ -549,14 +902,14 @@ if (gl) {
 
             float influence =
                 smoothstep(
-                    0.46,
+                    0.48,
                     0.0,
                     pointerDistance
                 );
 
 
             /* =================================
-               SWIRL / REFRACTION
+               SWIRL
             ================================= */
 
 
@@ -564,21 +917,21 @@ if (gl) {
                 influence
                 *
                 (
-                    0.28
+                    0.25
                     +
                     u_motion
                     *
-                    3.2
+                    3.5
                 )
                 *
                 sin(
                     u_time
                     *
-                    0.55
+                    0.8
                     +
                     pointerDistance
                     *
-                    7.0
+                    8.0
                 );
 
 
@@ -599,11 +952,11 @@ if (gl) {
                 *
                 influence
                 *
-                0.78;
+                0.82;
 
 
             /* =================================
-               DRAG / SMEAR
+               SMEAR
             ================================= */
 
 
@@ -613,20 +966,20 @@ if (gl) {
                 influence
                 *
                 (
-                    0.22
+                    0.28
                     +
                     u_motion
                     *
-                    0.9
+                    1.05
                 );
 
 
             /* =================================
-               LIQUID WAVES
+               LIQUID RIPPLES
             ================================= */
 
 
-            vec2 radial =
+            vec2 radialDirection =
                 normalize(
                     pointerDelta
                     +
@@ -640,11 +993,11 @@ if (gl) {
                 sin(
                     pointerDistance
                     *
-                    62.0
+                    65.0
                     -
                     u_time
                     *
-                    8.0
+                    9.0
                 );
 
 
@@ -652,83 +1005,141 @@ if (gl) {
                 sin(
                     pointerDistance
                     *
-                    25.0
+                    26.0
                     +
                     u_time
                     *
-                    3.5
+                    4.2
                 );
 
 
             float waves =
                 waveA
                 *
-                0.7
+                0.68
                 +
                 waveB
                 *
-                0.3;
+                0.32;
 
 
             uv +=
-                radial
+                radialDirection
                 *
                 waves
                 *
                 influence
                 *
                 (
-                    0.004
+                    0.005
                     +
                     u_motion
                     *
-                    0.034
+                    0.038
                 );
 
 
             /* =================================
-               SECONDARY WARP
+               HORIZONTAL DIGITAL TEARS
             ================================= */
 
 
-            vec2 secondaryWarp =
-                vec2(
-
-                    sin(
-                        uv.y
-                        *
-                        21.0
-                        +
-                        u_time
-                        *
-                        1.2
-                    ),
-
-                    cos(
-                        uv.x
-                        *
-                        18.0
-                        -
-                        u_time
-                        *
-                        0.9
-                    )
-
+            float glitchTime =
+                floor(
+                    u_time
+                    *
+                    10.0
                 );
 
 
-            uv +=
-                secondaryWarp
+            float row =
+                floor(
+                    baseUV.y
+                    *
+                    38.0
+                );
+
+
+            float rowRandom =
+                randomValue(
+                    row
+                    *
+                    17.17
+                    +
+                    glitchTime
+                    *
+                    3.71
+                );
+
+
+            float glitchGate =
+                step(
+                    0.87
+                    -
+                    u_motion
+                    *
+                    0.18,
+                    rowRandom
+                );
+
+
+            float horizontalTear =
+                (
+                    randomValue(
+                        row
+                        *
+                        71.3
+                        +
+                        glitchTime
+                    )
+                    -
+                    0.5
+                )
+                *
+                glitchGate
+                *
+                (
+                    0.003
+                    +
+                    u_motion
+                    *
+                    0.065
+                );
+
+
+            uv.x +=
+                horizontalTear;
+
+
+            /* =================================
+               POINTER GLITCH BURST
+            ================================= */
+
+
+            float microBands =
+                sin(
+                    baseUV.y
+                    *
+                    240.0
+                    +
+                    u_time
+                    *
+                    19.0
+                );
+
+
+            uv.x +=
+                microBands
                 *
                 influence
                 *
                 u_motion
                 *
-                0.009;
+                0.0035;
 
 
             /* =================================
-               CLICK / TOUCH RIPPLE
+               CLICK RIPPLE
             ================================= */
 
 
@@ -759,7 +1170,7 @@ if (gl) {
             float pulseRadius =
                 u_pulseAge
                 *
-                0.34;
+                0.36;
 
 
             float ring =
@@ -770,7 +1181,7 @@ if (gl) {
                         pulseRadius
                     )
                     *
-                    70.0
+                    72.0
                 )
                 *
                 pulseLife;
@@ -791,11 +1202,11 @@ if (gl) {
                 *
                 ring
                 *
-                0.055;
+                0.06;
 
 
             /* =================================
-               KEEP INSIDE TEXTURE
+               SAFE UV
             ================================= */
 
 
@@ -803,70 +1214,149 @@ if (gl) {
                 clamp(
                     uv,
                     vec2(
-                        0.001
+                        0.003
                     ),
                     vec2(
-                        0.999
+                        0.997
                     )
                 );
 
 
             /* =================================
-               VISCOUS DOUBLE-SAMPLE
+               RGB SEPARATION
 
-               No RGB splitting.
-               Just soft refractive smearing.
+               Comes alive mainly during movement.
             ================================= */
 
 
-            vec4 normalSample =
-                texture2D(
-                    u_texture,
-                    uv
+            vec2 rgbOffset =
+                (
+                    u_velocity
+                    *
+                    1.6
+                    +
+                    flow
+                    *
+                    0.002
+                )
+                *
+                (
+                    0.18
+                    +
+                    u_motion
+                    *
+                    1.1
                 );
 
 
-            vec4 draggedSample =
+            rgbOffset.x +=
+                horizontalTear
+                *
+                0.5;
+
+
+            vec2 redUV =
+                clamp(
+                    uv
+                    +
+                    rgbOffset,
+                    vec2(0.003),
+                    vec2(0.997)
+                );
+
+
+            vec2 blueUV =
+                clamp(
+                    uv
+                    -
+                    rgbOffset,
+                    vec2(0.003),
+                    vec2(0.997)
+                );
+
+
+            float red =
+                texture2D(
+                    u_texture,
+                    redUV
+                ).r;
+
+
+            float green =
+                texture2D(
+                    u_texture,
+                    uv
+                ).g;
+
+
+            float blue =
+                texture2D(
+                    u_texture,
+                    blueUV
+                ).b;
+
+
+            /* =================================
+               EXTRA SMEAR SAMPLE
+            ================================= */
+
+
+            vec4 smearSample =
                 texture2D(
 
                     u_texture,
 
                     clamp(
+
                         uv
                         -
                         u_velocity
                         *
                         influence
                         *
-                        0.9,
-                        vec2(
-                            0.001
-                        ),
-                        vec2(
-                            0.999
-                        )
+                        1.2,
+
+                        vec2(0.003),
+
+                        vec2(0.997)
+
                     )
 
                 );
 
 
+            vec3 glitchColour =
+                vec3(
+                    red,
+                    green,
+                    blue
+                );
+
+
             float smearAmount =
                 clamp(
-                    u_motion
-                    *
                     influence
                     *
-                    0.48,
+                    u_motion
+                    *
+                    0.35,
                     0.0,
-                    0.48
+                    0.35
+                );
+
+
+            vec3 finalColour =
+                mix(
+                    glitchColour,
+                    smearSample.rgb,
+                    smearAmount
                 );
 
 
             gl_FragColor =
-                mix(
-                    normalSample,
-                    draggedSample,
-                    smearAmount
+                vec4(
+                    finalColour,
+                    1.0
                 );
 
         }
@@ -875,7 +1365,7 @@ if (gl) {
 
 
     /* =========================================
-       CREATE SHADER
+       SHADER CREATION
     ========================================== */
 
     function createShader(
@@ -978,7 +1468,7 @@ if (gl) {
 
 
             /* =================================
-               PLANE
+               FULLSCREEN PLANE
             ================================= */
 
 
@@ -1163,10 +1653,6 @@ if (gl) {
             image.onload =
                 function () {
 
-                    /*
-                       Resize internally for mobile/GPU.
-                    */
-
                     const maximum =
                         Math.min(
                             2048,
@@ -1221,22 +1707,22 @@ if (gl) {
                     }
 
 
-                    const tempCanvas =
+                    const temporaryCanvas =
                         document.createElement(
                             "canvas"
                         );
 
 
-                    tempCanvas.width =
+                    temporaryCanvas.width =
                         width;
 
 
-                    tempCanvas.height =
+                    temporaryCanvas.height =
                         height;
 
 
                     const context =
-                        tempCanvas.getContext(
+                        temporaryCanvas.getContext(
                             "2d"
                         );
 
@@ -1274,7 +1760,7 @@ if (gl) {
 
                         gl.UNSIGNED_BYTE,
 
-                        tempCanvas
+                        temporaryCanvas
 
                     );
 
@@ -1291,7 +1777,7 @@ if (gl) {
 
 
             /* =================================
-               POINTER
+               POINTER STATE
             ================================= */
 
 
@@ -1343,21 +1829,8 @@ if (gl) {
                 new Set();
 
 
-            function clamp(
-                value,
-                minimum,
-                maximum
-            ) {
-
-                return Math.max(
-                    minimum,
-                    Math.min(
-                        maximum,
-                        value
-                    )
-                );
-
-            }
+            let hasVisualInteraction =
+                false;
 
 
             function updatePointer(
@@ -1416,9 +1889,9 @@ if (gl) {
                     clamp(
                         deltaX
                         *
-                        2.5,
-                        -0.075,
-                        0.075
+                        2.8,
+                        -0.085,
+                        0.085
                     );
 
 
@@ -1426,9 +1899,9 @@ if (gl) {
                     clamp(
                         deltaY
                         *
-                        2.5,
-                        -0.075,
-                        0.075
+                        2.8,
+                        -0.085,
+                        0.085
                     );
 
 
@@ -1440,7 +1913,7 @@ if (gl) {
                             deltaY
                         )
                         *
-                        55
+                        60
                     );
 
 
@@ -1462,7 +1935,7 @@ if (gl) {
 
 
             /* =================================
-               DESKTOP + MOBILE
+               DESKTOP + MOBILE INPUT
             ================================= */
 
 
@@ -1511,13 +1984,6 @@ if (gl) {
             container.addEventListener(
                 "pointermove",
                 function (event) {
-
-                    /*
-                       Mouse always reacts.
-
-                       Touch reacts while finger
-                       is actually dragging.
-                    */
 
                     if (
                         event.pointerType
@@ -1626,7 +2092,7 @@ if (gl) {
 
 
             /* =================================
-               RENDER
+               RENDER LOOP
             ================================= */
 
 
@@ -1646,7 +2112,7 @@ if (gl) {
                         velocityX
                     )
                     *
-                    0.18;
+                    0.19;
 
 
                 velocityY +=
@@ -1656,7 +2122,7 @@ if (gl) {
                         velocityY
                     )
                     *
-                    0.18;
+                    0.19;
 
 
                 motion +=
@@ -1666,24 +2132,24 @@ if (gl) {
                         motion
                     )
                     *
-                    0.13;
+                    0.14;
 
 
                 /*
-                   Slow viscous decay creates
-                   a lingering feeling after movement.
+                   Slow decay gives the image
+                   a lingering liquid/glitch trail.
                 */
 
                 targetVelocityX *=
-                    0.88;
+                    0.87;
 
 
                 targetVelocityY *=
-                    0.88;
+                    0.87;
 
 
                 targetMotion *=
-                    0.91;
+                    0.90;
 
 
                 const now =
