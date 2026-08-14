@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<!DOCTYPE html>
-<html lang="en">
-
 <head>
 
     <meta charset="UTF-8">
@@ -22,10 +19,11 @@
 
     <link
         rel="stylesheet"
-        href="./new.css?v=24"
+        href="./new.css?v=26"
     >
 
 </head>
+
 
 <body>
 
@@ -84,13 +82,15 @@
                     SRC001
                 </p>
 
-                <h1>
-                    MARTIN SOLLI
-                </h1>
 
                 <h2>
-                    DRIP
+                    MARTIN SOLLI
                 </h2>
+
+
+                <h1>
+                    DRIP
+                </h1>
 
             </div>
 
@@ -249,32 +249,62 @@
         ========================================== */
 
         const artworkOpen =
-            document.getElementById("artwork-open");
+            document.getElementById(
+                "artwork-open"
+            );
+
 
         const viewer =
-            document.getElementById("artwork-viewer");
+            document.getElementById(
+                "artwork-viewer"
+            );
+
 
         const viewerClose =
-            document.getElementById("viewer-close");
+            document.getElementById(
+                "viewer-close"
+            );
+
 
         const viewerStage =
-            document.getElementById("viewer-stage");
+            document.getElementById(
+                "viewer-stage"
+            );
+
 
         const viewerImage =
-            document.getElementById("viewer-image");
+            document.getElementById(
+                "viewer-image"
+            );
+
 
         const zoomInButton =
-            document.getElementById("zoom-in");
+            document.getElementById(
+                "zoom-in"
+            );
+
 
         const zoomOutButton =
-            document.getElementById("zoom-out");
+            document.getElementById(
+                "zoom-out"
+            );
+
 
         const zoomResetButton =
-            document.getElementById("zoom-reset");
+            document.getElementById(
+                "zoom-reset"
+            );
+
 
         const zoomValue =
-            document.getElementById("zoom-value");
+            document.getElementById(
+                "zoom-value"
+            );
 
+
+        /* =========================================
+           ZOOM STATE
+        ========================================== */
 
         let scale = 1;
 
@@ -282,28 +312,124 @@
 
         let translateY = 0;
 
-        let dragging = false;
 
-        let dragStartX = 0;
+        const activePointers =
+            new Map();
 
-        let dragStartY = 0;
 
-        let dragOriginalX = 0;
+        let pinchStartDistance = 0;
 
-        let dragOriginalY = 0;
+        let pinchStartScale = 1;
+
+        let pinchStartX = 0;
+
+        let pinchStartY = 0;
+
+        let pinchStartTranslateX = 0;
+
+        let pinchStartTranslateY = 0;
+
+
+        let panStartX = 0;
+
+        let panStartY = 0;
+
+        let panOriginalX = 0;
+
+        let panOriginalY = 0;
+
+        let panning = false;
+
+
+        /* =========================================
+           HELPERS
+        ========================================== */
+
+        function clamp(
+            value,
+            minimum,
+            maximum
+        ) {
+
+            return Math.max(
+                minimum,
+                Math.min(
+                    maximum,
+                    value
+                )
+            );
+
+        }
+
+
+        function limitPan() {
+
+            if (
+                scale <= 1
+            ) {
+
+                translateX = 0;
+
+                translateY = 0;
+
+                return;
+
+            }
+
+
+            const maxX =
+                viewerStage.clientWidth
+                *
+                (
+                    scale - 1
+                )
+                /
+                2;
+
+
+            const maxY =
+                viewerStage.clientHeight
+                *
+                (
+                    scale - 1
+                )
+                /
+                2;
+
+
+            translateX =
+                clamp(
+                    translateX,
+                    -maxX,
+                    maxX
+                );
+
+
+            translateY =
+                clamp(
+                    translateY,
+                    -maxY,
+                    maxY
+                );
+
+        }
 
 
         /* =========================================
            UPDATE IMAGE
         ========================================== */
 
-        function updateViewerImage() {
+        function updateViewer() {
+
+            limitPan();
+
 
             viewerImage.style.transform =
                 `
-                    translate(
+                    translate3d(
                         ${translateX}px,
-                        ${translateY}px
+                        ${translateY}px,
+                        0
                     )
                     scale(${scale})
                 `;
@@ -311,13 +437,17 @@
 
             zoomValue.textContent =
                 Math.round(
-                    scale * 100
+                    scale
+                    *
+                    100
                 )
                 +
                 "%";
 
 
-            if (scale > 1) {
+            if (
+                scale > 1
+            ) {
 
                 viewerStage.classList.add(
                     "is-zoomed"
@@ -337,10 +467,48 @@
 
 
         /* =========================================
-           OPEN
+           ZOOM
+        ========================================== */
+
+        function setZoom(
+            newScale
+        ) {
+
+            scale =
+                clamp(
+                    newScale,
+                    1,
+                    5
+                );
+
+
+            updateViewer();
+
+        }
+
+
+        function resetZoom() {
+
+            scale = 1;
+
+            translateX = 0;
+
+            translateY = 0;
+
+
+            updateViewer();
+
+        }
+
+
+        /* =========================================
+           OPEN / CLOSE
         ========================================== */
 
         function openViewer() {
+
+            resetZoom();
+
 
             viewer.classList.add(
                 "is-open"
@@ -357,15 +525,8 @@
                 "viewer-open"
             );
 
-
-            resetZoom();
-
         }
 
-
-        /* =========================================
-           CLOSE
-        ========================================== */
 
         function closeViewer() {
 
@@ -388,63 +549,61 @@
 
 
         /* =========================================
-           ZOOM
+           PINCH HELPERS
         ========================================== */
 
-        function setZoom(newScale) {
+        function pointerDistance() {
 
-            scale =
-                Math.min(
-                    5,
-                    Math.max(
-                        1,
-                        newScale
-                    )
+            const points =
+                Array.from(
+                    activePointers.values()
                 );
 
 
-            if (scale === 1) {
+            return Math.hypot(
 
-                translateX = 0;
+                points[1].x
+                -
+                points[0].x,
 
-                translateY = 0;
+                points[1].y
+                -
+                points[0].y
 
-            }
-
-
-            updateViewerImage();
-
-        }
-
-
-        function zoomIn() {
-
-            setZoom(
-                scale + 0.35
             );
 
         }
 
 
-        function zoomOut() {
+        function pointerMidpoint() {
 
-            setZoom(
-                scale - 0.35
-            );
-
-        }
-
-
-        function resetZoom() {
-
-            scale = 1;
-
-            translateX = 0;
-
-            translateY = 0;
+            const points =
+                Array.from(
+                    activePointers.values()
+                );
 
 
-            updateViewerImage();
+            return {
+
+                x:
+                    (
+                        points[0].x
+                        +
+                        points[1].x
+                    )
+                    /
+                    2,
+
+                y:
+                    (
+                        points[0].y
+                        +
+                        points[1].y
+                    )
+                    /
+                    2
+
+            };
 
         }
 
@@ -467,13 +626,25 @@
 
         zoomInButton.addEventListener(
             "click",
-            zoomIn
+            function () {
+
+                setZoom(
+                    scale + 0.35
+                );
+
+            }
         );
 
 
         zoomOutButton.addEventListener(
             "click",
-            zoomOut
+            function () {
+
+                setZoom(
+                    scale - 0.35
+                );
+
+            }
         );
 
 
@@ -484,7 +655,7 @@
 
 
         /* =========================================
-           MOUSE WHEEL ZOOM
+           MOUSE WHEEL
         ========================================== */
 
         viewerStage.addEventListener(
@@ -494,21 +665,17 @@
                 event.preventDefault();
 
 
-                if (event.deltaY < 0) {
+                setZoom(
 
-                    setZoom(
-                        scale + 0.2
-                    );
+                    scale
+                    +
+                    (
+                        event.deltaY < 0
+                            ? 0.2
+                            : -0.2
+                    )
 
-                }
-
-                else {
-
-                    setZoom(
-                        scale - 0.2
-                    );
-
-                }
+                );
 
             },
             {
@@ -518,67 +685,36 @@
 
 
         /* =========================================
-           DOUBLE CLICK
+           PREVENT DOUBLE-CLICK PAGE ZOOM
         ========================================== */
 
-        viewerImage.addEventListener(
+        viewerStage.addEventListener(
             "dblclick",
-            function () {
+            function (event) {
 
-                if (scale > 1) {
-
-                    resetZoom();
-
-                }
-
-                else {
-
-                    setZoom(2);
-
-                }
+                event.preventDefault();
 
             }
         );
 
 
         /* =========================================
-           DRAG / PAN
-
-           Works with mouse and touch.
+           POINTER / PINCH / PAN
         ========================================== */
 
         viewerStage.addEventListener(
             "pointerdown",
             function (event) {
 
-                if (scale <= 1) {
+                activePointers.set(
 
-                    return;
+                    event.pointerId,
 
-                }
+                    {
+                        x: event.clientX,
+                        y: event.clientY
+                    }
 
-
-                dragging = true;
-
-
-                dragStartX =
-                    event.clientX;
-
-
-                dragStartY =
-                    event.clientY;
-
-
-                dragOriginalX =
-                    translateX;
-
-
-                dragOriginalY =
-                    translateY;
-
-
-                viewerStage.classList.add(
-                    "is-dragging"
                 );
 
 
@@ -593,6 +729,72 @@
                 catch (error) {
                 }
 
+
+                if (
+                    activePointers.size === 2
+                ) {
+
+                    pinchStartDistance =
+                        pointerDistance();
+
+
+                    pinchStartScale =
+                        scale;
+
+
+                    const midpoint =
+                        pointerMidpoint();
+
+
+                    pinchStartX =
+                        midpoint.x;
+
+
+                    pinchStartY =
+                        midpoint.y;
+
+
+                    pinchStartTranslateX =
+                        translateX;
+
+
+                    pinchStartTranslateY =
+                        translateY;
+
+
+                    panning =
+                        false;
+
+                }
+
+
+                else if (
+                    activePointers.size === 1
+                    &&
+                    scale > 1
+                ) {
+
+                    panning =
+                        true;
+
+
+                    panStartX =
+                        event.clientX;
+
+
+                    panStartY =
+                        event.clientY;
+
+
+                    panOriginalX =
+                        translateX;
+
+
+                    panOriginalY =
+                        translateY;
+
+                }
+
             }
         );
 
@@ -601,60 +803,168 @@
             "pointermove",
             function (event) {
 
-                if (!dragging) {
+                if (
+                    !activePointers.has(
+                        event.pointerId
+                    )
+                ) {
 
                     return;
 
                 }
 
 
-                translateX =
-                    dragOriginalX
-                    +
-                    (
-                        event.clientX
-                        -
-                        dragStartX
-                    );
+                activePointers.set(
+
+                    event.pointerId,
+
+                    {
+                        x: event.clientX,
+                        y: event.clientY
+                    }
+
+                );
 
 
-                translateY =
-                    dragOriginalY
-                    +
-                    (
-                        event.clientY
-                        -
-                        dragStartY
-                    );
+                /* =================================
+                   PINCH
+                ================================== */
+
+                if (
+                    activePointers.size === 2
+                ) {
+
+                    const distance =
+                        pointerDistance();
 
 
-                updateViewerImage();
+                    const midpoint =
+                        pointerMidpoint();
+
+
+                    scale =
+                        clamp(
+
+                            pinchStartScale
+                            *
+                            (
+                                distance
+                                /
+                                pinchStartDistance
+                            ),
+
+                            1,
+                            5
+
+                        );
+
+
+                    translateX =
+                        pinchStartTranslateX
+                        +
+                        (
+                            midpoint.x
+                            -
+                            pinchStartX
+                        );
+
+
+                    translateY =
+                        pinchStartTranslateY
+                        +
+                        (
+                            midpoint.y
+                            -
+                            pinchStartY
+                        );
+
+
+                    updateViewer();
+
+
+                    return;
+
+                }
+
+
+                /* =================================
+                   PAN
+                ================================== */
+
+                if (
+                    panning
+                    &&
+                    scale > 1
+                ) {
+
+                    translateX =
+                        panOriginalX
+                        +
+                        (
+                            event.clientX
+                            -
+                            panStartX
+                        );
+
+
+                    translateY =
+                        panOriginalY
+                        +
+                        (
+                            event.clientY
+                            -
+                            panStartY
+                        );
+
+
+                    updateViewer();
+
+                }
 
             }
         );
 
 
-        function stopDragging() {
+        function releasePointer(
+            event
+        ) {
 
-            dragging = false;
-
-
-            viewerStage.classList.remove(
-                "is-dragging"
+            activePointers.delete(
+                event.pointerId
             );
+
+
+            if (
+                activePointers.size < 2
+            ) {
+
+                pinchStartDistance =
+                    0;
+
+            }
+
+
+            if (
+                activePointers.size === 0
+            ) {
+
+                panning =
+                    false;
+
+            }
 
         }
 
 
         viewerStage.addEventListener(
             "pointerup",
-            stopDragging
+            releasePointer
         );
 
 
         viewerStage.addEventListener(
             "pointercancel",
-            stopDragging
+            releasePointer
         );
 
 
@@ -692,7 +1002,9 @@
                     event.key === "="
                 ) {
 
-                    zoomIn();
+                    setZoom(
+                        scale + 0.35
+                    );
 
                 }
 
@@ -701,7 +1013,9 @@
                     event.key === "-"
                 ) {
 
-                    zoomOut();
+                    setZoom(
+                        scale - 0.35
+                    );
 
                 }
 

@@ -1,158 +1,63 @@
 /* =========================================
-   SECOND SOURCE
-   SRC001 — DRIP
+   SECOND SOURCE — EXPERIMENT
 ========================================= */
 
 
 /* =========================================
-   AUDIO PLAYER
+   AUDIO
 ========================================= */
 
-const audio =
-    document.getElementById(
-        "experiment-audio"
-    );
+const audio = document.getElementById("experiment-audio");
+
+const playButton = document.getElementById("play-button");
+const playSymbol = document.getElementById("play-symbol");
+
+const soundButton = document.getElementById("sound-button");
+const speakerSymbol = document.getElementById("speaker-symbol");
+
+const volumeSlider = document.getElementById("volume-slider");
+const volumePercent = document.getElementById("volume-percent");
+
+const progressTrack = document.getElementById("progress-track");
+const progressFill = document.getElementById("progress-fill");
+const playerTime = document.getElementById("player-time");
 
 
-const playButton =
-    document.getElementById(
-        "play-button"
-    );
+let selectedVolume = 0.35;
+let muted = false;
+let wantsPlayback = true;
 
 
-const playSymbol =
-    document.getElementById(
-        "play-symbol"
-    );
-
-
-const soundButton =
-    document.getElementById(
-        "sound-button"
-    );
-
-
-const speakerSymbol =
-    document.getElementById(
-        "speaker-symbol"
-    );
-
-
-const volumeSlider =
-    document.getElementById(
-        "volume-slider"
-    );
-
-
-const volumePercent =
-    document.getElementById(
-        "volume-percent"
-    );
-
-
-const progressTrack =
-    document.getElementById(
-        "progress-track"
-    );
-
-
-const progressFill =
-    document.getElementById(
-        "progress-fill"
-    );
-
-
-const playerTime =
-    document.getElementById(
-        "player-time"
-    );
+audio.volume = selectedVolume;
+audio.muted = false;
 
 
 /* =========================================
-   INITIAL AUDIO STATE
+   HELPERS
 ========================================= */
 
-let selectedVolume =
-    0.35;
-
-
-let muted =
-    false;
-
-
-let wantsPlayback =
-    true;
-
-
-audio.volume =
-    selectedVolume;
-
-
-audio.muted =
-    false;
-
-
-/* =========================================
-   GENERAL HELPERS
-========================================= */
-
-function clamp(
-    value,
-    minimum,
-    maximum
-) {
-
+function clamp(value, minimum, maximum) {
     return Math.max(
         minimum,
-        Math.min(
-            maximum,
-            value
-        )
+        Math.min(maximum, value)
     );
-
 }
 
 
-function formatTime(
-    seconds
-) {
+function formatTime(seconds) {
 
-    if (
-        !Number.isFinite(
-            seconds
-        )
-    ) {
-
+    if (!Number.isFinite(seconds)) {
         return "0:00";
-
     }
 
-
-    const minutes =
-        Math.floor(
-            seconds / 60
-        );
-
-
-    const secondsLeft =
-        Math.floor(
-            seconds % 60
-        );
-
+    const minutes = Math.floor(seconds / 60);
+    const secondsLeft = Math.floor(seconds % 60);
 
     return (
-        minutes
-        +
-        ":"
-        +
-        String(
-            secondsLeft
-        ).padStart(
-            2,
-            "0"
-        )
+        minutes +
+        ":" +
+        String(secondsLeft).padStart(2, "0")
     );
-
 }
 
 
@@ -170,8 +75,7 @@ function updatePlayer() {
 
     speakerSymbol.textContent =
         (
-            muted
-            ||
+            muted ||
             selectedVolume <= 0
         )
             ? "×"
@@ -180,53 +84,34 @@ function updatePlayer() {
 
     volumePercent.textContent =
         Math.round(
-            selectedVolume
-            *
-            100
-        )
-        +
-        "%";
+            selectedVolume * 100
+        ) + "%";
 
 
     volumeSlider.value =
-        selectedVolume
-        *
-        100;
+        selectedVolume * 100;
 
 
     if (
-        Number.isFinite(
-            audio.duration
-        )
-        &&
+        Number.isFinite(audio.duration) &&
         audio.duration > 0
     ) {
 
         progressFill.style.width =
             (
-                audio.currentTime
-                /
-                audio.duration
-                *
+                audio.currentTime /
+                audio.duration *
                 100
-            )
-            +
-            "%";
-
+            ) + "%";
     }
 
 
     playerTime.textContent =
-        formatTime(
-            audio.currentTime
-        )
+        formatTime(audio.currentTime)
         +
         " / "
         +
-        formatTime(
-            audio.duration
-        );
-
+        formatTime(audio.duration);
 }
 
 
@@ -237,32 +122,19 @@ function updatePlayer() {
 function attemptPlayback() {
 
     if (
-        !wantsPlayback
-        ||
+        !wantsPlayback ||
         muted
     ) {
-
         return;
-
     }
 
+    audio.muted = false;
+    audio.volume = selectedVolume;
 
-    audio.muted =
-        false;
-
-
-    audio.volume =
-        selectedVolume;
-
-
-    audio.play()
-        .then(
-            updatePlayer
-        )
-        .catch(
-            updatePlayer
-        );
-
+    audio
+        .play()
+        .then(updatePlayer)
+        .catch(updatePlayer);
 }
 
 
@@ -274,15 +146,11 @@ document.addEventListener(
     function () {
 
         if (
-            wantsPlayback
-            &&
-            !muted
-            &&
+            wantsPlayback &&
+            !muted &&
             audio.paused
         ) {
-
             attemptPlayback();
-
         }
 
     },
@@ -301,39 +169,23 @@ playButton.addEventListener(
     "click",
     function () {
 
-        if (
-            audio.paused
-        ) {
+        if (audio.paused) {
 
-            wantsPlayback =
-                true;
+            wantsPlayback = true;
+            muted = false;
 
-
-            muted =
-                false;
-
-
-            audio.muted =
-                false;
-
+            audio.muted = false;
 
             attemptPlayback();
 
-        }
+        } else {
 
-        else {
-
-            wantsPlayback =
-                false;
-
+            wantsPlayback = false;
 
             audio.pause();
-
         }
 
-
         updatePlayer();
-
     }
 );
 
@@ -346,40 +198,28 @@ soundButton.addEventListener(
     "click",
     function () {
 
-        muted =
-            !muted;
+        muted = !muted;
 
-
-        audio.muted =
-            muted;
-
+        audio.muted = muted;
 
         if (
-            !muted
-            &&
-            wantsPlayback
-            &&
+            !muted &&
+            wantsPlayback &&
             audio.paused
         ) {
-
             attemptPlayback();
-
         }
 
-
         updatePlayer();
-
     }
 );
 
 
 /* =========================================
-   SMOOTH VOLUME
+   VOLUME
 ========================================= */
 
-function setVolume(
-    value
-) {
+function setVolume(value) {
 
     selectedVolume =
         clamp(
@@ -388,27 +228,16 @@ function setVolume(
             1
         );
 
-
     audio.volume =
         selectedVolume;
 
+    if (selectedVolume > 0) {
 
-    if (
-        selectedVolume > 0
-    ) {
-
-        muted =
-            false;
-
-
-        audio.muted =
-            false;
-
+        muted = false;
+        audio.muted = false;
     }
 
-
     updatePlayer();
-
 }
 
 
@@ -417,24 +246,15 @@ volumeSlider.addEventListener(
     function () {
 
         setVolume(
-            Number(
-                volumeSlider.value
-            )
-            /
-            100
+            Number(volumeSlider.value) / 100
         );
 
-
         if (
-            wantsPlayback
-            &&
+            wantsPlayback &&
             audio.paused
         ) {
-
             attemptPlayback();
-
         }
-
     }
 );
 
@@ -443,46 +263,30 @@ volumeSlider.addEventListener(
    VERTICAL VOLUME DRAG
 ========================================= */
 
-let volumeDragging =
-    false;
+let volumeDragging = false;
 
-
-let volumeStartY =
-    0;
-
-
-let volumeStartValue =
-    selectedVolume;
+let volumeStartY = 0;
+let volumeStartValue = selectedVolume;
 
 
 volumePercent.addEventListener(
     "pointerdown",
     function (event) {
 
-        volumeDragging =
-            true;
-
+        volumeDragging = true;
 
         volumeStartY =
             event.clientY;
 
-
         volumeStartValue =
             selectedVolume;
 
-
         try {
-
-            volumePercent
-                .setPointerCapture(
-                    event.pointerId
-                );
-
+            volumePercent.setPointerCapture(
+                event.pointerId
+            );
+        } catch (error) {
         }
-
-        catch (error) {
-        }
-
     }
 );
 
@@ -491,51 +295,31 @@ volumePercent.addEventListener(
     "pointermove",
     function (event) {
 
-        if (
-            !volumeDragging
-        ) {
-
+        if (!volumeDragging) {
             return;
-
         }
-
 
         const movement =
-            volumeStartY
-            -
+            volumeStartY -
             event.clientY;
 
-
         setVolume(
-
-            volumeStartValue
-            +
-            movement
-            /
-            220
-
+            volumeStartValue +
+            movement / 220
         );
 
-
         if (
-            wantsPlayback
-            &&
+            wantsPlayback &&
             audio.paused
         ) {
-
             attemptPlayback();
-
         }
-
     }
 );
 
 
 function stopVolumeDrag() {
-
-    volumeDragging =
-        false;
-
+    volumeDragging = false;
 }
 
 
@@ -560,46 +344,30 @@ progressTrack.addEventListener(
     function (event) {
 
         if (
-            !Number.isFinite(
-                audio.duration
-            )
+            !Number.isFinite(audio.duration)
         ) {
-
             return;
-
         }
 
-
         const rect =
-            progressTrack
-                .getBoundingClientRect();
-
+            progressTrack.getBoundingClientRect();
 
         const position =
             clamp(
-
                 (
-                    event.clientX
-                    -
+                    event.clientX -
                     rect.left
-                )
-                /
+                ) /
                 rect.width,
-
                 0,
                 1
-
             );
 
-
         audio.currentTime =
-            position
-            *
+            position *
             audio.duration;
 
-
         updatePlayer();
-
     }
 );
 
@@ -613,18 +381,15 @@ audio.addEventListener(
     updatePlayer
 );
 
-
 audio.addEventListener(
     "loadedmetadata",
     updatePlayer
 );
 
-
 audio.addEventListener(
     "play",
     updatePlayer
 );
-
 
 audio.addEventListener(
     "pause",
@@ -636,32 +401,26 @@ updatePlayer();
 
 
 /* =========================================
-   EXPERIMENT ELEMENTS
+   EXPERIMENT
 ========================================= */
 
 const canvas =
-    document.getElementById(
-        "visual"
-    );
-
+    document.getElementById("visual");
 
 const container =
     document.getElementById(
         "visual-container"
     );
 
-
 const visualMedia =
     document.getElementById(
         "visual-media"
     );
 
-
 const fallbackImage =
     document.getElementById(
         "fallback-image"
     );
-
 
 const interactionMessage =
     document.getElementById(
@@ -673,110 +432,83 @@ const interactionMessage =
    PINCH ZOOM
 ========================================= */
 
-let viewScale =
-    1;
+let viewScale = 1;
 
-
-let viewX =
-    0;
-
-
-let viewY =
-    0;
+let viewX = 0;
+let viewY = 0;
 
 
 const viewPointers =
     new Map();
 
 
-let pinchStartDistance =
-    0;
+let pinchStartDistance = 0;
+let pinchStartScale = 1;
+
+let pinchStartX = 0;
+let pinchStartY = 0;
+
+let pinchStartViewX = 0;
+let pinchStartViewY = 0;
 
 
-let pinchStartScale =
-    1;
+let panStartX = 0;
+let panStartY = 0;
 
+let panOriginalX = 0;
+let panOriginalY = 0;
 
-let pinchStartX =
-    0;
-
-
-let pinchStartY =
-    0;
-
-
-let pinchStartViewX =
-    0;
-
-
-let pinchStartViewY =
-    0;
-
-
-let panStartX =
-    0;
-
-
-let panStartY =
-    0;
-
-
-let panOriginalX =
-    0;
-
-
-let panOriginalY =
-    0;
-
-
-let panning =
-    false;
+let panning = false;
 
 
 /* =========================================
-   LIMIT PAN
+   DRAG DETECTION
+
+   Prevents trackpad snapping.
+========================================= */
+
+let dragPointerId = null;
+
+let dragOriginX = 0;
+let dragOriginY = 0;
+
+let dragHasStarted = false;
+
+
+/*
+   The pointer must actually move this far
+   before the whirl activates.
+*/
+
+const dragThreshold = 7;
+
+
+/* =========================================
+   LIMIT ZOOM PAN
 ========================================= */
 
 function limitViewPan() {
 
-    if (
-        viewScale <= 1
-    ) {
+    if (viewScale <= 1) {
 
-        viewScale =
-            1;
+        viewScale = 1;
 
-
-        viewX =
-            0;
-
-
-        viewY =
-            0;
-
+        viewX = 0;
+        viewY = 0;
 
         return;
-
     }
 
 
     const maxX =
-        container.clientWidth
-        *
-        (
-            viewScale - 1
-        )
-        /
+        container.clientWidth *
+        (viewScale - 1) /
         2;
 
 
     const maxY =
-        container.clientHeight
-        *
-        (
-            viewScale - 1
-        )
-        /
+        container.clientHeight *
+        (viewScale - 1) /
         2;
 
 
@@ -794,7 +526,6 @@ function limitViewPan() {
             -maxY,
             maxY
         );
-
 }
 
 
@@ -806,7 +537,6 @@ function updateViewTransform() {
 
     limitViewPan();
 
-
     visualMedia.style.transform =
         `
             translate3d(
@@ -814,11 +544,8 @@ function updateViewTransform() {
                 ${viewY}px,
                 0
             )
-            scale(
-                ${viewScale}
-            )
+            scale(${viewScale})
         `;
-
 }
 
 
@@ -833,19 +560,13 @@ function viewPointerDistance() {
             viewPointers.values()
         );
 
-
     return Math.hypot(
-
-        points[1].x
-        -
+        points[1].x -
         points[0].x,
 
-        points[1].y
-        -
+        points[1].y -
         points[0].y
-
     );
-
 }
 
 
@@ -856,42 +577,30 @@ function viewPointerMidpoint() {
             viewPointers.values()
         );
 
-
     return {
-
         x:
             (
-                points[0].x
-                +
+                points[0].x +
                 points[1].x
-            )
-            /
-            2,
+            ) / 2,
 
         y:
             (
-                points[0].y
-                +
+                points[0].y +
                 points[1].y
-            )
-            /
-            2
-
+            ) / 2
     };
-
 }
 
 
-/*
-   Prevent browser double-click zoom.
-*/
+/* =========================================
+   STOP BROWSER DOUBLE-TAP ZOOM
+========================================= */
 
 container.addEventListener(
     "dblclick",
     function (event) {
-
         event.preventDefault();
-
     }
 );
 
@@ -911,15 +620,12 @@ const gl =
 
 
 if (!gl) {
-
-    canvas.style.display =
-        "none";
-
+    canvas.style.display = "none";
 }
 
 
 /* =========================================
-   SHADERS
+   WEBGL PROGRAM
 ========================================= */
 
 if (gl) {
@@ -930,16 +636,10 @@ if (gl) {
 
         varying vec2 v_uv;
 
-
         void main() {
 
             v_uv =
-                a_position
-                *
-                0.5
-                +
-                0.5;
-
+                a_position * 0.5 + 0.5;
 
             gl_Position =
                 vec4(
@@ -947,7 +647,6 @@ if (gl) {
                     0.0,
                     1.0
                 );
-
         }
 
     `;
@@ -957,50 +656,33 @@ if (gl) {
 
         precision mediump float;
 
-
         varying vec2 v_uv;
-
 
         uniform sampler2D u_texture;
 
         uniform vec2 u_pointer;
-
         uniform vec2 u_velocity;
 
         uniform vec2 u_dripCenter;
 
         uniform float u_time;
-
         uniform float u_motion;
-
         uniform float u_dripAge;
-
         uniform float u_dragging;
 
 
-        mat2 rotate2D(
-            float angle
-        ) {
+        mat2 rotate2D(float angle) {
 
-            float sineValue =
-                sin(
-                    angle
-                );
+            float s =
+                sin(angle);
 
-
-            float cosineValue =
-                cos(
-                    angle
-                );
-
+            float c =
+                cos(angle);
 
             return mat2(
-                cosineValue,
-                -sineValue,
-                sineValue,
-                cosineValue
+                c, -s,
+                s,  c
             );
-
         }
 
 
@@ -1009,15 +691,13 @@ if (gl) {
             vec2 baseUV =
                 v_uv;
 
-
             vec2 uv =
                 baseUV;
 
 
             /* =================================
-               1. CONSTANT CENTER BUBBLING
+               CONSTANT CENTER BUBBLING
             ================================= */
-
 
             vec2 center =
                 vec2(
@@ -1025,81 +705,53 @@ if (gl) {
                     0.5
                 );
 
-
             vec2 centerDelta =
-                baseUV
-                -
+                baseUV -
                 center;
-
 
             float centerDistance =
                 length(
                     centerDelta
                 );
 
-
             vec2 centerDirection =
                 normalize(
-                    centerDelta
-                    +
-                    vec2(
-                        0.0001
-                    )
+                    centerDelta +
+                    vec2(0.0001)
                 );
 
 
             float bubbleOne =
                 sin(
-                    centerDistance
-                    *
-                    50.0
-                    -
-                    u_time
-                    *
+                    centerDistance *
+                    50.0 -
+                    u_time *
                     3.1
                 );
 
 
             float bubbleTwo =
                 sin(
-                    centerDistance
-                    *
-                    29.0
-                    -
-                    u_time
-                    *
+                    centerDistance *
+                    29.0 -
+                    u_time *
                     2.0
                 );
 
 
             float bubbleThree =
                 sin(
-                    centerDistance
-                    *
-                    76.0
-                    -
-                    u_time
-                    *
+                    centerDistance *
+                    76.0 -
+                    u_time *
                     4.1
                 );
 
 
             float centerBubble =
-                bubbleOne
-                *
-                0.50
-
-                +
-
-                bubbleTwo
-                *
-                0.32
-
-                +
-
-                bubbleThree
-                *
-                0.18;
+                bubbleOne * 0.50 +
+                bubbleTwo * 0.32 +
+                bubbleThree * 0.18;
 
 
             float centerInfluence =
@@ -1111,65 +763,51 @@ if (gl) {
 
 
             uv +=
-                centerDirection
-                *
-                centerBubble
-                *
-                centerInfluence
-                *
-                0.0048;
+                centerDirection *
+                centerBubble *
+                centerInfluence *
+                0.0045;
 
 
             /* =================================
-               2. SUBTLE 90s WAVE
+               SUBTLE 90s WAVING
             ================================= */
-
 
             float waveX =
                 sin(
-                    baseUV.y
-                    *
-                    8.0
-                    -
-                    u_time
-                    *
+                    baseUV.y *
+                    8.0 -
+                    u_time *
                     1.15
                 )
                 *
-                0.0042;
+                0.0040;
 
 
             float waveY =
                 cos(
-                    baseUV.x
-                    *
-                    6.5
-                    -
-                    u_time
-                    *
+                    baseUV.x *
+                    6.5 -
+                    u_time *
                     0.9
                 )
                 *
-                0.0024;
+                0.0022;
 
 
             float fineWave =
                 sin(
-                    baseUV.y
-                    *
-                    16.0
-                    +
-                    u_time
-                    *
+                    baseUV.y *
+                    16.0 +
+                    u_time *
                     1.6
                 )
                 *
-                0.0011;
+                0.0010;
 
 
             uv.x +=
-                waveX
-                +
+                waveX +
                 fineWave;
 
 
@@ -1178,13 +816,11 @@ if (gl) {
 
 
             /* =================================
-               3. POINTER FIELD
+               POINTER FIELD
             ================================= */
 
-
             vec2 pointerDelta =
-                baseUV
-                -
+                baseUV -
                 u_pointer;
 
 
@@ -1196,7 +832,7 @@ if (gl) {
 
             float pointerInfluence =
                 smoothstep(
-                    0.42,
+                    0.35,
                     0.0,
                     pointerDistance
                 );
@@ -1204,27 +840,14 @@ if (gl) {
 
             vec2 pointerDirection =
                 normalize(
-                    pointerDelta
-                    +
-                    vec2(
-                        0.0001
-                    )
+                    pointerDelta +
+                    vec2(0.0001)
                 );
 
 
             /* =================================
-               4. WHIRL WHILE DRAGGING
+               SMOOTH WHIRL WHILE DRAGGING
             ================================= */
-
-
-            /*
-               The whirl only comes alive while
-               the mouse/finger is actually held.
-
-               Faster dragging creates a deeper,
-               more aggressive vortex.
-            */
-
 
             float velocityMagnitude =
                 min(
@@ -1232,48 +855,55 @@ if (gl) {
                         u_velocity
                     )
                     *
-                    18.0,
+                    20.0,
                     1.0
                 );
 
 
-            float whirlDirection =
-                sign(
+            /*
+               Tighter falloff than before.
 
-                    u_velocity.x
-                    -
-                    u_velocity.y
-                    +
-                    0.0001
-
-                );
-
+               This prevents the whole artwork
+               being yanked toward the pointer.
+            */
 
             float whirlFade =
                 exp(
-                    -pointerDistance
-                    *
-                    3.2
+                    -pointerDistance *
+                    5.2
                 );
 
 
+            /*
+               Determine clockwise /
+               counter-clockwise movement from
+               the drag direction.
+            */
+
+            float whirlDirection =
+                sign(
+                    u_velocity.x -
+                    u_velocity.y +
+                    0.0001
+                );
+
+
+            /*
+               Considerably softer than the
+               previous vortex.
+
+               u_dragging itself is also smoothly
+               eased in JavaScript.
+            */
+
             float whirlAngle =
-                whirlDirection
-                *
-                u_dragging
-                *
-                whirlFade
-                *
+                whirlDirection *
+                u_dragging *
+                whirlFade *
                 (
-                    0.20
-                    +
-                    u_motion
-                    *
-                    1.8
-                    +
-                    velocityMagnitude
-                    *
-                    1.1
+                    0.08 +
+                    u_motion * 0.70 +
+                    velocityMagnitude * 0.42
                 );
 
 
@@ -1286,110 +916,79 @@ if (gl) {
 
 
             /*
-               Blend the rotated coordinate field
-               into the normal image.
+               Only blend a portion of the
+               rotational field.
 
-               This creates the vortex rather than
-               rotating the entire square.
+               This is the main anti-snap change.
             */
-
 
             uv +=
                 (
-                    whirledDelta
-                    -
+                    whirledDelta -
                     pointerDelta
                 )
                 *
                 pointerInfluence
                 *
-                0.60;
+                0.30;
 
 
             /* =================================
-               5. POINTER WATER RIPPLE
+               POINTER WATER RIPPLE
             ================================= */
-
 
             float pointerWaveOne =
                 sin(
-                    pointerDistance
-                    *
-                    59.0
-                    -
-                    u_time
-                    *
+                    pointerDistance *
+                    59.0 -
+                    u_time *
                     6.8
                 );
 
 
             float pointerWaveTwo =
                 sin(
-                    pointerDistance
-                    *
-                    27.0
-                    -
-                    u_time
-                    *
+                    pointerDistance *
+                    27.0 -
+                    u_time *
                     3.8
                 );
 
 
             float pointerWave =
-                pointerWaveOne
-                *
-                0.68
-
-                +
-
-                pointerWaveTwo
-                *
-                0.32;
+                pointerWaveOne * 0.68 +
+                pointerWaveTwo * 0.32;
 
 
             uv +=
-                pointerDirection
-                *
-                pointerWave
-                *
-                pointerInfluence
-                *
+                pointerDirection *
+                pointerWave *
+                pointerInfluence *
                 (
-                    0.006
-                    +
-                    u_motion
-                    *
-                    0.026
+                    0.0045 +
+                    u_motion * 0.017
                 );
 
 
             /* =================================
-               6. LIQUID DRAG
+               SOFT LIQUID DRAG
             ================================= */
-
 
             uv -=
-                u_velocity
-                *
-                pointerInfluence
-                *
+                u_velocity *
+                pointerInfluence *
                 (
-                    0.16
-                    +
-                    u_motion
-                    *
-                    0.42
+                    0.08 +
+                    u_motion * 0.20
                 );
 
 
             /* =================================
-               7. DRIP ON CLICK / TAP
+               DRIP ON CLICK / TAP
             ================================= */
 
-
             vec2 dripDelta =
-                baseUV
-                -
+                baseUV -
                 u_dripCenter;
 
 
@@ -1401,26 +1000,20 @@ if (gl) {
 
             vec2 dripDirection =
                 normalize(
-                    dripDelta
-                    +
-                    vec2(
-                        0.0001
-                    )
+                    dripDelta +
+                    vec2(0.0001)
                 );
 
 
             float dripRadius =
-                u_dripAge
-                *
+                u_dripAge *
                 0.33;
 
 
             float dripLife =
                 clamp(
-                    1.0
-                    -
-                    u_dripAge
-                    /
+                    1.0 -
+                    u_dripAge /
                     2.6,
                     0.0,
                     1.0
@@ -1431,12 +1024,10 @@ if (gl) {
                Main expanding ring.
             */
 
-
             float dripRing =
                 exp(
                     -abs(
-                        dripDistance
-                        -
+                        dripDistance -
                         dripRadius
                     )
                     *
@@ -1447,15 +1038,13 @@ if (gl) {
 
 
             /*
-               Smaller trailing ring.
+               Trailing ring.
             */
-
 
             float secondRadius =
                 max(
                     0.0,
-                    dripRadius
-                    -
+                    dripRadius -
                     0.055
                 );
 
@@ -1463,8 +1052,7 @@ if (gl) {
             float secondRing =
                 exp(
                     -abs(
-                        dripDistance
-                        -
+                        dripDistance -
                         secondRadius
                     )
                     *
@@ -1477,69 +1065,54 @@ if (gl) {
 
 
             /*
-               Initial impact depression.
+               Initial indentation.
             */
-
 
             float impact =
                 exp(
-                    -dripDistance
-                    *
+                    -dripDistance *
                     24.0
                 )
                 *
                 exp(
-                    -u_dripAge
-                    *
+                    -u_dripAge *
                     4.0
                 );
 
 
             uv +=
-                dripDirection
-                *
-                dripRing
-                *
+                dripDirection *
+                dripRing *
                 0.050;
 
 
             uv +=
-                dripDirection
-                *
-                secondRing
-                *
+                dripDirection *
+                secondRing *
                 0.022;
 
 
             uv -=
-                dripDelta
-                *
-                impact
-                *
+                dripDelta *
+                impact *
                 0.10;
 
 
             /* =================================
-               8. SAFE TEXTURE
+               SAFE IMAGE AREA
             ================================= */
-
 
             uv =
                 clamp(
                     uv,
-                    vec2(
-                        0.002
-                    ),
-                    vec2(
-                        0.998
-                    )
+                    vec2(0.002),
+                    vec2(0.998)
                 );
 
 
             /* =================================
-               9. ORIGINAL IMAGE COLOURS
+               ORIGINAL IMAGE
             ================================= */
-
 
             vec4 mainSample =
                 texture2D(
@@ -1548,48 +1121,27 @@ if (gl) {
                 );
 
 
-            /*
-               Subtle viscous trailing sample.
-            */
-
-
             vec4 draggedSample =
                 texture2D(
-
                     u_texture,
-
                     clamp(
-
-                        uv
-                        -
-                        u_velocity
-                        *
-                        pointerInfluence
-                        *
-                        0.65,
-
-                        vec2(
-                            0.002
-                        ),
-
-                        vec2(
-                            0.998
-                        )
-
+                        uv -
+                        u_velocity *
+                        pointerInfluence *
+                        0.35,
+                        vec2(0.002),
+                        vec2(0.998)
                     )
-
                 );
 
 
             float dragBlend =
                 clamp(
-                    u_motion
-                    *
-                    pointerInfluence
-                    *
-                    0.20,
+                    u_motion *
+                    pointerInfluence *
+                    0.12,
                     0.0,
-                    0.20
+                    0.12
                 );
 
 
@@ -1599,7 +1151,6 @@ if (gl) {
                     draggedSample,
                     dragBlend
                 );
-
         }
 
     `;
@@ -1615,16 +1166,12 @@ if (gl) {
     ) {
 
         const shader =
-            gl.createShader(
-                type
-            );
-
+            gl.createShader(type);
 
         gl.shaderSource(
             shader,
             source
         );
-
 
         gl.compileShader(
             shader
@@ -1644,14 +1191,10 @@ if (gl) {
                 )
             );
 
-
             return null;
-
         }
 
-
         return shader;
-
     }
 
 
@@ -1670,8 +1213,7 @@ if (gl) {
 
 
     if (
-        vertexShader
-        &&
+        vertexShader &&
         fragmentShader
     ) {
 
@@ -1684,12 +1226,10 @@ if (gl) {
             vertexShader
         );
 
-
         gl.attachShader(
             program,
             fragmentShader
         );
-
 
         gl.linkProgram(
             program
@@ -1712,7 +1252,6 @@ if (gl) {
                PLANE
             ================================= */
 
-
             const buffer =
                 gl.createBuffer();
 
@@ -1724,11 +1263,9 @@ if (gl) {
 
 
             gl.bufferData(
-
                 gl.ARRAY_BUFFER,
 
                 new Float32Array([
-
                     -1, -1,
                      1, -1,
                     -1,  1,
@@ -1736,11 +1273,9 @@ if (gl) {
                     -1,  1,
                      1, -1,
                      1,  1
-
                 ]),
 
                 gl.STATIC_DRAW
-
             );
 
 
@@ -1769,7 +1304,6 @@ if (gl) {
             /* =================================
                UNIFORMS
             ================================= */
-
 
             const pointerUniform =
                 gl.getUniformLocation(
@@ -1831,7 +1365,6 @@ if (gl) {
                TEXTURE
             ================================= */
 
-
             const texture =
                 gl.createTexture();
 
@@ -1885,9 +1418,7 @@ if (gl) {
                ARTWORK TEXTURE
             ================================= */
 
-
-            let imageReady =
-                false;
+            let imageReady = false;
 
 
             function uploadArtworkTexture() {
@@ -1917,32 +1448,27 @@ if (gl) {
 
 
                 if (
-                    longest
-                    >
+                    longest >
                     maximum
                 ) {
 
                     const resizeScale =
-                        maximum
-                        /
+                        maximum /
                         longest;
 
 
                     width =
                         Math.round(
-                            width
-                            *
+                            width *
                             resizeScale
                         );
 
 
                     height =
                         Math.round(
-                            height
-                            *
+                            height *
                             resizeScale
                         );
-
                 }
 
 
@@ -1988,46 +1514,32 @@ if (gl) {
 
 
                 gl.texImage2D(
-
                     gl.TEXTURE_2D,
-
                     0,
-
                     gl.RGBA,
-
                     gl.RGBA,
-
                     gl.UNSIGNED_BYTE,
-
                     textureCanvas
-
                 );
 
 
-                imageReady =
-                    true;
+                imageReady = true;
 
 
                 canvas.classList.add(
                     "is-ready"
                 );
-
             }
 
 
             if (
-                fallbackImage.complete
-                &&
-                fallbackImage.naturalWidth
-                >
-                0
+                fallbackImage.complete &&
+                fallbackImage.naturalWidth > 0
             ) {
 
                 uploadArtworkTexture();
 
-            }
-
-            else {
+            } else {
 
                 fallbackImage.addEventListener(
                     "load",
@@ -2036,74 +1548,43 @@ if (gl) {
                         once: true
                     }
                 );
-
             }
 
 
             /* =================================
-               POINTER STATE
+               SMOOTH POINTER STATE
             ================================= */
 
-
-            let pointerX =
-                0.5;
-
-
-            let pointerY =
-                0.5;
+            let pointerX = 0.5;
+            let pointerY = 0.5;
 
 
-            let velocityX =
-                0;
+            let targetPointerX = 0.5;
+            let targetPointerY = 0.5;
 
 
-            let velocityY =
-                0;
+            let velocityX = 0;
+            let velocityY = 0;
 
 
-            let targetVelocityX =
-                0;
+            let targetVelocityX = 0;
+            let targetVelocityY = 0;
 
 
-            let targetVelocityY =
-                0;
+            let motion = 0;
+            let targetMotion = 0;
 
 
-            let motion =
-                0;
+            let draggingAmount = 0;
+            let targetDraggingAmount = 0;
 
 
-            let targetMotion =
-                0;
+/* =========================================
+   DRIP STATE
+========================================= */
 
-
-            /*
-               Smooth dragging value means
-               the vortex eases in/out rather
-               than snapping.
-            */
-
-
-            let draggingAmount =
-                0;
-
-
-            let targetDraggingAmount =
-                0;
-
-
-            /* =================================
-               DRIP STATE
-            ================================= */
-
-
-            let dripX =
-                0.5;
-
-
-            let dripY =
-                0.5;
-
+            let dripX = 0.5;
+            let dripY = 0.5;
 
             let dripStarted =
                 -10000;
@@ -2113,10 +1594,13 @@ if (gl) {
                 false;
 
 
-            /* =================================
-               POINTER UPDATE
-            ================================= */
+/* =========================================
+   UPDATE POINTER TARGET
 
+   Important:
+   We do NOT directly move the shader pointer.
+   Render loop eases toward this position.
+========================================= */
 
             function updateShaderPointer(
                 clientX,
@@ -2129,64 +1613,69 @@ if (gl) {
 
 
                 const nextX =
-                    (
-                        clientX
-                        -
-                        rect.left
-                    )
-                    /
-                    rect.width;
+                    clamp(
+                        (
+                            clientX -
+                            rect.left
+                        ) /
+                        rect.width,
+                        0,
+                        1
+                    );
 
 
                 const nextY =
-                    1
-                    -
-                    (
-                        clientY
-                        -
-                        rect.top
-                    )
-                    /
-                    rect.height;
+                    clamp(
+                        1 -
+                        (
+                            clientY -
+                            rect.top
+                        ) /
+                        rect.height,
+                        0,
+                        1
+                    );
 
 
                 const deltaX =
-                    nextX
-                    -
-                    pointerX;
+                    nextX -
+                    targetPointerX;
 
 
                 const deltaY =
-                    nextY
-                    -
-                    pointerY;
+                    nextY -
+                    targetPointerY;
 
 
-                pointerX =
+                targetPointerX =
                     nextX;
 
 
-                pointerY =
+                targetPointerY =
                     nextY;
 
 
+                /*
+                   Softer velocity than previous
+                   version.
+
+                   Prevents trackpad flicks from
+                   causing extreme pulls.
+                */
+
                 targetVelocityX =
                     clamp(
-                        deltaX
-                        *
-                        2.6,
-                        -0.075,
-                        0.075
+                        deltaX * 1.5,
+                        -0.040,
+                        0.040
                     );
 
 
                 targetVelocityY =
                     clamp(
-                        deltaY
-                        *
-                        2.6,
-                        -0.075,
-                        0.075
+                        deltaY * 1.5,
+                        -0.040,
+                        0.040
                     );
 
 
@@ -2198,16 +1687,13 @@ if (gl) {
                             deltaY
                         )
                         *
-                        52
+                        30
                     );
 
 
-                if (
-                    !interacted
-                ) {
+                if (!interacted) {
 
-                    interacted =
-                        true;
+                    interacted = true;
 
 
                     interactionMessage
@@ -2215,16 +1701,13 @@ if (gl) {
                         .add(
                             "is-hidden"
                         );
-
                 }
-
             }
 
 
             /* =================================
                CREATE DRIP
             ================================= */
-
 
             function createDrip(
                 clientX,
@@ -2237,37 +1720,38 @@ if (gl) {
 
 
                 dripX =
-                    (
-                        clientX
-                        -
-                        rect.left
-                    )
-                    /
-                    rect.width;
+                    clamp(
+                        (
+                            clientX -
+                            rect.left
+                        ) /
+                        rect.width,
+                        0,
+                        1
+                    );
 
 
                 dripY =
-                    1
-                    -
-                    (
-                        clientY
-                        -
-                        rect.top
-                    )
-                    /
-                    rect.height;
+                    clamp(
+                        1 -
+                        (
+                            clientY -
+                            rect.top
+                        ) /
+                        rect.height,
+                        0,
+                        1
+                    );
 
 
                 dripStarted =
                     performance.now();
-
             }
 
 
             /* =================================
                POINTER DOWN
             ================================= */
-
 
             container.addEventListener(
                 "pointerdown",
@@ -2289,23 +1773,41 @@ if (gl) {
                             event.pointerId
                         );
 
-                    }
-
-                    catch (error) {
+                    } catch (error) {
                     }
 
 
                     /*
-                       First finger / mouse button:
-                       activate water + DRIP + whirl.
+                       ONE POINTER:
+                       click/tap = DRIP
+
+                       But whirl does NOT start yet.
                     */
 
-
                     if (
-                        viewPointers.size === 1
-                        &&
+                        viewPointers.size === 1 &&
                         viewScale === 1
                     ) {
+
+                        dragPointerId =
+                            event.pointerId;
+
+
+                        dragOriginX =
+                            event.clientX;
+
+
+                        dragOriginY =
+                            event.clientY;
+
+
+                        dragHasStarted =
+                            false;
+
+
+                        targetDraggingAmount =
+                            0;
+
 
                         updateShaderPointer(
                             event.clientX,
@@ -2317,19 +1819,12 @@ if (gl) {
                             event.clientX,
                             event.clientY
                         );
-
-
-                        targetDraggingAmount =
-                            1;
-
                     }
 
 
-                    /*
-                       Second finger:
-                       immediately switch to pinch.
-                    */
-
+                    /* =================================
+                       TWO FINGERS = PINCH
+                    ================================= */
 
                     if (
                         viewPointers.size === 2
@@ -2337,6 +1832,14 @@ if (gl) {
 
                         targetDraggingAmount =
                             0;
+
+
+                        dragHasStarted =
+                            false;
+
+
+                        dragPointerId =
+                            null;
 
 
                         pinchStartDistance =
@@ -2369,9 +1872,12 @@ if (gl) {
 
                         panning =
                             false;
-
                     }
 
+
+                    /* =================================
+                       ALREADY ZOOMED = PAN
+                    ================================= */
 
                     else if (
                         viewScale > 1
@@ -2379,6 +1885,10 @@ if (gl) {
 
                         targetDraggingAmount =
                             0;
+
+
+                        dragHasStarted =
+                            false;
 
 
                         panning =
@@ -2399,22 +1909,16 @@ if (gl) {
 
                         panOriginalY =
                             viewY;
-
                     }
 
 
                     if (
-                        audio.paused
-                        &&
-                        wantsPlayback
-                        &&
+                        audio.paused &&
+                        wantsPlayback &&
                         !muted
                     ) {
-
                         attemptPlayback();
-
                     }
-
                 }
             );
 
@@ -2422,7 +1926,6 @@ if (gl) {
             /* =================================
                POINTER MOVE
             ================================= */
-
 
             container.addEventListener(
                 "pointermove",
@@ -2442,14 +1945,12 @@ if (gl) {
                                 type: event.pointerType
                             }
                         );
-
                     }
 
 
                     /* =================================
                        PINCH
                     ================================= */
-
 
                     if (
                         viewPointers.size === 2
@@ -2469,37 +1970,28 @@ if (gl) {
 
                         viewScale =
                             clamp(
-
-                                pinchStartScale
-                                *
+                                pinchStartScale *
                                 (
-                                    distance
-                                    /
+                                    distance /
                                     pinchStartDistance
                                 ),
-
                                 1,
                                 3.5
-
                             );
 
 
                         viewX =
-                            pinchStartViewX
-                            +
+                            pinchStartViewX +
                             (
-                                midpoint.x
-                                -
+                                midpoint.x -
                                 pinchStartX
                             );
 
 
                         viewY =
-                            pinchStartViewY
-                            +
+                            pinchStartViewY +
                             (
-                                midpoint.y
-                                -
+                                midpoint.y -
                                 pinchStartY
                             );
 
@@ -2508,7 +2000,6 @@ if (gl) {
 
 
                         return;
-
                     }
 
 
@@ -2516,10 +2007,8 @@ if (gl) {
                        PAN WHILE ZOOMED
                     ================================= */
 
-
                     if (
-                        panning
-                        &&
+                        panning &&
                         viewScale > 1
                     ) {
 
@@ -2528,21 +2017,17 @@ if (gl) {
 
 
                         viewX =
-                            panOriginalX
-                            +
+                            panOriginalX +
                             (
-                                event.clientX
-                                -
+                                event.clientX -
                                 panStartX
                             );
 
 
                         viewY =
-                            panOriginalY
-                            +
+                            panOriginalY +
                             (
-                                event.clientY
-                                -
+                                event.clientY -
                                 panStartY
                             );
 
@@ -2551,80 +2036,100 @@ if (gl) {
 
 
                         return;
+                    }
 
+
+                    if (viewScale !== 1) {
+                        return;
                     }
 
 
                     /* =================================
-                       NORMAL WATER MOVEMENT
+                       MOUSE HOVER
+
+                       Water follows cursor but
+                       whirl stays off.
                     ================================= */
 
-
                     if (
-                        viewScale === 1
+                        event.pointerType === "mouse" &&
+                        !viewPointers.has(
+                            event.pointerId
+                        )
                     ) {
 
-                        /*
-                           Mouse without button:
-                           ordinary ripple only.
-                        */
+                        targetDraggingAmount =
+                            0;
 
 
-                        if (
-                            event.pointerType
-                            ===
-                            "mouse"
-                            &&
-                            !viewPointers.has(
-                                event.pointerId
-                            )
-                        ) {
-
-                            targetDraggingAmount =
-                                0;
+                        updateShaderPointer(
+                            event.clientX,
+                            event.clientY
+                        );
 
 
-                            updateShaderPointer(
-                                event.clientX,
-                                event.clientY
-                            );
-
-                        }
-
-
-                        /*
-                           Mouse button / finger held:
-                           whirl + water.
-                        */
-
-
-                        if (
-                            viewPointers.has(
-                                event.pointerId
-                            )
-                        ) {
-
-                            targetDraggingAmount =
-                                1;
-
-
-                            updateShaderPointer(
-                                event.clientX,
-                                event.clientY
-                            );
-
-                        }
-
+                        return;
                     }
 
+
+                    /* =================================
+                       HELD POINTER
+
+                       Activate whirl only after
+                       deliberate movement.
+                    ================================= */
+
+                    if (
+                        viewPointers.has(
+                            event.pointerId
+                        )
+                    ) {
+
+                        if (
+                            event.pointerId ===
+                            dragPointerId
+                        ) {
+
+                            const distanceFromStart =
+                                Math.hypot(
+                                    event.clientX -
+                                    dragOriginX,
+
+                                    event.clientY -
+                                    dragOriginY
+                                );
+
+
+                            if (
+                                !dragHasStarted &&
+                                distanceFromStart >
+                                dragThreshold
+                            ) {
+
+                                dragHasStarted =
+                                    true;
+                            }
+
+
+                            targetDraggingAmount =
+                                dragHasStarted
+                                    ? 1
+                                    : 0;
+                        }
+
+
+                        updateShaderPointer(
+                            event.clientX,
+                            event.clientY
+                        );
+                    }
                 }
             );
 
 
             /* =================================
-               RELEASE POINTER
+               RELEASE
             ================================= */
-
 
             function releasePointer(
                 event
@@ -2636,12 +2141,29 @@ if (gl) {
 
 
                 if (
+                    event.pointerId ===
+                    dragPointerId
+                ) {
+
+                    dragPointerId =
+                        null;
+
+
+                    dragHasStarted =
+                        false;
+
+
+                    targetDraggingAmount =
+                        0;
+                }
+
+
+                if (
                     viewPointers.size < 2
                 ) {
 
                     pinchStartDistance =
                         0;
-
                 }
 
 
@@ -2655,9 +2177,7 @@ if (gl) {
 
                     targetDraggingAmount =
                         0;
-
                 }
-
             }
 
 
@@ -2677,42 +2197,32 @@ if (gl) {
                CANVAS SIZE
             ================================= */
 
-
             function resizeCanvas() {
 
                 const ratio =
                     Math.min(
-                        window.devicePixelRatio
-                        ||
-                        1,
+                        window.devicePixelRatio || 1,
                         2
                     );
 
 
                 const width =
                     Math.floor(
-                        container.clientWidth
-                        *
+                        container.clientWidth *
                         ratio
                     );
 
 
                 const height =
                     Math.floor(
-                        container.clientHeight
-                        *
+                        container.clientHeight *
                         ratio
                     );
 
 
                 if (
-                    canvas.width
-                    !==
-                    width
-                    ||
-                    canvas.height
-                    !==
-                    height
+                    canvas.width !== width ||
+                    canvas.height !== height
                 ) {
 
                     canvas.width =
@@ -2729,16 +2239,13 @@ if (gl) {
                         width,
                         height
                     );
-
                 }
-
             }
 
 
             /* =================================
-               RENDER
+               RENDER LOOP
             ================================= */
-
 
             const start =
                 performance.now();
@@ -2749,61 +2256,93 @@ if (gl) {
                 resizeCanvas();
 
 
+                /*
+                   Smooth actual pointer toward
+                   raw trackpad/mouse position.
+                */
+
+                pointerX +=
+                    (
+                        targetPointerX -
+                        pointerX
+                    )
+                    *
+                    0.17;
+
+
+                pointerY +=
+                    (
+                        targetPointerY -
+                        pointerY
+                    )
+                    *
+                    0.17;
+
+
+                /*
+                   Smooth velocity.
+                */
+
                 velocityX +=
                     (
-                        targetVelocityX
-                        -
+                        targetVelocityX -
                         velocityX
                     )
                     *
-                    0.18;
+                    0.12;
 
 
                 velocityY +=
                     (
-                        targetVelocityY
-                        -
+                        targetVelocityY -
                         velocityY
                     )
                     *
-                    0.18;
-
-
-                motion +=
-                    (
-                        targetMotion
-                        -
-                        motion
-                    )
-                    *
-                    0.14;
-
-
-                draggingAmount +=
-                    (
-                        targetDraggingAmount
-                        -
-                        draggingAmount
-                    )
-                    *
-                    0.16;
+                    0.12;
 
 
                 /*
-                   Gradual water / vortex decay.
+                   Smooth interaction intensity.
                 */
 
+                motion +=
+                    (
+                        targetMotion -
+                        motion
+                    )
+                    *
+                    0.10;
+
+
+                /*
+                   Slow vortex fade-in/out.
+
+                   This removes the snapping.
+                */
+
+                draggingAmount +=
+                    (
+                        targetDraggingAmount -
+                        draggingAmount
+                    )
+                    *
+                    0.09;
+
+
+                /*
+                   Natural decay.
+                */
 
                 targetVelocityX *=
-                    0.87;
+                    0.82;
 
 
                 targetVelocityY *=
-                    0.87;
+                    0.82;
 
 
                 targetMotion *=
-                    0.90;
+                    0.88;
 
 
                 const now =
@@ -2812,8 +2351,7 @@ if (gl) {
 
                 const time =
                     (
-                        now
-                        -
+                        now -
                         start
                     )
                     /
@@ -2822,17 +2360,14 @@ if (gl) {
 
                 const dripAge =
                     (
-                        now
-                        -
+                        now -
                         dripStarted
                     )
                     /
                     1000;
 
 
-                if (
-                    imageReady
-                ) {
+                if (imageReady) {
 
                     gl.uniform2f(
                         pointerUniform,
@@ -2884,21 +2419,16 @@ if (gl) {
                         0,
                         6
                     );
-
                 }
 
 
                 requestAnimationFrame(
                     render
                 );
-
             }
 
 
             render();
-
         }
-
     }
-
 }
