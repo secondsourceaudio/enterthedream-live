@@ -14,7 +14,7 @@
 
     <link
         rel="stylesheet"
-        href="./experiment.css?v=5"
+        href="./experiment.css?v=7"
     >
 
 </head>
@@ -36,12 +36,59 @@
         </a>
 
 
-        <a
-            class="return-link"
-            href="./index.html"
-        >
-            RETURN
-        </a>
+        <div class="experiment-actions">
+
+            <button
+                id="sound-button"
+                class="sound-button is-muted"
+                type="button"
+                aria-label="Play sound"
+                title="Play sound"
+            >
+
+                <svg
+                    class="sound-icon"
+                    viewBox="0 0 32 32"
+                    aria-hidden="true"
+                >
+
+                    <path
+                        d="M5 12H10L16 7V25L10 20H5Z"
+                    ></path>
+
+                    <path
+                        class="sound-wave"
+                        d="M20 12C22 14 22 18 20 20"
+                    ></path>
+
+                    <path
+                        class="sound-wave"
+                        d="M24 9C28 13 28 19 24 23"
+                    ></path>
+
+                    <path
+                        class="mute-line"
+                        d="M21 11L28 21"
+                    ></path>
+
+                    <path
+                        class="mute-line"
+                        d="M28 11L21 21"
+                    ></path>
+
+                </svg>
+
+            </button>
+
+
+            <a
+                class="return-link"
+                href="./index.html"
+            >
+                RETURN
+            </a>
+
+        </div>
 
     </header>
 
@@ -52,113 +99,46 @@
 
     <main class="experiment-main">
 
+        <div class="experiment-meta">
 
-        <!-- =====================================
-             RELEASE INFORMATION
-        ====================================== -->
-
-        <section class="experiment-information">
-
-            <p class="catalogue">
+            <p>
                 SRC001
             </p>
 
             <h1>
-                MARTIN SOLLI
+                MARTIN SOLLI — DRIP
             </h1>
 
-            <h2>
-                DRIP
-            </h2>
-
-            <p class="experiment-type">
-                INTERACTIVE ARTWORK
-            </p>
-
-        </section>
+        </div>
 
 
-        <!-- =====================================
-             INTERACTIVE ARTWORK
-        ====================================== -->
+        <div
+            id="visual-container"
+            class="visual-container"
+        >
 
-        <section class="artwork-section">
-
-            <div
-                id="visual-container"
-                class="visual-container"
+            <img
+                id="fallback-image"
+                class="fallback-image"
+                src="./images/drip_cover_front.jpg"
+                alt="Martin Solli — Drip"
             >
 
-                <img
-                    id="fallback-image"
-                    class="fallback-image"
-                    src="./images/drip_cover_front.jpg"
-                    alt="Martin Solli — Drip"
-                >
+
+            <canvas
+                id="visual"
+                class="visual-canvas"
+            ></canvas>
 
 
-                <canvas
-                    id="visual"
-                    class="visual-canvas"
-                ></canvas>
-
-
-                <div
-                    id="interaction-message"
-                    class="interaction-message"
-                >
-                    MOVE / TOUCH
-                </div>
-
-
-                <!-- SOUND -->
-
-                <button
-                    id="sound-button"
-                    class="sound-button"
-                    type="button"
-                    aria-label="Sound"
-                    title="Sound"
-                >
-
-                    <svg
-                        class="sound-icon"
-                        viewBox="0 0 32 32"
-                        aria-hidden="true"
-                    >
-
-                        <path
-                            class="speaker-shape"
-                            d="M5 12H10L16 7V25L10 20H5Z"
-                        ></path>
-
-                        <path
-                            class="sound-wave sound-wave-one"
-                            d="M20 12C22 14 22 18 20 20"
-                        ></path>
-
-                        <path
-                            class="sound-wave sound-wave-two"
-                            d="M24 9C28 13 28 19 24 23"
-                        ></path>
-
-                        <path
-                            class="mute-line"
-                            d="M21 11L28 21"
-                        ></path>
-
-                        <path
-                            class="mute-line"
-                            d="M28 11L21 21"
-                        ></path>
-
-                    </svg>
-
-                </button>
-
+            <div
+                id="interaction-message"
+                class="interaction-message"
+            >
+                MOVE / TOUCH
             </div>
 
-        </section>
+        </div>
 
     </main>
 
@@ -169,13 +149,7 @@
 
     <footer class="experiment-footer">
 
-        <span>
-            SECOND SOURCE / 2026
-        </span>
-
-        <span>
-            SRC001
-        </span>
+        SRC001 / MARTIN SOLLI / DRIP
 
     </footer>
 
@@ -190,16 +164,14 @@
         loop
         preload="auto"
     >
-
         <source
-            src="./audio/3. Sage Counsel (24B_48KHz_MST)_timeitemstudio DIGI.wav"
+            src="./audio/sage-counsel.wav"
             type="audio/wav"
         >
-
     </audio>
 
 
-    <script src="./experiment.js?v=6"></script>
+    <script src="./experiment.js?v=8"></script>
 
 </body>
 

@@ -51,7 +51,6 @@ body {
 
 .site-header {
     width: 100%;
-
     min-height: 72px;
 
     padding:
@@ -60,7 +59,6 @@ body {
 
     display: flex;
 
-    justify-content: space-between;
     align-items: center;
 
     border-bottom:
@@ -70,7 +68,7 @@ body {
 
 
 .site-logo {
-    display: inline-block;
+    flex: 0 0 auto;
 
     color: #ffffff;
 
@@ -88,18 +86,22 @@ body {
 
 
 .site-logo:hover {
-    opacity: 0.7;
+    opacity: 0.65;
 }
 
 
 /* =========================================
-   NAVIGATION
+   NAVIGATION — TOP RIGHT
 ========================================= */
 
 .site-nav {
+    margin-left: auto;
+
     display: flex;
 
     align-items: center;
+
+    justify-content: flex-end;
 
     gap: 34px;
 }
@@ -152,7 +154,7 @@ body {
 
 
 /* =========================================
-   MAIN
+   LANDING
 ========================================= */
 
 .landing {
@@ -161,36 +163,119 @@ body {
     width: 100%;
 
     padding:
-        55px
+        65px
         40px
-        90px;
-}
-
-
-.release {
-    width: 100%;
-    max-width: 1800px;
-
-    margin: 0 auto;
-
-    display: grid;
-
-    grid-template-columns:
-        minmax(0, 1fr)
-        270px;
-
-    gap: 55px;
-
-    align-items: end;
+        100px;
 }
 
 
 /* =========================================
-   ARTWORK
+   RELEASE — CENTRAL AXIS
+========================================= */
+
+.release {
+    width: 100%;
+    max-width: 1280px;
+
+    margin:
+        0
+        auto;
+
+    text-align: center;
+}
+
+
+/* =========================================
+   RELEASE HEADING
+========================================= */
+
+.release-heading {
+    width: 100%;
+
+    margin:
+        0
+        auto
+        42px;
+}
+
+
+.release-status {
+    margin:
+        0
+        0
+        22px;
+
+    color: #ffffff;
+
+    font-size: 10px;
+
+    letter-spacing: 0.3em;
+}
+
+
+.catalogue {
+    margin:
+        0
+        0
+        28px;
+
+    color: #ffffff;
+
+    font-size: 11px;
+
+    letter-spacing: 0.25em;
+}
+
+
+.release-heading h1 {
+    margin: 0;
+
+    color: #ffffff;
+
+    font-size:
+        clamp(
+            24px,
+            2.3vw,
+            38px
+        );
+
+    font-weight: normal;
+
+    letter-spacing: 0.08em;
+}
+
+
+.release-heading h2 {
+    margin:
+        8px
+        0
+        0;
+
+    color: #ffffff;
+
+    font-size:
+        clamp(
+            42px,
+            4vw,
+            68px
+        );
+
+    font-weight: normal;
+
+    letter-spacing: 0.05em;
+}
+
+
+/* =========================================
+   ARTWORK — TRUE CENTER
 ========================================= */
 
 .artwork-area {
     width: 100%;
+
+    margin:
+        0
+        auto;
 
     padding: 18px;
 
@@ -219,97 +304,25 @@ body {
 
 
 /* =========================================
-   RELEASE INFORMATION
+   COMING SOON
 ========================================= */
-
-.release-information {
-    padding-bottom: 12px;
-}
-
-
-.release-status {
-    margin:
-        0
-        0
-        42px;
-
-    color: #ffffff;
-
-    font-size: 13px;
-
-    letter-spacing: 0.28em;
-}
-
-
-.catalogue {
-    margin:
-        0
-        0
-        24px;
-
-    color: #ffffff;
-
-    font-size: 14px;
-
-    letter-spacing: 0.2em;
-}
-
-
-.release-information h1 {
-    margin: 0;
-
-    color: #ffffff;
-
-    font-size:
-        clamp(
-            25px,
-            2.5vw,
-            42px
-        );
-
-    font-weight: normal;
-
-    letter-spacing: 0.06em;
-}
-
-
-.release-information h2 {
-    margin:
-        12px
-        0
-        0;
-
-    color: #ffffff;
-
-    font-size:
-        clamp(
-            42px,
-            4.5vw,
-            72px
-        );
-
-    font-weight: normal;
-
-    letter-spacing: 0.04em;
-}
-
 
 .coming-soon {
     margin:
-        48px
+        42px
         0
         0;
 
     color: #ffffff;
 
-    font-size: 10px;
+    font-size: 9px;
 
-    letter-spacing: 0.3em;
+    letter-spacing: 0.32em;
 }
 
 
 /* =========================================
-   LEGAL FOOTER
+   FOOTER
 ========================================= */
 
 .legal-footer {
@@ -319,6 +332,8 @@ body {
         28px
         32px
         32px;
+
+    text-align: center;
 
     border-top:
         1px solid
@@ -343,7 +358,10 @@ body {
 .legal-line {
     max-width: 950px;
 
-    margin-top: 10px !important;
+    margin:
+        10px
+        auto
+        0 !important;
 
     color: #ffffff;
 
@@ -371,42 +389,6 @@ body {
         padding-right: 55px;
     }
 
-
-    .release {
-        grid-template-columns:
-            minmax(0, 1fr)
-            300px;
-
-        gap: 65px;
-    }
-
-}
-
-
-/* =========================================
-   TABLET
-========================================= */
-
-@media (max-width: 1000px) {
-
-    .release {
-        grid-template-columns:
-            minmax(0, 1fr)
-            230px;
-
-        gap: 35px;
-    }
-
-
-    .release-status {
-        font-size: 11px;
-    }
-
-
-    .catalogue {
-        font-size: 12px;
-    }
-
 }
 
 
@@ -430,31 +412,31 @@ body {
     .site-logo {
         display: inline-block;
 
-        margin-bottom: 28px;
+        margin-bottom: 27px;
 
         font-size: 10px;
-
-        letter-spacing: 0.3em;
     }
 
 
     .site-nav {
         width: 100%;
 
-        display: flex;
+        margin-left: 0;
 
-        align-items: center;
+        display: flex;
 
         justify-content: flex-start;
 
-        gap: 26px;
+        gap:
+            13px
+            20px;
+
+        flex-wrap: wrap;
     }
 
 
     .site-nav a {
-        display: block;
-
-        font-size: 8px;
+        font-size: 7px;
 
         letter-spacing: 0.16em;
     }
@@ -467,73 +449,52 @@ body {
 
     .landing {
         padding:
-            32px
+            42px
             16px
             70px;
     }
 
 
-    .release {
-        display: flex;
-
-        flex-direction: column;
-
-        gap: 38px;
-    }
-
-
-    .artwork-area {
-        width: 100%;
-
-        padding: 8px;
-
-        box-shadow:
-            0
-            12px
-            35px
-            rgba(0, 0, 0, 0.65);
-    }
-
-
-    .release-information {
-        width: 100%;
-
-        padding:
-            0
-            4px;
+    .release-heading {
+        margin-bottom: 32px;
     }
 
 
     .release-status {
-        margin-bottom: 30px;
+        margin-bottom: 18px;
 
-        font-size: 10px;
+        font-size: 8px;
     }
 
 
     .catalogue {
-        margin-bottom: 18px;
+        margin-bottom: 22px;
 
-        font-size: 11px;
+        font-size: 9px;
     }
 
 
-    .release-information h1 {
+    .release-heading h1 {
         font-size: 22px;
     }
 
 
-    .release-information h2 {
-        margin-top: 8px;
+    .release-heading h2 {
+        margin-top: 7px;
 
-        font-size: 42px;
+        font-size: 44px;
+    }
+
+
+    .artwork-area {
+        padding: 8px;
     }
 
 
     .coming-soon {
-        margin-top: 35px;
+        margin-top: 32px;
 
-        font-size: 8px;
+        font-size: 7px;
     }
 
 
@@ -558,17 +519,4 @@ body {
         line-height: 1.8;
     }
 
-}
-.site-nav {
-    width: 100%;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: flex-start;
-
-    gap: 18px;
-
-    flex-wrap: wrap;
 }
