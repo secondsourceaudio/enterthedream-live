@@ -22,7 +22,7 @@
 html,
 body {
     width: 100%;
-    height: 100%;
+    min-height: 100%;
 
     margin: 0;
 
@@ -32,7 +32,7 @@ body {
 
 
 body {
-    overflow: hidden;
+    min-height: 100vh;
 
     display: flex;
     flex-direction: column;
@@ -50,10 +50,6 @@ body {
 ========================================= */
 
 .experiment-header {
-    position: relative;
-
-    z-index: 10;
-
     width: 100%;
     min-height: 72px;
 
@@ -66,20 +62,9 @@ body {
     justify-content: space-between;
     align-items: center;
 
-    background: #050505;
-
     border-bottom:
         1px solid
         rgba(255, 255, 255, 0.18);
-}
-
-
-.experiment-identity {
-    display: flex;
-
-    align-items: center;
-
-    gap: 32px;
 }
 
 
@@ -93,15 +78,9 @@ body {
     text-decoration: none;
 
     white-space: nowrap;
-}
 
-
-.catalogue {
-    color: #ffffff;
-
-    font-size: 8px;
-
-    letter-spacing: 0.25em;
+    transition:
+        opacity 0.2s ease;
 }
 
 
@@ -115,6 +94,9 @@ body {
     text-decoration: none;
 
     white-space: nowrap;
+
+    transition:
+        opacity 0.2s ease;
 }
 
 
@@ -129,49 +111,140 @@ body {
 ========================================= */
 
 .experiment-main {
-    position: relative;
-
     flex: 1;
 
     width: 100%;
+    max-width: 1800px;
 
-    min-height: 0;
+    margin:
+        0
+        auto;
 
     padding:
-        28px
-        32px;
+        70px
+        40px
+        110px;
+
+    display: grid;
+
+    grid-template-columns:
+        240px
+        minmax(0, 1fr);
+
+    gap: 70px;
+
+    align-items: start;
 }
 
 
 /* =========================================
-   VISUAL
+   RELEASE INFORMATION
+========================================= */
+
+.experiment-information {
+    position: sticky;
+
+    top: 105px;
+
+    padding-top: 4px;
+}
+
+
+.experiment-information p,
+.experiment-information h1,
+.experiment-information h2 {
+    margin: 0;
+}
+
+
+.catalogue {
+    margin-bottom: 42px !important;
+
+    font-size: 10px;
+
+    letter-spacing: 0.25em;
+}
+
+
+.experiment-information h1 {
+    max-width: 230px;
+
+    font-size: 20px;
+
+    font-weight: normal;
+
+    line-height: 1.2;
+
+    letter-spacing: 0.08em;
+}
+
+
+.experiment-information h2 {
+    margin-top: 9px !important;
+
+    font-size: 42px;
+
+    font-weight: normal;
+
+    letter-spacing: 0.05em;
+}
+
+
+.experiment-type {
+    margin-top: 45px !important;
+
+    font-size: 7px;
+
+    letter-spacing: 0.28em;
+}
+
+
+/* =========================================
+   ARTWORK SECTION
+========================================= */
+
+.artwork-section {
+    width: 100%;
+
+    display: flex;
+
+    justify-content: center;
+}
+
+
+/* =========================================
+   INTERACTIVE ARTWORK
 ========================================= */
 
 .visual-container {
     position: relative;
 
-    width: 100%;
-    height: 100%;
+    width:
+        min(
+            100%,
+            1050px
+        );
+
+    aspect-ratio: 1 / 1;
 
     overflow: hidden;
 
     background: #050505;
 
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.18);
-
-    cursor: crosshair;
-
     touch-action: none;
+
+    cursor: default;
+
+    box-shadow:
+        0
+        25px
+        70px
+        rgba(0, 0, 0, 0.45);
 }
 
 
 /*
-   The normal image stays underneath WebGL.
-
-   This means the artwork remains visible even
-   while WebGL is loading or if WebGL fails.
+   Static artwork remains underneath WebGL.
 */
 
 .fallback-image {
@@ -179,16 +252,18 @@ body {
 
     inset: 0;
 
-    display: block;
-
     width: 100%;
     height: 100%;
 
-    object-fit: contain;
+    display: block;
 
-    background: #050505;
+    object-fit: cover;
 }
 
+
+/*
+   WebGL sits directly over the image.
+*/
 
 .visual-canvas {
     position: absolute;
@@ -215,28 +290,23 @@ body {
 
 
 /* =========================================
-   INTERACTION MESSAGE
+   INTERACTION LABEL
 ========================================= */
 
 .interaction-message {
     position: absolute;
 
-    left: 50%;
-    bottom: 28px;
-
-    transform:
-        translateX(-50%);
+    left: 18px;
+    bottom: 18px;
 
     z-index: 5;
 
     color:
         rgba(255, 255, 255, 0.85);
 
-    font-size: 8px;
+    font-size: 7px;
 
-    letter-spacing: 0.3em;
-
-    white-space: nowrap;
+    letter-spacing: 0.28em;
 
     pointer-events: none;
 
@@ -259,15 +329,15 @@ body {
 .sound-button {
     position: absolute;
 
-    right: 18px;
-    bottom: 17px;
+    right: 16px;
+    bottom: 14px;
 
     z-index: 20;
 
-    width: 38px;
-    height: 38px;
+    width: 32px;
+    height: 32px;
 
-    padding: 7px;
+    padding: 5px;
 
     display: flex;
 
@@ -276,26 +346,21 @@ body {
 
     color: #ffffff;
 
-    background:
-        rgba(5, 5, 5, 0.6);
+    background: transparent;
 
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.3);
-
-    border-radius: 50%;
+    border: none;
 
     cursor: pointer;
 
+    opacity: 0.8;
+
     transition:
-        opacity 0.2s ease,
-        border-color 0.2s ease;
+        opacity 0.2s ease;
 }
 
 
 .sound-button:hover {
-    border-color:
-        rgba(255, 255, 255, 0.8);
+    opacity: 1;
 }
 
 
@@ -342,12 +407,9 @@ body {
 ========================================= */
 
 .experiment-footer {
-    position: relative;
-
-    z-index: 10;
-
     width: 100%;
-    min-height: 52px;
+
+    min-height: 58px;
 
     padding:
         0
@@ -358,17 +420,35 @@ body {
     justify-content: space-between;
     align-items: center;
 
-    background: #050505;
-
     border-top:
         1px solid
         rgba(255, 255, 255, 0.18);
 
     color: #ffffff;
 
-    font-size: 7px;
+    font-size: 6px;
 
     letter-spacing: 0.22em;
+}
+
+
+/* =========================================
+   LARGE DESKTOP
+========================================= */
+
+@media (min-width: 1400px) {
+
+    .experiment-main {
+        padding-left: 55px;
+        padding-right: 55px;
+
+        grid-template-columns:
+            270px
+            minmax(0, 1fr);
+
+        gap: 90px;
+    }
+
 }
 
 
@@ -383,12 +463,7 @@ body {
 
         padding:
             0
-            18px;
-    }
-
-
-    .experiment-identity {
-        gap: 14px;
+            20px;
     }
 
 
@@ -396,13 +471,6 @@ body {
         font-size: 9px;
 
         letter-spacing: 0.22em;
-    }
-
-
-    .catalogue {
-        font-size: 6px;
-
-        letter-spacing: 0.18em;
     }
 
 
@@ -414,47 +482,84 @@ body {
 
 
     .experiment-main {
-        padding: 12px;
+        display: block;
+
+        padding:
+            38px
+            16px
+            70px;
+    }
+
+
+    .experiment-information {
+        position: static;
+
+        width: 100%;
+
+        margin-bottom: 40px;
+
+        padding:
+            0
+            4px;
+    }
+
+
+    .catalogue {
+        margin-bottom: 25px !important;
+
+        font-size: 8px;
+    }
+
+
+    .experiment-information h1 {
+        font-size: 18px;
+    }
+
+
+    .experiment-information h2 {
+        font-size: 36px;
+    }
+
+
+    .experiment-type {
+        margin-top: 30px !important;
+
+        font-size: 6px;
+    }
+
+
+    .visual-container {
+        width: 100%;
+
+        aspect-ratio: 1 / 1;
     }
 
 
     .interaction-message {
-        bottom: 18px;
+        left: 12px;
+        bottom: 13px;
 
-        font-size: 7px;
-
-        letter-spacing: 0.22em;
+        font-size: 6px;
     }
 
 
     .sound-button {
-        right: 10px;
-        bottom: 10px;
+        right: 9px;
+        bottom: 8px;
 
-        width: 40px;
-        height: 40px;
-
-        padding: 8px;
+        width: 34px;
+        height: 34px;
     }
 
 
     .experiment-footer {
-        min-height: 58px;
+        min-height: 54px;
 
         padding:
             0
-            18px;
-
-        gap: 20px;
+            20px;
 
         font-size: 6px;
-
-        line-height: 1.5;
-    }
-
-
-    .experiment-footer div:last-child {
-        text-align: right;
     }
 
 }

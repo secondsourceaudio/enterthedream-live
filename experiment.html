@@ -10,11 +10,11 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>SECOND SOURCE — SRC001 STUDY</title>
+    <title>SECOND SOURCE — SRC001</title>
 
     <link
         rel="stylesheet"
-        href="./experiment.css?v=4"
+        href="./experiment.css?v=5"
     >
 
 </head>
@@ -22,22 +22,18 @@
 
 <body>
 
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
     <header class="experiment-header">
 
-        <div class="experiment-identity">
-
-            <a
-                class="second-source"
-                href="./index.html"
-            >
-                SECOND SOURCE
-            </a>
-
-            <span class="catalogue">
-                SRC001
-            </span>
-
-        </div>
+        <a
+            class="second-source"
+            href="./index.html"
+        >
+            SECOND SOURCE
+        </a>
 
 
         <a
@@ -50,95 +46,143 @@
     </header>
 
 
+    <!-- =========================================
+         MAIN
+    ========================================== -->
+
     <main class="experiment-main">
 
-        <div
-            id="visual-container"
-            class="visual-container"
-        >
 
-            <img
-                id="fallback-image"
-                class="fallback-image"
-                src="./images/drip_cover_front.jpg"
-                alt="Martin Solli — Drip"
-            >
+        <!-- =====================================
+             RELEASE INFORMATION
+        ====================================== -->
+
+        <section class="experiment-information">
+
+            <p class="catalogue">
+                SRC001
+            </p>
+
+            <h1>
+                MARTIN SOLLI
+            </h1>
+
+            <h2>
+                DRIP
+            </h2>
+
+            <p class="experiment-type">
+                INTERACTIVE ARTWORK
+            </p>
+
+        </section>
 
 
-            <canvas
-                id="visual"
-                class="visual-canvas"
-            ></canvas>
+        <!-- =====================================
+             INTERACTIVE ARTWORK
+        ====================================== -->
 
+        <section class="artwork-section">
 
             <div
-                id="interaction-message"
-                class="interaction-message"
-            >
-                MOVE / TOUCH
-            </div>
-
-
-            <button
-                id="sound-button"
-                class="sound-button"
-                type="button"
-                aria-label="Sound"
-                title="Sound"
+                id="visual-container"
+                class="visual-container"
             >
 
-                <svg
-                    class="sound-icon"
-                    viewBox="0 0 32 32"
-                    aria-hidden="true"
+                <img
+                    id="fallback-image"
+                    class="fallback-image"
+                    src="./images/drip_cover_front.jpg"
+                    alt="Martin Solli — Drip"
                 >
 
-                    <path
-                        class="speaker-shape"
-                        d="M5 12H10L16 7V25L10 20H5Z"
-                    ></path>
 
-                    <path
-                        class="sound-wave sound-wave-one"
-                        d="M20 12C22 14 22 18 20 20"
-                    ></path>
+                <canvas
+                    id="visual"
+                    class="visual-canvas"
+                ></canvas>
 
-                    <path
-                        class="sound-wave sound-wave-two"
-                        d="M24 9C28 13 28 19 24 23"
-                    ></path>
 
-                    <path
-                        class="mute-line"
-                        d="M21 11L28 21"
-                    ></path>
+                <div
+                    id="interaction-message"
+                    class="interaction-message"
+                >
+                    MOVE / TOUCH
+                </div>
 
-                    <path
-                        class="mute-line"
-                        d="M28 11L21 21"
-                    ></path>
 
-                </svg>
+                <!-- SOUND -->
 
-            </button>
+                <button
+                    id="sound-button"
+                    class="sound-button"
+                    type="button"
+                    aria-label="Sound"
+                    title="Sound"
+                >
 
-        </div>
+                    <svg
+                        class="sound-icon"
+                        viewBox="0 0 32 32"
+                        aria-hidden="true"
+                    >
+
+                        <path
+                            class="speaker-shape"
+                            d="M5 12H10L16 7V25L10 20H5Z"
+                        ></path>
+
+                        <path
+                            class="sound-wave sound-wave-one"
+                            d="M20 12C22 14 22 18 20 20"
+                        ></path>
+
+                        <path
+                            class="sound-wave sound-wave-two"
+                            d="M24 9C28 13 28 19 24 23"
+                        ></path>
+
+                        <path
+                            class="mute-line"
+                            d="M21 11L28 21"
+                        ></path>
+
+                        <path
+                            class="mute-line"
+                            d="M28 11L21 21"
+                        ></path>
+
+                    </svg>
+
+                </button>
+
+            </div>
+
+        </section>
 
     </main>
 
 
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+
     <footer class="experiment-footer">
 
-        <div>
-            MARTIN SOLLI — DRIP
-        </div>
+        <span>
+            SECOND SOURCE / 2026
+        </span>
 
-        <div>
-            LIQUID STUDY 001
-        </div>
+        <span>
+            SRC001
+        </span>
 
     </footer>
 
+
+    <!-- =========================================
+         AUDIO
+    ========================================== -->
 
     <audio
         id="experiment-audio"
