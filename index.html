@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
 
@@ -8,20 +9,92 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>SECOND SOURCE</title>
+    <title>SECOND SOURCE — DRIP</title>
 
     <link
         rel="stylesheet"
-        href="./construction.css?v=4"
+        href="./new.css?v=10"
     >
 </head>
 
 <body>
 
-    <main class="landing-page">
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
+    <header class="site-header">
+
+        <div class="site-logo">
+            SECOND SOURCE
+        </div>
+
+        <a
+            class="gallery-link"
+            href="./gallery.html"
+        >
+            GALLERY
+        </a>
+
+    </header>
+
+
+    <!-- =========================================
+         MAIN RELEASE
+    ========================================== -->
+
+    <main class="landing">
+
+        <section class="release">
+
+            <div class="artwork-area">
+
+                <img
+                    class="release-artwork"
+                    src="./images/drip-cover.jpg"
+                    alt="Martin Solli — Drip"
+                >
+
+            </div>
+
+
+            <div class="release-information">
+
+                <p class="release-status">
+                    NEXT RELEASE
+                </p>
+
+                <p class="catalogue">
+                    SRC001
+                </p>
+
+                <h1>
+                    MARTIN SOLLI
+                </h1>
+
+                <h2>
+                    DRIP
+                </h2>
+
+                <p class="coming-soon">
+                    COMING SOON
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================================
+         SPINNING SECOND SOURCE LOGO
+    ========================================== -->
+
+    <section class="bottom-logo">
 
         <video
-            class="landing-video"
+            class="spinning-logo"
             autoplay
             muted
             loop
@@ -32,98 +105,30 @@
                 src="./videos/sourcelogo_2.webm"
                 type="video/webm"
             >
-
-            <source
-                src="./videos/ps2_loop.mp4"
-                type="video/mp4"
-            >
         </video>
 
-    </main>
+    </section>
 
 
-    <aside class="dream-access">
+    <!-- =========================================
+         COPYRIGHT
+    ========================================== -->
 
-        <p class="dream-access-title">
-            ENTER THE CURRENT DREAM.
+    <footer class="legal-footer">
+
+        <p class="copyright-line">
+            © 2026 SECOND SOURCE AUDIO. ALL RIGHTS RESERVED.
         </p>
 
-        <form
-            id="dream-form"
-            class="dream-form"
-        >
+        <p class="legal-line">
+            ALL MUSIC, ARTWORK, IMAGES, TEXT, GRAPHIC DESIGN AND OTHER ORIGINAL CONTENT
+            ON THIS WEBSITE ARE PROTECTED BY COPYRIGHT. NO REPRODUCTION, DISTRIBUTION,
+            MODIFICATION OR COMMERCIAL USE WITHOUT PRIOR WRITTEN PERMISSION,
+            EXCEPT AS PERMITTED BY LAW.
+        </p>
 
-            <input
-                id="dream-password"
-                class="dream-password"
-                type="password"
-                placeholder="PASSWORD"
-                autocomplete="off"
-                aria-label="Password"
-            >
-
-            <button
-                class="dream-button"
-                type="submit"
-            >
-                ENTER
-            </button>
-
-        </form>
-
-        <p
-            id="dream-error"
-            class="dream-error"
-            aria-live="polite"
-        ></p>
-
-    </aside>
-
-
-    <script>
-        const dreamForm =
-            document.getElementById("dream-form");
-
-        const passwordInput =
-            document.getElementById("dream-password");
-
-        const errorMessage =
-            document.getElementById("dream-error");
-
-
-        const correctPassword =
-            "currentdream";
-
-
-        dreamForm.addEventListener(
-            "submit",
-            function (event) {
-
-                event.preventDefault();
-
-                if (
-                    passwordInput.value ===
-                    correctPassword
-                ) {
-
-                    window.location.href =
-                        "./index-full.html";
-
-                } else {
-
-                    errorMessage.textContent =
-                        "ACCESS DENIED";
-
-                    passwordInput.value =
-                        "";
-
-                    passwordInput.focus();
-
-                }
-
-            }
-        );
-    </script>
+    </footer>
 
 </body>
+
 </html>

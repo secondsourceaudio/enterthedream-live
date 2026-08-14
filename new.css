@@ -56,6 +56,11 @@ body {
         26px
         32px;
 
+    display: flex;
+
+    justify-content: space-between;
+    align-items: center;
+
     border-bottom:
         1px solid
         rgba(255, 255, 255, 0.18);
@@ -68,6 +73,29 @@ body {
     font-size: 11px;
 
     letter-spacing: 0.3em;
+}
+
+
+.gallery-link {
+    color: #ffffff;
+
+    font-size: 9px;
+
+    letter-spacing: 0.3em;
+
+    text-decoration: none;
+
+    opacity: 0.85;
+
+    transition:
+        opacity 0.2s ease;
+}
+
+
+.gallery-link:hover {
+    opacity: 1;
+
+    text-decoration: underline;
 }
 
 
@@ -389,6 +417,13 @@ body {
 
     .site-logo {
         font-size: 10px;
+    }
+
+
+    .gallery-link {
+        font-size: 8px;
+
+        letter-spacing: 0.24em;
     }
 
 
