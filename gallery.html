@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>SECOND SOURCE — CONCEPT ARCHIVE</title>
+
+    <link
+        rel="stylesheet"
+        href="./gallery.css?v=2"
+    >
+</head>
+
+<body>
+
+    <header class="site-header">
+
+        <div class="site-logo">
+            SECOND SOURCE
+        </div>
+
+        <div class="page-title">
+            CONCEPT ARCHIVE
+        </div>
+
+        <a
+            class="return-link"
+            href="./new.html"
+        >
+            RETURN
+        </a>
+
+    </header>
+
+
+    <main class="gallery-main">
+
+        <div
+            id="gallery"
+            class="gallery-grid"
+        ></div>
+
+    </main>
+
+
+    <!-- FULLSCREEN ARTWORK VIEW -->
+
+    <div
+        id="lightbox"
+        class="lightbox"
+        aria-hidden="true"
+    >
+
+        <button
+            id="lightbox-close"
+            class="lightbox-close"
+            type="button"
+            aria-label="Close artwork"
+        >
+            CLOSE
+        </button>
+
+
+        <div class="lightbox-content">
+
+            <img
+                id="lightbox-image"
+                class="lightbox-image"
+                src=""
+                alt=""
+            >
+
+
+            <div class="lightbox-information">
+
+                <span id="lightbox-title"></span>
+
+                <span id="lightbox-number"></span>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script>
+
+        /* =========================================
+           ARTWORK ARCHIVE
+
+           To add another artwork later:
+
+           {
+               image: "./images/gallery/filename.png",
+               title: "TITLE"
+           }
+        ========================================= */
+
+        const artworks = [
+
+            {
+                image:
+                    "./images/gallery/cloud_patterns.png",
+
+                title:
+                    "CLOUD PATTERNS"
+            },
+
+            {
+                image:
+                    "./images/gallery/flower_1.png",
+
+                title:
+                    "FLOWER 01"
+            },
+
+            {
+                image:
+                    "./images/gallery/flower_2.png",
+
+                title:
+                    "FLOWER 02"
+            },
+
+            {
+                image:
+                    "./images/gallery/flower_3.png",
+
+                title:
+                    "FLOWER 03"
+            },
+
+            {
+                image:
+                    "./images/gallery/flower_4.png",
+
+                title:
+                    "FLOWER 04"
+            },
+
+            {
+                image:
+                    "./images/gallery/flower_5.png",
+
+                title:
+                    "FLOWER 05"
+            }
+
+        ];
+
+
+        /* =========================================
+           BUILD GALLERY
+        ========================================= */
+
+        const gallery =
+            document.getElementById("gallery");
+
+
+        artworks.forEach(
+            function (artwork, index) {
+
+                const item =
+                    document.createElement("article");
+
+                item.className =
+                    "gallery-item";
+
+
+                const imageButton =
+                    document.createElement("button");
+
+                imageButton.className =
+                    "artwork-button";
+
+                imageButton.type =
+                    "button";
+
+                imageButton.setAttribute(
+                    "aria-label",
+                    "View " + artwork.title
+                );
+
+
+                const image =
+                    document.createElement("img");
+
+                image.className =
+                    "artwork-image";
+
+                image.src =
+                    artwork.image;
+
+                image.alt =
+                    artwork.title;
+
+                image.loading =
+                    "lazy";
+
+
+                imageButton.appendChild(
+                    image
+                );
+
+
+                const information =
+                    document.createElement("div");
+
+                information.className =
+                    "artwork-information";
+
+
+                const number =
+                    document.createElement("span");
+
+                number.className =
+                    "artwork-number";
+
+                number.textContent =
+                    String(index + 1)
+                        .padStart(2, "0");
+
+
+                const title =
+                    document.createElement("span");
+
+                title.className =
+                    "artwork-title";
+
+                title.textContent =
+                    artwork.title;
+
+
+                information.appendChild(
+                    number
+                );
+
+                information.appendChild(
+                    title
+                );
+
+
+                item.appendChild(
+                    imageButton
+                );
+
+                item.appendChild(
+                    information
+                );
+
+
+                imageButton.addEventListener(
+                    "click",
+                    function () {
+
+                        openLightbox(
+                            artwork,
+                            index
+                        );
+
+                    }
+                );
+
+
+                gallery.appendChild(
+                    item
+                );
+
+            }
+        );
+
+
+        /* =========================================
+           LIGHTBOX
+        ========================================= */
+
+        const lightbox =
+            document.getElementById("lightbox");
+
+        const lightboxImage =
+            document.getElementById("lightbox-image");
+
+        const lightboxTitle =
+            document.getElementById("lightbox-title");
+
+        const lightboxNumber =
+            document.getElementById("lightbox-number");
+
+        const lightboxClose =
+            document.getElementById("lightbox-close");
+
+
+        function openLightbox(
+            artwork,
+            index
+        ) {
+
+            lightboxImage.src =
+                artwork.image;
+
+            lightboxImage.alt =
+                artwork.title;
+
+            lightboxTitle.textContent =
+                artwork.title;
+
+            lightboxNumber.textContent =
+                String(index + 1)
+                    .padStart(2, "0");
+
+
+            lightbox.classList.add(
+                "is-open"
+            );
+
+
+            lightbox.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+
+            document.body.classList.add(
+                "lightbox-open"
+            );
+
+        }
+
+
+        function closeLightbox() {
+
+            lightbox.classList.remove(
+                "is-open"
+            );
+
+
+            lightbox.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+
+            document.body.classList.remove(
+                "lightbox-open"
+            );
+
+        }
+
+
+        lightboxClose.addEventListener(
+            "click",
+            closeLightbox
+        );
+
+
+        lightbox.addEventListener(
+            "click",
+            function (event) {
+
+                if (
+                    event.target === lightbox
+                ) {
+
+                    closeLightbox();
+
+                }
+
+            }
+        );
+
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape"
+                ) {
+
+                    closeLightbox();
+
+                }
+
+            }
+        );
+
+    </script>
+
+</body>
+
+</html>

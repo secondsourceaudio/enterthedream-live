@@ -34,6 +34,9 @@ body {
 body {
     min-height: 100vh;
 
+    display: flex;
+    flex-direction: column;
+
     font-family:
         "Microgramma",
         Arial,
@@ -74,6 +77,8 @@ body {
 ========================================= */
 
 .landing {
+    flex: 1;
+
     width: 100%;
 
     padding:
@@ -229,6 +234,58 @@ body {
 
 
 /* =========================================
+   LEGAL FOOTER
+========================================= */
+
+.legal-footer {
+    width: 100%;
+
+    padding:
+        28px
+        32px
+        32px;
+
+    border-top:
+        1px solid
+        rgba(255, 255, 255, 0.07);
+
+    color: #555555;
+}
+
+
+.legal-footer p {
+    margin: 0;
+}
+
+
+.copyright-line {
+    font-size: 7px;
+
+    letter-spacing: 0.22em;
+}
+
+
+.legal-line {
+    max-width: 950px;
+
+    margin-top: 10px !important;
+
+    color: #3d3d3d;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    font-size: 7px;
+
+    line-height: 1.6;
+
+    letter-spacing: 0.06em;
+}
+
+
+/* =========================================
    LARGE DESKTOP
 ========================================= */
 
@@ -365,6 +422,28 @@ body {
         margin-top: 35px;
 
         font-size: 8px;
+    }
+
+
+    .legal-footer {
+        padding:
+            24px
+            20px
+            28px;
+    }
+
+
+    .copyright-line {
+        font-size: 6px;
+
+        line-height: 1.6;
+    }
+
+
+    .legal-line {
+        font-size: 6px;
+
+        line-height: 1.7;
     }
 
 }
