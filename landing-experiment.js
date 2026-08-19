@@ -1,0 +1,2276 @@
+/* =========================================
+   SECOND SOURCE
+   TEMPORARY LANDING EXPERIMENT
+========================================= */
+
+
+const canvas =
+    document.getElementById(
+        "visual"
+    );
+
+
+const container =
+    document.getElementById(
+        "visual-container"
+    );
+
+
+const visualMedia =
+    document.getElementById(
+        "visual-media"
+    );
+
+
+const fallbackImage =
+    document.getElementById(
+        "fallback-image"
+    );
+
+
+/* =========================================
+   HELPERS
+========================================= */
+
+function clamp(
+    value,
+    minimum,
+    maximum
+) {
+
+    return Math.max(
+        minimum,
+        Math.min(
+            maximum,
+            value
+        )
+    );
+
+}
+
+
+/* =========================================
+   PINCH ZOOM
+========================================= */
+
+let viewScale = 1;
+
+let viewX = 0;
+let viewY = 0;
+
+
+const viewPointers =
+    new Map();
+
+
+let pinchStartDistance = 0;
+let pinchStartScale = 1;
+
+let pinchStartX = 0;
+let pinchStartY = 0;
+
+let pinchStartViewX = 0;
+let pinchStartViewY = 0;
+
+
+let panStartX = 0;
+let panStartY = 0;
+
+let panOriginalX = 0;
+let panOriginalY = 0;
+
+let panning = false;
+
+
+/* =========================================
+   DRAG DETECTION
+========================================= */
+
+let dragPointerId = null;
+
+let dragOriginX = 0;
+let dragOriginY = 0;
+
+let dragHasStarted = false;
+
+
+/*
+   Prevents the whirl from snapping
+   immediately when clicking.
+*/
+
+const dragThreshold = 7;
+
+
+/* =========================================
+   LIMIT PAN
+========================================= */
+
+function limitViewPan() {
+
+    if (
+        viewScale <= 1
+    ) {
+
+        viewScale = 1;
+
+        viewX = 0;
+        viewY = 0;
+
+        return;
+
+    }
+
+
+    const maxX =
+        container.clientWidth
+        *
+        (
+            viewScale - 1
+        )
+        /
+        2;
+
+
+    const maxY =
+        container.clientHeight
+        *
+        (
+            viewScale - 1
+        )
+        /
+        2;
+
+
+    viewX =
+        clamp(
+            viewX,
+            -maxX,
+            maxX
+        );
+
+
+    viewY =
+        clamp(
+            viewY,
+            -maxY,
+            maxY
+        );
+
+}
+
+
+/* =========================================
+   APPLY ZOOM
+========================================= */
+
+function updateViewTransform() {
+
+    limitViewPan();
+
+
+    visualMedia.style.transform =
+        `
+            translate3d(
+                ${viewX}px,
+                ${viewY}px,
+                0
+            )
+            scale(${viewScale})
+        `;
+
+}
+
+
+/* =========================================
+   PINCH HELPERS
+========================================= */
+
+function viewPointerDistance() {
+
+    const points =
+        Array.from(
+            viewPointers.values()
+        );
+
+
+    return Math.hypot(
+
+        points[1].x
+        -
+        points[0].x,
+
+        points[1].y
+        -
+        points[0].y
+
+    );
+
+}
+
+
+function viewPointerMidpoint() {
+
+    const points =
+        Array.from(
+            viewPointers.values()
+        );
+
+
+    return {
+
+        x:
+            (
+                points[0].x
+                +
+                points[1].x
+            )
+            /
+            2,
+
+        y:
+            (
+                points[0].y
+                +
+                points[1].y
+            )
+            /
+            2
+
+    };
+
+}
+
+
+/* =========================================
+   PREVENT BROWSER DOUBLE-CLICK ZOOM
+========================================= */
+
+container.addEventListener(
+    "dblclick",
+    function (event) {
+
+        event.preventDefault();
+
+    }
+);
+
+
+/* =========================================
+   WEBGL
+========================================= */
+
+const gl =
+    canvas.getContext(
+        "webgl",
+        {
+            antialias: true,
+            alpha: true
+        }
+    );
+
+
+if (!gl) {
+
+    canvas.style.display =
+        "none";
+
+}
+
+
+/* =========================================
+   WEBGL PROGRAM
+========================================= */
+
+if (gl) {
+
+    const vertexShaderSource = `
+
+        attribute vec2 a_position;
+
+        varying vec2 v_uv;
+
+
+        void main() {
+
+            v_uv =
+                a_position
+                *
+                0.5
+                +
+                0.5;
+
+
+            gl_Position =
+                vec4(
+                    a_position,
+                    0.0,
+                    1.0
+                );
+
+        }
+
+    `;
+
+
+    const fragmentShaderSource = `
+
+        precision mediump float;
+
+
+        varying vec2 v_uv;
+
+
+        uniform sampler2D u_texture;
+
+        uniform vec2 u_pointer;
+
+        uniform vec2 u_velocity;
+
+        uniform vec2 u_dripCenter;
+
+        uniform float u_time;
+
+        uniform float u_motion;
+
+        uniform float u_dripAge;
+
+        uniform float u_dragging;
+
+
+        mat2 rotate2D(
+            float angle
+        ) {
+
+            float s =
+                sin(
+                    angle
+                );
+
+
+            float c =
+                cos(
+                    angle
+                );
+
+
+            return mat2(
+                c, -s,
+                s,  c
+            );
+
+        }
+
+
+        void main() {
+
+            vec2 baseUV =
+                v_uv;
+
+
+            vec2 uv =
+                baseUV;
+
+
+            /* =================================
+               CONSTANT CENTER BUBBLING
+            ================================= */
+
+
+            vec2 center =
+                vec2(
+                    0.5,
+                    0.5
+                );
+
+
+            vec2 centerDelta =
+                baseUV
+                -
+                center;
+
+
+            float centerDistance =
+                length(
+                    centerDelta
+                );
+
+
+            vec2 centerDirection =
+                normalize(
+                    centerDelta
+                    +
+                    vec2(
+                        0.0001
+                    )
+                );
+
+
+            float bubbleOne =
+                sin(
+                    centerDistance
+                    *
+                    50.0
+                    -
+                    u_time
+                    *
+                    3.1
+                );
+
+
+            float bubbleTwo =
+                sin(
+                    centerDistance
+                    *
+                    29.0
+                    -
+                    u_time
+                    *
+                    2.0
+                );
+
+
+            float bubbleThree =
+                sin(
+                    centerDistance
+                    *
+                    76.0
+                    -
+                    u_time
+                    *
+                    4.1
+                );
+
+
+            float centerBubble =
+                bubbleOne
+                *
+                0.50
+
+                +
+
+                bubbleTwo
+                *
+                0.32
+
+                +
+
+                bubbleThree
+                *
+                0.18;
+
+
+            float centerInfluence =
+                smoothstep(
+                    0.75,
+                    0.03,
+                    centerDistance
+                );
+
+
+            uv +=
+                centerDirection
+                *
+                centerBubble
+                *
+                centerInfluence
+                *
+                0.0045;
+
+
+            /* =================================
+               SUBTLE 90s WAVING
+            ================================= */
+
+
+            float waveX =
+                sin(
+                    baseUV.y
+                    *
+                    8.0
+                    -
+                    u_time
+                    *
+                    1.15
+                )
+                *
+                0.0040;
+
+
+            float waveY =
+                cos(
+                    baseUV.x
+                    *
+                    6.5
+                    -
+                    u_time
+                    *
+                    0.9
+                )
+                *
+                0.0022;
+
+
+            float fineWave =
+                sin(
+                    baseUV.y
+                    *
+                    16.0
+                    +
+                    u_time
+                    *
+                    1.6
+                )
+                *
+                0.0010;
+
+
+            uv.x +=
+                waveX
+                +
+                fineWave;
+
+
+            uv.y +=
+                waveY;
+
+
+            /* =================================
+               POINTER FIELD
+            ================================= */
+
+
+            vec2 pointerDelta =
+                baseUV
+                -
+                u_pointer;
+
+
+            float pointerDistance =
+                length(
+                    pointerDelta
+                );
+
+
+            float pointerInfluence =
+                smoothstep(
+                    0.35,
+                    0.0,
+                    pointerDistance
+                );
+
+
+            vec2 pointerDirection =
+                normalize(
+                    pointerDelta
+                    +
+                    vec2(
+                        0.0001
+                    )
+                );
+
+
+            /* =================================
+               SMOOTH WHIRL WHILE DRAGGING
+            ================================= */
+
+
+            float velocityMagnitude =
+                min(
+                    length(
+                        u_velocity
+                    )
+                    *
+                    20.0,
+                    1.0
+                );
+
+
+            float whirlFade =
+                exp(
+                    -pointerDistance
+                    *
+                    5.2
+                );
+
+
+            float whirlDirection =
+                sign(
+                    u_velocity.x
+                    -
+                    u_velocity.y
+                    +
+                    0.0001
+                );
+
+
+            float whirlAngle =
+                whirlDirection
+                *
+                u_dragging
+                *
+                whirlFade
+                *
+                (
+                    0.08
+                    +
+                    u_motion
+                    *
+                    0.70
+                    +
+                    velocityMagnitude
+                    *
+                    0.42
+                );
+
+
+            vec2 whirledDelta =
+                rotate2D(
+                    whirlAngle
+                )
+                *
+                pointerDelta;
+
+
+            uv +=
+                (
+                    whirledDelta
+                    -
+                    pointerDelta
+                )
+                *
+                pointerInfluence
+                *
+                0.30;
+
+
+            /* =================================
+               POINTER WATER
+            ================================= */
+
+
+            float pointerWaveOne =
+                sin(
+                    pointerDistance
+                    *
+                    59.0
+                    -
+                    u_time
+                    *
+                    6.8
+                );
+
+
+            float pointerWaveTwo =
+                sin(
+                    pointerDistance
+                    *
+                    27.0
+                    -
+                    u_time
+                    *
+                    3.8
+                );
+
+
+            float pointerWave =
+                pointerWaveOne
+                *
+                0.68
+
+                +
+
+                pointerWaveTwo
+                *
+                0.32;
+
+
+            uv +=
+                pointerDirection
+                *
+                pointerWave
+                *
+                pointerInfluence
+                *
+                (
+                    0.0045
+                    +
+                    u_motion
+                    *
+                    0.017
+                );
+
+
+            /* =================================
+               SOFT LIQUID DRAG
+            ================================= */
+
+
+            uv -=
+                u_velocity
+                *
+                pointerInfluence
+                *
+                (
+                    0.08
+                    +
+                    u_motion
+                    *
+                    0.20
+                );
+
+
+            /* =================================
+               DRIP ON CLICK / TAP
+            ================================= */
+
+
+            vec2 dripDelta =
+                baseUV
+                -
+                u_dripCenter;
+
+
+            float dripDistance =
+                length(
+                    dripDelta
+                );
+
+
+            vec2 dripDirection =
+                normalize(
+                    dripDelta
+                    +
+                    vec2(
+                        0.0001
+                    )
+                );
+
+
+            float dripRadius =
+                u_dripAge
+                *
+                0.33;
+
+
+            float dripLife =
+                clamp(
+                    1.0
+                    -
+                    u_dripAge
+                    /
+                    2.6,
+                    0.0,
+                    1.0
+                );
+
+
+            float dripRing =
+                exp(
+                    -abs(
+                        dripDistance
+                        -
+                        dripRadius
+                    )
+                    *
+                    58.0
+                )
+                *
+                dripLife;
+
+
+            float secondRadius =
+                max(
+                    0.0,
+                    dripRadius
+                    -
+                    0.055
+                );
+
+
+            float secondRing =
+                exp(
+                    -abs(
+                        dripDistance
+                        -
+                        secondRadius
+                    )
+                    *
+                    72.0
+                )
+                *
+                dripLife
+                *
+                0.45;
+
+
+            float impact =
+                exp(
+                    -dripDistance
+                    *
+                    24.0
+                )
+                *
+                exp(
+                    -u_dripAge
+                    *
+                    4.0
+                );
+
+
+            uv +=
+                dripDirection
+                *
+                dripRing
+                *
+                0.050;
+
+
+            uv +=
+                dripDirection
+                *
+                secondRing
+                *
+                0.022;
+
+
+            uv -=
+                dripDelta
+                *
+                impact
+                *
+                0.10;
+
+
+            /* =================================
+               SAFE IMAGE AREA
+            ================================= */
+
+
+            uv =
+                clamp(
+                    uv,
+                    vec2(
+                        0.002
+                    ),
+                    vec2(
+                        0.998
+                    )
+                );
+
+
+            /* =================================
+               ORIGINAL COLOURS
+            ================================= */
+
+
+            vec4 mainSample =
+                texture2D(
+                    u_texture,
+                    uv
+                );
+
+
+            vec4 draggedSample =
+                texture2D(
+
+                    u_texture,
+
+                    clamp(
+
+                        uv
+                        -
+                        u_velocity
+                        *
+                        pointerInfluence
+                        *
+                        0.35,
+
+                        vec2(
+                            0.002
+                        ),
+
+                        vec2(
+                            0.998
+                        )
+
+                    )
+
+                );
+
+
+            float dragBlend =
+                clamp(
+                    u_motion
+                    *
+                    pointerInfluence
+                    *
+                    0.12,
+                    0.0,
+                    0.12
+                );
+
+
+            gl_FragColor =
+                mix(
+                    mainSample,
+                    draggedSample,
+                    dragBlend
+                );
+
+        }
+
+    `;
+
+
+    /* =========================================
+       CREATE SHADER
+    ========================================== */
+
+    function createShader(
+        type,
+        source
+    ) {
+
+        const shader =
+            gl.createShader(
+                type
+            );
+
+
+        gl.shaderSource(
+            shader,
+            source
+        );
+
+
+        gl.compileShader(
+            shader
+        );
+
+
+        if (
+            !gl.getShaderParameter(
+                shader,
+                gl.COMPILE_STATUS
+            )
+        ) {
+
+            console.error(
+                gl.getShaderInfoLog(
+                    shader
+                )
+            );
+
+
+            return null;
+
+        }
+
+
+        return shader;
+
+    }
+
+
+    const vertexShader =
+        createShader(
+            gl.VERTEX_SHADER,
+            vertexShaderSource
+        );
+
+
+    const fragmentShader =
+        createShader(
+            gl.FRAGMENT_SHADER,
+            fragmentShaderSource
+        );
+
+
+    if (
+        vertexShader
+        &&
+        fragmentShader
+    ) {
+
+        const program =
+            gl.createProgram();
+
+
+        gl.attachShader(
+            program,
+            vertexShader
+        );
+
+
+        gl.attachShader(
+            program,
+            fragmentShader
+        );
+
+
+        gl.linkProgram(
+            program
+        );
+
+
+        if (
+            gl.getProgramParameter(
+                program,
+                gl.LINK_STATUS
+            )
+        ) {
+
+            gl.useProgram(
+                program
+            );
+
+
+            /* =================================
+               PLANE
+            ================================= */
+
+
+            const buffer =
+                gl.createBuffer();
+
+
+            gl.bindBuffer(
+                gl.ARRAY_BUFFER,
+                buffer
+            );
+
+
+            gl.bufferData(
+
+                gl.ARRAY_BUFFER,
+
+                new Float32Array([
+
+                    -1, -1,
+                     1, -1,
+                    -1,  1,
+
+                    -1,  1,
+                     1, -1,
+                     1,  1
+
+                ]),
+
+                gl.STATIC_DRAW
+
+            );
+
+
+            const position =
+                gl.getAttribLocation(
+                    program,
+                    "a_position"
+                );
+
+
+            gl.enableVertexAttribArray(
+                position
+            );
+
+
+            gl.vertexAttribPointer(
+                position,
+                2,
+                gl.FLOAT,
+                false,
+                0,
+                0
+            );
+
+
+            /* =================================
+               UNIFORMS
+            ================================= */
+
+
+            const pointerUniform =
+                gl.getUniformLocation(
+                    program,
+                    "u_pointer"
+                );
+
+
+            const velocityUniform =
+                gl.getUniformLocation(
+                    program,
+                    "u_velocity"
+                );
+
+
+            const dripCenterUniform =
+                gl.getUniformLocation(
+                    program,
+                    "u_dripCenter"
+                );
+
+
+            const timeUniform =
+                gl.getUniformLocation(
+                    program,
+                    "u_time"
+                );
+
+
+            const motionUniform =
+                gl.getUniformLocation(
+                    program,
+                    "u_motion"
+                );
+
+
+            const dripAgeUniform =
+                gl.getUniformLocation(
+                    program,
+                    "u_dripAge"
+                );
+
+
+            const draggingUniform =
+                gl.getUniformLocation(
+                    program,
+                    "u_dragging"
+                );
+
+
+            const textureUniform =
+                gl.getUniformLocation(
+                    program,
+                    "u_texture"
+                );
+
+
+            /* =================================
+               TEXTURE
+            ================================= */
+
+
+            const texture =
+                gl.createTexture();
+
+
+            gl.activeTexture(
+                gl.TEXTURE0
+            );
+
+
+            gl.bindTexture(
+                gl.TEXTURE_2D,
+                texture
+            );
+
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_WRAP_S,
+                gl.CLAMP_TO_EDGE
+            );
+
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_WRAP_T,
+                gl.CLAMP_TO_EDGE
+            );
+
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_MIN_FILTER,
+                gl.LINEAR
+            );
+
+
+            gl.texParameteri(
+                gl.TEXTURE_2D,
+                gl.TEXTURE_MAG_FILTER,
+                gl.LINEAR
+            );
+
+
+            gl.uniform1i(
+                textureUniform,
+                0
+            );
+
+
+            /* =================================
+               ARTWORK
+            ================================= */
+
+
+            let imageReady =
+                false;
+
+
+            function uploadArtworkTexture() {
+
+                const maximum =
+                    Math.min(
+                        1800,
+                        gl.getParameter(
+                            gl.MAX_TEXTURE_SIZE
+                        )
+                    );
+
+
+                let width =
+                    fallbackImage.naturalWidth;
+
+
+                let height =
+                    fallbackImage.naturalHeight;
+
+
+                const longest =
+                    Math.max(
+                        width,
+                        height
+                    );
+
+
+                if (
+                    longest
+                    >
+                    maximum
+                ) {
+
+                    const resizeScale =
+                        maximum
+                        /
+                        longest;
+
+
+                    width =
+                        Math.round(
+                            width
+                            *
+                            resizeScale
+                        );
+
+
+                    height =
+                        Math.round(
+                            height
+                            *
+                            resizeScale
+                        );
+
+                }
+
+
+                const textureCanvas =
+                    document.createElement(
+                        "canvas"
+                    );
+
+
+                textureCanvas.width =
+                    width;
+
+
+                textureCanvas.height =
+                    height;
+
+
+                const context =
+                    textureCanvas.getContext(
+                        "2d"
+                    );
+
+
+                context.drawImage(
+                    fallbackImage,
+                    0,
+                    0,
+                    width,
+                    height
+                );
+
+
+                gl.pixelStorei(
+                    gl.UNPACK_FLIP_Y_WEBGL,
+                    true
+                );
+
+
+                gl.bindTexture(
+                    gl.TEXTURE_2D,
+                    texture
+                );
+
+
+                gl.texImage2D(
+
+                    gl.TEXTURE_2D,
+
+                    0,
+
+                    gl.RGBA,
+
+                    gl.RGBA,
+
+                    gl.UNSIGNED_BYTE,
+
+                    textureCanvas
+
+                );
+
+
+                imageReady =
+                    true;
+
+
+                canvas.classList.add(
+                    "is-ready"
+                );
+
+            }
+
+
+            if (
+                fallbackImage.complete
+                &&
+                fallbackImage.naturalWidth > 0
+            ) {
+
+                uploadArtworkTexture();
+
+            }
+
+            else {
+
+                fallbackImage.addEventListener(
+                    "load",
+                    uploadArtworkTexture,
+                    {
+                        once: true
+                    }
+                );
+
+            }
+
+
+            /* =================================
+               SMOOTH POINTER
+            ================================= */
+
+
+            let pointerX = 0.5;
+            let pointerY = 0.5;
+
+
+            let targetPointerX = 0.5;
+            let targetPointerY = 0.5;
+
+
+            let velocityX = 0;
+            let velocityY = 0;
+
+
+            let targetVelocityX = 0;
+            let targetVelocityY = 0;
+
+
+            let motion = 0;
+            let targetMotion = 0;
+
+
+            let draggingAmount = 0;
+            let targetDraggingAmount = 0;
+
+
+            /* =================================
+               DRIP
+            ================================= */
+
+
+            let dripX = 0.5;
+            let dripY = 0.5;
+
+
+            let dripStarted =
+                -10000;
+
+
+            /* =================================
+               UPDATE POINTER
+            ================================= */
+
+
+            function updateShaderPointer(
+                clientX,
+                clientY
+            ) {
+
+                const rect =
+                    container
+                        .getBoundingClientRect();
+
+
+                const nextX =
+                    clamp(
+
+                        (
+                            clientX
+                            -
+                            rect.left
+                        )
+                        /
+                        rect.width,
+
+                        0,
+                        1
+
+                    );
+
+
+                const nextY =
+                    clamp(
+
+                        1
+                        -
+                        (
+                            clientY
+                            -
+                            rect.top
+                        )
+                        /
+                        rect.height,
+
+                        0,
+                        1
+
+                    );
+
+
+                const deltaX =
+                    nextX
+                    -
+                    targetPointerX;
+
+
+                const deltaY =
+                    nextY
+                    -
+                    targetPointerY;
+
+
+                targetPointerX =
+                    nextX;
+
+
+                targetPointerY =
+                    nextY;
+
+
+                targetVelocityX =
+                    clamp(
+                        deltaX
+                        *
+                        1.5,
+                        -0.040,
+                        0.040
+                    );
+
+
+                targetVelocityY =
+                    clamp(
+                        deltaY
+                        *
+                        1.5,
+                        -0.040,
+                        0.040
+                    );
+
+
+                targetMotion =
+                    Math.min(
+                        1,
+                        Math.hypot(
+                            deltaX,
+                            deltaY
+                        )
+                        *
+                        30
+                    );
+
+            }
+
+
+            /* =================================
+               CREATE DRIP
+            ================================= */
+
+
+            function createDrip(
+                clientX,
+                clientY
+            ) {
+
+                const rect =
+                    container
+                        .getBoundingClientRect();
+
+
+                dripX =
+                    clamp(
+
+                        (
+                            clientX
+                            -
+                            rect.left
+                        )
+                        /
+                        rect.width,
+
+                        0,
+                        1
+
+                    );
+
+
+                dripY =
+                    clamp(
+
+                        1
+                        -
+                        (
+                            clientY
+                            -
+                            rect.top
+                        )
+                        /
+                        rect.height,
+
+                        0,
+                        1
+
+                    );
+
+
+                dripStarted =
+                    performance.now();
+
+            }
+
+
+            /* =================================
+               POINTER DOWN
+            ================================= */
+
+
+            container.addEventListener(
+                "pointerdown",
+                function (event) {
+
+                    viewPointers.set(
+
+                        event.pointerId,
+
+                        {
+                            x: event.clientX,
+                            y: event.clientY,
+                            type: event.pointerType
+                        }
+
+                    );
+
+
+                    try {
+
+                        container.setPointerCapture(
+                            event.pointerId
+                        );
+
+                    }
+
+                    catch (error) {
+                    }
+
+
+                    if (
+                        viewPointers.size === 1
+                        &&
+                        viewScale === 1
+                    ) {
+
+                        dragPointerId =
+                            event.pointerId;
+
+
+                        dragOriginX =
+                            event.clientX;
+
+
+                        dragOriginY =
+                            event.clientY;
+
+
+                        dragHasStarted =
+                            false;
+
+
+                        targetDraggingAmount =
+                            0;
+
+
+                        updateShaderPointer(
+                            event.clientX,
+                            event.clientY
+                        );
+
+
+                        createDrip(
+                            event.clientX,
+                            event.clientY
+                        );
+
+                    }
+
+
+                    /* =================================
+                       TWO FINGERS = PINCH
+                    ================================= */
+
+
+                    if (
+                        viewPointers.size === 2
+                    ) {
+
+                        targetDraggingAmount =
+                            0;
+
+
+                        dragHasStarted =
+                            false;
+
+
+                        dragPointerId =
+                            null;
+
+
+                        pinchStartDistance =
+                            viewPointerDistance();
+
+
+                        pinchStartScale =
+                            viewScale;
+
+
+                        const midpoint =
+                            viewPointerMidpoint();
+
+
+                        pinchStartX =
+                            midpoint.x;
+
+
+                        pinchStartY =
+                            midpoint.y;
+
+
+                        pinchStartViewX =
+                            viewX;
+
+
+                        pinchStartViewY =
+                            viewY;
+
+
+                        panning =
+                            false;
+
+                    }
+
+
+                    else if (
+                        viewScale > 1
+                    ) {
+
+                        targetDraggingAmount =
+                            0;
+
+
+                        panning =
+                            true;
+
+
+                        panStartX =
+                            event.clientX;
+
+
+                        panStartY =
+                            event.clientY;
+
+
+                        panOriginalX =
+                            viewX;
+
+
+                        panOriginalY =
+                            viewY;
+
+                    }
+
+                }
+            );
+
+
+            /* =================================
+               POINTER MOVE
+            ================================= */
+
+
+            container.addEventListener(
+                "pointermove",
+                function (event) {
+
+                    if (
+                        viewPointers.has(
+                            event.pointerId
+                        )
+                    ) {
+
+                        viewPointers.set(
+
+                            event.pointerId,
+
+                            {
+                                x: event.clientX,
+                                y: event.clientY,
+                                type: event.pointerType
+                            }
+
+                        );
+
+                    }
+
+
+                    /* =================================
+                       PINCH ZOOM
+                    ================================= */
+
+
+                    if (
+                        viewPointers.size === 2
+                    ) {
+
+                        targetDraggingAmount =
+                            0;
+
+
+                        const distance =
+                            viewPointerDistance();
+
+
+                        const midpoint =
+                            viewPointerMidpoint();
+
+
+                        viewScale =
+                            clamp(
+
+                                pinchStartScale
+                                *
+                                (
+                                    distance
+                                    /
+                                    pinchStartDistance
+                                ),
+
+                                1,
+                                3.5
+
+                            );
+
+
+                        viewX =
+                            pinchStartViewX
+                            +
+                            (
+                                midpoint.x
+                                -
+                                pinchStartX
+                            );
+
+
+                        viewY =
+                            pinchStartViewY
+                            +
+                            (
+                                midpoint.y
+                                -
+                                pinchStartY
+                            );
+
+
+                        updateViewTransform();
+
+
+                        return;
+
+                    }
+
+
+                    /* =================================
+                       PAN WHILE ZOOMED
+                    ================================= */
+
+
+                    if (
+                        panning
+                        &&
+                        viewScale > 1
+                    ) {
+
+                        targetDraggingAmount =
+                            0;
+
+
+                        viewX =
+                            panOriginalX
+                            +
+                            (
+                                event.clientX
+                                -
+                                panStartX
+                            );
+
+
+                        viewY =
+                            panOriginalY
+                            +
+                            (
+                                event.clientY
+                                -
+                                panStartY
+                            );
+
+
+                        updateViewTransform();
+
+
+                        return;
+
+                    }
+
+
+                    if (
+                        viewScale !== 1
+                    ) {
+
+                        return;
+
+                    }
+
+
+                    /* =================================
+                       MOUSE HOVER
+                    ================================= */
+
+
+                    if (
+                        event.pointerType === "mouse"
+                        &&
+                        !viewPointers.has(
+                            event.pointerId
+                        )
+                    ) {
+
+                        targetDraggingAmount =
+                            0;
+
+
+                        updateShaderPointer(
+                            event.clientX,
+                            event.clientY
+                        );
+
+
+                        return;
+
+                    }
+
+
+                    /* =================================
+                       HELD DRAG
+                    ================================= */
+
+
+                    if (
+                        viewPointers.has(
+                            event.pointerId
+                        )
+                    ) {
+
+                        if (
+                            event.pointerId
+                            ===
+                            dragPointerId
+                        ) {
+
+                            const distanceFromStart =
+                                Math.hypot(
+
+                                    event.clientX
+                                    -
+                                    dragOriginX,
+
+                                    event.clientY
+                                    -
+                                    dragOriginY
+
+                                );
+
+
+                            if (
+                                !dragHasStarted
+                                &&
+                                distanceFromStart
+                                >
+                                dragThreshold
+                            ) {
+
+                                dragHasStarted =
+                                    true;
+
+                            }
+
+
+                            targetDraggingAmount =
+                                dragHasStarted
+                                    ? 1
+                                    : 0;
+
+                        }
+
+
+                        updateShaderPointer(
+                            event.clientX,
+                            event.clientY
+                        );
+
+                    }
+
+                }
+            );
+
+
+            /* =================================
+               RELEASE
+            ================================= */
+
+
+            function releasePointer(
+                event
+            ) {
+
+                viewPointers.delete(
+                    event.pointerId
+                );
+
+
+                if (
+                    event.pointerId
+                    ===
+                    dragPointerId
+                ) {
+
+                    dragPointerId =
+                        null;
+
+
+                    dragHasStarted =
+                        false;
+
+
+                    targetDraggingAmount =
+                        0;
+
+                }
+
+
+                if (
+                    viewPointers.size < 2
+                ) {
+
+                    pinchStartDistance =
+                        0;
+
+                }
+
+
+                if (
+                    viewPointers.size === 0
+                ) {
+
+                    panning =
+                        false;
+
+
+                    targetDraggingAmount =
+                        0;
+
+                }
+
+            }
+
+
+            container.addEventListener(
+                "pointerup",
+                releasePointer
+            );
+
+
+            container.addEventListener(
+                "pointercancel",
+                releasePointer
+            );
+
+
+            /* =================================
+               CANVAS SIZE
+            ================================= */
+
+
+            function resizeCanvas() {
+
+                const ratio =
+                    Math.min(
+                        window.devicePixelRatio
+                        ||
+                        1,
+                        2
+                    );
+
+
+                const width =
+                    Math.floor(
+                        container.clientWidth
+                        *
+                        ratio
+                    );
+
+
+                const height =
+                    Math.floor(
+                        container.clientHeight
+                        *
+                        ratio
+                    );
+
+
+                if (
+                    canvas.width !== width
+                    ||
+                    canvas.height !== height
+                ) {
+
+                    canvas.width =
+                        width;
+
+
+                    canvas.height =
+                        height;
+
+
+                    gl.viewport(
+                        0,
+                        0,
+                        width,
+                        height
+                    );
+
+                }
+
+            }
+
+
+            /* =================================
+               RENDER
+            ================================= */
+
+
+            const start =
+                performance.now();
+
+
+            function render() {
+
+                resizeCanvas();
+
+
+                pointerX +=
+                    (
+                        targetPointerX
+                        -
+                        pointerX
+                    )
+                    *
+                    0.17;
+
+
+                pointerY +=
+                    (
+                        targetPointerY
+                        -
+                        pointerY
+                    )
+                    *
+                    0.17;
+
+
+                velocityX +=
+                    (
+                        targetVelocityX
+                        -
+                        velocityX
+                    )
+                    *
+                    0.12;
+
+
+                velocityY +=
+                    (
+                        targetVelocityY
+                        -
+                        velocityY
+                    )
+                    *
+                    0.12;
+
+
+                motion +=
+                    (
+                        targetMotion
+                        -
+                        motion
+                    )
+                    *
+                    0.10;
+
+
+                draggingAmount +=
+                    (
+                        targetDraggingAmount
+                        -
+                        draggingAmount
+                    )
+                    *
+                    0.09;
+
+
+                targetVelocityX *=
+                    0.82;
+
+
+                targetVelocityY *=
+                    0.82;
+
+
+                targetMotion *=
+                    0.88;
+
+
+                const now =
+                    performance.now();
+
+
+                const time =
+                    (
+                        now
+                        -
+                        start
+                    )
+                    /
+                    1000;
+
+
+                const dripAge =
+                    (
+                        now
+                        -
+                        dripStarted
+                    )
+                    /
+                    1000;
+
+
+                if (
+                    imageReady
+                ) {
+
+                    gl.uniform2f(
+                        pointerUniform,
+                        pointerX,
+                        pointerY
+                    );
+
+
+                    gl.uniform2f(
+                        velocityUniform,
+                        velocityX,
+                        velocityY
+                    );
+
+
+                    gl.uniform2f(
+                        dripCenterUniform,
+                        dripX,
+                        dripY
+                    );
+
+
+                    gl.uniform1f(
+                        timeUniform,
+                        time
+                    );
+
+
+                    gl.uniform1f(
+                        motionUniform,
+                        motion
+                    );
+
+
+                    gl.uniform1f(
+                        dripAgeUniform,
+                        dripAge
+                    );
+
+
+                    gl.uniform1f(
+                        draggingUniform,
+                        draggingAmount
+                    );
+
+
+                    gl.drawArrays(
+                        gl.TRIANGLES,
+                        0,
+                        6
+                    );
+
+                }
+
+
+                requestAnimationFrame(
+                    render
+                );
+
+            }
+
+
+            render();
+
+        }
+
+    }
+
+}

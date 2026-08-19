@@ -1,317 +1,46 @@
-/* =========================================
-   LANDING
-========================================= */
+@font-face {
+    font-family: "Microgramma";
 
-.landing {
-    flex: 1;
-
-    width: 100%;
-
-    padding:
-        68px
-        40px
-        105px;
-}
-
-
-/* =========================================
-   RELEASE
-========================================= */
-
-.release {
-    width: 100%;
-
-    max-width: 1280px;
-
-    margin:
-        0
-        auto;
-
-    text-align: center;
-}
-
-
-/* =========================================
-   RELEASE HEADING
-========================================= */
-
-.release-heading {
-    width: 100%;
-
-    margin:
-        0
-        auto
-        44px;
-}
-
-
-/*
-   NEXT RELEASE stays deliberately small.
-*/
-
-.release-status {
-    margin:
-        0
-        0
-        23px;
-
-    font-size: 10px;
-
-    letter-spacing: 0.3em;
-}
-
-
-/* =========================================
-   CATALOGUE
-========================================= */
-
-.catalogue {
-    margin:
-        0
-        0
-        29px;
-
-    font-size: var(--font-label);
-
-    letter-spacing: 0.24em;
-}
-
-
-/* =========================================
-   ARTIST
-
-   Smaller than release title.
-========================================= */
-
-.release-heading h2 {
-    margin:
-        0
-        0
-        9px;
-
-    font-size:
-        clamp(
-            18px,
-            1.6vw,
-            25px
-        );
+    src:
+        url("./fonts/microgrammanormal.ttf")
+        format("truetype");
 
     font-weight: normal;
-
-    line-height: 1.1;
-
-    letter-spacing: 0.08em;
+    font-style: normal;
 }
 
 
 /* =========================================
-   RELEASE TITLE
-
-   Larger than artist, but intentionally
-   smaller than previous version.
+   RESET
 ========================================= */
 
-.release-heading h1 {
-    margin: 0;
-
-    font-size:
-        clamp(
-            36px,
-            3.2vw,
-            50px
-        );
-
-    font-weight: normal;
-
-    line-height: 1;
-
-    letter-spacing: 0.05em;
+* {
+    box-sizing: border-box;
 }
 
 
-/* =========================================
-   ARTWORK
-========================================= */
-
-.artwork-area {
+html,
+body {
     width: 100%;
+    min-width: 0;
+    min-height: 100%;
 
     margin: 0;
 
-    padding: 18px;
+    overflow-x: hidden;
 
-    display: block;
-
-    background: #0a0a0a;
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.18);
-
-    box-shadow:
-        0
-        22px
-        60px
-        rgba(0, 0, 0, 0.65);
-
-    cursor: zoom-in;
-
-    transition:
-        border-color
-        0.2s ease;
-}
-
-
-.artwork-area:hover {
-    border-color:
-        rgba(
-            255,
-            255,
-            255,
-            0.45
-        );
-}
-
-
-.release-artwork {
-    display: block;
-
-    width: 100%;
-    height: auto;
-
-    margin: 0;
-}
-
-
-/* =========================================
-   ARTWORK INSTRUCTION
-========================================= */
-
-.artwork-instruction {
-    margin:
-        17px
-        0
-        0;
-
-    font-size:
-        var(--font-small);
-
-    letter-spacing: 0.25em;
-
-    opacity: 0.72;
-}
-
-
-/* =========================================
-   COMING SOON
-========================================= */
-
-.coming-soon {
-    margin:
-        45px
-        0
-        0;
-
-    font-size:
-        var(--font-small);
-
-    letter-spacing: 0.3em;
-}
-
-
-/* =========================================
-   VIEWER BODY
-========================================= */
-
-body.viewer-open {
-    overflow: hidden;
-}
-
-
-/* =========================================
-   FULLSCREEN VIEWER
-========================================= */
-
-.artwork-viewer {
-    position: fixed;
-
-    inset: 0;
-
-    z-index: 5000;
-
-    display: none;
-
-    grid-template-rows:
-        64px
-        minmax(0, 1fr)
-        70px;
-
-    width: 100vw;
-
-    height: 100dvh;
-
-    overflow: hidden;
-
-    background:
-        rgba(
-            0,
-            0,
-            0,
-            0.985
-        );
-}
-
-
-.artwork-viewer.is-open {
-    display: grid;
-}
-
-
-/* =========================================
-   VIEWER TOP BAR
-========================================= */
-
-.viewer-topbar {
-    width: 100%;
-
-    padding:
-        0
-        24px;
-
-    display: flex;
-
-    align-items: center;
-
-    justify-content: space-between;
-
-    border-bottom:
-        1px solid
-        rgba(255, 255, 255, 0.18);
-}
-
-
-/* =========================================
-   VIEWER TEXT
-========================================= */
-
-.viewer-title {
-    font-size:
-        var(--font-small);
-
-    letter-spacing: 0.2em;
-}
-
-
-.viewer-text-button {
-    padding:
-        8px
-        4px;
-
+    background: #050505;
     color: #ffffff;
+}
 
-    background: transparent;
 
-    border: none;
+html {
+    touch-action: manipulation;
+}
+
+
+body {
+    min-height: 100dvh;
 
     font-family:
         "Microgramma",
@@ -319,40 +48,67 @@ body.viewer-open {
         Helvetica,
         sans-serif;
 
-    font-size:
-        var(--font-small);
-
-    letter-spacing: 0.2em;
-
-    cursor: pointer;
-}
-
-
-.viewer-text-button:hover {
-    opacity: 0.65;
+    overscroll-behavior-x: none;
 }
 
 
 /* =========================================
-   VIEWER STAGE
+   LANDING
 ========================================= */
 
-.viewer-stage {
-    position: relative;
+.landing-experiment {
+    width: 100%;
+    min-height: 100dvh;
 
-    min-width: 0;
-
-    min-height: 0;
-
-    overflow: hidden;
+    padding:
+        40px
+        24px;
 
     display: flex;
 
-    align-items: center;
+    flex-direction: column;
 
+    align-items: center;
     justify-content: center;
 
-    padding: 18px;
+    gap: 28px;
+
+    overflow: hidden;
+}
+
+
+/* =========================================
+   ARTWORK
+========================================= */
+
+.visual-container {
+    position: relative;
+
+    width:
+        min(
+            78vmin,
+            880px
+        );
+
+    max-width:
+        calc(
+            100vw
+            -
+            48px
+        );
+
+    max-height:
+        calc(
+            100dvh
+            -
+            125px
+        );
+
+    aspect-ratio: 1 / 1;
+
+    overflow: hidden;
+
+    background: #050505;
 
     touch-action: none;
 
@@ -360,33 +116,17 @@ body.viewer-open {
 }
 
 
-.viewer-stage.is-zoomed {
-    cursor: grab;
-}
-
-
 /* =========================================
-   VIEWER IMAGE
+   ZOOMABLE MEDIA
 ========================================= */
 
-.viewer-image {
-    display: block;
+.visual-media {
+    position: absolute;
 
-    max-width: 94%;
+    inset: 0;
 
-    max-height: 94%;
-
-    width: auto;
-
-    height: auto;
-
-    object-fit: contain;
-
-    user-select: none;
-
-    -webkit-user-select: none;
-
-    -webkit-touch-callout: none;
+    width: 100%;
+    height: 100%;
 
     transform-origin:
         center
@@ -397,126 +137,75 @@ body.viewer-open {
 
 
 /* =========================================
-   VIEWER CONTROLS
+   FALLBACK IMAGE
 ========================================= */
 
-.viewer-controls {
+.fallback-image {
+    position: absolute;
+
+    inset: 0;
+
+    display: block;
+
     width: 100%;
+    height: 100%;
 
-    display: flex;
+    object-fit: cover;
 
-    align-items: center;
+    user-select: none;
+    -webkit-user-select: none;
 
-    justify-content: center;
+    -webkit-touch-callout: none;
 
-    gap: 18px;
-
-    border-top:
-        1px solid
-        rgba(255, 255, 255, 0.18);
+    pointer-events: none;
 }
 
 
 /* =========================================
-   + / -
+   WEBGL
 ========================================= */
 
-.viewer-control-button {
-    width: 36px;
+.visual-canvas {
+    position: absolute;
 
-    height: 36px;
+    inset: 0;
 
-    padding: 0;
+    z-index: 2;
+
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    opacity: 0;
+
+    transition:
+        opacity
+        0.4s ease;
+
+    touch-action: none;
+}
+
+
+.visual-canvas.is-ready {
+    opacity: 1;
+}
+
+
+/* =========================================
+   TBA
+========================================= */
+
+.tba {
+    margin: 0;
 
     color: #ffffff;
 
-    background: transparent;
+    font-size: 12px;
 
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.3);
-
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-    font-size: 22px;
-
-    cursor: pointer;
-}
-
-
-.viewer-control-button:hover {
-    border-color: #ffffff;
-}
-
-
-/* =========================================
-   ZOOM %
-========================================= */
-
-.zoom-value {
-    min-width: 58px;
-
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-    font-size: 11px;
+    letter-spacing: 0.28em;
 
     text-align: center;
-}
-
-
-/* =========================================
-   RESET
-========================================= */
-
-.viewer-reset {
-    padding:
-        8px
-        5px;
-
-    color: #ffffff;
-
-    background: transparent;
-
-    border: none;
-
-    font-family:
-        "Microgramma",
-        Arial,
-        Helvetica,
-        sans-serif;
-
-    font-size:
-        var(--font-small);
-
-    letter-spacing: 0.2em;
-
-    cursor: pointer;
-}
-
-
-.viewer-reset:hover {
-    opacity: 0.65;
-}
-
-
-/* =========================================
-   LARGE DESKTOP
-========================================= */
-
-@media (min-width: 1400px) {
-
-    .landing {
-        padding-left: 55px;
-
-        padding-right: 55px;
-    }
-
 }
 
 
@@ -526,28 +215,55 @@ body.viewer-open {
 
 @media (max-width: 750px) {
 
-    /* =====================================
-       LANDING
-    ====================================== */
-
-    .landing {
+    html,
+    body {
         width: 100%;
 
         max-width: 100vw;
-
-        padding:
-            45px
-            14px
-            75px;
 
         overflow-x: hidden;
     }
 
 
-    .release {
+    .landing-experiment {
         width: 100%;
 
+        min-height: 100dvh;
+
+        padding:
+            18px
+            12px
+            24px;
+
+        gap: 24px;
+
+        justify-content: center;
+    }
+
+
+    .visual-container {
+        width:
+            min(
+                calc(
+                    100vw
+                    -
+                    24px
+                ),
+                calc(
+                    100dvh
+                    -
+                    100px
+                )
+            );
+
         max-width: 100%;
+
+        max-height:
+            calc(
+                100dvh
+                -
+                100px
+            );
 
         margin:
             0
@@ -555,127 +271,10 @@ body.viewer-open {
     }
 
 
-    /* =====================================
-       RELEASE HEADING
-    ====================================== */
+    .tba {
+        font-size: 11px;
 
-    .release-heading {
-        margin-bottom: 34px;
-    }
-
-
-    .release-status {
-        margin-bottom: 19px;
-
-        font-size: 8px;
-    }
-
-
-    .catalogue {
-        margin-bottom: 24px;
-    }
-
-
-    /* =====================================
-       ARTIST
-    ====================================== */
-
-    .release-heading h2 {
-        margin-bottom: 8px;
-
-        font-size: 18px;
-    }
-
-
-    /* =====================================
-       RELEASE TITLE
-    ====================================== */
-
-    .release-heading h1 {
-        font-size: 36px;
-    }
-
-
-    /* =====================================
-       ARTWORK
-    ====================================== */
-
-    .artwork-area {
-        width: 100%;
-
-        max-width: 100%;
-
-        padding: 8px;
-    }
-
-
-    .artwork-instruction {
-        margin-top: 14px;
-    }
-
-
-    .coming-soon {
-        margin-top: 35px;
-    }
-
-
-    /* =====================================
-       VIEWER
-    ====================================== */
-
-    .artwork-viewer {
-        width: 100vw;
-
-        max-width: 100vw;
-
-        grid-template-rows:
-            58px
-            minmax(0, 1fr)
-            68px;
-    }
-
-
-    .viewer-topbar {
-        padding:
-            0
-            14px;
-    }
-
-
-    .viewer-title {
-        max-width: 68%;
-
-        overflow: hidden;
-
-        text-overflow: ellipsis;
-
-        white-space: nowrap;
-    }
-
-
-    .viewer-stage {
-        width: 100%;
-
-        padding: 8px;
-    }
-
-
-    .viewer-image {
-        max-width: 98%;
-
-        max-height: 98%;
-    }
-
-
-    .viewer-controls {
-        gap: 14px;
-    }
-
-
-    .viewer-control-button {
-        width: 36px;
-
-        height: 36px;
+        letter-spacing: 0.25em;
     }
 
 }
