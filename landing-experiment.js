@@ -524,124 +524,178 @@ if (gl) {
 
 
             /* =================================
-               4. CURSOR-CENTERED WHIRL
-            ================================= */
+               /* =================================
+   4. CURSOR-CENTERED WHIRL
+================================= */
 
 
-            float whirlFalloff =
-                exp(
-                    -pointerDistance *
-                    4.0
-                );
+/*
+   The vortex sits directly under
+   the cursor/finger.
+*/
+
+float whirlFalloff =
+    exp(
+        -pointerDistance *
+        4.6
+    );
 
 
-            float speed =
-                clamp(
-                    length(
-                        u_velocity
-                    )
-                    *
-                    22.0,
-                    0.0,
-                    1.0
-                );
+float speed =
+    clamp(
+        length(
+            u_velocity
+        )
+        *
+        24.0,
+        0.0,
+        1.0
+    );
 
 
-            float totalWhirl =
-                clamp(
+float totalWhirl =
+    clamp(
 
-                    u_dragging * 0.72 +
-                    u_whirlEnergy * 0.48,
+        u_dragging * 0.78 +
+        u_whirlEnergy * 0.38,
 
-                    0.0,
-                    1.25
+        0.0,
+        1.2
 
-                );
-
-
-            /*
-               Rotate texture coordinates around
-               the exact cursor location.
-            */
+    );
 
 
-            float rotationAngle =
-                u_whirlSpin *
-                totalWhirl *
-                whirlFalloff *
-                (
-                    0.12 +
-                    speed * 0.55 +
-                    u_motion * 0.30
-                );
+/*
+   Rotate the image locally around
+   the cursor.
+*/
+
+float rotationAngle =
+    u_whirlSpin *
+    totalWhirl *
+    whirlFalloff *
+    (
+        0.16 +
+        speed * 0.72 +
+        u_motion * 0.28
+    );
 
 
-            vec2 rotatedDelta =
-                rotate2D(
-                    rotationAngle
-                )
-                *
-                pointerDelta;
+vec2 rotatedDelta =
+    rotate2D(
+        rotationAngle
+    )
+    *
+    pointerDelta;
 
 
-            uv +=
-                (
-                    rotatedDelta -
-                    pointerDelta
-                )
-                *
-                pointerInfluence *
-                0.55;
+uv +=
+    (
+        rotatedDelta -
+        pointerDelta
+    )
+    *
+    pointerInfluence *
+    0.62;
 
 
-            /*
-               Tangential flow strengthens the
-               impression of water circulating
-               around the cursor.
-            */
+/* =================================
+   5. SMALL WHIRL HALO
+
+   This is the visible little spiral
+   around the cursor while holding
+   and moving.
+================================= */
 
 
-            uv +=
-                tangent *
-                u_whirlSpin *
-                totalWhirl *
-                whirlFalloff *
-                (
-                    0.006 +
-                    speed * 0.013
-                );
+float pointerAngle =
+    atan(
+        pointerDelta.y,
+        pointerDelta.x
+    );
 
 
-            /* =================================
-               5. SPIRAL DETAIL
-            ================================= */
+/*
+   Keep the visible whirl fairly
+   close to the cursor.
+*/
+
+float whirlHalo =
+    smoothstep(
+        0.30,
+        0.025,
+        pointerDistance
+    )
+    *
+    u_dragging;
 
 
-            float pointerAngle =
-                atan(
-                    pointerDelta.y,
-                    pointerDelta.x
-                );
+/*
+   Circular water bands rotating
+   around the pointer.
+*/
+
+float whirlBand =
+    sin(
+        pointerDistance *
+        36.0
+        -
+        pointerAngle *
+        4.0 *
+        u_whirlSpin
+        -
+        u_time *
+        3.2 *
+        u_whirlSpin
+    );
 
 
-            float spiral =
-                sin(
-                    pointerDistance *
-                    38.0 -
-                    u_time *
-                    2.2 +
-                    pointerAngle *
-                    3.0
-                );
+/*
+   Tangential movement gives the
+   actual circular stirring motion.
+*/
+
+uv +=
+    tangent *
+    whirlBand *
+    whirlHalo *
+    (
+        0.0045 +
+        speed * 0.010
+    );
 
 
-            uv +=
-                pointerDirection *
-                spiral *
-                totalWhirl *
-                pointerInfluence *
-                0.0028;
+/*
+   A very small inward/outward pull
+   makes it feel more fluid and less
+   like a flat rotation.
+*/
 
+uv +=
+    pointerDirection *
+    sin(
+        pointerDistance *
+        42.0
+        -
+        u_time *
+        2.5
+    )
+    *
+    whirlHalo *
+    0.0022;
+
+
+/*
+   Continue a tiny amount of circular
+   movement immediately after release.
+*/
+
+uv +=
+    tangent *
+    u_whirlSpin *
+    u_whirlEnergy *
+    whirlFalloff *
+    0.0030;
 
             /* =================================
                6. POINTER WATER
