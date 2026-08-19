@@ -92,11 +92,6 @@ let dragOriginY = 0;
 let dragHasStarted = false;
 
 
-/*
-   Small threshold prevents trackpad clicks
-   from instantly activating the vortex.
-*/
-
 const dragThreshold = 6;
 
 
@@ -263,7 +258,7 @@ if (!gl) {
 
 
 /* =========================================
-   WEBGL
+   WEBGL PROGRAM
 ========================================= */
 
 if (gl) {
@@ -307,25 +302,36 @@ if (gl) {
 
         uniform vec2 u_velocity;
 
-        uniform vec2 u_dripCenter;
-
         uniform float u_time;
 
         uniform float u_motion;
 
-        uniform float u_dripAge;
-
         uniform float u_dragging;
 
         uniform float u_whirlEnergy;
+
+        uniform float u_whirlSpin;
+
+
+        /*
+           Eight independent click/tap drops.
+        */
+
+        uniform vec2 u_dripCenters[8];
+
+        uniform float u_dripAges[8];
 
 
         mat2 rotate2D(
             float angle
         ) {
 
-            float s = sin(angle);
-            float c = cos(angle);
+            float s =
+                sin(angle);
+
+            float c =
+                cos(angle);
+
 
             return mat2(
                 c, -s,
@@ -346,7 +352,7 @@ if (gl) {
 
 
             /* =================================
-               1. CONSTANT CENTER WATER
+               1. CONSTANT CENTER BUBBLING
             ================================= */
 
 
@@ -424,7 +430,7 @@ if (gl) {
 
 
             /* =================================
-               2. SUBTLE DREAMY WAVE
+               2. DREAMY WAVING
             ================================= */
 
 
@@ -488,7 +494,7 @@ if (gl) {
 
             float pointerInfluence =
                 smoothstep(
-                    0.42,
+                    0.46,
                     0.0,
                     pointerDistance
                 );
@@ -501,43 +507,31 @@ if (gl) {
                 );
 
 
-            /* =================================
-               4. REALISTIC DREAMY WHIRL
-            ================================= */
-
-
             /*
-               The vortex is strongest near the
-               pointer and dissolves gradually.
+               Tangent around the cursor.
+
+               This is what gives the movement
+               a true circular flow around the
+               point being dragged.
             */
+
+
+            vec2 tangent =
+                vec2(
+                    -pointerDirection.y,
+                    pointerDirection.x
+                );
+
+
+            /* =================================
+               4. CURSOR-CENTERED WHIRL
+            ================================= */
 
 
             float whirlFalloff =
                 exp(
                     -pointerDistance *
-                    4.2
-                );
-
-
-            /*
-               Movement direction determines
-               clockwise / counter-clockwise
-               rotation.
-            */
-
-
-            float crossDirection =
-                u_velocity.x *
-                pointerDelta.y
-                -
-                u_velocity.y *
-                pointerDelta.x;
-
-
-            float direction =
-                sign(
-                    crossDirection +
-                    0.00001
+                    4.0
                 );
 
 
@@ -547,106 +541,110 @@ if (gl) {
                         u_velocity
                     )
                     *
-                    18.0,
+                    22.0,
                     0.0,
                     1.0
                 );
 
 
+            float totalWhirl =
+                clamp(
+
+                    u_dragging * 0.72 +
+                    u_whirlEnergy * 0.48,
+
+                    0.0,
+                    1.25
+
+                );
+
+
             /*
-               Residual whirlEnergy allows the
-               surface to continue spinning gently
-               after releasing the pointer.
+               Rotate texture coordinates around
+               the exact cursor location.
             */
 
 
-            float whirlStrength =
-                (
-                    u_dragging *
-                    0.55
-
-                    +
-
-                    u_whirlEnergy *
-                    0.45
-                );
-
-
-            float whirlAngle =
-                direction *
+            float rotationAngle =
+                u_whirlSpin *
+                totalWhirl *
                 whirlFalloff *
-                whirlStrength *
                 (
-                    0.10 +
-                    speed * 0.65 +
-                    u_motion * 0.35
+                    0.12 +
+                    speed * 0.55 +
+                    u_motion * 0.30
                 );
 
 
-            vec2 rotatedPointer =
+            vec2 rotatedDelta =
                 rotate2D(
-                    whirlAngle
+                    rotationAngle
                 )
                 *
                 pointerDelta;
 
 
-            /*
-               Blend rotational coordinates softly.
-               No hard digital warping.
-            */
-
-
             uv +=
                 (
-                    rotatedPointer -
+                    rotatedDelta -
                     pointerDelta
                 )
                 *
                 pointerInfluence *
-                0.42;
+                0.55;
+
+
+            /*
+               Tangential flow strengthens the
+               impression of water circulating
+               around the cursor.
+            */
+
+
+            uv +=
+                tangent *
+                u_whirlSpin *
+                totalWhirl *
+                whirlFalloff *
+                (
+                    0.006 +
+                    speed * 0.013
+                );
 
 
             /* =================================
-               5. SMALL SPIRAL WATER RINGS
+               5. SPIRAL DETAIL
             ================================= */
 
 
-            float spiralPhase =
-                pointerDistance *
-                42.0
-
-                -
-
-                u_time *
-                3.0
-
-                +
-
+            float pointerAngle =
                 atan(
                     pointerDelta.y,
                     pointerDelta.x
-                )
-                *
-                2.4;
+                );
 
 
-            float spiralWave =
+            float spiral =
                 sin(
-                    spiralPhase
+                    pointerDistance *
+                    38.0 -
+                    u_time *
+                    2.2 +
+                    pointerAngle *
+                    3.0
                 );
 
 
             uv +=
                 pointerDirection *
-                spiralWave *
+                spiral *
+                totalWhirl *
                 pointerInfluence *
-                whirlStrength *
-                0.0035;
+                0.0028;
 
 
             /* =================================
-               6. POINTER WATER RIPPLE
+               6. POINTER WATER
             ================================= */
 
 
@@ -684,7 +682,7 @@ if (gl) {
 
 
             /* =================================
-               7. VISCOUS DRAG
+               7. VISCOUS MOVEMENT
             ================================= */
 
 
@@ -692,116 +690,204 @@ if (gl) {
                 u_velocity *
                 pointerInfluence *
                 (
-                    0.055 +
-                    u_motion * 0.13
+                    0.045 +
+                    u_motion * 0.10
                 );
 
 
             /* =================================
-               8. DRIP ON CLICK / TAP
+               8. MULTIPLE DRIPS
+
+               A new click does NOT reset the
+               previous click.
+
+               Every active drop continues
+               expanding independently.
             ================================= */
 
 
-            vec2 dripDelta =
-                baseUV -
-                u_dripCenter;
+            for (
+                int i = 0;
+                i < 8;
+                i++
+            ) {
+
+                float dripAge =
+                    u_dripAges[i];
 
 
-            float dripDistance =
-                length(
-                    dripDelta
-                );
+                /*
+                   Negative age means the slot
+                   has never been used.
+                */
 
 
-            vec2 dripDirection =
-                normalize(
-                    dripDelta +
-                    vec2(0.0001)
-                );
+                if (
+                    dripAge >= 0.0
+                    &&
+                    dripAge < 4.0
+                ) {
+
+                    vec2 dripDelta =
+                        baseUV -
+                        u_dripCenters[i];
 
 
-            float dripRadius =
-                u_dripAge *
-                0.33;
+                    float dripDistance =
+                        length(
+                            dripDelta
+                        );
 
 
-            float dripLife =
-                clamp(
-                    1.0 -
-                    u_dripAge /
-                    2.6,
-                    0.0,
-                    1.0
-                );
+                    vec2 dripDirection =
+                        normalize(
+                            dripDelta +
+                            vec2(0.0001)
+                        );
 
 
-            float dripRing =
-                exp(
-                    -abs(
-                        dripDistance -
-                        dripRadius
-                    )
-                    *
-                    58.0
-                )
-                *
-                dripLife;
+                    float dripRadius =
+                        dripAge *
+                        0.28;
 
 
-            float secondRadius =
-                max(
-                    0.0,
-                    dripRadius -
-                    0.055
-                );
+                    /*
+                       Longer fade than before so
+                       older ripples remain visible
+                       while new ones are added.
+                    */
 
 
-            float secondRing =
-                exp(
-                    -abs(
-                        dripDistance -
-                        secondRadius
-                    )
-                    *
-                    72.0
-                )
-                *
-                dripLife *
-                0.45;
+                    float dripLife =
+                        clamp(
+                            1.0 -
+                            dripAge /
+                            3.8,
+                            0.0,
+                            1.0
+                        );
 
 
-            float impact =
-                exp(
-                    -dripDistance *
-                    24.0
-                )
-                *
-                exp(
-                    -u_dripAge *
-                    4.0
-                );
+                    /*
+                       Main ring.
+                    */
 
 
-            uv +=
-                dripDirection *
-                dripRing *
-                0.050;
+                    float ringOne =
+                        exp(
+                            -abs(
+                                dripDistance -
+                                dripRadius
+                            )
+                            *
+                            55.0
+                        )
+                        *
+                        dripLife;
 
 
-            uv +=
-                dripDirection *
-                secondRing *
-                0.022;
+                    /*
+                       First trailing ring.
+                    */
 
 
-            uv -=
-                dripDelta *
-                impact *
-                0.10;
+                    float radiusTwo =
+                        max(
+                            0.0,
+                            dripRadius -
+                            0.050
+                        );
+
+
+                    float ringTwo =
+                        exp(
+                            -abs(
+                                dripDistance -
+                                radiusTwo
+                            )
+                            *
+                            70.0
+                        )
+                        *
+                        dripLife *
+                        0.46;
+
+
+                    /*
+                       Second softer trailing ring.
+                    */
+
+
+                    float radiusThree =
+                        max(
+                            0.0,
+                            dripRadius -
+                            0.095
+                        );
+
+
+                    float ringThree =
+                        exp(
+                            -abs(
+                                dripDistance -
+                                radiusThree
+                            )
+                            *
+                            62.0
+                        )
+                        *
+                        dripLife *
+                        0.20;
+
+
+                    /*
+                       Initial depression where
+                       the finger/cursor touched.
+                    */
+
+
+                    float impact =
+                        exp(
+                            -dripDistance *
+                            25.0
+                        )
+                        *
+                        exp(
+                            -dripAge *
+                            4.5
+                        );
+
+
+                    uv +=
+                        dripDirection *
+                        ringOne *
+                        0.044;
+
+
+                    uv +=
+                        dripDirection *
+                        ringTwo *
+                        0.019;
+
+
+                    uv +=
+                        dripDirection *
+                        ringThree *
+                        0.009;
+
+
+                    uv -=
+                        dripDelta *
+                        impact *
+                        0.090;
+
+                }
+
+            }
 
 
             /* =================================
-               9. SAFE TEXTURE
+               9. SAFE TEXTURE AREA
             ================================= */
 
 
@@ -825,12 +911,6 @@ if (gl) {
                 );
 
 
-            /*
-               A very subtle secondary sample gives
-               the moving area a liquid thickness.
-            */
-
-
             vec4 softTrail =
                 texture2D(
 
@@ -841,7 +921,7 @@ if (gl) {
                         uv -
                         u_velocity *
                         pointerInfluence *
-                        0.22,
+                        0.18,
 
                         vec2(0.002),
 
@@ -856,9 +936,9 @@ if (gl) {
                 clamp(
                     u_motion *
                     pointerInfluence *
-                    0.08,
+                    0.065,
                     0.0,
-                    0.08
+                    0.065
                 );
 
 
@@ -1053,13 +1133,6 @@ if (gl) {
                 );
 
 
-            const dripCenterUniform =
-                gl.getUniformLocation(
-                    program,
-                    "u_dripCenter"
-                );
-
-
             const timeUniform =
                 gl.getUniformLocation(
                     program,
@@ -1074,13 +1147,6 @@ if (gl) {
                 );
 
 
-            const dripAgeUniform =
-                gl.getUniformLocation(
-                    program,
-                    "u_dripAge"
-                );
-
-
             const draggingUniform =
                 gl.getUniformLocation(
                     program,
@@ -1092,6 +1158,27 @@ if (gl) {
                 gl.getUniformLocation(
                     program,
                     "u_whirlEnergy"
+                );
+
+
+            const whirlSpinUniform =
+                gl.getUniformLocation(
+                    program,
+                    "u_whirlSpin"
+                );
+
+
+            const dripCentersUniform =
+                gl.getUniformLocation(
+                    program,
+                    "u_dripCenters[0]"
+                );
+
+
+            const dripAgesUniform =
+                gl.getUniformLocation(
+                    program,
+                    "u_dripAges[0]"
                 );
 
 
@@ -1335,31 +1422,68 @@ if (gl) {
             let targetDraggingAmount = 0;
 
 
-            /*
-               Whirl energy remains briefly after
-               releasing the drag.
-            */
-
-
             let whirlEnergy = 0;
             let targetWhirlEnergy = 0;
 
 
+            /*
+               Current rotational direction.
+
+               +1 = clockwise
+               -1 = counter-clockwise
+            */
+
+
+            let whirlSpin = 1;
+
+
+            let targetWhirlSpin = 1;
+
+
+            /*
+               Previous position is used to infer
+               a stable drag direction.
+            */
+
+
+            let previousDragX = 0.5;
+            let previousDragY = 0.5;
+
+
             /* =================================
-               DRIP STATE
+               MULTIPLE DRIPS
             ================================= */
 
 
-            let dripX = 0.5;
-            let dripY = 0.5;
+            const maximumDrips = 8;
 
 
-            let dripStarted =
-                -10000;
+            const drips =
+                [];
+
+
+            for (
+                let index = 0;
+                index < maximumDrips;
+                index++
+            ) {
+
+                drips.push(
+                    {
+                        x: 0.5,
+                        y: 0.5,
+                        started: -100000
+                    }
+                );
+
+            }
+
+
+            let nextDripSlot = 0;
 
 
             /* =================================
-               POINTER TARGET
+               UPDATE POINTER
             ================================= */
 
 
@@ -1424,25 +1548,19 @@ if (gl) {
                     nextY;
 
 
-                /*
-                   Conservative velocity keeps
-                   trackpads smooth.
-                */
-
-
                 targetVelocityX =
                     clamp(
-                        deltaX * 1.35,
-                        -0.035,
-                        0.035
+                        deltaX * 1.30,
+                        -0.033,
+                        0.033
                     );
 
 
                 targetVelocityY =
                     clamp(
-                        deltaY * 1.35,
-                        -0.035,
-                        0.035
+                        deltaY * 1.30,
+                        -0.033,
+                        0.033
                     );
 
 
@@ -1454,29 +1572,89 @@ if (gl) {
                             deltaY
                         )
                         *
-                        28
+                        27
                     );
+
+
+                /* =================================
+                   WHIRL DIRECTION
+                ================================= */
 
 
                 if (
                     dragHasStarted
                 ) {
 
+                    const dragX =
+                        nextX -
+                        previousDragX;
+
+
+                    const dragY =
+                        nextY -
+                        previousDragY;
+
+
+                    /*
+                       Use the cursor's movement
+                       relative to the centre of
+                       the local vortex to infer
+                       a smooth rotational direction.
+                    */
+
+
+                    const localX =
+                        nextX - 0.5;
+
+
+                    const localY =
+                        nextY - 0.5;
+
+
+                    const cross =
+                        localX * dragY -
+                        localY * dragX;
+
+
+                    if (
+                        Math.abs(cross) >
+                        0.00002
+                    ) {
+
+                        targetWhirlSpin =
+                            cross > 0
+                                ? 1
+                                : -1;
+
+                    }
+
+
                     targetWhirlEnergy =
                         Math.min(
                             1,
-                            0.35 +
+                            0.30 +
                             targetMotion *
-                            0.65
+                            0.70
                         );
 
                 }
+
+
+                previousDragX =
+                    nextX;
+
+
+                previousDragY =
+                    nextY;
 
             }
 
 
             /* =================================
-               CREATE DRIP
+               CREATE NEW DROP
+
+               Does not delete any other active
+               drop. It simply uses the next slot.
             ================================= */
 
 
@@ -1490,7 +1668,7 @@ if (gl) {
                         .getBoundingClientRect();
 
 
-                dripX =
+                const x =
                     clamp(
 
                         (
@@ -1506,7 +1684,7 @@ if (gl) {
                     );
 
 
-                dripY =
+                const y =
                     clamp(
 
                         1 -
@@ -1523,8 +1701,23 @@ if (gl) {
                     );
 
 
-                dripStarted =
-                    performance.now();
+                drips[
+                    nextDripSlot
+                ] =
+                    {
+                        x: x,
+                        y: y,
+                        started:
+                            performance.now()
+                    };
+
+
+                nextDripSlot =
+                    (
+                        nextDripSlot + 1
+                    )
+                    %
+                    maximumDrips;
 
             }
 
@@ -1563,12 +1756,6 @@ if (gl) {
                     }
 
 
-                    /*
-                       One pointer begins with a drip.
-                       Whirl waits until movement.
-                    */
-
-
                     if (
                         viewPointers.size === 1 &&
                         viewScale === 1
@@ -1600,6 +1787,20 @@ if (gl) {
                         );
 
 
+                        previousDragX =
+                            targetPointerX;
+
+
+                        previousDragY =
+                            targetPointerY;
+
+
+                        /*
+                           Every click/tap adds
+                           another independent drop.
+                        */
+
+
                         createDrip(
                             event.clientX,
                             event.clientY
@@ -1609,7 +1810,7 @@ if (gl) {
 
 
                     /* =================================
-                       PINCH
+                       SECOND FINGER = PINCH
                     ================================= */
 
 
@@ -1622,8 +1823,6 @@ if (gl) {
                         dragHasStarted = false;
 
                         targetDraggingAmount = 0;
-
-                        targetWhirlEnergy = 0;
 
 
                         pinchStartDistance =
@@ -1664,9 +1863,12 @@ if (gl) {
                         viewScale > 1
                     ) {
 
-                        targetDraggingAmount = 0;
+                        targetDraggingAmount =
+                            0;
 
-                        panning = true;
+
+                        panning =
+                            true;
 
 
                         panStartX =
@@ -1729,7 +1931,8 @@ if (gl) {
                         viewPointers.size === 2
                     ) {
 
-                        targetDraggingAmount = 0;
+                        targetDraggingAmount =
+                            0;
 
 
                         const distance =
@@ -1780,7 +1983,7 @@ if (gl) {
 
 
                     /* =================================
-                       PAN WHILE ZOOMED
+                       PAN WHEN ZOOMED
                     ================================= */
 
 
@@ -1789,7 +1992,8 @@ if (gl) {
                         viewScale > 1
                     ) {
 
-                        targetDraggingAmount = 0;
+                        targetDraggingAmount =
+                            0;
 
 
                         viewX =
@@ -1826,7 +2030,7 @@ if (gl) {
 
 
                     /* =================================
-                       NORMAL MOUSE MOVEMENT
+                       NORMAL CURSOR MOVEMENT
                     ================================= */
 
 
@@ -1853,7 +2057,7 @@ if (gl) {
 
 
                     /* =================================
-                       HELD DRAG = WHIRL
+                       HELD DRAG
                     ================================= */
 
 
@@ -1888,6 +2092,14 @@ if (gl) {
 
                                 dragHasStarted =
                                     true;
+
+
+                                previousDragX =
+                                    targetPointerX;
+
+
+                                previousDragY =
+                                    targetPointerY;
 
                             }
 
@@ -1934,22 +2146,28 @@ if (gl) {
                     dragPointerId
                 ) {
 
-                    dragPointerId = null;
+                    dragPointerId =
+                        null;
 
-                    dragHasStarted = false;
 
-                    targetDraggingAmount = 0;
+                    dragHasStarted =
+                        false;
+
+
+                    targetDraggingAmount =
+                        0;
 
 
                     /*
-                       Keep some residual swirl.
+                       Keep some of the whirl alive
+                       after release.
                     */
 
 
                     targetWhirlEnergy =
                         Math.max(
                             whirlEnergy,
-                            0.32
+                            0.30
                         );
 
                 }
@@ -1959,7 +2177,8 @@ if (gl) {
                     viewPointers.size < 2
                 ) {
 
-                    pinchStartDistance = 0;
+                    pinchStartDistance =
+                        0;
 
                 }
 
@@ -1968,9 +2187,12 @@ if (gl) {
                     viewPointers.size === 0
                 ) {
 
-                    panning = false;
+                    panning =
+                        false;
 
-                    targetDraggingAmount = 0;
+
+                    targetDraggingAmount =
+                        0;
 
                 }
 
@@ -2057,7 +2279,7 @@ if (gl) {
 
 
                 /* =================================
-                   POINTER SMOOTHING
+                   SMOOTH POINTER
                 ================================= */
 
 
@@ -2124,9 +2346,18 @@ if (gl) {
                     0.055;
 
 
-                /*
-                   Natural decay.
-                */
+                whirlSpin +=
+                    (
+                        targetWhirlSpin -
+                        whirlSpin
+                    )
+                    *
+                    0.08;
+
+
+                /* =================================
+                   NATURAL DECAY
+                ================================= */
 
 
                 targetVelocityX *=
@@ -2139,12 +2370,6 @@ if (gl) {
 
                 targetMotion *=
                     0.88;
-
-
-                /*
-                   If not actively dragging,
-                   whirl slowly dissolves.
-                */
 
 
                 if (
@@ -2170,13 +2395,67 @@ if (gl) {
                     1000;
 
 
-                const dripAge =
-                    (
-                        now -
-                        dripStarted
-                    )
-                    /
-                    1000;
+                /* =================================
+                   MULTIPLE DROP UNIFORMS
+                ================================= */
+
+
+                const dripCenters =
+                    new Float32Array(
+                        maximumDrips * 2
+                    );
+
+
+                const dripAges =
+                    new Float32Array(
+                        maximumDrips
+                    );
+
+
+                for (
+                    let index = 0;
+                    index < maximumDrips;
+                    index++
+                ) {
+
+                    const drip =
+                        drips[index];
+
+
+                    dripCenters[
+                        index * 2
+                    ] =
+                        drip.x;
+
+
+                    dripCenters[
+                        index * 2 + 1
+                    ] =
+                        drip.y;
+
+
+                    if (
+                        drip.started < 0
+                    ) {
+
+                        dripAges[index] =
+                            -1;
+
+                    }
+
+                    else {
+
+                        dripAges[index] =
+                            (
+                                now -
+                                drip.started
+                            )
+                            /
+                            1000;
+
+                    }
+
+                }
 
 
                 if (
@@ -2197,13 +2476,6 @@ if (gl) {
                     );
 
 
-                    gl.uniform2f(
-                        dripCenterUniform,
-                        dripX,
-                        dripY
-                    );
-
-
                     gl.uniform1f(
                         timeUniform,
                         time
@@ -2217,12 +2489,6 @@ if (gl) {
 
 
                     gl.uniform1f(
-                        dripAgeUniform,
-                        dripAge
-                    );
-
-
-                    gl.uniform1f(
                         draggingUniform,
                         draggingAmount
                     );
@@ -2231,6 +2497,24 @@ if (gl) {
                     gl.uniform1f(
                         whirlEnergyUniform,
                         whirlEnergy
+                    );
+
+
+                    gl.uniform1f(
+                        whirlSpinUniform,
+                        whirlSpin
+                    );
+
+
+                    gl.uniform2fv(
+                        dripCentersUniform,
+                        dripCenters
+                    );
+
+
+                    gl.uniform1fv(
+                        dripAgesUniform,
+                        dripAges
                     );
 
 
