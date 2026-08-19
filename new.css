@@ -1,29 +1,16 @@
-@font-face {
-    font-family: "Microgramma";
-
-    src:
-        url("./fonts/microgrammanormal.ttf")
-        format("truetype");
-
-    font-weight: normal;
-    font-style: normal;
-}
+/* =========================================
+   TEMPORARY EXPERIMENT LANDING
+========================================= */
 
 
 /* =========================================
-   RESET
+   PAGE
 ========================================= */
-
-* {
-    box-sizing: border-box;
-}
-
 
 html,
 body {
     width: 100%;
     min-width: 0;
-    min-height: 100%;
 
     margin: 0;
 
@@ -34,19 +21,11 @@ body {
 }
 
 
-html {
-    touch-action: manipulation;
-}
-
-
 body {
     min-height: 100dvh;
 
-    font-family:
-        "Microgramma",
-        Arial,
-        Helvetica,
-        sans-serif;
+    display: flex;
+    flex-direction: column;
 
     overscroll-behavior-x: none;
 }
@@ -57,28 +36,33 @@ body {
 ========================================= */
 
 .landing-experiment {
+    flex: 1;
+
     width: 100%;
-    min-height: 100dvh;
+
+    min-width: 0;
 
     padding:
-        40px
-        24px;
+        56px
+        24px
+        70px;
 
     display: flex;
 
     flex-direction: column;
 
     align-items: center;
+
     justify-content: center;
 
-    gap: 28px;
+    gap: 30px;
 
     overflow: hidden;
 }
 
 
 /* =========================================
-   ARTWORK
+   ARTWORK CONTAINER
 ========================================= */
 
 .visual-container {
@@ -86,8 +70,8 @@ body {
 
     width:
         min(
-            78vmin,
-            880px
+            72vmin,
+            860px
         );
 
     max-width:
@@ -97,14 +81,8 @@ body {
             48px
         );
 
-    max-height:
-        calc(
-            100dvh
-            -
-            125px
-        );
-
-    aspect-ratio: 1 / 1;
+    aspect-ratio:
+        1 / 1;
 
     overflow: hidden;
 
@@ -117,7 +95,7 @@ body {
 
 
 /* =========================================
-   ZOOMABLE MEDIA
+   ZOOMABLE / INTERACTIVE MEDIA
 ========================================= */
 
 .visual-media {
@@ -137,7 +115,7 @@ body {
 
 
 /* =========================================
-   FALLBACK IMAGE
+   FALLBACK ARTWORK
 ========================================= */
 
 .fallback-image {
@@ -153,6 +131,7 @@ body {
     object-fit: cover;
 
     user-select: none;
+
     -webkit-user-select: none;
 
     -webkit-touch-callout: none;
@@ -210,6 +189,15 @@ body {
 
 
 /* =========================================
+   COPYRIGHT SPACING
+========================================= */
+
+.legal-footer {
+    flex: 0 0 auto;
+}
+
+
+/* =========================================
    MOBILE
 ========================================= */
 
@@ -225,21 +213,61 @@ body {
     }
 
 
+    /* =====================================
+       HEADER
+
+       Override shared mobile header so
+       everything stays centered and tidy.
+    ====================================== */
+
+    .site-header {
+        width: 100%;
+
+        padding:
+            22px
+            16px;
+
+        text-align: center;
+    }
+
+
+    .site-logo {
+        margin-bottom: 23px;
+    }
+
+
+    .site-nav {
+        width: 100%;
+
+        justify-content: center;
+
+        gap:
+            12px
+            18px;
+    }
+
+
+    /* =====================================
+       LANDING
+    ====================================== */
+
     .landing-experiment {
         width: 100%;
 
-        min-height: 100dvh;
+        max-width: 100vw;
 
         padding:
-            18px
+            32px
             12px
-            24px;
+            48px;
 
         gap: 24px;
-
-        justify-content: center;
     }
 
+
+    /* =====================================
+       ARTWORK
+    ====================================== */
 
     .visual-container {
         width:
@@ -249,21 +277,10 @@ body {
                     -
                     24px
                 ),
-                calc(
-                    100dvh
-                    -
-                    100px
-                )
+                620px
             );
 
         max-width: 100%;
-
-        max-height:
-            calc(
-                100dvh
-                -
-                100px
-            );
 
         margin:
             0
@@ -271,10 +288,28 @@ body {
     }
 
 
+    /* =====================================
+       TBA
+    ====================================== */
+
     .tba {
         font-size: 11px;
 
         letter-spacing: 0.25em;
+    }
+
+
+    /* =====================================
+       LEGAL
+    ====================================== */
+
+    .legal-footer {
+        width: 100%;
+
+        padding:
+            28px
+            18px
+            32px;
     }
 
 }
