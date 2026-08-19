@@ -5,9 +5,7 @@
 
 
 const canvas =
-    document.getElementById(
-        "visual"
-    );
+    document.getElementById("visual");
 
 
 const container =
@@ -50,7 +48,7 @@ function clamp(
 
 
 /* =========================================
-   PINCH ZOOM
+   ARTWORK ZOOM
 ========================================= */
 
 let viewScale = 1;
@@ -95,11 +93,11 @@ let dragHasStarted = false;
 
 
 /*
-   Prevents the whirl from snapping
-   immediately when clicking.
+   Small threshold prevents trackpad clicks
+   from instantly activating the vortex.
 */
 
-const dragThreshold = 7;
+const dragThreshold = 6;
 
 
 /* =========================================
@@ -108,9 +106,7 @@ const dragThreshold = 7;
 
 function limitViewPan() {
 
-    if (
-        viewScale <= 1
-    ) {
+    if (viewScale <= 1) {
 
         viewScale = 1;
 
@@ -123,22 +119,14 @@ function limitViewPan() {
 
 
     const maxX =
-        container.clientWidth
-        *
-        (
-            viewScale - 1
-        )
-        /
+        container.clientWidth *
+        (viewScale - 1) /
         2;
 
 
     const maxY =
-        container.clientHeight
-        *
-        (
-            viewScale - 1
-        )
-        /
+        container.clientHeight *
+        (viewScale - 1) /
         2;
 
 
@@ -196,12 +184,10 @@ function viewPointerDistance() {
 
     return Math.hypot(
 
-        points[1].x
-        -
+        points[1].x -
         points[0].x,
 
-        points[1].y
-        -
+        points[1].y -
         points[0].y
 
     );
@@ -221,8 +207,7 @@ function viewPointerMidpoint() {
 
         x:
             (
-                points[0].x
-                +
+                points[0].x +
                 points[1].x
             )
             /
@@ -230,8 +215,7 @@ function viewPointerMidpoint() {
 
         y:
             (
-                points[0].y
-                +
+                points[0].y +
                 points[1].y
             )
             /
@@ -243,7 +227,7 @@ function viewPointerMidpoint() {
 
 
 /* =========================================
-   PREVENT BROWSER DOUBLE-CLICK ZOOM
+   PREVENT BROWSER DOUBLE CLICK ZOOM
 ========================================= */
 
 container.addEventListener(
@@ -279,7 +263,7 @@ if (!gl) {
 
 
 /* =========================================
-   WEBGL PROGRAM
+   WEBGL
 ========================================= */
 
 if (gl) {
@@ -294,11 +278,7 @@ if (gl) {
         void main() {
 
             v_uv =
-                a_position
-                *
-                0.5
-                +
-                0.5;
+                a_position * 0.5 + 0.5;
 
 
             gl_Position =
@@ -337,22 +317,15 @@ if (gl) {
 
         uniform float u_dragging;
 
+        uniform float u_whirlEnergy;
+
 
         mat2 rotate2D(
             float angle
         ) {
 
-            float s =
-                sin(
-                    angle
-                );
-
-
-            float c =
-                cos(
-                    angle
-                );
-
+            float s = sin(angle);
+            float c = cos(angle);
 
             return mat2(
                 c, -s,
@@ -373,7 +346,7 @@ if (gl) {
 
 
             /* =================================
-               CONSTANT CENTER BUBBLING
+               1. CONSTANT CENTER WATER
             ================================= */
 
 
@@ -385,8 +358,7 @@ if (gl) {
 
 
             vec2 centerDelta =
-                baseUV
-                -
+                baseUV -
                 center;
 
 
@@ -398,151 +370,113 @@ if (gl) {
 
             vec2 centerDirection =
                 normalize(
-                    centerDelta
-                    +
-                    vec2(
-                        0.0001
-                    )
+                    centerDelta +
+                    vec2(0.0001)
                 );
 
 
             float bubbleOne =
                 sin(
-                    centerDistance
-                    *
-                    50.0
-                    -
-                    u_time
-                    *
-                    3.1
+                    centerDistance *
+                    48.0 -
+                    u_time *
+                    2.8
                 );
 
 
             float bubbleTwo =
                 sin(
-                    centerDistance
-                    *
-                    29.0
-                    -
-                    u_time
-                    *
-                    2.0
+                    centerDistance *
+                    27.0 -
+                    u_time *
+                    1.7
                 );
 
 
             float bubbleThree =
                 sin(
-                    centerDistance
-                    *
-                    76.0
-                    -
-                    u_time
-                    *
-                    4.1
+                    centerDistance *
+                    72.0 -
+                    u_time *
+                    3.7
                 );
 
 
             float centerBubble =
-                bubbleOne
-                *
-                0.50
-
-                +
-
-                bubbleTwo
-                *
-                0.32
-
-                +
-
-                bubbleThree
-                *
-                0.18;
+                bubbleOne * 0.50 +
+                bubbleTwo * 0.32 +
+                bubbleThree * 0.18;
 
 
             float centerInfluence =
                 smoothstep(
-                    0.75,
-                    0.03,
+                    0.78,
+                    0.02,
                     centerDistance
                 );
 
 
             uv +=
-                centerDirection
-                *
-                centerBubble
-                *
-                centerInfluence
-                *
-                0.0045;
+                centerDirection *
+                centerBubble *
+                centerInfluence *
+                0.0038;
 
 
             /* =================================
-               SUBTLE 90s WAVING
+               2. SUBTLE DREAMY WAVE
             ================================= */
 
 
-            float waveX =
+            float broadWave =
                 sin(
-                    baseUV.y
-                    *
-                    8.0
-                    -
-                    u_time
-                    *
-                    1.15
+                    baseUV.y *
+                    7.0 -
+                    u_time *
+                    0.95
                 )
                 *
-                0.0040;
+                0.0035;
 
 
-            float waveY =
+            float verticalWave =
                 cos(
-                    baseUV.x
-                    *
-                    6.5
-                    -
-                    u_time
-                    *
-                    0.9
+                    baseUV.x *
+                    5.8 -
+                    u_time *
+                    0.72
                 )
                 *
-                0.0022;
+                0.0019;
 
 
             float fineWave =
                 sin(
-                    baseUV.y
-                    *
-                    16.0
-                    +
-                    u_time
-                    *
-                    1.6
+                    baseUV.y *
+                    14.0 +
+                    u_time *
+                    1.25
                 )
                 *
-                0.0010;
+                0.0009;
 
 
             uv.x +=
-                waveX
-                +
+                broadWave +
                 fineWave;
 
 
             uv.y +=
-                waveY;
+                verticalWave;
 
 
             /* =================================
-               POINTER FIELD
+               3. POINTER FIELD
             ================================= */
 
 
             vec2 pointerDelta =
-                baseUV
-                -
+                baseUV -
                 u_pointer;
 
 
@@ -554,7 +488,7 @@ if (gl) {
 
             float pointerInfluence =
                 smoothstep(
-                    0.35,
+                    0.42,
                     0.0,
                     pointerDistance
                 );
@@ -562,69 +496,94 @@ if (gl) {
 
             vec2 pointerDirection =
                 normalize(
-                    pointerDelta
-                    +
-                    vec2(
-                        0.0001
-                    )
+                    pointerDelta +
+                    vec2(0.0001)
                 );
 
 
             /* =================================
-               SMOOTH WHIRL WHILE DRAGGING
+               4. REALISTIC DREAMY WHIRL
             ================================= */
 
 
-            float velocityMagnitude =
-                min(
+            /*
+               The vortex is strongest near the
+               pointer and dissolves gradually.
+            */
+
+
+            float whirlFalloff =
+                exp(
+                    -pointerDistance *
+                    4.2
+                );
+
+
+            /*
+               Movement direction determines
+               clockwise / counter-clockwise
+               rotation.
+            */
+
+
+            float crossDirection =
+                u_velocity.x *
+                pointerDelta.y
+                -
+                u_velocity.y *
+                pointerDelta.x;
+
+
+            float direction =
+                sign(
+                    crossDirection +
+                    0.00001
+                );
+
+
+            float speed =
+                clamp(
                     length(
                         u_velocity
                     )
                     *
-                    20.0,
+                    18.0,
+                    0.0,
                     1.0
                 );
 
 
-            float whirlFade =
-                exp(
-                    -pointerDistance
-                    *
-                    5.2
-                );
+            /*
+               Residual whirlEnergy allows the
+               surface to continue spinning gently
+               after releasing the pointer.
+            */
 
 
-            float whirlDirection =
-                sign(
-                    u_velocity.x
-                    -
-                    u_velocity.y
+            float whirlStrength =
+                (
+                    u_dragging *
+                    0.55
+
                     +
-                    0.0001
+
+                    u_whirlEnergy *
+                    0.45
                 );
 
 
             float whirlAngle =
-                whirlDirection
-                *
-                u_dragging
-                *
-                whirlFade
-                *
+                direction *
+                whirlFalloff *
+                whirlStrength *
                 (
-                    0.08
-                    +
-                    u_motion
-                    *
-                    0.70
-                    +
-                    velocityMagnitude
-                    *
-                    0.42
+                    0.10 +
+                    speed * 0.65 +
+                    u_motion * 0.35
                 );
 
 
-            vec2 whirledDelta =
+            vec2 rotatedPointer =
                 rotate2D(
                     whirlAngle
                 )
@@ -632,102 +591,119 @@ if (gl) {
                 pointerDelta;
 
 
+            /*
+               Blend rotational coordinates softly.
+               No hard digital warping.
+            */
+
+
             uv +=
                 (
-                    whirledDelta
-                    -
+                    rotatedPointer -
                     pointerDelta
                 )
                 *
-                pointerInfluence
-                *
-                0.30;
+                pointerInfluence *
+                0.42;
 
 
             /* =================================
-               POINTER WATER
+               5. SMALL SPIRAL WATER RINGS
+            ================================= */
+
+
+            float spiralPhase =
+                pointerDistance *
+                42.0
+
+                -
+
+                u_time *
+                3.0
+
+                +
+
+                atan(
+                    pointerDelta.y,
+                    pointerDelta.x
+                )
+                *
+                2.4;
+
+
+            float spiralWave =
+                sin(
+                    spiralPhase
+                );
+
+
+            uv +=
+                pointerDirection *
+                spiralWave *
+                pointerInfluence *
+                whirlStrength *
+                0.0035;
+
+
+            /* =================================
+               6. POINTER WATER RIPPLE
             ================================= */
 
 
             float pointerWaveOne =
                 sin(
-                    pointerDistance
-                    *
-                    59.0
-                    -
-                    u_time
-                    *
-                    6.8
+                    pointerDistance *
+                    56.0 -
+                    u_time *
+                    6.0
                 );
 
 
             float pointerWaveTwo =
                 sin(
-                    pointerDistance
-                    *
-                    27.0
-                    -
-                    u_time
-                    *
-                    3.8
+                    pointerDistance *
+                    26.0 -
+                    u_time *
+                    3.2
                 );
 
 
             float pointerWave =
-                pointerWaveOne
-                *
-                0.68
-
-                +
-
-                pointerWaveTwo
-                *
-                0.32;
+                pointerWaveOne * 0.68 +
+                pointerWaveTwo * 0.32;
 
 
             uv +=
-                pointerDirection
-                *
-                pointerWave
-                *
-                pointerInfluence
-                *
+                pointerDirection *
+                pointerWave *
+                pointerInfluence *
                 (
-                    0.0045
-                    +
-                    u_motion
-                    *
-                    0.017
+                    0.0035 +
+                    u_motion * 0.013
                 );
 
 
             /* =================================
-               SOFT LIQUID DRAG
+               7. VISCOUS DRAG
             ================================= */
 
 
             uv -=
-                u_velocity
-                *
-                pointerInfluence
-                *
+                u_velocity *
+                pointerInfluence *
                 (
-                    0.08
-                    +
-                    u_motion
-                    *
-                    0.20
+                    0.055 +
+                    u_motion * 0.13
                 );
 
 
             /* =================================
-               DRIP ON CLICK / TAP
+               8. DRIP ON CLICK / TAP
             ================================= */
 
 
             vec2 dripDelta =
-                baseUV
-                -
+                baseUV -
                 u_dripCenter;
 
 
@@ -739,26 +715,20 @@ if (gl) {
 
             vec2 dripDirection =
                 normalize(
-                    dripDelta
-                    +
-                    vec2(
-                        0.0001
-                    )
+                    dripDelta +
+                    vec2(0.0001)
                 );
 
 
             float dripRadius =
-                u_dripAge
-                *
+                u_dripAge *
                 0.33;
 
 
             float dripLife =
                 clamp(
-                    1.0
-                    -
-                    u_dripAge
-                    /
+                    1.0 -
+                    u_dripAge /
                     2.6,
                     0.0,
                     1.0
@@ -768,8 +738,7 @@ if (gl) {
             float dripRing =
                 exp(
                     -abs(
-                        dripDistance
-                        -
+                        dripDistance -
                         dripRadius
                     )
                     *
@@ -782,8 +751,7 @@ if (gl) {
             float secondRadius =
                 max(
                     0.0,
-                    dripRadius
-                    -
+                    dripRadius -
                     0.055
                 );
 
@@ -791,76 +759,62 @@ if (gl) {
             float secondRing =
                 exp(
                     -abs(
-                        dripDistance
-                        -
+                        dripDistance -
                         secondRadius
                     )
                     *
                     72.0
                 )
                 *
-                dripLife
-                *
+                dripLife *
                 0.45;
 
 
             float impact =
                 exp(
-                    -dripDistance
-                    *
+                    -dripDistance *
                     24.0
                 )
                 *
                 exp(
-                    -u_dripAge
-                    *
+                    -u_dripAge *
                     4.0
                 );
 
 
             uv +=
-                dripDirection
-                *
-                dripRing
-                *
+                dripDirection *
+                dripRing *
                 0.050;
 
 
             uv +=
-                dripDirection
-                *
-                secondRing
-                *
+                dripDirection *
+                secondRing *
                 0.022;
 
 
             uv -=
-                dripDelta
-                *
-                impact
-                *
+                dripDelta *
+                impact *
                 0.10;
 
 
             /* =================================
-               SAFE IMAGE AREA
+               9. SAFE TEXTURE
             ================================= */
 
 
             uv =
                 clamp(
                     uv,
-                    vec2(
-                        0.002
-                    ),
-                    vec2(
-                        0.998
-                    )
+                    vec2(0.002),
+                    vec2(0.998)
                 );
 
 
             /* =================================
-               ORIGINAL COLOURS
+               10. IMAGE
             ================================= */
 
 
@@ -871,51 +825,48 @@ if (gl) {
                 );
 
 
-            vec4 draggedSample =
+            /*
+               A very subtle secondary sample gives
+               the moving area a liquid thickness.
+            */
+
+
+            vec4 softTrail =
                 texture2D(
 
                     u_texture,
 
                     clamp(
 
-                        uv
-                        -
-                        u_velocity
-                        *
-                        pointerInfluence
-                        *
-                        0.35,
+                        uv -
+                        u_velocity *
+                        pointerInfluence *
+                        0.22,
 
-                        vec2(
-                            0.002
-                        ),
+                        vec2(0.002),
 
-                        vec2(
-                            0.998
-                        )
+                        vec2(0.998)
 
                     )
 
                 );
 
 
-            float dragBlend =
+            float trailBlend =
                 clamp(
-                    u_motion
-                    *
-                    pointerInfluence
-                    *
-                    0.12,
+                    u_motion *
+                    pointerInfluence *
+                    0.08,
                     0.0,
-                    0.12
+                    0.08
                 );
 
 
             gl_FragColor =
                 mix(
                     mainSample,
-                    draggedSample,
-                    dragBlend
+                    softTrail,
+                    trailBlend
                 );
 
         }
@@ -924,7 +875,7 @@ if (gl) {
 
 
     /* =========================================
-       CREATE SHADER
+       SHADER CREATION
     ========================================== */
 
     function createShader(
@@ -988,8 +939,7 @@ if (gl) {
 
 
     if (
-        vertexShader
-        &&
+        vertexShader &&
         fragmentShader
     ) {
 
@@ -1138,6 +1088,13 @@ if (gl) {
                 );
 
 
+            const whirlEnergyUniform =
+                gl.getUniformLocation(
+                    program,
+                    "u_whirlEnergy"
+                );
+
+
             const textureUniform =
                 gl.getUniformLocation(
                     program,
@@ -1204,8 +1161,7 @@ if (gl) {
             ================================= */
 
 
-            let imageReady =
-                false;
+            let imageReady = false;
 
 
             function uploadArtworkTexture() {
@@ -1235,29 +1191,25 @@ if (gl) {
 
 
                 if (
-                    longest
-                    >
+                    longest >
                     maximum
                 ) {
 
                     const resizeScale =
-                        maximum
-                        /
+                        maximum /
                         longest;
 
 
                     width =
                         Math.round(
-                            width
-                            *
+                            width *
                             resizeScale
                         );
 
 
                     height =
                         Math.round(
-                            height
-                            *
+                            height *
                             resizeScale
                         );
 
@@ -1322,8 +1274,7 @@ if (gl) {
                 );
 
 
-                imageReady =
-                    true;
+                imageReady = true;
 
 
                 canvas.classList.add(
@@ -1334,8 +1285,7 @@ if (gl) {
 
 
             if (
-                fallbackImage.complete
-                &&
+                fallbackImage.complete &&
                 fallbackImage.naturalWidth > 0
             ) {
 
@@ -1357,7 +1307,7 @@ if (gl) {
 
 
             /* =================================
-               SMOOTH POINTER
+               POINTER STATE
             ================================= */
 
 
@@ -1385,8 +1335,18 @@ if (gl) {
             let targetDraggingAmount = 0;
 
 
+            /*
+               Whirl energy remains briefly after
+               releasing the drag.
+            */
+
+
+            let whirlEnergy = 0;
+            let targetWhirlEnergy = 0;
+
+
             /* =================================
-               DRIP
+               DRIP STATE
             ================================= */
 
 
@@ -1399,7 +1359,7 @@ if (gl) {
 
 
             /* =================================
-               UPDATE POINTER
+               POINTER TARGET
             ================================= */
 
 
@@ -1417,8 +1377,7 @@ if (gl) {
                     clamp(
 
                         (
-                            clientX
-                            -
+                            clientX -
                             rect.left
                         )
                         /
@@ -1433,11 +1392,9 @@ if (gl) {
                 const nextY =
                     clamp(
 
-                        1
-                        -
+                        1 -
                         (
-                            clientY
-                            -
+                            clientY -
                             rect.top
                         )
                         /
@@ -1450,14 +1407,12 @@ if (gl) {
 
 
                 const deltaX =
-                    nextX
-                    -
+                    nextX -
                     targetPointerX;
 
 
                 const deltaY =
-                    nextY
-                    -
+                    nextY -
                     targetPointerY;
 
 
@@ -1469,23 +1424,25 @@ if (gl) {
                     nextY;
 
 
+                /*
+                   Conservative velocity keeps
+                   trackpads smooth.
+                */
+
+
                 targetVelocityX =
                     clamp(
-                        deltaX
-                        *
-                        1.5,
-                        -0.040,
-                        0.040
+                        deltaX * 1.35,
+                        -0.035,
+                        0.035
                     );
 
 
                 targetVelocityY =
                     clamp(
-                        deltaY
-                        *
-                        1.5,
-                        -0.040,
-                        0.040
+                        deltaY * 1.35,
+                        -0.035,
+                        0.035
                     );
 
 
@@ -1497,8 +1454,23 @@ if (gl) {
                             deltaY
                         )
                         *
-                        30
+                        28
                     );
+
+
+                if (
+                    dragHasStarted
+                ) {
+
+                    targetWhirlEnergy =
+                        Math.min(
+                            1,
+                            0.35 +
+                            targetMotion *
+                            0.65
+                        );
+
+                }
 
             }
 
@@ -1522,8 +1494,7 @@ if (gl) {
                     clamp(
 
                         (
-                            clientX
-                            -
+                            clientX -
                             rect.left
                         )
                         /
@@ -1538,11 +1509,9 @@ if (gl) {
                 dripY =
                     clamp(
 
-                        1
-                        -
+                        1 -
                         (
-                            clientY
-                            -
+                            clientY -
                             rect.top
                         )
                         /
@@ -1594,9 +1563,14 @@ if (gl) {
                     }
 
 
+                    /*
+                       One pointer begins with a drip.
+                       Whirl waits until movement.
+                    */
+
+
                     if (
-                        viewPointers.size === 1
-                        &&
+                        viewPointers.size === 1 &&
                         viewScale === 1
                     ) {
 
@@ -1635,7 +1609,7 @@ if (gl) {
 
 
                     /* =================================
-                       TWO FINGERS = PINCH
+                       PINCH
                     ================================= */
 
 
@@ -1643,16 +1617,13 @@ if (gl) {
                         viewPointers.size === 2
                     ) {
 
-                        targetDraggingAmount =
-                            0;
+                        dragPointerId = null;
 
+                        dragHasStarted = false;
 
-                        dragHasStarted =
-                            false;
+                        targetDraggingAmount = 0;
 
-
-                        dragPointerId =
-                            null;
+                        targetWhirlEnergy = 0;
 
 
                         pinchStartDistance =
@@ -1693,12 +1664,9 @@ if (gl) {
                         viewScale > 1
                     ) {
 
-                        targetDraggingAmount =
-                            0;
+                        targetDraggingAmount = 0;
 
-
-                        panning =
-                            true;
+                        panning = true;
 
 
                         panStartX =
@@ -1753,7 +1721,7 @@ if (gl) {
 
 
                     /* =================================
-                       PINCH ZOOM
+                       PINCH
                     ================================= */
 
 
@@ -1761,8 +1729,7 @@ if (gl) {
                         viewPointers.size === 2
                     ) {
 
-                        targetDraggingAmount =
-                            0;
+                        targetDraggingAmount = 0;
 
 
                         const distance =
@@ -1776,11 +1743,9 @@ if (gl) {
                         viewScale =
                             clamp(
 
-                                pinchStartScale
-                                *
+                                pinchStartScale *
                                 (
-                                    distance
-                                    /
+                                    distance /
                                     pinchStartDistance
                                 ),
 
@@ -1791,21 +1756,17 @@ if (gl) {
 
 
                         viewX =
-                            pinchStartViewX
-                            +
+                            pinchStartViewX +
                             (
-                                midpoint.x
-                                -
+                                midpoint.x -
                                 pinchStartX
                             );
 
 
                         viewY =
-                            pinchStartViewY
-                            +
+                            pinchStartViewY +
                             (
-                                midpoint.y
-                                -
+                                midpoint.y -
                                 pinchStartY
                             );
 
@@ -1824,31 +1785,25 @@ if (gl) {
 
 
                     if (
-                        panning
-                        &&
+                        panning &&
                         viewScale > 1
                     ) {
 
-                        targetDraggingAmount =
-                            0;
+                        targetDraggingAmount = 0;
 
 
                         viewX =
-                            panOriginalX
-                            +
+                            panOriginalX +
                             (
-                                event.clientX
-                                -
+                                event.clientX -
                                 panStartX
                             );
 
 
                         viewY =
-                            panOriginalY
-                            +
+                            panOriginalY +
                             (
-                                event.clientY
-                                -
+                                event.clientY -
                                 panStartY
                             );
 
@@ -1871,13 +1826,12 @@ if (gl) {
 
 
                     /* =================================
-                       MOUSE HOVER
+                       NORMAL MOUSE MOVEMENT
                     ================================= */
 
 
                     if (
-                        event.pointerType === "mouse"
-                        &&
+                        event.pointerType === "mouse" &&
                         !viewPointers.has(
                             event.pointerId
                         )
@@ -1899,7 +1853,7 @@ if (gl) {
 
 
                     /* =================================
-                       HELD DRAG
+                       HELD DRAG = WHIRL
                     ================================= */
 
 
@@ -1910,30 +1864,25 @@ if (gl) {
                     ) {
 
                         if (
-                            event.pointerId
-                            ===
+                            event.pointerId ===
                             dragPointerId
                         ) {
 
                             const distanceFromStart =
                                 Math.hypot(
 
-                                    event.clientX
-                                    -
+                                    event.clientX -
                                     dragOriginX,
 
-                                    event.clientY
-                                    -
+                                    event.clientY -
                                     dragOriginY
 
                                 );
 
 
                             if (
-                                !dragHasStarted
-                                &&
-                                distanceFromStart
-                                >
+                                !dragHasStarted &&
+                                distanceFromStart >
                                 dragThreshold
                             ) {
 
@@ -1943,10 +1892,14 @@ if (gl) {
                             }
 
 
-                            targetDraggingAmount =
+                            if (
                                 dragHasStarted
-                                    ? 1
-                                    : 0;
+                            ) {
+
+                                targetDraggingAmount =
+                                    1;
+
+                            }
 
                         }
 
@@ -1977,21 +1930,27 @@ if (gl) {
 
 
                 if (
-                    event.pointerId
-                    ===
+                    event.pointerId ===
                     dragPointerId
                 ) {
 
-                    dragPointerId =
-                        null;
+                    dragPointerId = null;
+
+                    dragHasStarted = false;
+
+                    targetDraggingAmount = 0;
 
 
-                    dragHasStarted =
-                        false;
+                    /*
+                       Keep some residual swirl.
+                    */
 
 
-                    targetDraggingAmount =
-                        0;
+                    targetWhirlEnergy =
+                        Math.max(
+                            whirlEnergy,
+                            0.32
+                        );
 
                 }
 
@@ -2000,8 +1959,7 @@ if (gl) {
                     viewPointers.size < 2
                 ) {
 
-                    pinchStartDistance =
-                        0;
+                    pinchStartDistance = 0;
 
                 }
 
@@ -2010,12 +1968,9 @@ if (gl) {
                     viewPointers.size === 0
                 ) {
 
-                    panning =
-                        false;
+                    panning = false;
 
-
-                    targetDraggingAmount =
-                        0;
+                    targetDraggingAmount = 0;
 
                 }
 
@@ -2043,32 +1998,27 @@ if (gl) {
 
                 const ratio =
                     Math.min(
-                        window.devicePixelRatio
-                        ||
-                        1,
+                        window.devicePixelRatio || 1,
                         2
                     );
 
 
                 const width =
                     Math.floor(
-                        container.clientWidth
-                        *
+                        container.clientWidth *
                         ratio
                     );
 
 
                 const height =
                     Math.floor(
-                        container.clientHeight
-                        *
+                        container.clientHeight *
                         ratio
                     );
 
 
                 if (
-                    canvas.width !== width
-                    ||
+                    canvas.width !== width ||
                     canvas.height !== height
                 ) {
 
@@ -2106,64 +2056,77 @@ if (gl) {
                 resizeCanvas();
 
 
+                /* =================================
+                   POINTER SMOOTHING
+                ================================= */
+
+
                 pointerX +=
                     (
-                        targetPointerX
-                        -
+                        targetPointerX -
                         pointerX
                     )
                     *
-                    0.17;
+                    0.14;
 
 
                 pointerY +=
                     (
-                        targetPointerY
-                        -
+                        targetPointerY -
                         pointerY
                     )
                     *
-                    0.17;
+                    0.14;
 
 
                 velocityX +=
                     (
-                        targetVelocityX
-                        -
+                        targetVelocityX -
                         velocityX
-                    )
-                    *
-                    0.12;
-
-
-                velocityY +=
-                    (
-                        targetVelocityY
-                        -
-                        velocityY
-                    )
-                    *
-                    0.12;
-
-
-                motion +=
-                    (
-                        targetMotion
-                        -
-                        motion
                     )
                     *
                     0.10;
 
 
-                draggingAmount +=
+                velocityY +=
                     (
-                        targetDraggingAmount
-                        -
-                        draggingAmount
+                        targetVelocityY -
+                        velocityY
+                    )
+                    *
+                    0.10;
+
+
+                motion +=
+                    (
+                        targetMotion -
+                        motion
                     )
                     *
                     0.09;
+
+
+                draggingAmount +=
+                    (
+                        targetDraggingAmount -
+                        draggingAmount
+                    )
+                    *
+                    0.075;
+
+
+                whirlEnergy +=
+                    (
+                        targetWhirlEnergy -
+                        whirlEnergy
+                    )
+                    *
+                    0.055;
+
+
+                /*
+                   Natural decay.
+                */
 
 
                 targetVelocityX *=
@@ -2178,14 +2141,29 @@ if (gl) {
                     0.88;
 
 
+                /*
+                   If not actively dragging,
+                   whirl slowly dissolves.
+                */
+
+
+                if (
+                    targetDraggingAmount === 0
+                ) {
+
+                    targetWhirlEnergy *=
+                        0.965;
+
+                }
+
+
                 const now =
                     performance.now();
 
 
                 const time =
                     (
-                        now
-                        -
+                        now -
                         start
                     )
                     /
@@ -2194,8 +2172,7 @@ if (gl) {
 
                 const dripAge =
                     (
-                        now
-                        -
+                        now -
                         dripStarted
                     )
                     /
@@ -2248,6 +2225,12 @@ if (gl) {
                     gl.uniform1f(
                         draggingUniform,
                         draggingAmount
+                    );
+
+
+                    gl.uniform1f(
+                        whirlEnergyUniform,
+                        whirlEnergy
                     );
 
 
