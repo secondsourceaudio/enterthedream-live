@@ -81,9 +81,10 @@
             >
 
                 <img
-                    src="./images/gallery/cloud_patterns.png"
+                    src="./images/gallery/thumbs/cloud_patterns.png"
                     alt=""
                     loading="eager"
+                    decoding="async"
                     draggable="false"
                 >
 
@@ -105,9 +106,10 @@
             >
 
                 <img
-                    src="./images/gallery/flower_1.png"
+                    src="./images/gallery/thumbs/flower_1.png"
                     alt=""
                     loading="lazy"
+                    decoding="async"
                     draggable="false"
                 >
 
@@ -122,9 +124,10 @@
             >
 
                 <img
-                    src="./images/gallery/flower_2.png"
+                    src="./images/gallery/thumbs/flower_2.png"
                     alt=""
                     loading="lazy"
+                    decoding="async"
                     draggable="false"
                 >
 
@@ -146,9 +149,10 @@
             >
 
                 <img
-                    src="./images/gallery/flower_3.png"
+                    src="./images/gallery/thumbs/flower_3.png"
                     alt=""
                     loading="lazy"
+                    decoding="async"
                     draggable="false"
                 >
 
@@ -170,9 +174,10 @@
             >
 
                 <img
-                    src="./images/gallery/flower_4.png"
+                    src="./images/gallery/thumbs/flower_4.png"
                     alt=""
                     loading="lazy"
+                    decoding="async"
                     draggable="false"
                 >
 
@@ -187,9 +192,10 @@
             >
 
                 <img
-                    src="./images/gallery/flower_5.png"
+                    src="./images/gallery/thumbs/flower_5.png"
                     alt=""
                     loading="lazy"
+                    decoding="async"
                     draggable="false"
                 >
 
@@ -211,9 +217,10 @@
             >
 
                 <img
-                    src="./images/gallery/flower_6.png"
+                    src="./images/gallery/thumbs/flower_6.png"
                     alt=""
                     loading="lazy"
+                    decoding="async"
                     draggable="false"
                 >
 
@@ -343,6 +350,16 @@
 
     <script>
 
+        /*
+           IMPORTANT:
+
+           These are deliberately the ORIGINAL
+           high-resolution files.
+
+           The normal archive uses the smaller
+           files inside /thumbs/.
+        */
+
         const images = [
 
             "./images/gallery/cloud_patterns.png",
@@ -411,6 +428,7 @@
 
 
         let currentIndex = 0;
+
 
 
         /* =========================================
@@ -576,15 +594,11 @@
 
 
             viewerCount.textContent =
-                `
-                    ${paddedNumber(
-                        currentIndex + 1
-                    )}
-                    /
-                    ${paddedNumber(
-                        images.length
-                    )}
-                `;
+                `${paddedNumber(
+                    currentIndex + 1
+                )} / ${paddedNumber(
+                    images.length
+                )}`;
 
 
             resetZoom();
@@ -790,8 +804,7 @@
 
 
                 if (
-                    activePointers.size === 1
-                    &&
+                    activePointers.size === 1 &&
                     scale > 1
                 ) {
 
@@ -916,8 +929,7 @@
 
 
                 if (
-                    dragging
-                    &&
+                    dragging &&
                     scale > 1
                 ) {
 
@@ -982,8 +994,6 @@
 
         /* =========================================
            DOUBLE CLICK
-
-           Reset rather than allowing browser zoom.
         ========================================== */
 
         viewerImageArea.addEventListener(
@@ -1069,8 +1079,7 @@
 
 
                 if (
-                    event.key === "+"
-                    ||
+                    event.key === "+" ||
                     event.key === "="
                 ) {
 
