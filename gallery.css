@@ -1,391 +1,800 @@
-body.lightbox-open {
-    overflow: hidden;
+/* =========================================
+   SECOND SOURCE
+   IMAGES
+========================================= */
+
+
+/* =========================================
+   PAGE
+========================================= */
+
+body {
+    background:
+        #050505;
+}
+
+
+body.viewer-open {
+    overflow:
+        hidden;
 }
 
 
 /* =========================================
-   GALLERY
+   ARCHIVE
+
+   Everything is constructed around
+   one exact vertical centre axis.
 ========================================= */
 
-.gallery-main {
-    flex: 1;
+.archive {
+    width:
+        100%;
 
-    width: 100%;
+    max-width:
+        1440px;
+
+    margin:
+        0 auto;
 
     padding:
-        72px
-        40px
-        120px;
+        110px
+        48px
+        150px;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    align-items:
+        center;
+
+    gap:
+        150px;
 }
 
-
-.archive-header {
-    width: 100%;
-    max-width: 1800px;
-
-    margin:
-        0
-        auto
-        90px;
-
-    text-align: center;
-}
-
-
-.archive-label {
-    margin:
-        0
-        0
-        28px;
-
-    font-size: var(--font-label);
-
-    letter-spacing: 0.25em;
-}
-
-
-.archive-header h1 {
-    margin: 0;
-}
-
-
-.archive-description {
-    margin:
-        25px
-        0
-        0;
-
-    font-size: var(--font-small);
-
-    letter-spacing: 0.22em;
-}
 
 
 /* =========================================
-   GRID
+   SINGLE IMAGE ROW
 ========================================= */
 
-.gallery-grid {
-    width: 100%;
-    max-width: 1800px;
+.archive-single {
+    width:
+        100%;
 
-    margin:
-        0
-        auto;
+    display:
+        flex;
 
-    display: grid;
+    justify-content:
+        center;
+
+    align-items:
+        center;
+}
+
+
+.archive-single-large
+.archive-image-button {
+    width:
+        min(
+            76vw,
+            1040px
+        );
+}
+
+
+.archive-single-medium
+.archive-image-button {
+    width:
+        min(
+            54vw,
+            720px
+        );
+}
+
+
+
+/* =========================================
+   MIRRORED PAIR
+
+   Two equal columns with the centre of
+   the gap sitting exactly on page centre.
+========================================= */
+
+.archive-pair {
+    width:
+        min(
+            88vw,
+            1120px
+        );
+
+    display:
+        grid;
 
     grid-template-columns:
         repeat(
-            3,
-            minmax(0, 1fr)
+            2,
+            minmax(
+                0,
+                1fr
+            )
         );
 
     gap:
-        90px
-        36px;
+        90px;
+
+    align-items:
+        center;
 }
 
-
-.gallery-item {
-    min-width: 0;
-}
-
-
-.artwork-button {
-    width: 100%;
-
-    padding: 12px;
-
-    display: block;
-
-    background: #0a0a0a;
-
-    border:
-        1px solid
-        rgba(255, 255, 255, 0.18);
-
-    cursor: pointer;
-}
-
-
-.artwork-image {
-    display: block;
-
-    width: 100%;
-    height: auto;
-}
-
-
-.artwork-information {
-    margin-top: 16px;
-
-    display: grid;
-
-    grid-template-columns:
-        44px
-        1fr;
-
-    gap: 12px;
-
-    font-size: var(--font-small);
-
-    letter-spacing: 0.17em;
-}
 
 
 /* =========================================
-   LIGHTBOX
+   IMAGE BUTTON
 ========================================= */
 
-.lightbox {
-    position: fixed;
+.archive-image-button {
+    display:
+        block;
 
-    inset: 0;
+    margin:
+        0;
 
-    z-index: 5000;
+    padding:
+        0;
 
-    display: none;
+    border:
+        0;
+
+    background:
+        transparent;
+
+    cursor:
+        zoom-in;
+
+    appearance:
+        none;
+
+    -webkit-appearance:
+        none;
+}
+
+
+.archive-image-button img {
+    display:
+        block;
+
+    width:
+        100%;
+
+    height:
+        auto;
+
+    margin:
+        0 auto;
+
+    user-select:
+        none;
+
+    -webkit-user-select:
+        none;
+
+    -webkit-touch-callout:
+        none;
+
+    transition:
+        opacity
+        0.25s
+        ease;
+}
+
+
+.archive-image-button:hover img {
+    opacity:
+        0.76;
+}
+
+
+.archive-image-button:focus-visible {
+    outline:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.7
+        );
+
+    outline-offset:
+        10px;
+}
+
+
+
+/* =========================================
+   VIEWER
+========================================= */
+
+.gallery-viewer {
+    position:
+        fixed;
+
+    inset:
+        0;
+
+    z-index:
+        5000;
+
+    width:
+        100vw;
+
+    height:
+        100dvh;
+
+    display:
+        none;
+
+    grid-template-rows:
+        64px
+        minmax(
+            0,
+            1fr
+        )
+        56px;
+
+    overflow:
+        hidden;
 
     background:
         rgba(
             0,
             0,
             0,
-            0.98
+            0.99
         );
 }
 
 
-.lightbox.is-open {
-    display: flex;
-
-    align-items: center;
-    justify-content: center;
+.gallery-viewer.is-open {
+    display:
+        grid;
 }
 
 
-.lightbox-content {
+
+/* =========================================
+   VIEWER TOP
+========================================= */
+
+.viewer-topbar {
+    position:
+        relative;
+
     width:
-        calc(
-            100%
-            -
-            180px
-        );
-
-    height: 100%;
+        100%;
 
     padding:
-        60px
-        30px
-        35px;
+        0
+        28px;
 
-    display: flex;
+    display:
+        flex;
 
-    flex-direction: column;
+    align-items:
+        center;
 
-    align-items: center;
-    justify-content: center;
-}
+    justify-content:
+        flex-end;
 
-
-.lightbox-image {
-    display: block;
-
-    max-width: 100%;
-    max-height:
-        calc(
-            100vh
-            -
-            160px
+    border-bottom:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.14
         );
-
-    width: auto;
-    height: auto;
-
-    object-fit: contain;
 }
 
 
-.lightbox-information {
-    width: 100%;
-    max-width: 1200px;
+.viewer-count {
+    position:
+        absolute;
 
-    margin-top: 20px;
+    left:
+        50%;
 
-    display: grid;
-
-    grid-template-columns:
-        auto
-        1fr
-        auto;
-
-    gap: 20px;
-
-    font-size: var(--font-small);
-
-    letter-spacing: 0.18em;
-}
-
-
-.lightbox-information span:nth-child(2) {
-    text-align: center;
-}
-
-
-.lightbox-arrow {
-    position: absolute;
-
-    top: 50%;
+    top:
+        50%;
 
     transform:
-        translateY(-50%);
+        translate(
+            -50%,
+            -50%
+        );
 
-    width: 80px;
-    height: 120px;
+    font-size:
+        var(
+            --font-small
+        );
 
-    color: #ffffff;
+    letter-spacing:
+        0.22em;
 
-    background: transparent;
+    white-space:
+        nowrap;
+}
 
-    border: none;
+
+.viewer-close {
+    padding:
+        8px
+        0;
+
+    color:
+        #ffffff;
+
+    background:
+        transparent;
+
+    border:
+        0;
+
+    font-family:
+        "Microgramma",
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    font-size:
+        var(
+            --font-small
+        );
+
+    letter-spacing:
+        0.2em;
+
+    cursor:
+        pointer;
+}
+
+
+
+/* =========================================
+   VIEWER STAGE
+========================================= */
+
+.viewer-stage {
+    position:
+        relative;
+
+    min-width:
+        0;
+
+    min-height:
+        0;
+
+    display:
+        grid;
+
+    grid-template-columns:
+        82px
+        minmax(
+            0,
+            1fr
+        )
+        82px;
+
+    align-items:
+        stretch;
+
+    overflow:
+        hidden;
+}
+
+
+
+/* =========================================
+   IMAGE AREA
+========================================= */
+
+.viewer-image-area {
+    position:
+        relative;
+
+    min-width:
+        0;
+
+    min-height:
+        0;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    overflow:
+        hidden;
+
+    padding:
+        22px;
+
+    touch-action:
+        none;
+
+    overscroll-behavior:
+        contain;
+}
+
+
+.viewer-image-area.is-zoomed {
+    cursor:
+        grab;
+}
+
+
+.viewer-image {
+    display:
+        block;
+
+    max-width:
+        100%;
+
+    max-height:
+        100%;
+
+    width:
+        auto;
+
+    height:
+        auto;
+
+    object-fit:
+        contain;
+
+    transform-origin:
+        center
+        center;
+
+    will-change:
+        transform;
+
+    user-select:
+        none;
+
+    -webkit-user-select:
+        none;
+
+    -webkit-touch-callout:
+        none;
+}
+
+
+
+/* =========================================
+   ARROWS
+
+   Perfect mirror positions either
+   side of the image.
+========================================= */
+
+.viewer-arrow {
+    width:
+        100%;
+
+    height:
+        100%;
+
+    margin:
+        0;
+
+    padding:
+        0;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    color:
+        rgba(
+            255,
+            255,
+            255,
+            0.72
+        );
+
+    background:
+        transparent;
+
+    border:
+        0;
 
     font-family:
         Arial,
         Helvetica,
         sans-serif;
 
-    font-size: 40px;
+    font-size:
+        22px;
 
-    cursor: pointer;
+    cursor:
+        pointer;
+
+    transition:
+        color
+        0.2s
+        ease;
 }
 
 
-.lightbox-previous {
-    left: 0;
+.viewer-arrow:hover {
+    color:
+        #ffffff;
 }
 
 
-.lightbox-next {
-    right: 0;
+
+/* =========================================
+   BOTTOM
+========================================= */
+
+.viewer-bottom {
+    width:
+        100%;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    border-top:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.14
+        );
+
+    color:
+        rgba(
+            255,
+            255,
+            255,
+            0.52
+        );
+
+    font-size:
+        8px;
+
+    letter-spacing:
+        0.22em;
 }
 
-
-.lightbox-close {
-    position: absolute;
-
-    top: 24px;
-    right: 28px;
-
-    z-index: 10;
-
-    color: #ffffff;
-
-    background: transparent;
-
-    border: none;
-
-    font-size: var(--font-small);
-
-    letter-spacing: 0.2em;
-
-    cursor: pointer;
-}
 
 
 /* =========================================
    TABLET
 ========================================= */
 
-@media (max-width: 1000px) {
+@media (
+    max-width:
+    950px
+) {
 
-    .gallery-grid {
-        grid-template-columns:
-            repeat(
-                2,
-                minmax(0, 1fr)
+    .archive {
+        padding:
+            90px
+            30px
+            120px;
+
+        gap:
+            120px;
+    }
+
+
+    .archive-pair {
+        width:
+            min(
+                90vw,
+                900px
+            );
+
+        gap:
+            52px;
+    }
+
+
+    .archive-single-large
+    .archive-image-button {
+        width:
+            min(
+                82vw,
+                900px
+            );
+    }
+
+
+    .archive-single-medium
+    .archive-image-button {
+        width:
+            min(
+                62vw,
+                650px
             );
     }
 
 }
 
 
+
 /* =========================================
    MOBILE
 ========================================= */
 
-@media (max-width: 750px) {
+@media (
+    max-width:
+    750px
+) {
 
-    .gallery-main {
-        width: 100%;
+    html,
+    body {
+        width:
+            100%;
+
+        max-width:
+            100vw;
+
+        overflow-x:
+            hidden;
+    }
+
+
+    /* =====================================
+       ARCHIVE
+
+       Mobile becomes a single perfectly
+       centred vertical axis.
+    ====================================== */
+
+    .archive {
+        width:
+            100%;
+
+        max-width:
+            100vw;
 
         padding:
-            48px
+            64px
             14px
-            85px;
+            90px;
+
+        gap:
+            84px;
     }
 
 
-    .archive-header {
-        margin-bottom: 58px;
+    .archive-single-large
+    .archive-image-button,
+
+    .archive-single-medium
+    .archive-image-button {
+        width:
+            min(
+                88vw,
+                620px
+            );
+
+        margin:
+            0 auto;
     }
 
 
-    .archive-label {
-        margin-bottom: 22px;
+    .archive-pair {
+        width:
+            100%;
+
+        display:
+            flex;
+
+        flex-direction:
+            column;
+
+        align-items:
+            center;
+
+        gap:
+            84px;
     }
 
 
-    .archive-description {
-        line-height: 1.7;
+    .archive-pair
+    .archive-image-button {
+        width:
+            min(
+                78vw,
+                520px
+            );
+
+        margin:
+            0 auto;
     }
 
 
-    .gallery-grid {
-        width: 100%;
+    /* =====================================
+       VIEWER
+    ====================================== */
 
-        display: block;
+    .gallery-viewer {
+        width:
+            100vw;
+
+        max-width:
+            100vw;
+
+        grid-template-rows:
+            58px
+            minmax(
+                0,
+                1fr
+            )
+            48px;
     }
 
 
-    .gallery-item {
-        width: 100%;
-
-        margin-bottom: 70px;
-    }
-
-
-    .artwork-button {
-        width: 100%;
-
-        padding: 7px;
-    }
-
-
-    .artwork-information {
-        margin-top: 14px;
-    }
-
-
-    .lightbox-content {
-        width: 100%;
-
+    .viewer-topbar {
         padding:
-            65px
-            48px
-            35px;
+            0
+            16px;
     }
 
 
-    .lightbox-arrow {
-        top: 0;
+    .viewer-stage {
+        grid-template-columns:
+            42px
+            minmax(
+                0,
+                1fr
+            )
+            42px;
+    }
 
-        transform: none;
 
-        width: 48px;
-        height: 100%;
+    .viewer-image-area {
+        padding:
+            8px
+            2px;
+    }
 
-        font-size: 30px;
+
+    .viewer-arrow {
+        font-size:
+            19px;
+    }
+
+
+    .viewer-bottom {
+        font-size:
+            7px;
+
+        letter-spacing:
+            0.16em;
     }
 
 }

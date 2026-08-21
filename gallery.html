@@ -10,22 +10,23 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>SECOND SOURCE — CONCEPT ARCHIVE</title>
+    <title>SECOND SOURCE — IMAGES</title>
 
     <link
         rel="stylesheet"
-        href="./site.css?v=1"
+        href="./site.css?v=3"
     >
 
     <link
         rel="stylesheet"
-        href="./gallery.css?v=8"
+        href="./gallery.css?v=10"
     >
 
 </head>
 
 
 <body>
+
 
     <!-- =========================================
          HEADER
@@ -43,12 +44,8 @@
 
         <nav class="site-nav">
 
-            <a href="./index.html">
-                HOME
-            </a>
-
-            <a href="./experiment.html">
-                EXPERIMENT
+            <a href="./gallery.html">
+                IMAGES
             </a>
 
             <a
@@ -64,39 +61,173 @@
     </header>
 
 
+
     <!-- =========================================
-         GALLERY
+         IMAGE ARCHIVE
     ========================================== -->
 
-    <main class="gallery-main">
-
-        <header class="archive-header">
-
-            <p class="archive-label">
-                SECOND SOURCE
-            </p>
-
-            <h1>
-                CONCEPT ARCHIVE
-            </h1>
-
-            <p class="archive-description">
-                VISUAL STUDIES / ARTWORK / SOURCE MATERIAL
-            </p>
-
-        </header>
+    <main class="archive">
 
 
-        <div
-            id="gallery"
-            class="gallery-grid"
-        ></div>
+        <!-- 01 -->
+
+        <section class="archive-single archive-single-large">
+
+            <button
+                class="archive-image-button"
+                type="button"
+                data-index="0"
+                aria-label="Open image 1"
+            >
+
+                <img
+                    src="./images/gallery/cloud_patterns.png"
+                    alt=""
+                    loading="eager"
+                    draggable="false"
+                >
+
+            </button>
+
+        </section>
+
+
+
+        <!-- 02 / 03 -->
+
+        <section class="archive-pair">
+
+            <button
+                class="archive-image-button"
+                type="button"
+                data-index="1"
+                aria-label="Open image 2"
+            >
+
+                <img
+                    src="./images/gallery/flower_1.png"
+                    alt=""
+                    loading="lazy"
+                    draggable="false"
+                >
+
+            </button>
+
+
+            <button
+                class="archive-image-button"
+                type="button"
+                data-index="2"
+                aria-label="Open image 3"
+            >
+
+                <img
+                    src="./images/gallery/flower_2.png"
+                    alt=""
+                    loading="lazy"
+                    draggable="false"
+                >
+
+            </button>
+
+        </section>
+
+
+
+        <!-- 04 -->
+
+        <section class="archive-single archive-single-medium">
+
+            <button
+                class="archive-image-button"
+                type="button"
+                data-index="3"
+                aria-label="Open image 4"
+            >
+
+                <img
+                    src="./images/gallery/flower_3.png"
+                    alt=""
+                    loading="lazy"
+                    draggable="false"
+                >
+
+            </button>
+
+        </section>
+
+
+
+        <!-- 05 / 06 -->
+
+        <section class="archive-pair">
+
+            <button
+                class="archive-image-button"
+                type="button"
+                data-index="4"
+                aria-label="Open image 5"
+            >
+
+                <img
+                    src="./images/gallery/flower_4.png"
+                    alt=""
+                    loading="lazy"
+                    draggable="false"
+                >
+
+            </button>
+
+
+            <button
+                class="archive-image-button"
+                type="button"
+                data-index="5"
+                aria-label="Open image 6"
+            >
+
+                <img
+                    src="./images/gallery/flower_5.png"
+                    alt=""
+                    loading="lazy"
+                    draggable="false"
+                >
+
+            </button>
+
+        </section>
+
+
+
+        <!-- 07 -->
+
+        <section class="archive-single archive-single-large">
+
+            <button
+                class="archive-image-button"
+                type="button"
+                data-index="6"
+                aria-label="Open image 7"
+            >
+
+                <img
+                    src="./images/gallery/flower_6.png"
+                    alt=""
+                    loading="lazy"
+                    draggable="false"
+                >
+
+            </button>
+
+        </section>
+
 
     </main>
 
 
+
     <!-- =========================================
-         LEGAL
+         COPYRIGHT
     ========================================== -->
 
     <footer class="legal-footer">
@@ -115,433 +246,788 @@
     </footer>
 
 
+
     <!-- =========================================
-         VIEWER
+         FULLSCREEN VIEWER
     ========================================== -->
 
     <div
-        id="lightbox"
-        class="lightbox"
+        id="gallery-viewer"
+        class="gallery-viewer"
         aria-hidden="true"
     >
 
-        <button
-            id="lightbox-close"
-            class="lightbox-close"
-            type="button"
-        >
-            CLOSE
-        </button>
 
+        <div class="viewer-topbar">
 
-        <button
-            id="lightbox-previous"
-            class="lightbox-arrow lightbox-previous"
-            type="button"
-        >
-            ←
-        </button>
-
-
-        <div class="lightbox-content">
-
-            <img
-                id="lightbox-image"
-                class="lightbox-image"
-                src=""
-                alt=""
+            <div
+                id="viewer-count"
+                class="viewer-count"
             >
-
-
-            <div class="lightbox-information">
-
-                <span id="lightbox-number"></span>
-
-                <span id="lightbox-title"></span>
-
-                <span id="lightbox-total"></span>
-
+                01 / 07
             </div>
+
+
+            <button
+                id="viewer-close"
+                class="viewer-close"
+                type="button"
+            >
+                CLOSE
+            </button>
 
         </div>
 
 
-        <button
-            id="lightbox-next"
-            class="lightbox-arrow lightbox-next"
-            type="button"
+
+        <div
+            id="viewer-stage"
+            class="viewer-stage"
         >
-            →
-        </button>
+
+            <button
+                id="viewer-previous"
+                class="viewer-arrow viewer-arrow-left"
+                type="button"
+                aria-label="Previous image"
+            >
+                ←
+            </button>
+
+
+            <div
+                id="viewer-image-area"
+                class="viewer-image-area"
+            >
+
+                <img
+                    id="viewer-image"
+                    class="viewer-image"
+                    src=""
+                    alt=""
+                    draggable="false"
+                >
+
+            </div>
+
+
+            <button
+                id="viewer-next"
+                class="viewer-arrow viewer-arrow-right"
+                type="button"
+                aria-label="Next image"
+            >
+                →
+            </button>
+
+        </div>
+
+
+
+        <div class="viewer-bottom">
+
+            <span>
+                SCROLL / PINCH TO ZOOM
+            </span>
+
+        </div>
+
 
     </div>
 
 
+
+    <!-- =========================================
+         VIEWER SCRIPT
+    ========================================== -->
+
     <script>
 
-        const artworks = [
+        const images = [
 
-            {
-                image:
-                    "./images/gallery/cloud_patterns.png",
+            "./images/gallery/cloud_patterns.png",
 
-                title:
-                    "CLOUD PATTERNS"
-            },
+            "./images/gallery/flower_1.png",
 
-            {
-                image:
-                    "./images/gallery/flower_1.png",
+            "./images/gallery/flower_2.png",
 
-                title:
-                    "FLOWER 01"
-            },
+            "./images/gallery/flower_3.png",
 
-            {
-                image:
-                    "./images/gallery/flower_2.png",
+            "./images/gallery/flower_4.png",
 
-                title:
-                    "FLOWER 02"
-            },
+            "./images/gallery/flower_5.png",
 
-            {
-                image:
-                    "./images/gallery/flower_3.png",
-
-                title:
-                    "FLOWER 03"
-            },
-
-            {
-                image:
-                    "./images/gallery/flower_4.png",
-
-                title:
-                    "FLOWER 04"
-            },
-
-            {
-                image:
-                    "./images/gallery/flower_5.png",
-
-                title:
-                    "FLOWER 05"
-            },
-
-            {
-                image:
-                    "./images/gallery/flower_6.png",
-
-                title:
-                    "FLOWER 06"
-            }
+            "./images/gallery/flower_6.png"
 
         ];
 
 
-        const gallery =
+        const viewer =
             document.getElementById(
-                "gallery"
+                "gallery-viewer"
             );
 
 
-        artworks.forEach(
-            function (
-                artwork,
-                index
-            ) {
-
-                const item =
-                    document.createElement(
-                        "article"
-                    );
-
-
-                item.className =
-                    "gallery-item";
-
-
-                const button =
-                    document.createElement(
-                        "button"
-                    );
-
-
-                button.className =
-                    "artwork-button";
-
-
-                button.type =
-                    "button";
-
-
-                const image =
-                    document.createElement(
-                        "img"
-                    );
-
-
-                image.className =
-                    "artwork-image";
-
-
-                image.src =
-                    artwork.image;
-
-
-                image.alt =
-                    artwork.title;
-
-
-                image.loading =
-                    "lazy";
-
-
-                button.appendChild(
-                    image
-                );
-
-
-                const information =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                information.className =
-                    "artwork-information";
-
-
-                information.innerHTML =
-                    `
-                        <span>
-                            ${String(
-                                index + 1
-                            ).padStart(
-                                2,
-                                "0"
-                            )}
-                        </span>
-
-                        <span>
-                            ${artwork.title}
-                        </span>
-                    `;
-
-
-                button.addEventListener(
-                    "click",
-                    function () {
-
-                        openLightbox(
-                            index
-                        );
-
-                    }
-                );
-
-
-                item.appendChild(
-                    button
-                );
-
-
-                item.appendChild(
-                    information
-                );
-
-
-                gallery.appendChild(
-                    item
-                );
-
-            }
-        );
-
-
-        const lightbox =
+        const viewerImage =
             document.getElementById(
-                "lightbox"
+                "viewer-image"
             );
 
 
-        const lightboxImage =
+        const viewerImageArea =
             document.getElementById(
-                "lightbox-image"
+                "viewer-image-area"
             );
 
 
-        const lightboxTitle =
+        const viewerCount =
             document.getElementById(
-                "lightbox-title"
+                "viewer-count"
             );
 
 
-        const lightboxNumber =
+        const closeButton =
             document.getElementById(
-                "lightbox-number"
+                "viewer-close"
             );
 
 
-        const lightboxTotal =
+        const previousButton =
             document.getElementById(
-                "lightbox-total"
+                "viewer-previous"
+            );
+
+
+        const nextButton =
+            document.getElementById(
+                "viewer-next"
+            );
+
+
+        const imageButtons =
+            document.querySelectorAll(
+                ".archive-image-button"
             );
 
 
         let currentIndex = 0;
 
 
-        function updateLightbox() {
+        /* =========================================
+           ZOOM STATE
+        ========================================== */
 
-            const artwork =
-                artworks[
-                    currentIndex
-                ];
+        let scale = 1;
 
+        let translateX = 0;
 
-            lightboxImage.src =
-                artwork.image;
-
-
-            lightboxImage.alt =
-                artwork.title;
+        let translateY = 0;
 
 
-            lightboxTitle.textContent =
-                artwork.title;
+        let dragging = false;
+
+        let dragStartX = 0;
+
+        let dragStartY = 0;
+
+        let dragOriginalX = 0;
+
+        let dragOriginalY = 0;
 
 
-            lightboxNumber.textContent =
-                String(
-                    currentIndex + 1
-                ).padStart(
-                    2,
-                    "0"
-                );
+        const activePointers =
+            new Map();
 
 
-            lightboxTotal.textContent =
-                "/ "
-                +
-                String(
-                    artworks.length
-                ).padStart(
-                    2,
-                    "0"
-                );
+        let pinchStartDistance = 0;
+
+        let pinchStartScale = 1;
+
+
+
+        /* =========================================
+           HELPERS
+        ========================================== */
+
+        function clamp(
+            value,
+            minimum,
+            maximum
+        ) {
+
+            return Math.max(
+                minimum,
+                Math.min(
+                    maximum,
+                    value
+                )
+            );
 
         }
 
 
-        function openLightbox(
+
+        function paddedNumber(
+            number
+        ) {
+
+            return String(
+                number
+            ).padStart(
+                2,
+                "0"
+            );
+
+        }
+
+
+
+        /* =========================================
+           UPDATE IMAGE
+        ========================================== */
+
+        function updateViewerImage() {
+
+            viewerImage.style.transform =
+                `
+                    translate3d(
+                        ${translateX}px,
+                        ${translateY}px,
+                        0
+                    )
+                    scale(${scale})
+                `;
+
+
+            viewerImageArea.classList.toggle(
+                "is-zoomed",
+                scale > 1
+            );
+
+        }
+
+
+
+        function resetZoom() {
+
+            scale = 1;
+
+            translateX = 0;
+
+            translateY = 0;
+
+
+            updateViewerImage();
+
+        }
+
+
+
+        function setZoom(
+            newScale
+        ) {
+
+            scale =
+                clamp(
+                    newScale,
+                    1,
+                    5
+                );
+
+
+            if (
+                scale === 1
+            ) {
+
+                translateX = 0;
+
+                translateY = 0;
+
+            }
+
+
+            updateViewerImage();
+
+        }
+
+
+
+        /* =========================================
+           LOAD IMAGE
+        ========================================== */
+
+        function showImage(
             index
         ) {
 
             currentIndex =
-                index;
+                (
+                    index +
+                    images.length
+                )
+                %
+                images.length;
 
 
-            updateLightbox();
+            viewerImage.src =
+                images[
+                    currentIndex
+                ];
 
 
-            lightbox.classList.add(
+            viewerCount.textContent =
+                `
+                    ${paddedNumber(
+                        currentIndex + 1
+                    )}
+                    /
+                    ${paddedNumber(
+                        images.length
+                    )}
+                `;
+
+
+            resetZoom();
+
+        }
+
+
+
+        /* =========================================
+           OPEN / CLOSE
+        ========================================== */
+
+        function openViewer(
+            index
+        ) {
+
+            showImage(
+                index
+            );
+
+
+            viewer.classList.add(
                 "is-open"
+            );
+
+
+            viewer.setAttribute(
+                "aria-hidden",
+                "false"
             );
 
 
             document.body.classList.add(
-                "lightbox-open"
+                "viewer-open"
             );
 
         }
 
 
-        function closeLightbox() {
 
-            lightbox.classList.remove(
+        function closeViewer() {
+
+            viewer.classList.remove(
                 "is-open"
             );
 
 
+            viewer.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+
             document.body.classList.remove(
-                "lightbox-open"
+                "viewer-open"
             );
+
+
+            resetZoom();
 
         }
 
 
-        function nextArtwork() {
 
-            currentIndex =
-                (
+        /* =========================================
+           ARCHIVE IMAGE CLICKS
+        ========================================== */
+
+        imageButtons.forEach(
+
+            function (
+                button
+            ) {
+
+                button.addEventListener(
+                    "click",
+                    function () {
+
+                        openViewer(
+                            Number(
+                                button.dataset.index
+                            )
+                        );
+
+                    }
+                );
+
+            }
+
+        );
+
+
+
+        /* =========================================
+           VIEWER CONTROLS
+        ========================================== */
+
+        closeButton.addEventListener(
+            "click",
+            closeViewer
+        );
+
+
+        previousButton.addEventListener(
+            "click",
+            function () {
+
+                showImage(
+                    currentIndex - 1
+                );
+
+            }
+        );
+
+
+        nextButton.addEventListener(
+            "click",
+            function () {
+
+                showImage(
                     currentIndex + 1
-                )
-                %
-                artworks.length;
+                );
+
+            }
+        );
 
 
-            updateLightbox();
+
+        /* =========================================
+           WHEEL ZOOM
+        ========================================== */
+
+        viewerImageArea.addEventListener(
+            "wheel",
+            function (
+                event
+            ) {
+
+                event.preventDefault();
+
+
+                if (
+                    event.deltaY < 0
+                ) {
+
+                    setZoom(
+                        scale + 0.18
+                    );
+
+                }
+
+                else {
+
+                    setZoom(
+                        scale - 0.18
+                    );
+
+                }
+
+            },
+            {
+                passive: false
+            }
+        );
+
+
+
+        /* =========================================
+           POINTER / PINCH
+        ========================================== */
+
+        viewerImageArea.addEventListener(
+            "pointerdown",
+            function (
+                event
+            ) {
+
+                activePointers.set(
+
+                    event.pointerId,
+
+                    {
+                        x: event.clientX,
+                        y: event.clientY
+                    }
+
+                );
+
+
+                try {
+
+                    viewerImageArea
+                        .setPointerCapture(
+                            event.pointerId
+                        );
+
+                }
+
+                catch (
+                    error
+                ) {
+                }
+
+
+                if (
+                    activePointers.size === 1
+                    &&
+                    scale > 1
+                ) {
+
+                    dragging = true;
+
+
+                    dragStartX =
+                        event.clientX;
+
+
+                    dragStartY =
+                        event.clientY;
+
+
+                    dragOriginalX =
+                        translateX;
+
+
+                    dragOriginalY =
+                        translateY;
+
+                }
+
+
+                if (
+                    activePointers.size === 2
+                ) {
+
+                    dragging = false;
+
+
+                    const points =
+                        Array.from(
+                            activePointers.values()
+                        );
+
+
+                    pinchStartDistance =
+                        Math.hypot(
+
+                            points[1].x -
+                            points[0].x,
+
+                            points[1].y -
+                            points[0].y
+
+                        );
+
+
+                    pinchStartScale =
+                        scale;
+
+                }
+
+            }
+        );
+
+
+
+        viewerImageArea.addEventListener(
+            "pointermove",
+            function (
+                event
+            ) {
+
+                if (
+                    activePointers.has(
+                        event.pointerId
+                    )
+                ) {
+
+                    activePointers.set(
+
+                        event.pointerId,
+
+                        {
+                            x: event.clientX,
+                            y: event.clientY
+                        }
+
+                    );
+
+                }
+
+
+                if (
+                    activePointers.size === 2
+                ) {
+
+                    const points =
+                        Array.from(
+                            activePointers.values()
+                        );
+
+
+                    const distance =
+                        Math.hypot(
+
+                            points[1].x -
+                            points[0].x,
+
+                            points[1].y -
+                            points[0].y
+
+                        );
+
+
+                    setZoom(
+
+                        pinchStartScale *
+                        (
+                            distance /
+                            pinchStartDistance
+                        )
+
+                    );
+
+
+                    return;
+
+                }
+
+
+                if (
+                    dragging
+                    &&
+                    scale > 1
+                ) {
+
+                    translateX =
+                        dragOriginalX +
+                        (
+                            event.clientX -
+                            dragStartX
+                        );
+
+
+                    translateY =
+                        dragOriginalY +
+                        (
+                            event.clientY -
+                            dragStartY
+                        );
+
+
+                    updateViewerImage();
+
+                }
+
+            }
+        );
+
+
+
+        function releasePointer(
+            event
+        ) {
+
+            activePointers.delete(
+                event.pointerId
+            );
+
+
+            if (
+                activePointers.size === 0
+            ) {
+
+                dragging =
+                    false;
+
+            }
 
         }
 
 
-        function previousArtwork() {
-
-            currentIndex =
-                (
-                    currentIndex
-                    -
-                    1
-                    +
-                    artworks.length
-                )
-                %
-                artworks.length;
+        viewerImageArea.addEventListener(
+            "pointerup",
+            releasePointer
+        );
 
 
-            updateLightbox();
-
-        }
-
-
-        document
-            .getElementById(
-                "lightbox-close"
-            )
-            .addEventListener(
-                "click",
-                closeLightbox
-            );
+        viewerImageArea.addEventListener(
+            "pointercancel",
+            releasePointer
+        );
 
 
-        document
-            .getElementById(
-                "lightbox-next"
-            )
-            .addEventListener(
-                "click",
-                nextArtwork
-            );
+
+        /* =========================================
+           DOUBLE CLICK
+
+           Reset rather than allowing browser zoom.
+        ========================================== */
+
+        viewerImageArea.addEventListener(
+            "dblclick",
+            function (
+                event
+            ) {
+
+                event.preventDefault();
 
 
-        document
-            .getElementById(
-                "lightbox-previous"
-            )
-            .addEventListener(
-                "click",
-                previousArtwork
-            );
+                if (
+                    scale > 1
+                ) {
 
+                    resetZoom();
+
+                }
+
+                else {
+
+                    setZoom(
+                        2
+                    );
+
+                }
+
+            }
+        );
+
+
+
+        /* =========================================
+           KEYBOARD
+        ========================================== */
 
         document.addEventListener(
             "keydown",
-            function (event) {
+            function (
+                event
+            ) {
 
                 if (
-                    !lightbox.classList.contains(
+                    !viewer.classList.contains(
                         "is-open"
                     )
                 ) {
@@ -555,16 +1041,7 @@
                     event.key === "Escape"
                 ) {
 
-                    closeLightbox();
-
-                }
-
-
-                if (
-                    event.key === "ArrowRight"
-                ) {
-
-                    nextArtwork();
+                    closeViewer();
 
                 }
 
@@ -573,14 +1050,53 @@
                     event.key === "ArrowLeft"
                 ) {
 
-                    previousArtwork();
+                    showImage(
+                        currentIndex - 1
+                    );
+
+                }
+
+
+                if (
+                    event.key === "ArrowRight"
+                ) {
+
+                    showImage(
+                        currentIndex + 1
+                    );
+
+                }
+
+
+                if (
+                    event.key === "+"
+                    ||
+                    event.key === "="
+                ) {
+
+                    setZoom(
+                        scale + 0.25
+                    );
+
+                }
+
+
+                if (
+                    event.key === "-"
+                ) {
+
+                    setZoom(
+                        scale - 0.25
+                    );
 
                 }
 
             }
         );
 
+
     </script>
+
 
 </body>
 
