@@ -28,8 +28,98 @@ let muted = false;
 let wantsPlayback = true;
 
 
-audio.volume = selectedVolume;
-audio.muted = false;
+/* =========================================
+   IPHONE VOLUME SUPPORT (Web Audio)
+
+   iOS ignores audio.volume (it is read-only
+   there). On those devices we send the audio
+   through a gain node and control volume with
+   that instead. Everywhere else the normal
+   audio.volume is used, exactly as before.
+========================================= */
+
+const volumeIsReadOnly = (function () {
+
+    const test = new Audio();
+
+    test.volume = 0.5;
+
+    return test.volume === 1;
+})();
+
+
+let audioContext = null;
+let gainNode = null;
+
+
+function setupWebAudio() {
+
+    const AudioContextClass =
+        window.AudioContext || window.webkitAudioContext;
+
+    if (!AudioContextClass) {
+        return;
+    }
+
+    try {
+
+        audioContext = new AudioContextClass();
+
+        const source = audioContext.createMediaElementSource(audio);
+
+        gainNode = audioContext.createGain();
+
+        source.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+    } catch (error) {
+
+        audioContext = null;
+        gainNode = null;
+    }
+}
+
+
+if (volumeIsReadOnly) {
+    setupWebAudio();
+}
+
+
+/* Browsers keep the audio context "suspended"
+   until a tap. This wakes it up. */
+
+function resumeAudio() {
+
+    if (audioContext && audioContext.state === "suspended") {
+        audioContext.resume().catch(function () {});
+    }
+}
+
+
+/* Single place that applies volume + mute. */
+
+function applyOutput() {
+
+    if (gainNode) {
+
+        audio.muted = false;
+        audio.volume = 1;
+
+        gainNode.gain.setTargetAtTime(
+            muted ? 0 : selectedVolume,
+            audioContext.currentTime,
+            0.015
+        );
+
+    } else {
+
+        audio.muted = muted;
+        audio.volume = selectedVolume;
+    }
+}
+
+
+applyOutput();
 
 
 /* =========================================
@@ -89,8 +179,8 @@ function attemptPlayback() {
         return;
     }
 
-    audio.muted = false;
-    audio.volume = selectedVolume;
+    applyOutput();
+    resumeAudio();
 
     audio
         .play()
@@ -102,24 +192,29 @@ function attemptPlayback() {
 attemptPlayback();
 
 
-/* FIX 1: first tap on the player buttons no longer
-   starts and immediately stops the audio. */
+/* First tap anywhere (except the player controls)
+   starts the audio if the browser blocked autoplay.
+
+   iPhones only accept audio starts on touchend /
+   click, so we listen for all three. The handler is
+   cheap and only acts when audio is still paused. */
 
 function firstGesture(event) {
 
-    // Ignore taps on the player controls themselves
     if (event.target.closest(".compact-player")) {
         return;
     }
 
-    document.removeEventListener("pointerdown", firstGesture, true);
+    resumeAudio();
 
     if (wantsPlayback && !muted && audio.paused) {
         attemptPlayback();
     }
 }
 
-document.addEventListener("pointerdown", firstGesture, true);
+["pointerdown", "touchend", "click"].forEach(function (name) {
+    document.addEventListener(name, firstGesture, true);
+});
 
 
 /* =========================================
@@ -128,12 +223,12 @@ document.addEventListener("pointerdown", firstGesture, true);
 
 playButton.addEventListener("click", function () {
 
+    resumeAudio();
+
     if (audio.paused) {
 
         wantsPlayback = true;
         muted = false;
-
-        audio.muted = false;
 
         attemptPlayback();
 
@@ -154,9 +249,11 @@ playButton.addEventListener("click", function () {
 
 soundButton.addEventListener("click", function () {
 
+    resumeAudio();
+
     muted = !muted;
 
-    audio.muted = muted;
+    applyOutput();
 
     if (!muted && wantsPlayback && audio.paused) {
         attemptPlayback();
@@ -174,18 +271,19 @@ function setVolume(value) {
 
     selectedVolume = clamp(value, 0, 1);
 
-    audio.volume = selectedVolume;
-
     if (selectedVolume > 0) {
         muted = false;
-        audio.muted = false;
     }
+
+    applyOutput();
 
     updatePlayer();
 }
 
 
 volumeSlider.addEventListener("input", function () {
+
+    resumeAudio();
 
     setVolume(Number(volumeSlider.value) / 100);
 
@@ -375,8 +473,6 @@ function updateViewTransform() {
 
     limitViewPan();
 
-    /* FIX 5: lets the CSS .is-zooming rule switch
-       will-change on only while zoomed in. */
     visualMedia.classList.toggle("is-zooming", viewScale > 1);
 
     visualMedia.style.transform =
@@ -425,7 +521,7 @@ container.addEventListener("dblclick", function (event) {
 ========================================= */
 
 const gl = canvas.getContext("webgl", {
-    antialias: true,
+    antialias: false,
     alpha: true
 });
 
@@ -435,11 +531,11 @@ if (!gl) {
 }
 
 
-/* =========================================
-   WEBGL PROGRAM
-========================================= */
-
 if (gl) {
+
+    /* =========================================
+       SHADERS
+    ========================================== */
 
     const vertexShaderSource = `
 
@@ -459,8 +555,6 @@ if (gl) {
 
     const fragmentShaderSource = `
 
-        /* FIX 4: ask for high precision where available so the
-           waves don't shimmer as u_time grows. */
         #ifdef GL_FRAGMENT_PRECISION_HIGH
         precision highp float;
         #else
@@ -474,11 +568,12 @@ if (gl) {
         uniform vec2 u_pointer;
         uniform vec2 u_velocity;
 
-        uniform vec2 u_dripCenter;
+        /* Up to 4 overlapping drips.
+           x, y = centre   z = age in seconds */
+        uniform vec3 u_drips[4];
 
         uniform float u_time;
         uniform float u_motion;
-        uniform float u_dripAge;
         uniform float u_dragging;
 
 
@@ -584,15 +679,11 @@ if (gl) {
                 min(length(u_velocity) * 20.0, 1.0);
 
 
-            /* Tighter falloff: stops the whole artwork
-               being yanked toward the pointer. */
-
             float whirlFade =
                 exp(-pointerDistance * 5.2);
 
 
-            /* FIX 3: continuous direction instead of sign(),
-               so the whirl no longer flips instantly. */
+            /* Continuous direction (no sudden flip). */
 
             float whirlDirection =
                 clamp(
@@ -616,8 +707,6 @@ if (gl) {
             vec2 whirledDelta =
                 rotate2D(whirlAngle) * pointerDelta;
 
-
-            /* Only blend a portion of the rotational field. */
 
             uv +=
                 (whirledDelta - pointerDelta) *
@@ -658,53 +747,63 @@ if (gl) {
 
 
             /* =================================
-               DRIP ON CLICK / TAP
+               DRIPS ON CLICK / TAP
+
+               Loops over every active drip so
+               several can ripple at once.
             ================================= */
 
-            vec2 dripDelta = baseUV - u_dripCenter;
+            for (int i = 0; i < 4; i++) {
 
-            float dripDistance = length(dripDelta);
+                vec3 drip = u_drips[i];
 
-            vec2 dripDirection =
-                normalize(dripDelta + vec2(0.0001));
+                float dripAge = drip.z;
 
+                vec2 dripDelta = baseUV - drip.xy;
 
-            float dripRadius = u_dripAge * 0.33;
+                float dripDistance = length(dripDelta);
 
-            float dripLife =
-                clamp(1.0 - u_dripAge / 2.6, 0.0, 1.0);
-
-
-            /* Main expanding ring. */
-
-            float dripRing =
-                exp(-abs(dripDistance - dripRadius) * 58.0) *
-                dripLife;
+                vec2 dripDirection =
+                    normalize(dripDelta + vec2(0.0001));
 
 
-            /* Trailing ring. */
+                float dripRadius = dripAge * 0.33;
 
-            float secondRadius =
-                max(0.0, dripRadius - 0.055);
-
-            float secondRing =
-                exp(-abs(dripDistance - secondRadius) * 72.0) *
-                dripLife *
-                0.45;
+                float dripLife =
+                    clamp(1.0 - dripAge / 2.6, 0.0, 1.0);
 
 
-            /* Initial indentation. */
+                /* Main expanding ring. */
 
-            float impact =
-                exp(-dripDistance * 24.0) *
-                exp(-u_dripAge * 4.0);
+                float dripRing =
+                    exp(-abs(dripDistance - dripRadius) * 58.0) *
+                    dripLife;
 
 
-            uv += dripDirection * dripRing * 0.050;
+                /* Trailing ring. */
 
-            uv += dripDirection * secondRing * 0.022;
+                float secondRadius =
+                    max(0.0, dripRadius - 0.055);
 
-            uv -= dripDelta * impact * 0.10;
+                float secondRing =
+                    exp(-abs(dripDistance - secondRadius) * 72.0) *
+                    dripLife *
+                    0.45;
+
+
+                /* Initial indentation. */
+
+                float impact =
+                    exp(-dripDistance * 24.0) *
+                    exp(-dripAge * 4.0);
+
+
+                uv += dripDirection * dripRing * 0.050;
+
+                uv += dripDirection * secondRing * 0.022;
+
+                uv -= dripDelta * impact * 0.10;
+            }
 
 
             /* =================================
@@ -769,14 +868,89 @@ if (gl) {
     }
 
 
-    const vertexShader =
-        createShader(gl.VERTEX_SHADER, vertexShaderSource);
+    /* =========================================
+       GL RESOURCES
 
-    const fragmentShader =
-        createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
+       Everything the GPU owns lives here, so it can
+       be rebuilt if the browser takes the WebGL
+       context away (common on phones when you switch
+       apps) and then gives it back.
+    ========================================== */
+
+    let glActive = false;
+    let imageReady = false;
+
+    let uniforms = {};
+    let texture = null;
 
 
-    if (vertexShader && fragmentShader) {
+    function uploadArtworkTexture() {
+
+        const maximum = Math.min(
+            1800,
+            gl.getParameter(gl.MAX_TEXTURE_SIZE)
+        );
+
+        const sourceWidth = fallbackImage.naturalWidth;
+        const sourceHeight = fallbackImage.naturalHeight;
+
+        /* Crop to the largest centred square so the
+           texture matches the CSS object-fit: cover crop. */
+
+        const side = Math.min(sourceWidth, sourceHeight);
+        const size = Math.min(side, maximum);
+
+        const textureCanvas = document.createElement("canvas");
+
+        textureCanvas.width = size;
+        textureCanvas.height = size;
+
+        const context = textureCanvas.getContext("2d");
+
+        context.drawImage(
+            fallbackImage,
+            (sourceWidth - side) / 2,
+            (sourceHeight - side) / 2,
+            side,
+            side,
+            0,
+            0,
+            size,
+            size
+        );
+
+
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            textureCanvas
+        );
+
+        imageReady = true;
+
+        canvas.classList.add("is-ready");
+    }
+
+
+    function setupGL() {
+
+        const vertexShader =
+            createShader(gl.VERTEX_SHADER, vertexShaderSource);
+
+        const fragmentShader =
+            createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+        if (!vertexShader || !fragmentShader) {
+            return false;
+        }
+
 
         const program = gl.createProgram();
 
@@ -785,625 +959,610 @@ if (gl) {
 
         gl.linkProgram(program);
 
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
 
-        if (gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            console.error(gl.getProgramInfoLog(program));
 
-            gl.useProgram(program);
+            return false;
+        }
 
+        gl.useProgram(program);
 
-            /* =================================
-               PLANE
-            ================================= */
 
-            const buffer = gl.createBuffer();
+        /* PLANE */
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        const buffer = gl.createBuffer();
 
-            gl.bufferData(
-                gl.ARRAY_BUFFER,
-                new Float32Array([
-                    -1, -1,
-                     1, -1,
-                    -1,  1,
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
-                    -1,  1,
-                     1, -1,
-                     1,  1
-                ]),
-                gl.STATIC_DRAW
-            );
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array([
+                -1, -1,
+                 1, -1,
+                -1,  1,
 
+                -1,  1,
+                 1, -1,
+                 1,  1
+            ]),
+            gl.STATIC_DRAW
+        );
 
-            const position = gl.getAttribLocation(program, "a_position");
+        const position = gl.getAttribLocation(program, "a_position");
 
-            gl.enableVertexAttribArray(position);
+        gl.enableVertexAttribArray(position);
 
-            gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
 
 
-            /* =================================
-               UNIFORMS
-            ================================= */
+        /* UNIFORMS */
 
-            const pointerUniform =
-                gl.getUniformLocation(program, "u_pointer");
+        uniforms = {
+            pointer:  gl.getUniformLocation(program, "u_pointer"),
+            velocity: gl.getUniformLocation(program, "u_velocity"),
+            drips:    gl.getUniformLocation(program, "u_drips"),
+            time:     gl.getUniformLocation(program, "u_time"),
+            motion:   gl.getUniformLocation(program, "u_motion"),
+            dragging: gl.getUniformLocation(program, "u_dragging"),
+            texture:  gl.getUniformLocation(program, "u_texture")
+        };
 
-            const velocityUniform =
-                gl.getUniformLocation(program, "u_velocity");
 
-            const dripCenterUniform =
-                gl.getUniformLocation(program, "u_dripCenter");
+        /* TEXTURE */
 
-            const timeUniform =
-                gl.getUniformLocation(program, "u_time");
+        texture = gl.createTexture();
 
-            const motionUniform =
-                gl.getUniformLocation(program, "u_motion");
+        gl.activeTexture(gl.TEXTURE0);
 
-            const dripAgeUniform =
-                gl.getUniformLocation(program, "u_dripAge");
+        gl.bindTexture(gl.TEXTURE_2D, texture);
 
-            const draggingUniform =
-                gl.getUniformLocation(program, "u_dragging");
+        gl.texParameteri(
+            gl.TEXTURE_2D,
+            gl.TEXTURE_WRAP_S,
+            gl.CLAMP_TO_EDGE
+        );
 
-            const textureUniform =
-                gl.getUniformLocation(program, "u_texture");
+        gl.texParameteri(
+            gl.TEXTURE_2D,
+            gl.TEXTURE_WRAP_T,
+            gl.CLAMP_TO_EDGE
+        );
 
+        gl.texParameteri(
+            gl.TEXTURE_2D,
+            gl.TEXTURE_MIN_FILTER,
+            gl.LINEAR
+        );
 
-            /* =================================
-               TEXTURE
-            ================================= */
+        gl.texParameteri(
+            gl.TEXTURE_2D,
+            gl.TEXTURE_MAG_FILTER,
+            gl.LINEAR
+        );
 
-            const texture = gl.createTexture();
+        gl.uniform1i(uniforms.texture, 0);
 
-            gl.activeTexture(gl.TEXTURE0);
 
-            gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.viewport(0, 0, canvas.width, canvas.height);
 
-            gl.texParameteri(
-                gl.TEXTURE_2D,
-                gl.TEXTURE_WRAP_S,
-                gl.CLAMP_TO_EDGE
-            );
 
-            gl.texParameteri(
-                gl.TEXTURE_2D,
-                gl.TEXTURE_WRAP_T,
-                gl.CLAMP_TO_EDGE
-            );
+        glActive = true;
 
-            gl.texParameteri(
-                gl.TEXTURE_2D,
-                gl.TEXTURE_MIN_FILTER,
-                gl.LINEAR
-            );
+        if (
+            fallbackImage.complete &&
+            fallbackImage.naturalWidth > 0
+        ) {
+            uploadArtworkTexture();
+        }
 
-            gl.texParameteri(
-                gl.TEXTURE_2D,
-                gl.TEXTURE_MAG_FILTER,
-                gl.LINEAR
-            );
+        return true;
+    }
 
-            gl.uniform1i(textureUniform, 0);
 
+    /* If the image finishes loading after setup. */
 
-            /* =================================
-               ARTWORK TEXTURE
-            ================================= */
+    fallbackImage.addEventListener("load", function () {
 
-            let imageReady = false;
+        if (glActive) {
+            uploadArtworkTexture();
+        }
+    });
 
 
-            function uploadArtworkTexture() {
+    /* =========================================
+       CONTEXT LOSS / RESTORE
+    ========================================== */
 
-                const maximum = Math.min(
-                    1800,
-                    gl.getParameter(gl.MAX_TEXTURE_SIZE)
-                );
+    canvas.addEventListener("webglcontextlost", function (event) {
 
-                const sourceWidth = fallbackImage.naturalWidth;
-                const sourceHeight = fallbackImage.naturalHeight;
+        /* Tells the browser we want the context back. */
+        event.preventDefault();
 
-                /* FIX 2: crop to the largest centred square so the
-                   texture matches the CSS object-fit: cover crop. */
+        glActive = false;
+        imageReady = false;
+    });
 
-                const side = Math.min(sourceWidth, sourceHeight);
-                const size = Math.min(side, maximum);
 
-                const textureCanvas = document.createElement("canvas");
+    canvas.addEventListener("webglcontextrestored", function () {
 
-                textureCanvas.width = size;
-                textureCanvas.height = size;
+        setupGL();
+    });
 
-                const context = textureCanvas.getContext("2d");
 
-                context.drawImage(
-                    fallbackImage,
-                    (sourceWidth - side) / 2,
-                    (sourceHeight - side) / 2,
-                    side,
-                    side,
-                    0,
-                    0,
-                    size,
-                    size
-                );
+    /* =========================================
+       SMOOTH POINTER STATE
+    ========================================== */
 
+    let pointerX = 0.5;
+    let pointerY = 0.5;
 
-                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    let targetPointerX = 0.5;
+    let targetPointerY = 0.5;
 
-                gl.bindTexture(gl.TEXTURE_2D, texture);
+    let velocityX = 0;
+    let velocityY = 0;
 
-                gl.texImage2D(
-                    gl.TEXTURE_2D,
-                    0,
-                    gl.RGBA,
-                    gl.RGBA,
-                    gl.UNSIGNED_BYTE,
-                    textureCanvas
-                );
+    let targetVelocityX = 0;
+    let targetVelocityY = 0;
 
-                imageReady = true;
+    let motion = 0;
+    let targetMotion = 0;
 
-                canvas.classList.add("is-ready");
-            }
+    let draggingAmount = 0;
+    let targetDraggingAmount = 0;
 
 
-            if (
-                fallbackImage.complete &&
-                fallbackImage.naturalWidth > 0
-            ) {
+    /* =========================================
+       DRIP STATE
 
-                uploadArtworkTexture();
+       A small pool of 4 drips. Each new tap takes
+       the next slot, so older ripples keep going.
+    ========================================== */
 
-            } else {
+    const MAX_DRIPS = 4;
 
-                fallbackImage.addEventListener(
-                    "load",
-                    uploadArtworkTexture,
-                    { once: true }
-                );
-            }
+    const drips = [];
 
+    for (let i = 0; i < MAX_DRIPS; i++) {
+        drips.push({ x: 0.5, y: 0.5, start: -10000000 });
+    }
 
-            /* =================================
-               SMOOTH POINTER STATE
-            ================================= */
+    const dripData = new Float32Array(MAX_DRIPS * 3);
 
-            let pointerX = 0.5;
-            let pointerY = 0.5;
+    let nextDrip = 0;
+    let lastDripIndex = -1;
 
-            let targetPointerX = 0.5;
-            let targetPointerY = 0.5;
 
-            let velocityX = 0;
-            let velocityY = 0;
+    let interacted = false;
 
-            let targetVelocityX = 0;
-            let targetVelocityY = 0;
 
-            let motion = 0;
-            let targetMotion = 0;
+    /* =========================================
+       UPDATE POINTER TARGET
 
-            let draggingAmount = 0;
-            let targetDraggingAmount = 0;
+       We do NOT directly move the shader pointer.
+       The render loop eases toward this position.
+    ========================================== */
 
+    function updateShaderPointer(clientX, clientY) {
 
-            /* =================================
-               DRIP STATE
-            ================================= */
+        const rect = container.getBoundingClientRect();
 
-            let dripX = 0.5;
-            let dripY = 0.5;
+        const nextX = clamp(
+            (clientX - rect.left) / rect.width,
+            0,
+            1
+        );
 
-            let dripStarted = -10000;
+        const nextY = clamp(
+            1 - (clientY - rect.top) / rect.height,
+            0,
+            1
+        );
 
-            let interacted = false;
+        const deltaX = nextX - targetPointerX;
+        const deltaY = nextY - targetPointerY;
 
+        targetPointerX = nextX;
+        targetPointerY = nextY;
 
-            /* =================================
-               UPDATE POINTER TARGET
 
-               We do NOT directly move the shader pointer.
-               The render loop eases toward this position.
-            ================================= */
+        targetVelocityX = clamp(deltaX * 1.5, -0.040, 0.040);
+        targetVelocityY = clamp(deltaY * 1.5, -0.040, 0.040);
 
-            function updateShaderPointer(clientX, clientY) {
+        targetMotion = Math.min(
+            1,
+            Math.hypot(deltaX, deltaY) * 30
+        );
 
-                const rect = container.getBoundingClientRect();
 
-                const nextX = clamp(
-                    (clientX - rect.left) / rect.width,
-                    0,
-                    1
-                );
+        if (!interacted) {
 
-                const nextY = clamp(
-                    1 - (clientY - rect.top) / rect.height,
-                    0,
-                    1
-                );
+            interacted = true;
 
-                const deltaX = nextX - targetPointerX;
-                const deltaY = nextY - targetPointerY;
+            interactionMessage.classList.add("is-hidden");
+        }
+    }
 
-                targetPointerX = nextX;
-                targetPointerY = nextY;
 
+    /* =========================================
+       CREATE / CANCEL DRIP
+    ========================================== */
 
-                /* Softer velocity: prevents trackpad flicks
-                   from causing extreme pulls. */
+    function createDrip(clientX, clientY) {
 
-                targetVelocityX = clamp(deltaX * 1.5, -0.040, 0.040);
-                targetVelocityY = clamp(deltaY * 1.5, -0.040, 0.040);
+        const rect = container.getBoundingClientRect();
 
-                targetMotion = Math.min(
-                    1,
-                    Math.hypot(deltaX, deltaY) * 30
-                );
+        const drip = drips[nextDrip];
 
+        drip.x = clamp(
+            (clientX - rect.left) / rect.width,
+            0,
+            1
+        );
 
-                if (!interacted) {
+        drip.y = clamp(
+            1 - (clientY - rect.top) / rect.height,
+            0,
+            1
+        );
 
-                    interacted = true;
+        drip.start = performance.now();
 
-                    interactionMessage.classList.add("is-hidden");
-                }
-            }
+        lastDripIndex = nextDrip;
 
+        nextDrip = (nextDrip + 1) % MAX_DRIPS;
+    }
 
-            /* =================================
-               CREATE DRIP
-            ================================= */
 
-            function createDrip(clientX, clientY) {
+    /* Used when a tap turns out to be the start of a pinch. */
 
-                const rect = container.getBoundingClientRect();
+    function cancelLastDrip() {
 
-                dripX = clamp(
-                    (clientX - rect.left) / rect.width,
-                    0,
-                    1
-                );
+        if (lastDripIndex >= 0) {
+            drips[lastDripIndex].start = -10000000;
+        }
+    }
 
-                dripY = clamp(
-                    1 - (clientY - rect.top) / rect.height,
-                    0,
-                    1
-                );
 
-                dripStarted = performance.now();
-            }
+    /* =========================================
+       POINTER DOWN
+    ========================================== */
 
+    container.addEventListener("pointerdown", function (event) {
 
-            /* =================================
-               POINTER DOWN
-            ================================= */
+        viewPointers.set(event.pointerId, {
+            x: event.clientX,
+            y: event.clientY,
+            type: event.pointerType
+        });
 
-            container.addEventListener("pointerdown", function (event) {
 
-                viewPointers.set(event.pointerId, {
-                    x: event.clientX,
-                    y: event.clientY,
-                    type: event.pointerType
-                });
+        try {
+            container.setPointerCapture(event.pointerId);
+        } catch (error) {
+        }
 
 
-                try {
-                    container.setPointerCapture(event.pointerId);
-                } catch (error) {
-                }
+        /* ONE POINTER: click/tap = DRIP
+           (the whirl does NOT start yet) */
 
+        if (viewPointers.size === 1 && viewScale === 1) {
 
-                /* ONE POINTER: click/tap = DRIP
-                   (the whirl does NOT start yet) */
+            dragPointerId = event.pointerId;
 
-                if (viewPointers.size === 1 && viewScale === 1) {
+            dragOriginX = event.clientX;
+            dragOriginY = event.clientY;
 
-                    dragPointerId = event.pointerId;
+            dragHasStarted = false;
 
-                    dragOriginX = event.clientX;
-                    dragOriginY = event.clientY;
+            targetDraggingAmount = 0;
 
-                    dragHasStarted = false;
+            updateShaderPointer(event.clientX, event.clientY);
 
-                    targetDraggingAmount = 0;
+            createDrip(event.clientX, event.clientY);
+        }
 
-                    updateShaderPointer(event.clientX, event.clientY);
 
-                    createDrip(event.clientX, event.clientY);
-                }
+        /* TWO FINGERS = PINCH */
 
+        if (viewPointers.size === 2) {
 
-                /* TWO FINGERS = PINCH */
+            cancelLastDrip();
 
-                if (viewPointers.size === 2) {
+            targetDraggingAmount = 0;
 
-                    /* FIX 6: cancel the drip the first finger started. */
-                    dripStarted = -10000;
+            dragHasStarted = false;
 
-                    targetDraggingAmount = 0;
+            dragPointerId = null;
 
-                    dragHasStarted = false;
+            pinchStartDistance = viewPointerDistance();
 
-                    dragPointerId = null;
+            pinchStartScale = viewScale;
 
-                    pinchStartDistance = viewPointerDistance();
+            const midpoint = viewPointerMidpoint();
 
-                    pinchStartScale = viewScale;
+            pinchStartX = midpoint.x;
+            pinchStartY = midpoint.y;
 
-                    const midpoint = viewPointerMidpoint();
+            pinchStartViewX = viewX;
+            pinchStartViewY = viewY;
 
-                    pinchStartX = midpoint.x;
-                    pinchStartY = midpoint.y;
+            panning = false;
+        }
 
-                    pinchStartViewX = viewX;
-                    pinchStartViewY = viewY;
 
-                    panning = false;
-                }
+        /* ALREADY ZOOMED = PAN */
 
+        else if (viewScale > 1) {
 
-                /* ALREADY ZOOMED = PAN */
+            targetDraggingAmount = 0;
 
-                else if (viewScale > 1) {
+            dragHasStarted = false;
 
-                    targetDraggingAmount = 0;
+            panning = true;
 
-                    dragHasStarted = false;
+            panStartX = event.clientX;
+            panStartY = event.clientY;
 
-                    panning = true;
+            panOriginalX = viewX;
+            panOriginalY = viewY;
+        }
 
-                    panStartX = event.clientX;
-                    panStartY = event.clientY;
 
-                    panOriginalX = viewX;
-                    panOriginalY = viewY;
-                }
+        if (audio.paused && wantsPlayback && !muted) {
+            attemptPlayback();
+        }
+    });
 
 
-                if (audio.paused && wantsPlayback && !muted) {
-                    attemptPlayback();
-                }
+    /* =========================================
+       POINTER MOVE
+    ========================================== */
+
+    container.addEventListener("pointermove", function (event) {
+
+        if (viewPointers.has(event.pointerId)) {
+
+            viewPointers.set(event.pointerId, {
+                x: event.clientX,
+                y: event.clientY,
+                type: event.pointerType
             });
+        }
 
 
-            /* =================================
-               POINTER MOVE
-            ================================= */
+        /* PINCH */
 
-            container.addEventListener("pointermove", function (event) {
+        if (viewPointers.size === 2) {
 
-                if (viewPointers.has(event.pointerId)) {
+            targetDraggingAmount = 0;
 
-                    viewPointers.set(event.pointerId, {
-                        x: event.clientX,
-                        y: event.clientY,
-                        type: event.pointerType
-                    });
-                }
+            const distance = viewPointerDistance();
 
+            const midpoint = viewPointerMidpoint();
 
-                /* PINCH */
+            viewScale = clamp(
+                pinchStartScale * (distance / pinchStartDistance),
+                1,
+                3.5
+            );
 
-                if (viewPointers.size === 2) {
+            viewX = pinchStartViewX + (midpoint.x - pinchStartX);
+            viewY = pinchStartViewY + (midpoint.y - pinchStartY);
 
-                    targetDraggingAmount = 0;
+            updateViewTransform();
 
-                    const distance = viewPointerDistance();
-
-                    const midpoint = viewPointerMidpoint();
-
-                    viewScale = clamp(
-                        pinchStartScale * (distance / pinchStartDistance),
-                        1,
-                        3.5
-                    );
-
-                    viewX = pinchStartViewX + (midpoint.x - pinchStartX);
-                    viewY = pinchStartViewY + (midpoint.y - pinchStartY);
-
-                    updateViewTransform();
-
-                    return;
-                }
+            return;
+        }
 
 
-                /* PAN WHILE ZOOMED */
+        /* PAN WHILE ZOOMED */
 
-                if (panning && viewScale > 1) {
+        if (panning && viewScale > 1) {
 
-                    targetDraggingAmount = 0;
+            targetDraggingAmount = 0;
 
-                    viewX = panOriginalX + (event.clientX - panStartX);
-                    viewY = panOriginalY + (event.clientY - panStartY);
+            viewX = panOriginalX + (event.clientX - panStartX);
+            viewY = panOriginalY + (event.clientY - panStartY);
 
-                    updateViewTransform();
+            updateViewTransform();
 
-                    return;
-                }
-
-
-                if (viewScale !== 1) {
-                    return;
-                }
+            return;
+        }
 
 
-                /* MOUSE HOVER: water follows cursor, whirl stays off. */
+        if (viewScale !== 1) {
+            return;
+        }
+
+
+        /* MOUSE HOVER: water follows cursor, whirl stays off. */
+
+        if (
+            event.pointerType === "mouse" &&
+            !viewPointers.has(event.pointerId)
+        ) {
+
+            targetDraggingAmount = 0;
+
+            updateShaderPointer(event.clientX, event.clientY);
+
+            return;
+        }
+
+
+        /* HELD POINTER: whirl only after deliberate movement. */
+
+        if (viewPointers.has(event.pointerId)) {
+
+            if (event.pointerId === dragPointerId) {
+
+                const distanceFromStart = Math.hypot(
+                    event.clientX - dragOriginX,
+                    event.clientY - dragOriginY
+                );
 
                 if (
-                    event.pointerType === "mouse" &&
-                    !viewPointers.has(event.pointerId)
+                    !dragHasStarted &&
+                    distanceFromStart > dragThreshold
                 ) {
-
-                    targetDraggingAmount = 0;
-
-                    updateShaderPointer(event.clientX, event.clientY);
-
-                    return;
+                    dragHasStarted = true;
                 }
 
-
-                /* HELD POINTER: whirl only after deliberate movement. */
-
-                if (viewPointers.has(event.pointerId)) {
-
-                    if (event.pointerId === dragPointerId) {
-
-                        const distanceFromStart = Math.hypot(
-                            event.clientX - dragOriginX,
-                            event.clientY - dragOriginY
-                        );
-
-                        if (
-                            !dragHasStarted &&
-                            distanceFromStart > dragThreshold
-                        ) {
-                            dragHasStarted = true;
-                        }
-
-                        targetDraggingAmount = dragHasStarted ? 1 : 0;
-                    }
-
-                    updateShaderPointer(event.clientX, event.clientY);
-                }
-            });
-
-
-            /* =================================
-               RELEASE
-            ================================= */
-
-            function releasePointer(event) {
-
-                viewPointers.delete(event.pointerId);
-
-
-                if (event.pointerId === dragPointerId) {
-
-                    dragPointerId = null;
-
-                    dragHasStarted = false;
-
-                    targetDraggingAmount = 0;
-                }
-
-
-                if (viewPointers.size < 2) {
-                    pinchStartDistance = 0;
-                }
-
-
-                if (viewPointers.size === 0) {
-
-                    panning = false;
-
-                    targetDraggingAmount = 0;
-                }
+                targetDraggingAmount = dragHasStarted ? 1 : 0;
             }
 
-
-            container.addEventListener("pointerup", releasePointer);
-            container.addEventListener("pointercancel", releasePointer);
-
-
-            /* =================================
-               CANVAS SIZE
-            ================================= */
-
-            function resizeCanvas() {
-
-                const ratio = Math.min(window.devicePixelRatio || 1, 2);
-
-                const width = Math.floor(container.clientWidth * ratio);
-                const height = Math.floor(container.clientHeight * ratio);
-
-                if (canvas.width !== width || canvas.height !== height) {
-
-                    canvas.width = width;
-                    canvas.height = height;
-
-                    gl.viewport(0, 0, width, height);
-                }
-            }
-
-
-            /* =================================
-               RENDER LOOP
-            ================================= */
-
-            const start = performance.now();
-
-
-            function render() {
-
-                resizeCanvas();
-
-
-                /* Smooth the actual pointer toward the raw
-                   trackpad / mouse position. */
-
-                pointerX += (targetPointerX - pointerX) * 0.17;
-                pointerY += (targetPointerY - pointerY) * 0.17;
-
-
-                /* Smooth velocity. */
-
-                velocityX += (targetVelocityX - velocityX) * 0.12;
-                velocityY += (targetVelocityY - velocityY) * 0.12;
-
-
-                /* Smooth interaction intensity. */
-
-                motion += (targetMotion - motion) * 0.10;
-
-
-                /* Slow vortex fade-in/out: removes the snapping. */
-
-                draggingAmount +=
-                    (targetDraggingAmount - draggingAmount) * 0.09;
-
-
-                /* Natural decay. */
-
-                targetVelocityX *= 0.82;
-                targetVelocityY *= 0.82;
-
-                targetMotion *= 0.88;
-
-
-                const now = performance.now();
-
-                const time = (now - start) / 1000;
-
-                const dripAge = (now - dripStarted) / 1000;
-
-
-                if (imageReady) {
-
-                    gl.uniform2f(pointerUniform, pointerX, pointerY);
-
-                    gl.uniform2f(velocityUniform, velocityX, velocityY);
-
-                    gl.uniform2f(dripCenterUniform, dripX, dripY);
-
-                    gl.uniform1f(timeUniform, time);
-
-                    gl.uniform1f(motionUniform, motion);
-
-                    gl.uniform1f(dripAgeUniform, dripAge);
-
-                    gl.uniform1f(draggingUniform, draggingAmount);
-
-                    gl.drawArrays(gl.TRIANGLES, 0, 6);
-                }
-
-
-                requestAnimationFrame(render);
-            }
-
-
-            render();
+            updateShaderPointer(event.clientX, event.clientY);
         }
+    });
+
+
+    /* =========================================
+       RELEASE
+    ========================================== */
+
+    function releasePointer(event) {
+
+        viewPointers.delete(event.pointerId);
+
+
+        if (event.pointerId === dragPointerId) {
+
+            dragPointerId = null;
+
+            dragHasStarted = false;
+
+            targetDraggingAmount = 0;
+        }
+
+
+        if (viewPointers.size < 2) {
+            pinchStartDistance = 0;
+        }
+
+
+        if (viewPointers.size === 0) {
+
+            panning = false;
+
+            targetDraggingAmount = 0;
+        }
+    }
+
+
+    container.addEventListener("pointerup", releasePointer);
+    container.addEventListener("pointercancel", releasePointer);
+
+
+    /* =========================================
+       CANVAS SIZE
+    ========================================== */
+
+    function resizeCanvas() {
+
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+
+        const width = Math.floor(container.clientWidth * ratio);
+        const height = Math.floor(container.clientHeight * ratio);
+
+        if (canvas.width !== width || canvas.height !== height) {
+
+            canvas.width = width;
+            canvas.height = height;
+
+            gl.viewport(0, 0, width, height);
+        }
+    }
+
+
+    /* =========================================
+       RENDER LOOP
+
+       Runs once and keeps going. While the context
+       is lost it just waits.
+    ========================================== */
+
+    const start = performance.now();
+
+
+    function render() {
+
+        requestAnimationFrame(render);
+
+
+        if (!glActive) {
+            return;
+        }
+
+
+        resizeCanvas();
+
+
+        /* Smooth the actual pointer toward the raw
+           trackpad / mouse position. */
+
+        pointerX += (targetPointerX - pointerX) * 0.17;
+        pointerY += (targetPointerY - pointerY) * 0.17;
+
+
+        velocityX += (targetVelocityX - velocityX) * 0.12;
+        velocityY += (targetVelocityY - velocityY) * 0.12;
+
+
+        motion += (targetMotion - motion) * 0.10;
+
+
+        draggingAmount +=
+            (targetDraggingAmount - draggingAmount) * 0.09;
+
+
+        /* Natural decay. */
+
+        targetVelocityX *= 0.82;
+        targetVelocityY *= 0.82;
+
+        targetMotion *= 0.88;
+
+
+        const now = performance.now();
+
+        const time = (now - start) / 1000;
+
+
+        if (imageReady) {
+
+            for (let i = 0; i < MAX_DRIPS; i++) {
+
+                const drip = drips[i];
+
+                dripData[i * 3] = drip.x;
+                dripData[i * 3 + 1] = drip.y;
+
+                /* Capped so very old drips stay tiny numbers. */
+                dripData[i * 3 + 2] =
+                    Math.min((now - drip.start) / 1000, 100);
+            }
+
+
+            gl.uniform2f(uniforms.pointer, pointerX, pointerY);
+
+            gl.uniform2f(uniforms.velocity, velocityX, velocityY);
+
+            gl.uniform3fv(uniforms.drips, dripData);
+
+            gl.uniform1f(uniforms.time, time);
+
+            gl.uniform1f(uniforms.motion, motion);
+
+            gl.uniform1f(uniforms.dragging, draggingAmount);
+
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+        }
+    }
+
+
+    if (setupGL()) {
+        render();
     }
 }
