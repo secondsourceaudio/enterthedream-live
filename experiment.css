@@ -1,18 +1,41 @@
 /* =========================================
+   TOKENS
+========================================= */
+
+:root {
+    color-scheme: dark;
+
+    /* Set --header-h to your real header height */
+    --header-h: 76px;
+    --stage-pad: 28px;
+}
+
+@media (max-width: 750px) {
+    :root {
+        --header-h: 68px;
+        --stage-pad: 12px;
+    }
+}
+
+
+/* =========================================
    PAGE
 ========================================= */
 
 html,
 body {
     width: 100%;
-    height: 100%;
-
+    margin: 0;
     overflow: hidden;
 }
 
-
 body {
-    min-height: 100dvh;
+    height: 100dvh;
+
+    /* .experiment-main { flex: 1 } needs a flex column parent.
+       Remove these two lines if your shared stylesheet already sets them. */
+    display: flex;
+    flex-direction: column;
 }
 
 
@@ -22,6 +45,7 @@ body {
 
 .experiment-header {
     flex: 0 0 auto;
+    min-height: var(--header-h);
 }
 
 
@@ -33,25 +57,20 @@ body {
     margin-left: auto;
 
     display: flex;
-
     align-items: center;
 
     gap: 32px;
 }
 
-
 .return-link {
     color: #ffffff;
 
     font-size: var(--font-nav);
-
     letter-spacing: 0.22em;
-
     text-decoration: none;
 
     white-space: nowrap;
 }
-
 
 .return-link:hover {
     opacity: 0.65;
@@ -64,7 +83,6 @@ body {
 
 .compact-player {
     display: flex;
-
     align-items: center;
 
     gap: 9px;
@@ -83,38 +101,31 @@ body {
     padding: 0;
 
     display: flex;
-
     align-items: center;
     justify-content: center;
 
     color: #ffffff;
-
     background: transparent;
-
     border: none;
 
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
 
     cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
 }
-
-
-.player-button {
-    font-size: 12px;
-}
-
-
-.sound-button {
-    font-size: 12px;
-}
-
 
 .player-button:hover,
 .sound-button:hover {
     opacity: 0.65;
+}
+
+.player-button:focus-visible,
+.sound-button:focus-visible,
+.volume-slider:focus-visible {
+    outline: 1px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 3px;
 }
 
 
@@ -124,8 +135,7 @@ body {
 
 .volume-slider {
     width: 90px;
-
-    height: 20px;
+    height: 24px;
 
     margin: 0;
 
@@ -137,15 +147,12 @@ body {
     cursor: pointer;
 }
 
-
 .volume-slider::-webkit-slider-runnable-track {
     width: 100%;
     height: 1px;
 
-    background:
-        rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.35);
 }
-
 
 .volume-slider::-webkit-slider-thumb {
     width: 9px;
@@ -161,42 +168,33 @@ body {
     background: #ffffff;
 }
 
-
 .volume-slider::-moz-range-track {
     height: 1px;
 
-    background:
-        rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.35);
 }
-
 
 .volume-slider::-moz-range-thumb {
     width: 9px;
     height: 9px;
 
     border: none;
-
     border-radius: 50%;
 
     background: #ffffff;
 }
-
 
 .volume-percent {
     min-width: 36px;
 
     color: #ffffff;
 
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 11px;
-
     text-align: right;
 
     user-select: none;
+    -webkit-user-select: none;
 
     cursor: ns-resize;
 }
@@ -212,16 +210,12 @@ body {
     flex: 1;
 
     width: 100%;
-
     min-width: 0;
     min-height: 0;
 
-    padding:
-        28px
-        28px;
+    padding: var(--stage-pad);
 
     display: grid;
-
     place-items: center;
 
     overflow: hidden;
@@ -230,41 +224,34 @@ body {
 
 /* =========================================
    ARTWORK
+
+   One --size drives width AND (via aspect-ratio)
+   height, so the box always stays square.
 ========================================= */
 
 .visual-container {
+    --size: min(
+        78vmin,
+        900px,
+        100vw - var(--stage-pad) * 2,
+        100dvh - var(--header-h) - var(--stage-pad) * 2
+    );
+
     position: relative;
 
-    width:
-        min(
-            78vmin,
-            900px
-        );
-
-    max-width:
-        calc(
-            100vw
-            -
-            56px
-        );
-
-    max-height:
-        calc(
-            100dvh
-            -
-            132px
-        );
-
-    aspect-ratio:
-        1 / 1;
+    width: var(--size);
+    aspect-ratio: 1 / 1;
 
     overflow: hidden;
 
     background: #050505;
 
     touch-action: none;
-
     overscroll-behavior: contain;
+
+    contain: layout paint;
+
+    -webkit-tap-highlight-color: transparent;
 }
 
 
@@ -274,16 +261,16 @@ body {
 
 .visual-media {
     position: absolute;
-
     inset: 0;
 
     width: 100%;
     height: 100%;
 
-    transform-origin:
-        center
-        center;
+    transform-origin: center center;
+}
 
+/* Toggle this class from JS only while zooming */
+.visual-media.is-zooming {
     will-change: transform;
 }
 
@@ -294,7 +281,6 @@ body {
 
 .fallback-image {
     position: absolute;
-
     inset: 0;
 
     width: 100%;
@@ -306,6 +292,7 @@ body {
 
     user-select: none;
     -webkit-user-select: none;
+    -webkit-user-drag: none;
 
     -webkit-touch-callout: none;
 }
@@ -317,7 +304,6 @@ body {
 
 .visual-canvas {
     position: absolute;
-
     inset: 0;
 
     z-index: 2;
@@ -329,10 +315,13 @@ body {
 
     opacity: 0;
 
-    transition:
-        opacity 0.35s ease;
-}
+    cursor: crosshair;
 
+    user-select: none;
+    -webkit-user-select: none;
+
+    transition: opacity 0.35s ease;
+}
 
 .visual-canvas.is-ready {
     opacity: 1;
@@ -349,26 +338,23 @@ body {
     left: 50%;
     bottom: 14px;
 
-    transform:
-        translateX(-50%);
+    transform: translateX(-50%);
 
     z-index: 5;
 
-    color:
-        rgba(255, 255, 255, 0.72);
+    color: rgba(255, 255, 255, 0.85);
 
-    font-size: 8px;
-
+    font-size: 10px;
     letter-spacing: 0.22em;
+
+    text-shadow: 0 0 6px rgba(0, 0, 0, 0.6);
 
     white-space: nowrap;
 
     pointer-events: none;
 
-    transition:
-        opacity 0.7s ease;
+    transition: opacity 0.7s ease;
 }
-
 
 .interaction-message.is-hidden {
     opacity: 0;
@@ -394,72 +380,57 @@ body {
 
 
 /* =========================================
+   REDUCED MOTION
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+    .visual-canvas,
+    .interaction-message {
+        transition: none;
+    }
+}
+
+
+/* =========================================
    MOBILE
 ========================================= */
 
 @media (max-width: 750px) {
 
-    html,
-    body {
-        width: 100%;
-
-        max-width: 100vw;
-
-        height: 100%;
-
-        overflow: hidden;
-    }
-
-
     .experiment-header {
         width: 100%;
 
-        min-height: 68px;
-
-        padding:
-            0
-            16px;
+        padding: 0 16px;
 
         display: flex;
-
         align-items: center;
 
         text-align: left;
     }
 
-
     .experiment-header .site-logo {
         margin: 0;
     }
 
-
     .experiment-controls {
-        margin-left: auto;
-
         gap: 13px;
     }
 
-
     .return-link {
         font-size: 10px;
-
         letter-spacing: 0.13em;
     }
 
 
-    /* =====================================
-       MOBILE PLAYER
-    ====================================== */
+    /* MOBILE PLAYER */
 
     .compact-player {
         gap: 5px;
     }
 
-
     .player-button {
         display: none;
     }
-
 
     .sound-button {
         width: 26px;
@@ -468,13 +439,10 @@ body {
         font-size: 11px;
     }
 
-
     .volume-slider {
         width: 68px;
-
         height: 30px;
     }
-
 
     .volume-slider::-webkit-slider-thumb {
         width: 14px;
@@ -483,12 +451,10 @@ body {
         margin-top: -7px;
     }
 
-
     .volume-slider::-moz-range-thumb {
         width: 14px;
         height: 14px;
     }
-
 
     .volume-percent {
         min-width: 31px;
@@ -499,62 +465,11 @@ body {
     }
 
 
-    /* =====================================
-       CENTERPIECE
-    ====================================== */
-
-    .experiment-main {
-        width: 100%;
-
-        min-width: 0;
-
-        padding:
-            12px
-            12px;
-
-        display: grid;
-
-        place-items: center;
-
-        overflow: hidden;
-    }
-
-
-    .visual-container {
-        width:
-            min(
-                calc(
-                    100vw
-                    -
-                    24px
-                ),
-                calc(
-                    100dvh
-                    -
-                    104px
-                )
-            );
-
-        max-width: 100%;
-
-        max-height:
-            calc(
-                100dvh
-                -
-                104px
-            );
-
-        margin: 0 auto;
-
-        aspect-ratio:
-            1 / 1;
-    }
-
+    /* LABEL */
 
     .interaction-message {
         bottom: 11px;
 
-        font-size: 7px;
+        font-size: 9px;
     }
-
 }

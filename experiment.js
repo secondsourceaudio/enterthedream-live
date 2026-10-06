@@ -37,10 +37,7 @@ audio.muted = false;
 ========================================= */
 
 function clamp(value, minimum, maximum) {
-    return Math.max(
-        minimum,
-        Math.min(maximum, value)
-    );
+    return Math.max(minimum, Math.min(maximum, value));
 }
 
 
@@ -53,11 +50,7 @@ function formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
     const secondsLeft = Math.floor(seconds % 60);
 
-    return (
-        minutes +
-        ":" +
-        String(secondsLeft).padStart(2, "0")
-    );
+    return minutes + ":" + String(secondsLeft).padStart(2, "0");
 }
 
 
@@ -67,51 +60,22 @@ function formatTime(seconds) {
 
 function updatePlayer() {
 
-    playSymbol.textContent =
-        audio.paused
-            ? "▶"
-            : "Ⅱ";
-
+    playSymbol.textContent = audio.paused ? "▶" : "Ⅱ";
 
     speakerSymbol.textContent =
-        (
-            muted ||
-            selectedVolume <= 0
-        )
-            ? "×"
-            : "◖))";
+        (muted || selectedVolume <= 0) ? "×" : "◖))";
 
+    volumePercent.textContent = Math.round(selectedVolume * 100) + "%";
 
-    volumePercent.textContent =
-        Math.round(
-            selectedVolume * 100
-        ) + "%";
+    volumeSlider.value = selectedVolume * 100;
 
-
-    volumeSlider.value =
-        selectedVolume * 100;
-
-
-    if (
-        Number.isFinite(audio.duration) &&
-        audio.duration > 0
-    ) {
-
+    if (Number.isFinite(audio.duration) && audio.duration > 0) {
         progressFill.style.width =
-            (
-                audio.currentTime /
-                audio.duration *
-                100
-            ) + "%";
+            (audio.currentTime / audio.duration * 100) + "%";
     }
 
-
     playerTime.textContent =
-        formatTime(audio.currentTime)
-        +
-        " / "
-        +
-        formatTime(audio.duration);
+        formatTime(audio.currentTime) + " / " + formatTime(audio.duration);
 }
 
 
@@ -121,10 +85,7 @@ function updatePlayer() {
 
 function attemptPlayback() {
 
-    if (
-        !wantsPlayback ||
-        muted
-    ) {
+    if (!wantsPlayback || muted) {
         return;
     }
 
@@ -141,78 +102,68 @@ function attemptPlayback() {
 attemptPlayback();
 
 
-document.addEventListener(
-    "pointerdown",
-    function () {
+/* FIX 1: first tap on the player buttons no longer
+   starts and immediately stops the audio. */
 
-        if (
-            wantsPlayback &&
-            !muted &&
-            audio.paused
-        ) {
-            attemptPlayback();
-        }
+function firstGesture(event) {
 
-    },
-    {
-        once: true,
-        capture: true
+    // Ignore taps on the player controls themselves
+    if (event.target.closest(".compact-player")) {
+        return;
     }
-);
+
+    document.removeEventListener("pointerdown", firstGesture, true);
+
+    if (wantsPlayback && !muted && audio.paused) {
+        attemptPlayback();
+    }
+}
+
+document.addEventListener("pointerdown", firstGesture, true);
 
 
 /* =========================================
    PLAY / PAUSE
 ========================================= */
 
-playButton.addEventListener(
-    "click",
-    function () {
+playButton.addEventListener("click", function () {
 
-        if (audio.paused) {
+    if (audio.paused) {
 
-            wantsPlayback = true;
-            muted = false;
+        wantsPlayback = true;
+        muted = false;
 
-            audio.muted = false;
+        audio.muted = false;
 
-            attemptPlayback();
+        attemptPlayback();
 
-        } else {
+    } else {
 
-            wantsPlayback = false;
+        wantsPlayback = false;
 
-            audio.pause();
-        }
-
-        updatePlayer();
+        audio.pause();
     }
-);
+
+    updatePlayer();
+});
 
 
 /* =========================================
    MUTE
 ========================================= */
 
-soundButton.addEventListener(
-    "click",
-    function () {
+soundButton.addEventListener("click", function () {
 
-        muted = !muted;
+    muted = !muted;
 
-        audio.muted = muted;
+    audio.muted = muted;
 
-        if (
-            !muted &&
-            wantsPlayback &&
-            audio.paused
-        ) {
-            attemptPlayback();
-        }
-
-        updatePlayer();
+    if (!muted && wantsPlayback && audio.paused) {
+        attemptPlayback();
     }
-);
+
+    updatePlayer();
+});
 
 
 /* =========================================
@@ -221,18 +172,11 @@ soundButton.addEventListener(
 
 function setVolume(value) {
 
-    selectedVolume =
-        clamp(
-            value,
-            0,
-            1
-        );
+    selectedVolume = clamp(value, 0, 1);
 
-    audio.volume =
-        selectedVolume;
+    audio.volume = selectedVolume;
 
     if (selectedVolume > 0) {
-
         muted = false;
         audio.muted = false;
     }
@@ -241,22 +185,14 @@ function setVolume(value) {
 }
 
 
-volumeSlider.addEventListener(
-    "input",
-    function () {
+volumeSlider.addEventListener("input", function () {
 
-        setVolume(
-            Number(volumeSlider.value) / 100
-        );
+    setVolume(Number(volumeSlider.value) / 100);
 
-        if (
-            wantsPlayback &&
-            audio.paused
-        ) {
-            attemptPlayback();
-        }
+    if (wantsPlayback && audio.paused) {
+        attemptPlayback();
     }
-);
+});
 
 
 /* =========================================
@@ -269,132 +205,76 @@ let volumeStartY = 0;
 let volumeStartValue = selectedVolume;
 
 
-volumePercent.addEventListener(
-    "pointerdown",
-    function (event) {
+volumePercent.addEventListener("pointerdown", function (event) {
 
-        volumeDragging = true;
+    volumeDragging = true;
 
-        volumeStartY =
-            event.clientY;
+    volumeStartY = event.clientY;
+    volumeStartValue = selectedVolume;
 
-        volumeStartValue =
-            selectedVolume;
-
-        try {
-            volumePercent.setPointerCapture(
-                event.pointerId
-            );
-        } catch (error) {
-        }
+    try {
+        volumePercent.setPointerCapture(event.pointerId);
+    } catch (error) {
     }
-);
+});
 
 
-volumePercent.addEventListener(
-    "pointermove",
-    function (event) {
+volumePercent.addEventListener("pointermove", function (event) {
 
-        if (!volumeDragging) {
-            return;
-        }
-
-        const movement =
-            volumeStartY -
-            event.clientY;
-
-        setVolume(
-            volumeStartValue +
-            movement / 220
-        );
-
-        if (
-            wantsPlayback &&
-            audio.paused
-        ) {
-            attemptPlayback();
-        }
+    if (!volumeDragging) {
+        return;
     }
-);
+
+    const movement = volumeStartY - event.clientY;
+
+    setVolume(volumeStartValue + movement / 220);
+
+    if (wantsPlayback && audio.paused) {
+        attemptPlayback();
+    }
+});
 
 
 function stopVolumeDrag() {
     volumeDragging = false;
 }
 
-
-volumePercent.addEventListener(
-    "pointerup",
-    stopVolumeDrag
-);
-
-
-volumePercent.addEventListener(
-    "pointercancel",
-    stopVolumeDrag
-);
+volumePercent.addEventListener("pointerup", stopVolumeDrag);
+volumePercent.addEventListener("pointercancel", stopVolumeDrag);
 
 
 /* =========================================
    SEEK
 ========================================= */
 
-progressTrack.addEventListener(
-    "click",
-    function (event) {
+progressTrack.addEventListener("click", function (event) {
 
-        if (
-            !Number.isFinite(audio.duration)
-        ) {
-            return;
-        }
-
-        const rect =
-            progressTrack.getBoundingClientRect();
-
-        const position =
-            clamp(
-                (
-                    event.clientX -
-                    rect.left
-                ) /
-                rect.width,
-                0,
-                1
-            );
-
-        audio.currentTime =
-            position *
-            audio.duration;
-
-        updatePlayer();
+    if (!Number.isFinite(audio.duration)) {
+        return;
     }
-);
+
+    const rect = progressTrack.getBoundingClientRect();
+
+    const position = clamp(
+        (event.clientX - rect.left) / rect.width,
+        0,
+        1
+    );
+
+    audio.currentTime = position * audio.duration;
+
+    updatePlayer();
+});
 
 
 /* =========================================
    AUDIO EVENTS
 ========================================= */
 
-audio.addEventListener(
-    "timeupdate",
-    updatePlayer
-);
-
-audio.addEventListener(
-    "loadedmetadata",
-    updatePlayer
-);
-
-audio.addEventListener(
-    "play",
-    updatePlayer
-);
-
-audio.addEventListener(
-    "pause",
-    updatePlayer
-);
+audio.addEventListener("timeupdate", updatePlayer);
+audio.addEventListener("loadedmetadata", updatePlayer);
+audio.addEventListener("play", updatePlayer);
+audio.addEventListener("pause", updatePlayer);
 
 
 updatePlayer();
@@ -404,28 +284,11 @@ updatePlayer();
    EXPERIMENT
 ========================================= */
 
-const canvas =
-    document.getElementById("visual");
-
-const container =
-    document.getElementById(
-        "visual-container"
-    );
-
-const visualMedia =
-    document.getElementById(
-        "visual-media"
-    );
-
-const fallbackImage =
-    document.getElementById(
-        "fallback-image"
-    );
-
-const interactionMessage =
-    document.getElementById(
-        "interaction-message"
-    );
+const canvas = document.getElementById("visual");
+const container = document.getElementById("visual-container");
+const visualMedia = document.getElementById("visual-media");
+const fallbackImage = document.getElementById("fallback-image");
+const interactionMessage = document.getElementById("interaction-message");
 
 
 /* =========================================
@@ -438,8 +301,7 @@ let viewX = 0;
 let viewY = 0;
 
 
-const viewPointers =
-    new Map();
+const viewPointers = new Map();
 
 
 let pinchStartDistance = 0;
@@ -475,10 +337,8 @@ let dragOriginY = 0;
 let dragHasStarted = false;
 
 
-/*
-   The pointer must actually move this far
-   before the whirl activates.
-*/
+/* The pointer must actually move this far
+   before the whirl activates. */
 
 const dragThreshold = 7;
 
@@ -499,33 +359,11 @@ function limitViewPan() {
         return;
     }
 
+    const maxX = container.clientWidth * (viewScale - 1) / 2;
+    const maxY = container.clientHeight * (viewScale - 1) / 2;
 
-    const maxX =
-        container.clientWidth *
-        (viewScale - 1) /
-        2;
-
-
-    const maxY =
-        container.clientHeight *
-        (viewScale - 1) /
-        2;
-
-
-    viewX =
-        clamp(
-            viewX,
-            -maxX,
-            maxX
-        );
-
-
-    viewY =
-        clamp(
-            viewY,
-            -maxY,
-            maxY
-        );
+    viewX = clamp(viewX, -maxX, maxX);
+    viewY = clamp(viewY, -maxY, maxY);
 }
 
 
@@ -537,15 +375,13 @@ function updateViewTransform() {
 
     limitViewPan();
 
+    /* FIX 5: lets the CSS .is-zooming rule switch
+       will-change on only while zoomed in. */
+    visualMedia.classList.toggle("is-zooming", viewScale > 1);
+
     visualMedia.style.transform =
-        `
-            translate3d(
-                ${viewX}px,
-                ${viewY}px,
-                0
-            )
-            scale(${viewScale})
-        `;
+        "translate3d(" + viewX + "px, " + viewY + "px, 0) " +
+        "scale(" + viewScale + ")";
 }
 
 
@@ -555,40 +391,22 @@ function updateViewTransform() {
 
 function viewPointerDistance() {
 
-    const points =
-        Array.from(
-            viewPointers.values()
-        );
+    const points = Array.from(viewPointers.values());
 
     return Math.hypot(
-        points[1].x -
-        points[0].x,
-
-        points[1].y -
-        points[0].y
+        points[1].x - points[0].x,
+        points[1].y - points[0].y
     );
 }
 
 
 function viewPointerMidpoint() {
 
-    const points =
-        Array.from(
-            viewPointers.values()
-        );
+    const points = Array.from(viewPointers.values());
 
     return {
-        x:
-            (
-                points[0].x +
-                points[1].x
-            ) / 2,
-
-        y:
-            (
-                points[0].y +
-                points[1].y
-            ) / 2
+        x: (points[0].x + points[1].x) / 2,
+        y: (points[0].y + points[1].y) / 2
     };
 }
 
@@ -597,26 +415,19 @@ function viewPointerMidpoint() {
    STOP BROWSER DOUBLE-TAP ZOOM
 ========================================= */
 
-container.addEventListener(
-    "dblclick",
-    function (event) {
-        event.preventDefault();
-    }
-);
+container.addEventListener("dblclick", function (event) {
+    event.preventDefault();
+});
 
 
 /* =========================================
    WEBGL
 ========================================= */
 
-const gl =
-    canvas.getContext(
-        "webgl",
-        {
-            antialias: true,
-            alpha: true
-        }
-    );
+const gl = canvas.getContext("webgl", {
+    antialias: true,
+    alpha: true
+});
 
 
 if (!gl) {
@@ -638,15 +449,9 @@ if (gl) {
 
         void main() {
 
-            v_uv =
-                a_position * 0.5 + 0.5;
+            v_uv = a_position * 0.5 + 0.5;
 
-            gl_Position =
-                vec4(
-                    a_position,
-                    0.0,
-                    1.0
-                );
+            gl_Position = vec4(a_position, 0.0, 1.0);
         }
 
     `;
@@ -654,7 +459,13 @@ if (gl) {
 
     const fragmentShaderSource = `
 
+        /* FIX 4: ask for high precision where available so the
+           waves don't shimmer as u_time grows. */
+        #ifdef GL_FRAGMENT_PRECISION_HIGH
+        precision highp float;
+        #else
         precision mediump float;
+        #endif
 
         varying vec2 v_uv;
 
@@ -673,11 +484,8 @@ if (gl) {
 
         mat2 rotate2D(float angle) {
 
-            float s =
-                sin(angle);
-
-            float c =
-                cos(angle);
+            float s = sin(angle);
+            float c = cos(angle);
 
             return mat2(
                 c, -s,
@@ -688,64 +496,33 @@ if (gl) {
 
         void main() {
 
-            vec2 baseUV =
-                v_uv;
+            vec2 baseUV = v_uv;
 
-            vec2 uv =
-                baseUV;
+            vec2 uv = baseUV;
 
 
             /* =================================
                CONSTANT CENTER BUBBLING
             ================================= */
 
-            vec2 center =
-                vec2(
-                    0.5,
-                    0.5
-                );
+            vec2 center = vec2(0.5, 0.5);
 
-            vec2 centerDelta =
-                baseUV -
-                center;
+            vec2 centerDelta = baseUV - center;
 
-            float centerDistance =
-                length(
-                    centerDelta
-                );
+            float centerDistance = length(centerDelta);
 
             vec2 centerDirection =
-                normalize(
-                    centerDelta +
-                    vec2(0.0001)
-                );
+                normalize(centerDelta + vec2(0.0001));
 
 
             float bubbleOne =
-                sin(
-                    centerDistance *
-                    50.0 -
-                    u_time *
-                    3.1
-                );
-
+                sin(centerDistance * 50.0 - u_time * 3.1);
 
             float bubbleTwo =
-                sin(
-                    centerDistance *
-                    29.0 -
-                    u_time *
-                    2.0
-                );
-
+                sin(centerDistance * 29.0 - u_time * 2.0);
 
             float bubbleThree =
-                sin(
-                    centerDistance *
-                    76.0 -
-                    u_time *
-                    4.1
-                );
+                sin(centerDistance * 76.0 - u_time * 4.1);
 
 
             float centerBubble =
@@ -755,11 +532,7 @@ if (gl) {
 
 
             float centerInfluence =
-                smoothstep(
-                    0.75,
-                    0.03,
-                    centerDistance
-                );
+                smoothstep(0.75, 0.03, centerDistance);
 
 
             uv +=
@@ -774,75 +547,33 @@ if (gl) {
             ================================= */
 
             float waveX =
-                sin(
-                    baseUV.y *
-                    8.0 -
-                    u_time *
-                    1.15
-                )
-                *
-                0.0040;
-
+                sin(baseUV.y * 8.0 - u_time * 1.15) * 0.0040;
 
             float waveY =
-                cos(
-                    baseUV.x *
-                    6.5 -
-                    u_time *
-                    0.9
-                )
-                *
-                0.0022;
-
+                cos(baseUV.x * 6.5 - u_time * 0.9) * 0.0022;
 
             float fineWave =
-                sin(
-                    baseUV.y *
-                    16.0 +
-                    u_time *
-                    1.6
-                )
-                *
-                0.0010;
+                sin(baseUV.y * 16.0 + u_time * 1.6) * 0.0010;
 
 
-            uv.x +=
-                waveX +
-                fineWave;
+            uv.x += waveX + fineWave;
 
-
-            uv.y +=
-                waveY;
+            uv.y += waveY;
 
 
             /* =================================
                POINTER FIELD
             ================================= */
 
-            vec2 pointerDelta =
-                baseUV -
-                u_pointer;
+            vec2 pointerDelta = baseUV - u_pointer;
 
-
-            float pointerDistance =
-                length(
-                    pointerDelta
-                );
-
+            float pointerDistance = length(pointerDelta);
 
             float pointerInfluence =
-                smoothstep(
-                    0.35,
-                    0.0,
-                    pointerDistance
-                );
-
+                smoothstep(0.35, 0.0, pointerDistance);
 
             vec2 pointerDirection =
-                normalize(
-                    pointerDelta +
-                    vec2(0.0001)
-                );
+                normalize(pointerDelta + vec2(0.0001));
 
 
             /* =================================
@@ -850,51 +581,26 @@ if (gl) {
             ================================= */
 
             float velocityMagnitude =
-                min(
-                    length(
-                        u_velocity
-                    )
-                    *
-                    20.0,
+                min(length(u_velocity) * 20.0, 1.0);
+
+
+            /* Tighter falloff: stops the whole artwork
+               being yanked toward the pointer. */
+
+            float whirlFade =
+                exp(-pointerDistance * 5.2);
+
+
+            /* FIX 3: continuous direction instead of sign(),
+               so the whirl no longer flips instantly. */
+
+            float whirlDirection =
+                clamp(
+                    (u_velocity.x - u_velocity.y) * 150.0,
+                    -1.0,
                     1.0
                 );
 
-
-            /*
-               Tighter falloff than before.
-
-               This prevents the whole artwork
-               being yanked toward the pointer.
-            */
-
-            float whirlFade =
-                exp(
-                    -pointerDistance *
-                    5.2
-                );
-
-
-            /*
-               Determine clockwise /
-               counter-clockwise movement from
-               the drag direction.
-            */
-
-            float whirlDirection =
-                sign(
-                    u_velocity.x -
-                    u_velocity.y +
-                    0.0001
-                );
-
-
-            /*
-               Considerably softer than the
-               previous vortex.
-
-               u_dragging itself is also smoothly
-               eased in JavaScript.
-            */
 
             float whirlAngle =
                 whirlDirection *
@@ -908,28 +614,14 @@ if (gl) {
 
 
             vec2 whirledDelta =
-                rotate2D(
-                    whirlAngle
-                )
-                *
-                pointerDelta;
+                rotate2D(whirlAngle) * pointerDelta;
 
 
-            /*
-               Only blend a portion of the
-               rotational field.
-
-               This is the main anti-snap change.
-            */
+            /* Only blend a portion of the rotational field. */
 
             uv +=
-                (
-                    whirledDelta -
-                    pointerDelta
-                )
-                *
-                pointerInfluence
-                *
+                (whirledDelta - pointerDelta) *
+                pointerInfluence *
                 0.30;
 
 
@@ -938,22 +630,10 @@ if (gl) {
             ================================= */
 
             float pointerWaveOne =
-                sin(
-                    pointerDistance *
-                    59.0 -
-                    u_time *
-                    6.8
-                );
-
+                sin(pointerDistance * 59.0 - u_time * 6.8);
 
             float pointerWaveTwo =
-                sin(
-                    pointerDistance *
-                    27.0 -
-                    u_time *
-                    3.8
-                );
-
+                sin(pointerDistance * 27.0 - u_time * 3.8);
 
             float pointerWave =
                 pointerWaveOne * 0.68 +
@@ -964,10 +644,7 @@ if (gl) {
                 pointerDirection *
                 pointerWave *
                 pointerInfluence *
-                (
-                    0.0045 +
-                    u_motion * 0.017
-                );
+                (0.0045 + u_motion * 0.017);
 
 
             /* =================================
@@ -977,158 +654,78 @@ if (gl) {
             uv -=
                 u_velocity *
                 pointerInfluence *
-                (
-                    0.08 +
-                    u_motion * 0.20
-                );
+                (0.08 + u_motion * 0.20);
 
 
             /* =================================
                DRIP ON CLICK / TAP
             ================================= */
 
-            vec2 dripDelta =
-                baseUV -
-                u_dripCenter;
+            vec2 dripDelta = baseUV - u_dripCenter;
 
-
-            float dripDistance =
-                length(
-                    dripDelta
-                );
-
+            float dripDistance = length(dripDelta);
 
             vec2 dripDirection =
-                normalize(
-                    dripDelta +
-                    vec2(0.0001)
-                );
+                normalize(dripDelta + vec2(0.0001));
 
 
-            float dripRadius =
-                u_dripAge *
-                0.33;
-
+            float dripRadius = u_dripAge * 0.33;
 
             float dripLife =
-                clamp(
-                    1.0 -
-                    u_dripAge /
-                    2.6,
-                    0.0,
-                    1.0
-                );
+                clamp(1.0 - u_dripAge / 2.6, 0.0, 1.0);
 
 
-            /*
-               Main expanding ring.
-            */
+            /* Main expanding ring. */
 
             float dripRing =
-                exp(
-                    -abs(
-                        dripDistance -
-                        dripRadius
-                    )
-                    *
-                    58.0
-                )
-                *
+                exp(-abs(dripDistance - dripRadius) * 58.0) *
                 dripLife;
 
 
-            /*
-               Trailing ring.
-            */
+            /* Trailing ring. */
 
             float secondRadius =
-                max(
-                    0.0,
-                    dripRadius -
-                    0.055
-                );
-
+                max(0.0, dripRadius - 0.055);
 
             float secondRing =
-                exp(
-                    -abs(
-                        dripDistance -
-                        secondRadius
-                    )
-                    *
-                    72.0
-                )
-                *
-                dripLife
-                *
+                exp(-abs(dripDistance - secondRadius) * 72.0) *
+                dripLife *
                 0.45;
 
 
-            /*
-               Initial indentation.
-            */
+            /* Initial indentation. */
 
             float impact =
-                exp(
-                    -dripDistance *
-                    24.0
-                )
-                *
-                exp(
-                    -u_dripAge *
-                    4.0
-                );
+                exp(-dripDistance * 24.0) *
+                exp(-u_dripAge * 4.0);
 
 
-            uv +=
-                dripDirection *
-                dripRing *
-                0.050;
+            uv += dripDirection * dripRing * 0.050;
 
+            uv += dripDirection * secondRing * 0.022;
 
-            uv +=
-                dripDirection *
-                secondRing *
-                0.022;
-
-
-            uv -=
-                dripDelta *
-                impact *
-                0.10;
+            uv -= dripDelta * impact * 0.10;
 
 
             /* =================================
                SAFE IMAGE AREA
             ================================= */
 
-            uv =
-                clamp(
-                    uv,
-                    vec2(0.002),
-                    vec2(0.998)
-                );
+            uv = clamp(uv, vec2(0.002), vec2(0.998));
 
 
             /* =================================
                ORIGINAL IMAGE
             ================================= */
 
-            vec4 mainSample =
-                texture2D(
-                    u_texture,
-                    uv
-                );
+            vec4 mainSample = texture2D(u_texture, uv);
 
 
             vec4 draggedSample =
                 texture2D(
                     u_texture,
                     clamp(
-                        uv -
-                        u_velocity *
-                        pointerInfluence *
-                        0.35,
+                        uv - u_velocity * pointerInfluence * 0.35,
                         vec2(0.002),
                         vec2(0.998)
                     )
@@ -1137,20 +734,14 @@ if (gl) {
 
             float dragBlend =
                 clamp(
-                    u_motion *
-                    pointerInfluence *
-                    0.12,
+                    u_motion * pointerInfluence * 0.12,
                     0.0,
                     0.12
                 );
 
 
             gl_FragColor =
-                mix(
-                    mainSample,
-                    draggedSample,
-                    dragBlend
-                );
+                mix(mainSample, draggedSample, dragBlend);
         }
 
     `;
@@ -1160,36 +751,16 @@ if (gl) {
        CREATE SHADER
     ========================================== */
 
-    function createShader(
-        type,
-        source
-    ) {
+    function createShader(type, source) {
 
-        const shader =
-            gl.createShader(type);
+        const shader = gl.createShader(type);
 
-        gl.shaderSource(
-            shader,
-            source
-        );
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
 
-        gl.compileShader(
-            shader
-        );
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
 
-
-        if (
-            !gl.getShaderParameter(
-                shader,
-                gl.COMPILE_STATUS
-            )
-        ) {
-
-            console.error(
-                gl.getShaderInfoLog(
-                    shader
-                )
-            );
+            console.error(gl.getShaderInfoLog(shader));
 
             return null;
         }
@@ -1199,72 +770,37 @@ if (gl) {
 
 
     const vertexShader =
-        createShader(
-            gl.VERTEX_SHADER,
-            vertexShaderSource
-        );
-
+        createShader(gl.VERTEX_SHADER, vertexShaderSource);
 
     const fragmentShader =
-        createShader(
-            gl.FRAGMENT_SHADER,
-            fragmentShaderSource
-        );
+        createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
 
 
-    if (
-        vertexShader &&
-        fragmentShader
-    ) {
+    if (vertexShader && fragmentShader) {
 
-        const program =
-            gl.createProgram();
+        const program = gl.createProgram();
 
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
 
-        gl.attachShader(
-            program,
-            vertexShader
-        );
-
-        gl.attachShader(
-            program,
-            fragmentShader
-        );
-
-        gl.linkProgram(
-            program
-        );
+        gl.linkProgram(program);
 
 
-        if (
-            gl.getProgramParameter(
-                program,
-                gl.LINK_STATUS
-            )
-        ) {
+        if (gl.getProgramParameter(program, gl.LINK_STATUS)) {
 
-            gl.useProgram(
-                program
-            );
+            gl.useProgram(program);
 
 
             /* =================================
                PLANE
             ================================= */
 
-            const buffer =
-                gl.createBuffer();
+            const buffer = gl.createBuffer();
 
-
-            gl.bindBuffer(
-                gl.ARRAY_BUFFER,
-                buffer
-            );
-
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
 
             gl.bufferData(
                 gl.ARRAY_BUFFER,
-
                 new Float32Array([
                     -1, -1,
                      1, -1,
@@ -1274,31 +810,15 @@ if (gl) {
                      1, -1,
                      1,  1
                 ]),
-
                 gl.STATIC_DRAW
             );
 
 
-            const position =
-                gl.getAttribLocation(
-                    program,
-                    "a_position"
-                );
+            const position = gl.getAttribLocation(program, "a_position");
 
+            gl.enableVertexAttribArray(position);
 
-            gl.enableVertexAttribArray(
-                position
-            );
-
-
-            gl.vertexAttribPointer(
-                position,
-                2,
-                gl.FLOAT,
-                false,
-                0,
-                0
-            );
+            gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
 
 
             /* =================================
@@ -1306,79 +826,39 @@ if (gl) {
             ================================= */
 
             const pointerUniform =
-                gl.getUniformLocation(
-                    program,
-                    "u_pointer"
-                );
-
+                gl.getUniformLocation(program, "u_pointer");
 
             const velocityUniform =
-                gl.getUniformLocation(
-                    program,
-                    "u_velocity"
-                );
-
+                gl.getUniformLocation(program, "u_velocity");
 
             const dripCenterUniform =
-                gl.getUniformLocation(
-                    program,
-                    "u_dripCenter"
-                );
-
+                gl.getUniformLocation(program, "u_dripCenter");
 
             const timeUniform =
-                gl.getUniformLocation(
-                    program,
-                    "u_time"
-                );
-
+                gl.getUniformLocation(program, "u_time");
 
             const motionUniform =
-                gl.getUniformLocation(
-                    program,
-                    "u_motion"
-                );
-
+                gl.getUniformLocation(program, "u_motion");
 
             const dripAgeUniform =
-                gl.getUniformLocation(
-                    program,
-                    "u_dripAge"
-                );
-
+                gl.getUniformLocation(program, "u_dripAge");
 
             const draggingUniform =
-                gl.getUniformLocation(
-                    program,
-                    "u_dragging"
-                );
-
+                gl.getUniformLocation(program, "u_dragging");
 
             const textureUniform =
-                gl.getUniformLocation(
-                    program,
-                    "u_texture"
-                );
+                gl.getUniformLocation(program, "u_texture");
 
 
             /* =================================
                TEXTURE
             ================================= */
 
-            const texture =
-                gl.createTexture();
+            const texture = gl.createTexture();
 
+            gl.activeTexture(gl.TEXTURE0);
 
-            gl.activeTexture(
-                gl.TEXTURE0
-            );
-
-
-            gl.bindTexture(
-                gl.TEXTURE_2D,
-                texture
-            );
-
+            gl.bindTexture(gl.TEXTURE_2D, texture);
 
             gl.texParameteri(
                 gl.TEXTURE_2D,
@@ -1386,13 +866,11 @@ if (gl) {
                 gl.CLAMP_TO_EDGE
             );
 
-
             gl.texParameteri(
                 gl.TEXTURE_2D,
                 gl.TEXTURE_WRAP_T,
                 gl.CLAMP_TO_EDGE
             );
-
 
             gl.texParameteri(
                 gl.TEXTURE_2D,
@@ -1400,18 +878,13 @@ if (gl) {
                 gl.LINEAR
             );
 
-
             gl.texParameteri(
                 gl.TEXTURE_2D,
                 gl.TEXTURE_MAG_FILTER,
                 gl.LINEAR
             );
 
-
-            gl.uniform1i(
-                textureUniform,
-                0
-            );
+            gl.uniform1i(textureUniform, 0);
 
 
             /* =================================
@@ -1423,95 +896,43 @@ if (gl) {
 
             function uploadArtworkTexture() {
 
-                const maximum =
-                    Math.min(
-                        1800,
-                        gl.getParameter(
-                            gl.MAX_TEXTURE_SIZE
-                        )
-                    );
+                const maximum = Math.min(
+                    1800,
+                    gl.getParameter(gl.MAX_TEXTURE_SIZE)
+                );
 
+                const sourceWidth = fallbackImage.naturalWidth;
+                const sourceHeight = fallbackImage.naturalHeight;
 
-                let width =
-                    fallbackImage.naturalWidth;
+                /* FIX 2: crop to the largest centred square so the
+                   texture matches the CSS object-fit: cover crop. */
 
+                const side = Math.min(sourceWidth, sourceHeight);
+                const size = Math.min(side, maximum);
 
-                let height =
-                    fallbackImage.naturalHeight;
+                const textureCanvas = document.createElement("canvas");
 
+                textureCanvas.width = size;
+                textureCanvas.height = size;
 
-                const longest =
-                    Math.max(
-                        width,
-                        height
-                    );
-
-
-                if (
-                    longest >
-                    maximum
-                ) {
-
-                    const resizeScale =
-                        maximum /
-                        longest;
-
-
-                    width =
-                        Math.round(
-                            width *
-                            resizeScale
-                        );
-
-
-                    height =
-                        Math.round(
-                            height *
-                            resizeScale
-                        );
-                }
-
-
-                const textureCanvas =
-                    document.createElement(
-                        "canvas"
-                    );
-
-
-                textureCanvas.width =
-                    width;
-
-
-                textureCanvas.height =
-                    height;
-
-
-                const context =
-                    textureCanvas.getContext(
-                        "2d"
-                    );
-
+                const context = textureCanvas.getContext("2d");
 
                 context.drawImage(
                     fallbackImage,
+                    (sourceWidth - side) / 2,
+                    (sourceHeight - side) / 2,
+                    side,
+                    side,
                     0,
                     0,
-                    width,
-                    height
+                    size,
+                    size
                 );
 
 
-                gl.pixelStorei(
-                    gl.UNPACK_FLIP_Y_WEBGL,
-                    true
-                );
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 
-
-                gl.bindTexture(
-                    gl.TEXTURE_2D,
-                    texture
-                );
-
+                gl.bindTexture(gl.TEXTURE_2D, texture);
 
                 gl.texImage2D(
                     gl.TEXTURE_2D,
@@ -1522,13 +943,9 @@ if (gl) {
                     textureCanvas
                 );
 
-
                 imageReady = true;
 
-
-                canvas.classList.add(
-                    "is-ready"
-                );
+                canvas.classList.add("is-ready");
             }
 
 
@@ -1544,9 +961,7 @@ if (gl) {
                 fallbackImage.addEventListener(
                     "load",
                     uploadArtworkTexture,
-                    {
-                        once: true
-                    }
+                    { once: true }
                 );
             }
 
@@ -1558,149 +973,81 @@ if (gl) {
             let pointerX = 0.5;
             let pointerY = 0.5;
 
-
             let targetPointerX = 0.5;
             let targetPointerY = 0.5;
-
 
             let velocityX = 0;
             let velocityY = 0;
 
-
             let targetVelocityX = 0;
             let targetVelocityY = 0;
 
-
             let motion = 0;
             let targetMotion = 0;
-
 
             let draggingAmount = 0;
             let targetDraggingAmount = 0;
 
 
-/* =========================================
-   DRIP STATE
-========================================= */
+            /* =================================
+               DRIP STATE
+            ================================= */
 
             let dripX = 0.5;
             let dripY = 0.5;
 
-            let dripStarted =
-                -10000;
+            let dripStarted = -10000;
+
+            let interacted = false;
 
 
-            let interacted =
-                false;
+            /* =================================
+               UPDATE POINTER TARGET
+
+               We do NOT directly move the shader pointer.
+               The render loop eases toward this position.
+            ================================= */
+
+            function updateShaderPointer(clientX, clientY) {
+
+                const rect = container.getBoundingClientRect();
+
+                const nextX = clamp(
+                    (clientX - rect.left) / rect.width,
+                    0,
+                    1
+                );
+
+                const nextY = clamp(
+                    1 - (clientY - rect.top) / rect.height,
+                    0,
+                    1
+                );
+
+                const deltaX = nextX - targetPointerX;
+                const deltaY = nextY - targetPointerY;
+
+                targetPointerX = nextX;
+                targetPointerY = nextY;
 
 
-/* =========================================
-   UPDATE POINTER TARGET
+                /* Softer velocity: prevents trackpad flicks
+                   from causing extreme pulls. */
 
-   Important:
-   We do NOT directly move the shader pointer.
-   Render loop eases toward this position.
-========================================= */
+                targetVelocityX = clamp(deltaX * 1.5, -0.040, 0.040);
+                targetVelocityY = clamp(deltaY * 1.5, -0.040, 0.040);
 
-            function updateShaderPointer(
-                clientX,
-                clientY
-            ) {
-
-                const rect =
-                    container
-                        .getBoundingClientRect();
-
-
-                const nextX =
-                    clamp(
-                        (
-                            clientX -
-                            rect.left
-                        ) /
-                        rect.width,
-                        0,
-                        1
-                    );
-
-
-                const nextY =
-                    clamp(
-                        1 -
-                        (
-                            clientY -
-                            rect.top
-                        ) /
-                        rect.height,
-                        0,
-                        1
-                    );
-
-
-                const deltaX =
-                    nextX -
-                    targetPointerX;
-
-
-                const deltaY =
-                    nextY -
-                    targetPointerY;
-
-
-                targetPointerX =
-                    nextX;
-
-
-                targetPointerY =
-                    nextY;
-
-
-                /*
-                   Softer velocity than previous
-                   version.
-
-                   Prevents trackpad flicks from
-                   causing extreme pulls.
-                */
-
-                targetVelocityX =
-                    clamp(
-                        deltaX * 1.5,
-                        -0.040,
-                        0.040
-                    );
-
-
-                targetVelocityY =
-                    clamp(
-                        deltaY * 1.5,
-                        -0.040,
-                        0.040
-                    );
-
-
-                targetMotion =
-                    Math.min(
-                        1,
-                        Math.hypot(
-                            deltaX,
-                            deltaY
-                        )
-                        *
-                        30
-                    );
+                targetMotion = Math.min(
+                    1,
+                    Math.hypot(deltaX, deltaY) * 30
+                );
 
 
                 if (!interacted) {
 
                     interacted = true;
 
-
-                    interactionMessage
-                        .classList
-                        .add(
-                            "is-hidden"
-                        );
+                    interactionMessage.classList.add("is-hidden");
                 }
             }
 
@@ -1709,43 +1056,23 @@ if (gl) {
                CREATE DRIP
             ================================= */
 
-            function createDrip(
-                clientX,
-                clientY
-            ) {
+            function createDrip(clientX, clientY) {
 
-                const rect =
-                    container
-                        .getBoundingClientRect();
+                const rect = container.getBoundingClientRect();
 
+                dripX = clamp(
+                    (clientX - rect.left) / rect.width,
+                    0,
+                    1
+                );
 
-                dripX =
-                    clamp(
-                        (
-                            clientX -
-                            rect.left
-                        ) /
-                        rect.width,
-                        0,
-                        1
-                    );
+                dripY = clamp(
+                    1 - (clientY - rect.top) / rect.height,
+                    0,
+                    1
+                );
 
-
-                dripY =
-                    clamp(
-                        1 -
-                        (
-                            clientY -
-                            rect.top
-                        ) /
-                        rect.height,
-                        0,
-                        1
-                    );
-
-
-                dripStarted =
-                    performance.now();
+                dripStarted = performance.now();
             }
 
 
@@ -1753,444 +1080,231 @@ if (gl) {
                POINTER DOWN
             ================================= */
 
-            container.addEventListener(
-                "pointerdown",
-                function (event) {
+            container.addEventListener("pointerdown", function (event) {
 
-                    viewPointers.set(
-                        event.pointerId,
-                        {
-                            x: event.clientX,
-                            y: event.clientY,
-                            type: event.pointerType
-                        }
-                    );
+                viewPointers.set(event.pointerId, {
+                    x: event.clientX,
+                    y: event.clientY,
+                    type: event.pointerType
+                });
 
 
-                    try {
-
-                        container.setPointerCapture(
-                            event.pointerId
-                        );
-
-                    } catch (error) {
-                    }
-
-
-                    /*
-                       ONE POINTER:
-                       click/tap = DRIP
-
-                       But whirl does NOT start yet.
-                    */
-
-                    if (
-                        viewPointers.size === 1 &&
-                        viewScale === 1
-                    ) {
-
-                        dragPointerId =
-                            event.pointerId;
-
-
-                        dragOriginX =
-                            event.clientX;
-
-
-                        dragOriginY =
-                            event.clientY;
-
-
-                        dragHasStarted =
-                            false;
-
-
-                        targetDraggingAmount =
-                            0;
-
-
-                        updateShaderPointer(
-                            event.clientX,
-                            event.clientY
-                        );
-
-
-                        createDrip(
-                            event.clientX,
-                            event.clientY
-                        );
-                    }
-
-
-                    /* =================================
-                       TWO FINGERS = PINCH
-                    ================================= */
-
-                    if (
-                        viewPointers.size === 2
-                    ) {
-
-                        targetDraggingAmount =
-                            0;
-
-
-                        dragHasStarted =
-                            false;
-
-
-                        dragPointerId =
-                            null;
-
-
-                        pinchStartDistance =
-                            viewPointerDistance();
-
-
-                        pinchStartScale =
-                            viewScale;
-
-
-                        const midpoint =
-                            viewPointerMidpoint();
-
-
-                        pinchStartX =
-                            midpoint.x;
-
-
-                        pinchStartY =
-                            midpoint.y;
-
-
-                        pinchStartViewX =
-                            viewX;
-
-
-                        pinchStartViewY =
-                            viewY;
-
-
-                        panning =
-                            false;
-                    }
-
-
-                    /* =================================
-                       ALREADY ZOOMED = PAN
-                    ================================= */
-
-                    else if (
-                        viewScale > 1
-                    ) {
-
-                        targetDraggingAmount =
-                            0;
-
-
-                        dragHasStarted =
-                            false;
-
-
-                        panning =
-                            true;
-
-
-                        panStartX =
-                            event.clientX;
-
-
-                        panStartY =
-                            event.clientY;
-
-
-                        panOriginalX =
-                            viewX;
-
-
-                        panOriginalY =
-                            viewY;
-                    }
-
-
-                    if (
-                        audio.paused &&
-                        wantsPlayback &&
-                        !muted
-                    ) {
-                        attemptPlayback();
-                    }
+                try {
+                    container.setPointerCapture(event.pointerId);
+                } catch (error) {
                 }
-            );
+
+
+                /* ONE POINTER: click/tap = DRIP
+                   (the whirl does NOT start yet) */
+
+                if (viewPointers.size === 1 && viewScale === 1) {
+
+                    dragPointerId = event.pointerId;
+
+                    dragOriginX = event.clientX;
+                    dragOriginY = event.clientY;
+
+                    dragHasStarted = false;
+
+                    targetDraggingAmount = 0;
+
+                    updateShaderPointer(event.clientX, event.clientY);
+
+                    createDrip(event.clientX, event.clientY);
+                }
+
+
+                /* TWO FINGERS = PINCH */
+
+                if (viewPointers.size === 2) {
+
+                    /* FIX 6: cancel the drip the first finger started. */
+                    dripStarted = -10000;
+
+                    targetDraggingAmount = 0;
+
+                    dragHasStarted = false;
+
+                    dragPointerId = null;
+
+                    pinchStartDistance = viewPointerDistance();
+
+                    pinchStartScale = viewScale;
+
+                    const midpoint = viewPointerMidpoint();
+
+                    pinchStartX = midpoint.x;
+                    pinchStartY = midpoint.y;
+
+                    pinchStartViewX = viewX;
+                    pinchStartViewY = viewY;
+
+                    panning = false;
+                }
+
+
+                /* ALREADY ZOOMED = PAN */
+
+                else if (viewScale > 1) {
+
+                    targetDraggingAmount = 0;
+
+                    dragHasStarted = false;
+
+                    panning = true;
+
+                    panStartX = event.clientX;
+                    panStartY = event.clientY;
+
+                    panOriginalX = viewX;
+                    panOriginalY = viewY;
+                }
+
+
+                if (audio.paused && wantsPlayback && !muted) {
+                    attemptPlayback();
+                }
+            });
 
 
             /* =================================
                POINTER MOVE
             ================================= */
 
-            container.addEventListener(
-                "pointermove",
-                function (event) {
+            container.addEventListener("pointermove", function (event) {
 
-                    if (
-                        viewPointers.has(
-                            event.pointerId
-                        )
-                    ) {
+                if (viewPointers.has(event.pointerId)) {
 
-                        viewPointers.set(
-                            event.pointerId,
-                            {
-                                x: event.clientX,
-                                y: event.clientY,
-                                type: event.pointerType
-                            }
+                    viewPointers.set(event.pointerId, {
+                        x: event.clientX,
+                        y: event.clientY,
+                        type: event.pointerType
+                    });
+                }
+
+
+                /* PINCH */
+
+                if (viewPointers.size === 2) {
+
+                    targetDraggingAmount = 0;
+
+                    const distance = viewPointerDistance();
+
+                    const midpoint = viewPointerMidpoint();
+
+                    viewScale = clamp(
+                        pinchStartScale * (distance / pinchStartDistance),
+                        1,
+                        3.5
+                    );
+
+                    viewX = pinchStartViewX + (midpoint.x - pinchStartX);
+                    viewY = pinchStartViewY + (midpoint.y - pinchStartY);
+
+                    updateViewTransform();
+
+                    return;
+                }
+
+
+                /* PAN WHILE ZOOMED */
+
+                if (panning && viewScale > 1) {
+
+                    targetDraggingAmount = 0;
+
+                    viewX = panOriginalX + (event.clientX - panStartX);
+                    viewY = panOriginalY + (event.clientY - panStartY);
+
+                    updateViewTransform();
+
+                    return;
+                }
+
+
+                if (viewScale !== 1) {
+                    return;
+                }
+
+
+                /* MOUSE HOVER: water follows cursor, whirl stays off. */
+
+                if (
+                    event.pointerType === "mouse" &&
+                    !viewPointers.has(event.pointerId)
+                ) {
+
+                    targetDraggingAmount = 0;
+
+                    updateShaderPointer(event.clientX, event.clientY);
+
+                    return;
+                }
+
+
+                /* HELD POINTER: whirl only after deliberate movement. */
+
+                if (viewPointers.has(event.pointerId)) {
+
+                    if (event.pointerId === dragPointerId) {
+
+                        const distanceFromStart = Math.hypot(
+                            event.clientX - dragOriginX,
+                            event.clientY - dragOriginY
                         );
-                    }
-
-
-                    /* =================================
-                       PINCH
-                    ================================= */
-
-                    if (
-                        viewPointers.size === 2
-                    ) {
-
-                        targetDraggingAmount =
-                            0;
-
-
-                        const distance =
-                            viewPointerDistance();
-
-
-                        const midpoint =
-                            viewPointerMidpoint();
-
-
-                        viewScale =
-                            clamp(
-                                pinchStartScale *
-                                (
-                                    distance /
-                                    pinchStartDistance
-                                ),
-                                1,
-                                3.5
-                            );
-
-
-                        viewX =
-                            pinchStartViewX +
-                            (
-                                midpoint.x -
-                                pinchStartX
-                            );
-
-
-                        viewY =
-                            pinchStartViewY +
-                            (
-                                midpoint.y -
-                                pinchStartY
-                            );
-
-
-                        updateViewTransform();
-
-
-                        return;
-                    }
-
-
-                    /* =================================
-                       PAN WHILE ZOOMED
-                    ================================= */
-
-                    if (
-                        panning &&
-                        viewScale > 1
-                    ) {
-
-                        targetDraggingAmount =
-                            0;
-
-
-                        viewX =
-                            panOriginalX +
-                            (
-                                event.clientX -
-                                panStartX
-                            );
-
-
-                        viewY =
-                            panOriginalY +
-                            (
-                                event.clientY -
-                                panStartY
-                            );
-
-
-                        updateViewTransform();
-
-
-                        return;
-                    }
-
-
-                    if (viewScale !== 1) {
-                        return;
-                    }
-
-
-                    /* =================================
-                       MOUSE HOVER
-
-                       Water follows cursor but
-                       whirl stays off.
-                    ================================= */
-
-                    if (
-                        event.pointerType === "mouse" &&
-                        !viewPointers.has(
-                            event.pointerId
-                        )
-                    ) {
-
-                        targetDraggingAmount =
-                            0;
-
-
-                        updateShaderPointer(
-                            event.clientX,
-                            event.clientY
-                        );
-
-
-                        return;
-                    }
-
-
-                    /* =================================
-                       HELD POINTER
-
-                       Activate whirl only after
-                       deliberate movement.
-                    ================================= */
-
-                    if (
-                        viewPointers.has(
-                            event.pointerId
-                        )
-                    ) {
 
                         if (
-                            event.pointerId ===
-                            dragPointerId
+                            !dragHasStarted &&
+                            distanceFromStart > dragThreshold
                         ) {
-
-                            const distanceFromStart =
-                                Math.hypot(
-                                    event.clientX -
-                                    dragOriginX,
-
-                                    event.clientY -
-                                    dragOriginY
-                                );
-
-
-                            if (
-                                !dragHasStarted &&
-                                distanceFromStart >
-                                dragThreshold
-                            ) {
-
-                                dragHasStarted =
-                                    true;
-                            }
-
-
-                            targetDraggingAmount =
-                                dragHasStarted
-                                    ? 1
-                                    : 0;
+                            dragHasStarted = true;
                         }
 
-
-                        updateShaderPointer(
-                            event.clientX,
-                            event.clientY
-                        );
+                        targetDraggingAmount = dragHasStarted ? 1 : 0;
                     }
+
+                    updateShaderPointer(event.clientX, event.clientY);
                 }
-            );
+            });
 
 
             /* =================================
                RELEASE
             ================================= */
 
-            function releasePointer(
-                event
-            ) {
+            function releasePointer(event) {
 
-                viewPointers.delete(
-                    event.pointerId
-                );
+                viewPointers.delete(event.pointerId);
 
 
-                if (
-                    event.pointerId ===
-                    dragPointerId
-                ) {
+                if (event.pointerId === dragPointerId) {
 
-                    dragPointerId =
-                        null;
+                    dragPointerId = null;
 
+                    dragHasStarted = false;
 
-                    dragHasStarted =
-                        false;
-
-
-                    targetDraggingAmount =
-                        0;
+                    targetDraggingAmount = 0;
                 }
 
 
-                if (
-                    viewPointers.size < 2
-                ) {
-
-                    pinchStartDistance =
-                        0;
+                if (viewPointers.size < 2) {
+                    pinchStartDistance = 0;
                 }
 
 
-                if (
-                    viewPointers.size === 0
-                ) {
+                if (viewPointers.size === 0) {
 
-                    panning =
-                        false;
+                    panning = false;
 
-
-                    targetDraggingAmount =
-                        0;
+                    targetDraggingAmount = 0;
                 }
             }
 
 
-            container.addEventListener(
-                "pointerup",
-                releasePointer
-            );
-
-
-            container.addEventListener(
-                "pointercancel",
-                releasePointer
-            );
+            container.addEventListener("pointerup", releasePointer);
+            container.addEventListener("pointercancel", releasePointer);
 
 
             /* =================================
@@ -2199,46 +1313,17 @@ if (gl) {
 
             function resizeCanvas() {
 
-                const ratio =
-                    Math.min(
-                        window.devicePixelRatio || 1,
-                        2
-                    );
+                const ratio = Math.min(window.devicePixelRatio || 1, 2);
 
+                const width = Math.floor(container.clientWidth * ratio);
+                const height = Math.floor(container.clientHeight * ratio);
 
-                const width =
-                    Math.floor(
-                        container.clientWidth *
-                        ratio
-                    );
+                if (canvas.width !== width || canvas.height !== height) {
 
+                    canvas.width = width;
+                    canvas.height = height;
 
-                const height =
-                    Math.floor(
-                        container.clientHeight *
-                        ratio
-                    );
-
-
-                if (
-                    canvas.width !== width ||
-                    canvas.height !== height
-                ) {
-
-                    canvas.width =
-                        width;
-
-
-                    canvas.height =
-                        height;
-
-
-                    gl.viewport(
-                        0,
-                        0,
-                        width,
-                        height
-                    );
+                    gl.viewport(0, 0, width, height);
                 }
             }
 
@@ -2247,8 +1332,7 @@ if (gl) {
                RENDER LOOP
             ================================= */
 
-            const start =
-                performance.now();
+            const start = performance.now();
 
 
             function render() {
@@ -2256,175 +1340,66 @@ if (gl) {
                 resizeCanvas();
 
 
-                /*
-                   Smooth actual pointer toward
-                   raw trackpad/mouse position.
-                */
+                /* Smooth the actual pointer toward the raw
+                   trackpad / mouse position. */
 
-                pointerX +=
-                    (
-                        targetPointerX -
-                        pointerX
-                    )
-                    *
-                    0.17;
+                pointerX += (targetPointerX - pointerX) * 0.17;
+                pointerY += (targetPointerY - pointerY) * 0.17;
 
 
-                pointerY +=
-                    (
-                        targetPointerY -
-                        pointerY
-                    )
-                    *
-                    0.17;
+                /* Smooth velocity. */
+
+                velocityX += (targetVelocityX - velocityX) * 0.12;
+                velocityY += (targetVelocityY - velocityY) * 0.12;
 
 
-                /*
-                   Smooth velocity.
-                */
+                /* Smooth interaction intensity. */
 
-                velocityX +=
-                    (
-                        targetVelocityX -
-                        velocityX
-                    )
-                    *
-                    0.12;
+                motion += (targetMotion - motion) * 0.10;
 
 
-                velocityY +=
-                    (
-                        targetVelocityY -
-                        velocityY
-                    )
-                    *
-                    0.12;
-
-
-                /*
-                   Smooth interaction intensity.
-                */
-
-                motion +=
-                    (
-                        targetMotion -
-                        motion
-                    )
-                    *
-                    0.10;
-
-
-                /*
-                   Slow vortex fade-in/out.
-
-                   This removes the snapping.
-                */
+                /* Slow vortex fade-in/out: removes the snapping. */
 
                 draggingAmount +=
-                    (
-                        targetDraggingAmount -
-                        draggingAmount
-                    )
-                    *
-                    0.09;
+                    (targetDraggingAmount - draggingAmount) * 0.09;
 
 
-                /*
-                   Natural decay.
-                */
+                /* Natural decay. */
 
-                targetVelocityX *=
-                    0.82;
+                targetVelocityX *= 0.82;
+                targetVelocityY *= 0.82;
 
-
-                targetVelocityY *=
-                    0.82;
+                targetMotion *= 0.88;
 
 
-                targetMotion *=
-                    0.88;
+                const now = performance.now();
 
+                const time = (now - start) / 1000;
 
-                const now =
-                    performance.now();
-
-
-                const time =
-                    (
-                        now -
-                        start
-                    )
-                    /
-                    1000;
-
-
-                const dripAge =
-                    (
-                        now -
-                        dripStarted
-                    )
-                    /
-                    1000;
+                const dripAge = (now - dripStarted) / 1000;
 
 
                 if (imageReady) {
 
-                    gl.uniform2f(
-                        pointerUniform,
-                        pointerX,
-                        pointerY
-                    );
+                    gl.uniform2f(pointerUniform, pointerX, pointerY);
 
+                    gl.uniform2f(velocityUniform, velocityX, velocityY);
 
-                    gl.uniform2f(
-                        velocityUniform,
-                        velocityX,
-                        velocityY
-                    );
+                    gl.uniform2f(dripCenterUniform, dripX, dripY);
 
+                    gl.uniform1f(timeUniform, time);
 
-                    gl.uniform2f(
-                        dripCenterUniform,
-                        dripX,
-                        dripY
-                    );
+                    gl.uniform1f(motionUniform, motion);
 
+                    gl.uniform1f(dripAgeUniform, dripAge);
 
-                    gl.uniform1f(
-                        timeUniform,
-                        time
-                    );
+                    gl.uniform1f(draggingUniform, draggingAmount);
 
-
-                    gl.uniform1f(
-                        motionUniform,
-                        motion
-                    );
-
-
-                    gl.uniform1f(
-                        dripAgeUniform,
-                        dripAge
-                    );
-
-
-                    gl.uniform1f(
-                        draggingUniform,
-                        draggingAmount
-                    );
-
-
-                    gl.drawArrays(
-                        gl.TRIANGLES,
-                        0,
-                        6
-                    );
+                    gl.drawArrays(gl.TRIANGLES, 0, 6);
                 }
 
 
-                requestAnimationFrame(
-                    render
-                );
+                requestAnimationFrame(render);
             }
 
 
