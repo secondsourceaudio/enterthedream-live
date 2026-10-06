@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="robots"
+        content="noindex, nofollow"
+    >
+
+    <meta
+        name="theme-color"
+        content="#050505"
+    >
+
+    <title>SRC001 — DRIP</title>
+
+    <!-- No browser emoji / temporary favicon -->
+    <link
+        rel="icon"
+        href="data:,"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./site.css?v=3"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./src001.css?v=1"
+    >
+
+</head>
+
+
+<body>
+
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
+    <header class="site-header">
+
+        <a
+            class="site-logo"
+            href="./index.html"
+        >
+            SECOND SOURCE
+        </a>
+
+
+        <nav class="site-nav">
+
+            <a href="./gallery.html">
+                IMAGES
+            </a>
+
+            <a
+                href="https://secondsource.bandcamp.com"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                BANDCAMP ↗
+            </a>
+
+        </nav>
+
+    </header>
+
+
+
+    <!-- =========================================
+         RELEASE
+    ========================================== -->
+
+    <main class="release-page">
+
+
+        <section class="release-intro">
+
+            <p class="catalogue">
+                SRC001
+            </p>
+
+
+            <h2>
+                MARTIN SOLLI
+            </h2>
+
+
+            <h1>
+                DRIP
+            </h1>
+
+        </section>
+
+
+
+        <!-- =====================================
+             ARTWORK
+        ====================================== -->
+
+        <section class="artwork-section">
+
+            <button
+                id="artwork-open"
+                class="artwork-button"
+                type="button"
+                aria-label="Open artwork"
+            >
+
+                <img
+                    src="./images/drip-cover.jpg"
+                    alt="DRIP artwork"
+                    draggable="false"
+                >
+
+            </button>
+
+        </section>
+
+
+
+        <!-- =====================================
+             TRACKLIST
+        ====================================== -->
+
+        <section class="tracklist-section">
+
+            <ol class="tracklist">
+
+                <li>
+                    <span class="track-number">01</span>
+                    <span class="track-title">DRIP</span>
+                </li>
+
+                <li>
+                    <span class="track-number">02</span>
+                    <span class="track-title">INNER PASSAGE</span>
+                </li>
+
+                <li>
+                    <span class="track-number">03</span>
+                    <span class="track-title">SAGE COUNSEL</span>
+                </li>
+
+                <li>
+                    <span class="track-number">04</span>
+                    <span class="track-title">I'M BUSY</span>
+                </li>
+
+                <li>
+                    <span class="track-number">05</span>
+                    <span class="track-title">FOAM</span>
+                </li>
+
+                <li>
+                    <span class="track-number">06</span>
+                    <span class="track-title">MEMBERS CLUB</span>
+                </li>
+
+                <li>
+                    <span class="track-number">07</span>
+                    <span class="track-title">SPECIAL ENTITY</span>
+                </li>
+
+                <li>
+                    <span class="track-number">08</span>
+                    <span class="track-title">040225</span>
+                </li>
+
+                <li>
+                    <span class="track-number">09</span>
+                    <span class="track-title">MEASURED STEPS</span>
+                </li>
+
+                <li>
+                    <span class="track-number">10</span>
+                    <span class="track-title">DREAM SCENARIO</span>
+                </li>
+
+            </ol>
+
+        </section>
+
+
+    </main>
+
+
+
+    <!-- =========================================
+         COPYRIGHT
+    ========================================== -->
+
+    <footer class="legal-footer">
+
+        <p class="copyright-line">
+            © 2026 SECOND SOURCE AUDIO. ALL RIGHTS RESERVED.
+        </p>
+
+        <p class="legal-line">
+            ALL MUSIC, ARTWORK, IMAGES, TEXT, GRAPHIC DESIGN AND OTHER ORIGINAL CONTENT
+            ON THIS WEBSITE ARE PROTECTED BY COPYRIGHT. NO REPRODUCTION, DISTRIBUTION,
+            MODIFICATION OR COMMERCIAL USE WITHOUT PRIOR WRITTEN PERMISSION,
+            EXCEPT AS PERMITTED BY LAW.
+        </p>
+
+    </footer>
+
+
+
+    <!-- =========================================
+         ARTWORK VIEWER
+    ========================================== -->
+
+    <div
+        id="artwork-viewer"
+        class="artwork-viewer"
+        aria-hidden="true"
+    >
+
+        <div class="viewer-top">
+
+            <span>
+                SRC001
+            </span>
+
+
+            <button
+                id="viewer-close"
+                type="button"
+            >
+                CLOSE
+            </button>
+
+        </div>
+
+
+        <div
+            id="viewer-stage"
+            class="viewer-stage"
+        >
+
+            <img
+                id="viewer-image"
+                src="./images/drip-cover.jpg"
+                alt="DRIP artwork"
+                draggable="false"
+            >
+
+        </div>
+
+    </div>
+
+
+
+    <script>
+
+        const artworkOpen =
+            document.getElementById(
+                "artwork-open"
+            );
+
+
+        const viewer =
+            document.getElementById(
+                "artwork-viewer"
+            );
+
+
+        const viewerClose =
+            document.getElementById(
+                "viewer-close"
+            );
+
+
+        function openViewer() {
+
+            viewer.classList.add(
+                "is-open"
+            );
+
+
+            viewer.setAttribute(
+                "aria-hidden",
+                "false"
+            );
+
+
+            document.body.classList.add(
+                "viewer-open"
+            );
+
+        }
+
+
+        function closeViewer() {
+
+            viewer.classList.remove(
+                "is-open"
+            );
+
+
+            viewer.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+
+            document.body.classList.remove(
+                "viewer-open"
+            );
+
+        }
+
+
+        artworkOpen.addEventListener(
+            "click",
+            openViewer
+        );
+
+
+        viewerClose.addEventListener(
+            "click",
+            closeViewer
+        );
+
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape"
+                ) {
+
+                    closeViewer();
+
+                }
+
+            }
+        );
+
+    </script>
+
+
+</body>
+
+</html>
