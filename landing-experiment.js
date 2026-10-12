@@ -204,6 +204,7 @@ if (gl) {
 
         uniform float u_motion;
         uniform float u_sound;
+        uniform float u_glitch;
 
         uniform float u_dragging;
 
@@ -237,6 +238,16 @@ if (gl) {
                 c, -s,
                 s,  c
             );
+        }
+
+        float fragmentNoise(vec2 p) {
+            vec3 value = fract(vec3(p.xyx) * 0.1031);
+            value += dot(value, value.yzx + 33.33);
+            return fract((value.x + value.y) * value.z);
+        }
+
+        vec2 mirrorUV(vec2 p) {
+            return 1.0 - abs(mod(p, 2.0) - 1.0);
         }
 
 
@@ -502,6 +513,27 @@ if (gl) {
             // Soft limits keep overlapping drops from tearing the image.
             uv += clamp(rippleOffset, vec2(-0.045), vec2(0.045));
 
+            // SRC_GLITCH: folded refraction and independent horizontal tears.
+            float band = floor(baseUV.y * 24.0);
+            float beat = floor(u_time * 4.0);
+            float tear = smoothstep(0.45, 0.9, fragmentNoise(vec2(band, beat)));
+            if (u_glitch > 0.001) {
+                vec2 offset = uv - u_pointer;
+                float fold = exp(-length(offset) * 2.8)
+                    * (0.85 + u_dragging + u_whirlEnergy);
+                vec2 broken = u_pointer + rotate2D(
+                    sin(u_time * 0.65 + length(offset) * 18.0) * fold
+                ) * offset;
+                broken.x += (fragmentNoise(vec2(band + 71.0, beat)) - 0.5)
+                    * tear * (0.48 + u_sound * 0.25 + u_motion * 0.15);
+                broken.y += sin(broken.x * 28.0 + u_time * 1.8)
+                    * (0.025 + u_dragging * 0.04);
+                vec2 tile = floor(baseUV * vec2(16.0, 12.0));
+                broken += (vec2(fragmentNoise(tile + beat),
+                    fragmentNoise(tile.yx - beat)) - 0.5) * tear * 0.08;
+                uv = mix(uv, mirrorUV(broken), u_glitch);
+            }
+
 
             /* =================================
                9. SAFE TEXTURE AREA
@@ -539,8 +571,23 @@ if (gl) {
                 );
 
 
-            gl_FragColor =
-                mix(mainSample, softTrail, trailBlend);
+            vec4 color = mix(mainSample, softTrail, trailBlend);
+            if (u_glitch > 0.001) {
+                vec2 split = vec2(0.012 + tear * 0.035,
+                    sin(u_time * 0.8 + band) * 0.004) * u_glitch;
+                vec3 separated = vec3(
+                    texture2D(u_texture, coverUV(mirrorUV(uv + split))).r,
+                    color.g,
+                    texture2D(u_texture, coverUV(mirrorUV(uv - split))).b
+                );
+                // Crushed digital colour and displaced channels, without flashes.
+                vec3 crushed = floor(clamp(separated, 0.0, 1.0) * 7.0 + 0.5) / 7.0;
+                vec3 damaged = mix(crushed.brg * vec3(1.25, 0.75, 1.1),
+                    1.0 - crushed.gbr, tear * 0.5);
+                float lines = 0.88 + 0.12 * sin(baseUV.y * 460.0);
+                color.rgb = mix(color.rgb, damaged * lines, u_glitch);
+            }
+            gl_FragColor = vec4(color.rgb, 1.0);
         }
 
     `;
@@ -732,6 +779,7 @@ if (gl) {
             time:        gl.getUniformLocation(program, "u_time"),
             motion:      gl.getUniformLocation(program, "u_motion"),
             sound:       gl.getUniformLocation(program, "u_sound"),
+            glitch:      gl.getUniformLocation(program, "u_glitch"),
             dragging:    gl.getUniformLocation(program, "u_dragging"),
             whirlEnergy: gl.getUniformLocation(program, "u_whirlEnergy"),
             whirlSpin:   gl.getUniformLocation(program, "u_whirlSpin"),
@@ -841,6 +889,7 @@ if (gl) {
 
     let motion = 0;
     let soundEnergy = 0;
+    let glitchAmount = 0;
     let targetMotion = 0;
 
     let draggingAmount = 0;
@@ -1372,6 +1421,7 @@ if (gl) {
 
         const time = elapsed / 1000;
         soundEnergy += (window.SecondSourceExperience.sampleBass() - soundEnergy) * smoothing(0.08);
+        glitchAmount += ((window.SecondSourceExperience.glitchEnabled ? 1 : 0) - glitchAmount) * smoothing(0.08);
 
 
         /* MULTIPLE DROP UNIFORMS */
@@ -1398,6 +1448,7 @@ if (gl) {
 
             gl.uniform1f(uniforms.motion, motion);
             gl.uniform1f(uniforms.sound, soundEnergy);
+            gl.uniform1f(uniforms.glitch, glitchAmount);
 
             gl.uniform1f(uniforms.dragging, draggingAmount);
 

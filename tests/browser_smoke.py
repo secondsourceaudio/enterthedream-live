@@ -287,17 +287,80 @@ class WebsiteTests(unittest.TestCase):
         finally:
             context.close()
 
-    def test_reduced_motion_is_static_by_default_and_updates(self):
+    def test_drip_motion_starts_on_and_keeps_the_visitors_toggle_choice(self):
         self.page.emulate_media(reduced_motion="reduce")
         self.visit()
-        expect(self.page.locator("html")).to_have_attribute("data-motion", "off")
-        self.wait_for_frames()
-        self.assertEqual(self.page.evaluate("window.__drawCalls"), 0)
-        self.assertEqual(self.page.locator("main").evaluate("e => getComputedStyle(e).animationName"), "none")
-        self.page.emulate_media(reduced_motion="no-preference")
+        expect(self.page.locator("html")).to_have_attribute("data-motion", "on")
         self.page.wait_for_function("window.__drawCalls > 0")
+        self.assertEqual(self.page.locator("main").evaluate("e => getComputedStyle(e).animationName"), "none")
+        self.page.locator('[data-motion-toggle]').click()
+        self.page.emulate_media(reduced_motion="no-preference")
         self.page.emulate_media(reduced_motion="reduce")
         expect(self.page.locator("html")).to_have_attribute("data-motion", "off")
+        self.visit('experiment.html')
+        expect(self.page.locator("html")).to_have_attribute("data-motion", "off")
+
+    def test_src_glitch_is_hidden_opt_in_changes_pixels_and_resets_on_reload(self):
+        self.visit()
+        self.page.wait_for_function('window.__drawCalls > 0')
+        toggle = self.page.locator('[data-glitch-toggle]')
+        expect(toggle).not_to_be_visible()
+        self.assertFalse(self.page.evaluate('window.SecondSourceExperience.glitchEnabled'))
+        self.page.locator('[data-info]').click()
+        toggle.click()
+        expect(toggle).to_have_attribute('aria-pressed', 'true')
+        self.page.keyboard.press('Escape')
+        self.page.wait_for_function("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const program = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(program, gl.getUniformLocation(program, 'u_glitch')) > .95;
+        }""")
+        result = self.page.evaluate("""() => {
+            const canvas = document.querySelector('#visual');
+            const gl = canvas.getContext('webgl');
+            const program = gl.getParameter(gl.CURRENT_PROGRAM);
+            const location = gl.getUniformLocation(program, 'u_glitch');
+            const previous = gl.getUniform(program, location);
+            const read = level => {
+                gl.uniform1f(location, level);
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+                const pixels = new Uint8Array(canvas.width * canvas.height * 4);
+                gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+                return pixels;
+            };
+            const normal = read(0), broken = read(1), restored = read(0);
+            let changed = 0, samples = 0, restoredDifference = 0;
+            for (let i = 0; i < normal.length; i += 64) {
+                samples++;
+                if (Math.abs(normal[i] - broken[i]) + Math.abs(normal[i+1] - broken[i+1]) + Math.abs(normal[i+2] - broken[i+2]) > 30) changed++;
+                restoredDifference += Math.abs(normal[i] - restored[i]);
+            }
+            gl.uniform1f(location, previous);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+            return {fraction: changed / samples, restoredDifference};
+        }""")
+        self.assertGreater(result['fraction'], .5)
+        self.assertEqual(result['restoredDifference'], 0)
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
+        self.page.locator('[data-motion-toggle]').click()
+        draws = self.page.evaluate('window.__drawCalls')
+        self.wait_for_frames()
+        self.assertEqual(self.page.evaluate('window.__drawCalls'), draws)
+        self.page.locator('[data-motion-toggle]').click()
+        self.page.locator('[data-info]').click()
+        toggle.click()
+        expect(toggle).to_have_attribute('aria-pressed', 'false')
+        self.page.keyboard.press('Escape')
+        self.page.wait_for_function("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const program = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(program, gl.getUniformLocation(program, 'u_glitch')) < .05;
+        }""")
+        self.page.locator('[data-info]').click()
+        toggle.click()
+        self.visit()
+        self.assertFalse(self.page.evaluate('window.SecondSourceExperience.glitchEnabled'))
+        expect(toggle).to_have_attribute('aria-pressed', 'false')
 
     def test_fullscreen_and_information_keep_controls_accessible(self):
         self.visit()

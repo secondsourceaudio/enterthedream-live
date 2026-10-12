@@ -180,6 +180,8 @@ body.listening-mode { overflow: hidden; }
 .experience-info dl { margin-top: 28px; }
 .experience-info dt { font-size: 9px; letter-spacing: .18em; color: #888; }
 .experience-info dd { margin: 8px 0 20px; font-size: 11px; line-height: 1.6; letter-spacing: .08em; }
+.info-modifier { width: 100%; margin-top: 8px; padding: 18px 0 4px; border-top: 1px solid #333; text-align: left; }
+.info-modifier[aria-pressed="true"] { color: #b8f4d6; }
 
 /* The generative field has its own wider stage. */
 body.field-study { height: auto; min-height: 100dvh; overflow: auto; }

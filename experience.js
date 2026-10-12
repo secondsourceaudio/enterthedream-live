@@ -13,6 +13,7 @@
     const volumeInput = space.querySelector("[data-volume]");
     const volumeOutput = space.querySelector("[data-volume-output]");
     const motionButton = space.querySelector("[data-motion-toggle]");
+    const glitchButton = space.querySelector("[data-glitch-toggle]");
     const fullscreenButton = space.querySelector("[data-fullscreen]");
     const infoButton = space.querySelector("[data-info]");
     const dialog = space.querySelector("dialog");
@@ -29,7 +30,9 @@
     const savedVolume = readPreference("second-source-volume");
     let volume = savedVolume === null ? 0.35 : Number(savedVolume);
     if (!Number.isFinite(volume) || volume < 0 || volume > 1) volume = 0.35;
-    let motionEnabled = !reducedMotion.matches;
+    const motionDefaultOn = space.hasAttribute("data-motion-default-on");
+    let motionEnabled = motionDefaultOn || !reducedMotion.matches;
+    let glitchEnabled = false;
     let context = null;
     let analyser = null;
     let gain = null;
@@ -177,8 +180,17 @@
         status.textContent = motionEnabled ? "Artwork motion enabled." : "Static artwork selected.";
     });
     reducedMotion.addEventListener("change", () => {
+        if (motionDefaultOn) return;
         motionEnabled = !reducedMotion.matches;
         updateMotion();
+    });
+
+    if (glitchButton) glitchButton.addEventListener("click", () => {
+        glitchEnabled = !glitchEnabled;
+        glitchButton.textContent = glitchEnabled ? "SRC_GLITCH / ON" : "SRC_GLITCH / OFF";
+        glitchButton.setAttribute("aria-pressed", String(glitchEnabled));
+        glitchButton.setAttribute("aria-label", `SRC_GLITCH: ${glitchEnabled ? "on" : "off"}`);
+        status.textContent = glitchEnabled ? "SRC_GLITCH enabled." : "SRC_GLITCH disabled.";
     });
 
     function setImmersive(enabled) {
@@ -252,9 +264,11 @@
 
     window.SecondSourceExperience = {
         get motionEnabled() { return motionEnabled; },
+        get glitchEnabled() { return glitchEnabled; },
         useStaticArtwork() {
             motionEnabled = false;
             motionButton.disabled = true;
+            if (glitchButton) glitchButton.disabled = true;
             updateMotion();
         },
         sampleBass() {

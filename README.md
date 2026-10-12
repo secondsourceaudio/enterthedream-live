@@ -31,8 +31,8 @@ resumes playback. No audio context or audio download starts before that button
 is selected. Playback does not start automatically when following a page link.
 
 **Motion off** shows the static artwork and stops the rendering loop. Motion
-starts enabled on each visit, except when reduced-motion preferences
-select the static view. A visitor can explicitly enable animation or turn it off
+starts enabled on each DRIP visit, including with reduced-motion preferences.
+Other study pages follow reduced-motion preferences. A visitor can explicitly enable animation or turn it off
 for the current visit. Volume is remembered; the motion toggle is not. Rendering
 also pauses while the artwork is offscreen or the tab is
 hidden. If WebGL is unavailable, the original artwork remains available.
@@ -52,6 +52,10 @@ and ripples pause with the motion toggle. Space or Enter on the focused artwork
 also creates a ripple. Pinch gestures zoom instead of creating a second impact.
 The original compact play/pause, mute and volume player sits beneath DRIP;
 sound still starts only when Play is selected.
+DRIP's INFO panel also contains SRC_GLITCH, an opt-in modifier with folded
+refraction, horizontal tearing, channel separation and reduced colour levels.
+It starts off on each visit, responds to drag and optional audio, and pauses
+with the motion toggle. Turning it off eases back to the original artwork.
 INTERFERENCE uses a separate procedural shader with draggable sources, pulse
 interaction, arrow-key controls, and reset. It uses no photographic texture.
 `site.js` handles internal-link fades, browser Back navigation, and artwork
