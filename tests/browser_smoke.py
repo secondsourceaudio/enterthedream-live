@@ -144,6 +144,12 @@ class WebsiteTests(unittest.TestCase):
         drops = self.drip_uniforms()
         self.assertTrue(any(d[2] >= 0 and 0 < d[3] < 1 for d in drops[8:]))
         self.assertTrue(all(d[2] >= 0 and d[3] == 1 for d in drops[:2]))
+        energy = self.page.evaluate("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const program = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(program, gl.getUniformLocation(program, 'u_whirlEnergy'));
+        }""")
+        self.assertGreater(energy, .35, 'Dragging should leave a sustained whirl after release')
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
 
     def test_drip_keyboard_ripple_pauses_and_ignores_right_click(self):

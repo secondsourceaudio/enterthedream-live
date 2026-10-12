@@ -335,7 +335,7 @@ if (gl) {
             float pointerDistance = length(pointerDelta);
 
             float pointerInfluence =
-                1.0 - smoothstep(0.0, 0.46, pointerDistance);
+                1.0 - smoothstep(0.0, 0.58, pointerDistance);
 
             vec2 pointerDirection =
                 normalize(pointerDelta + vec2(0.0001));
@@ -353,7 +353,7 @@ if (gl) {
             ================================= */
 
             float whirlFalloff =
-                exp(-pointerDistance * 4.6);
+                exp(-pointerDistance * 3.4);
 
 
             float speed =
@@ -362,10 +362,10 @@ if (gl) {
 
             float totalWhirl =
                 clamp(
-                    u_dragging * 0.78 +
-                    u_whirlEnergy * 0.38,
+                    u_dragging * 1.05 +
+                    u_whirlEnergy * 0.70,
                     0.0,
-                    1.2
+                    1.8
                 );
 
 
@@ -376,9 +376,9 @@ if (gl) {
                 totalWhirl *
                 whirlFalloff *
                 (
-                    0.16 +
-                    speed * 0.72 +
-                    u_motion * 0.28
+                    0.40 +
+                    speed * 1.05 +
+                    u_motion * 0.65
                 );
 
 
@@ -389,13 +389,13 @@ if (gl) {
             uv +=
                 (rotatedDelta - pointerDelta) *
                 pointerInfluence *
-                0.62;
+                0.92;
 
 
             /* =================================
-               5. SMALL WHIRL HALO
+               5. WHIRL HALO
 
-               The visible little spiral around the
+               The visible spiral around the
                cursor while holding and moving.
             ================================= */
 
@@ -404,8 +404,8 @@ if (gl) {
 
 
             float whirlHalo =
-                (1.0 - smoothstep(0.025, 0.30, pointerDistance)) *
-                u_dragging;
+                (1.0 - smoothstep(0.025, 0.40, pointerDistance)) *
+                clamp(u_dragging + u_whirlEnergy * 0.55, 0.0, 1.0);
 
 
             /* Circular water bands rotating around the pointer. */
@@ -424,7 +424,7 @@ if (gl) {
                 tangent *
                 whirlBand *
                 whirlHalo *
-                (0.0045 + speed * 0.010);
+                (0.007 + speed * 0.018);
 
 
             /* A very small inward/outward pull makes it
@@ -434,10 +434,10 @@ if (gl) {
                 pointerDirection *
                 sin(pointerDistance * 42.0 - u_time * 2.5) *
                 whirlHalo *
-                0.0022;
+                0.0040;
 
 
-            /* Continue a tiny amount of circular movement
+            /* Continue circular movement
                immediately after release. */
 
             uv +=
@@ -445,7 +445,7 @@ if (gl) {
                 u_whirlSpin *
                 u_whirlEnergy *
                 whirlFalloff *
-                0.0030;
+                0.0070;
 
 
             /* =================================
@@ -490,6 +490,7 @@ if (gl) {
 
             vec2 surfaceScale = vec2(u_aspect, 1.0);
             vec2 rippleOffset = vec2(0.0);
+            vec2 impactWhirl = vec2(0.0);
             for (int i = 0; i < 12; i++) {
                 vec4 drip = u_drips[i];
                 float age = drip.z;
@@ -508,10 +509,19 @@ if (gl) {
                         * exp(-age * 9.0);
                     rippleOffset += (direction * wave * 0.020
                         - delta * impact * 0.12) * drip.w / surfaceScale;
+                    // Each click leaves its own short-lived local vortex.
+                    if (i < 8) {
+                        float twist = 1.20 * exp(-distance * 4.5)
+                            * (1.0 - smoothstep(0.18, 0.40, distance))
+                            * exp(-age * 1.8) * smoothstep(0.0, 0.08, age);
+                        impactWhirl += (rotate2D(twist * u_whirlSpin) * delta
+                            - delta) * drip.w / surfaceScale;
+                    }
                 }
             }
             // Soft limits keep overlapping drops from tearing the image.
             uv += clamp(rippleOffset, vec2(-0.045), vec2(0.045));
+            uv += clamp(impactWhirl, vec2(-0.08), vec2(0.08));
 
             // SRC_GLITCH: folded refraction and independent horizontal tears.
             float band = floor(baseUV.y * 24.0);
@@ -582,8 +592,7 @@ if (gl) {
                 );
                 // Crushed digital colour and displaced channels, without flashes.
                 vec3 crushed = floor(clamp(separated, 0.0, 1.0) * 7.0 + 0.5) / 7.0;
-                vec3 damaged = mix(crushed.brg * vec3(1.25, 0.75, 1.1),
-                    1.0 - crushed.gbr, tear * 0.5);
+                vec3 damaged = crushed.brg * vec3(1.25, 0.75, 1.1);
                 float lines = 0.88 + 0.12 * sin(baseUV.y * 460.0);
                 color.rgb = mix(color.rgb, damaged * lines, u_glitch);
             }
@@ -910,6 +919,8 @@ if (gl) {
 
     let previousDragX = 0.5;
     let previousDragY = 0.5;
+    let dragCenterX = 0.5;
+    let dragCenterY = 0.5;
     let lastPointerTime = 0;
     let lastWakeTime = -1000;
     let lastWakeX = 0.5;
@@ -988,11 +999,10 @@ if (gl) {
             const dragY = nextY - previousDragY;
 
 
-            /* Use the cursor's movement relative to the
-               centre to infer a smooth rotational direction. */
+            /* Follow the direction of stirring around the initial touch. */
 
-            const localX = nextX - 0.5;
-            const localY = nextY - 0.5;
+            const localX = nextX - dragCenterX;
+            const localY = nextY - dragCenterY;
 
             const cross = localX * dragY - localY * dragX;
 
@@ -1002,7 +1012,7 @@ if (gl) {
 
             targetWhirlEnergy = Math.min(
                 1,
-                0.30 + targetMotion * 0.70
+                0.70 + targetMotion * 0.30
             );
             if (simulationTime - lastWakeTime >= 0.08 &&
                 Math.hypot(nextX - lastWakeX, nextY - lastWakeY) >= 0.035) {
@@ -1096,6 +1106,8 @@ if (gl) {
 
             previousDragX = targetPointerX;
             previousDragY = targetPointerY;
+            dragCenterX = targetPointerX;
+            dragCenterY = targetPointerY;
             lastWakeX = targetPointerX;
             lastWakeY = targetPointerY;
             lastWakeTime = simulationTime;
@@ -1281,7 +1293,7 @@ if (gl) {
             /* Keep some of the whirl alive after release. */
 
             if (wasDragging && event.type === "pointerup") {
-                targetWhirlEnergy = Math.max(whirlEnergy, 0.30);
+                targetWhirlEnergy = Math.max(whirlEnergy, 0.70);
             }
         }
 
@@ -1389,8 +1401,8 @@ if (gl) {
 
         /* SMOOTH POINTER */
 
-        pointerX += (targetPointerX - pointerX) * smoothing(0.14);
-        pointerY += (targetPointerY - pointerY) * smoothing(0.14);
+        pointerX += (targetPointerX - pointerX) * smoothing(0.22);
+        pointerY += (targetPointerY - pointerY) * smoothing(0.22);
 
         velocityX += (targetVelocityX - velocityX) * smoothing(0.10);
         velocityY += (targetVelocityY - velocityY) * smoothing(0.10);
@@ -1398,10 +1410,10 @@ if (gl) {
         motion += (targetMotion - motion) * smoothing(0.09);
 
         draggingAmount +=
-            (targetDraggingAmount - draggingAmount) * smoothing(0.075);
+            (targetDraggingAmount - draggingAmount) * smoothing(0.14);
 
         whirlEnergy +=
-            (targetWhirlEnergy - whirlEnergy) * smoothing(0.055);
+            (targetWhirlEnergy - whirlEnergy) * smoothing(0.12);
 
         whirlSpin +=
             (targetWhirlSpin - whirlSpin) * smoothing(0.08);
@@ -1415,7 +1427,7 @@ if (gl) {
         targetMotion *= Math.pow(0.88, frames);
 
         if (targetDraggingAmount === 0) {
-            targetWhirlEnergy *= Math.pow(0.965, frames);
+            targetWhirlEnergy *= Math.pow(0.985, frames);
         }
 
 

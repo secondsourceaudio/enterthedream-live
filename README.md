@@ -46,7 +46,9 @@ and restore it when closed.
 `experience.js` and `experience.css` provide the shared controls. The DRIP
 renderer retains its reflective artwork and pointer effects.
 DRIP uses damped ripple crests and troughs for clicks or taps, with a quieter
-wake along a drag. Eight click impacts and four wake samples overlap without
+wake along a drag. Clicks also create localized vortices; dragging creates a
+broader, stronger whirl that follows stirring around the initial touch and
+coasts after release. Eight click impacts and four wake samples overlap without
 the drag replacing the click impacts. The motion settles using elapsed time,
 and ripples pause with the motion toggle. Space or Enter on the focused artwork
 also creates a ripple. Pinch gestures zoom instead of creating a second impact.
