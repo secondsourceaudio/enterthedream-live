@@ -214,13 +214,12 @@ if (gl) {
         /* Crops the texture like CSS object-fit: cover,
            so the canvas matches the <img> underneath. */
         uniform vec2 u_coverScale;
+        uniform float u_aspect;
 
 
-        /* Eight independent click/tap drops. */
-
-        uniform vec2 u_dripCenters[8];
-
-        uniform float u_dripAges[8];
+        /* Eight impacts and four quieter drag-wake samples.
+           Pack position, age and strength into one vector per drop. */
+        uniform vec4 u_drips[12];
 
 
         vec2 coverUV(vec2 p) {
@@ -253,7 +252,7 @@ if (gl) {
             uv += normalize(audioCenter + vec2(0.0001))
                 * sin(audioRadius * 28.0 - u_time * 2.0)
                 * u_sound * 0.010
-                * smoothstep(0.8, 0.0, audioRadius);
+                * (1.0 - smoothstep(0.0, 0.8, audioRadius));
 
 
             /* =================================
@@ -287,7 +286,7 @@ if (gl) {
 
 
             float centerInfluence =
-                smoothstep(0.78, 0.02, centerDistance);
+                1.0 - smoothstep(0.02, 0.78, centerDistance);
 
 
             uv +=
@@ -325,7 +324,7 @@ if (gl) {
             float pointerDistance = length(pointerDelta);
 
             float pointerInfluence =
-                smoothstep(0.46, 0.0, pointerDistance);
+                1.0 - smoothstep(0.0, 0.46, pointerDistance);
 
             vec2 pointerDirection =
                 normalize(pointerDelta + vec2(0.0001));
@@ -394,7 +393,7 @@ if (gl) {
 
 
             float whirlHalo =
-                smoothstep(0.30, 0.025, pointerDistance) *
+                (1.0 - smoothstep(0.025, 0.30, pointerDistance)) *
                 u_dragging;
 
 
@@ -457,7 +456,7 @@ if (gl) {
                 pointerDirection *
                 pointerWave *
                 pointerInfluence *
-                (0.0035 + u_motion * 0.013);
+                (u_motion * 0.009 + u_dragging * 0.002);
 
 
             /* =================================
@@ -478,76 +477,30 @@ if (gl) {
                independently.
             ================================= */
 
-            for (int i = 0; i < 8; i++) {
-
-                float dripAge = u_dripAges[i];
-
-
-                /* Negative age = slot never used. */
-
-                if (dripAge >= 0.0 && dripAge < 4.0) {
-
-                    vec2 dripDelta = baseUV - u_dripCenters[i];
-
-                    float dripDistance = length(dripDelta);
-
-                    vec2 dripDirection =
-                        normalize(dripDelta + vec2(0.0001));
-
-
-                    float dripRadius = dripAge * 0.28;
-
-
-                    float dripLife =
-                        clamp(1.0 - dripAge / 3.8, 0.0, 1.0);
-
-
-                    /* Main ring. */
-
-                    float ringOne =
-                        exp(-abs(dripDistance - dripRadius) * 55.0) *
-                        dripLife;
-
-
-                    /* First trailing ring. */
-
-                    float radiusTwo =
-                        max(0.0, dripRadius - 0.050);
-
-                    float ringTwo =
-                        exp(-abs(dripDistance - radiusTwo) * 70.0) *
-                        dripLife *
-                        0.46;
-
-
-                    /* Second softer trailing ring. */
-
-                    float radiusThree =
-                        max(0.0, dripRadius - 0.095);
-
-                    float ringThree =
-                        exp(-abs(dripDistance - radiusThree) * 62.0) *
-                        dripLife *
-                        0.20;
-
-
-                    /* Initial depression where the
-                       finger/cursor touched. */
-
-                    float impact =
-                        exp(-dripDistance * 25.0) *
-                        exp(-dripAge * 4.5);
-
-
-                    uv += dripDirection * ringOne * 0.044;
-
-                    uv += dripDirection * ringTwo * 0.019;
-
-                    uv += dripDirection * ringThree * 0.009;
-
-                    uv -= dripDelta * impact * 0.090;
+            vec2 surfaceScale = vec2(u_aspect, 1.0);
+            vec2 rippleOffset = vec2(0.0);
+            for (int i = 0; i < 12; i++) {
+                vec4 drip = u_drips[i];
+                float age = drip.z;
+                if (age >= 0.0 && age < 3.8) {
+                    vec2 delta = (baseUV - drip.xy) * surfaceScale;
+                    float distance = length(delta);
+                    vec2 direction = delta / max(distance, 0.0001);
+                    float radius = age * 0.29;
+                    float wavefront = distance - radius;
+                    float packet = exp(-pow(wavefront / 0.055, 2.0));
+                    float life = exp(-age * 0.65)
+                        * (1.0 - smoothstep(2.4, 3.8, age));
+                    // Alternating crests and troughs refract the image both ways.
+                    float wave = sin(wavefront * 115.0) * packet * life;
+                    float impact = exp(-distance * distance * 1500.0)
+                        * exp(-age * 9.0);
+                    rippleOffset += (direction * wave * 0.020
+                        - delta * impact * 0.12) * drip.w / surfaceScale;
                 }
             }
+            // Soft limits keep overlapping drops from tearing the image.
+            uv += clamp(rippleOffset, vec2(-0.045), vec2(0.045));
 
 
             /* =================================
@@ -783,8 +736,8 @@ if (gl) {
             whirlEnergy: gl.getUniformLocation(program, "u_whirlEnergy"),
             whirlSpin:   gl.getUniformLocation(program, "u_whirlSpin"),
             coverScale:  gl.getUniformLocation(program, "u_coverScale"),
-            dripCenters: gl.getUniformLocation(program, "u_dripCenters[0]"),
-            dripAges:    gl.getUniformLocation(program, "u_dripAges[0]"),
+            aspect:      gl.getUniformLocation(program, "u_aspect"),
+            drips:       gl.getUniformLocation(program, "u_drips[0]"),
             texture:     gl.getUniformLocation(program, "u_texture")
         };
 
@@ -908,64 +861,73 @@ if (gl) {
 
     let previousDragX = 0.5;
     let previousDragY = 0.5;
+    let lastPointerTime = 0;
+    let lastWakeTime = -1000;
+    let lastWakeX = 0.5;
+    let lastWakeY = 0.5;
+    let simulationTime = 0;
+    let previousFrameTime = null;
 
 
     /* =========================================
        MULTIPLE DRIPS
     ========================================== */
 
-    const maximumDrips = 8;
+    const maximumDrips = 12;
+    const impactSlots = 8;
 
     const drips = [];
 
     for (let index = 0; index < maximumDrips; index++) {
-        drips.push({ x: 0.5, y: 0.5, started: -100000 });
+        drips.push({ x: 0.5, y: 0.5, started: -100000, strength: 0 });
     }
 
     let nextDripSlot = 0;
     let lastDripSlot = -1;
+    let nextWakeSlot = impactSlots;
 
 
     /* Reused every frame instead of allocating new arrays
        60 times a second. */
 
-    const dripCenters = new Float32Array(maximumDrips * 2);
-    const dripAges = new Float32Array(maximumDrips);
+    const dripData = new Float32Array(maximumDrips * 4);
 
 
     /* =========================================
        UPDATE POINTER
     ========================================== */
 
-    function updateShaderPointer(clientX, clientY) {
+    function surfacePoint(clientX, clientY) {
+        // Use the transformed artwork bounds, including pinch zoom and pan.
+        const rect = visualMedia.getBoundingClientRect();
+        return {
+            x: clamp((clientX - rect.left) / rect.width, 0, 1),
+            y: clamp(1 - (clientY - rect.top) / rect.height, 0, 1)
+        };
+    }
 
-        const rect = container.getBoundingClientRect();
+    function updateShaderPointer(clientX, clientY, reset = false) {
 
-        const nextX = clamp(
-            (clientX - rect.left) / rect.width,
-            0,
-            1
-        );
+        const point = surfacePoint(clientX, clientY);
+        const nextX = point.x;
+        const nextY = point.y;
+        const now = performance.now();
+        const seconds = clamp((now - lastPointerTime) / 1000, 1 / 240, 0.08);
+        lastPointerTime = now;
 
-        const nextY = clamp(
-            1 - (clientY - rect.top) / rect.height,
-            0,
-            1
-        );
-
-        const deltaX = nextX - targetPointerX;
-        const deltaY = nextY - targetPointerY;
+        const deltaX = reset ? 0 : nextX - targetPointerX;
+        const deltaY = reset ? 0 : nextY - targetPointerY;
 
         targetPointerX = nextX;
         targetPointerY = nextY;
 
 
-        targetVelocityX = clamp(deltaX * 1.30, -0.033, 0.033);
-        targetVelocityY = clamp(deltaY * 1.30, -0.033, 0.033);
+        targetVelocityX = clamp(deltaX / seconds / 60 * 1.30, -0.033, 0.033);
+        targetVelocityY = clamp(deltaY / seconds / 60 * 1.30, -0.033, 0.033);
 
         targetMotion = Math.min(
             1,
-            Math.hypot(deltaX, deltaY) * 27
+            Math.hypot(deltaX, deltaY) / seconds * 0.45
         );
 
 
@@ -993,6 +955,17 @@ if (gl) {
                 1,
                 0.30 + targetMotion * 0.70
             );
+            if (simulationTime - lastWakeTime >= 0.08 &&
+                Math.hypot(nextX - lastWakeX, nextY - lastWakeY) >= 0.035) {
+                drips[nextWakeSlot] = {
+                    x: nextX, y: nextY, started: simulationTime,
+                    strength: 0.18 + targetMotion * 0.22
+                };
+                nextWakeSlot = impactSlots + (nextWakeSlot - impactSlots + 1) % 4;
+                lastWakeTime = simulationTime;
+                lastWakeX = nextX;
+                lastWakeY = nextY;
+            }
         }
 
 
@@ -1009,30 +982,18 @@ if (gl) {
     ========================================== */
 
     function createDrip(clientX, clientY) {
-
-        const rect = container.getBoundingClientRect();
-
-        const x = clamp(
-            (clientX - rect.left) / rect.width,
-            0,
-            1
-        );
-
-        const y = clamp(
-            1 - (clientY - rect.top) / rect.height,
-            0,
-            1
-        );
+        const { x, y } = surfacePoint(clientX, clientY);
 
         drips[nextDripSlot] = {
             x: x,
             y: y,
-            started: performance.now()
+            started: simulationTime,
+            strength: 1
         };
 
         lastDripSlot = nextDripSlot;
 
-        nextDripSlot = (nextDripSlot + 1) % maximumDrips;
+        nextDripSlot = (nextDripSlot + 1) % impactSlots;
     }
 
 
@@ -1042,6 +1003,7 @@ if (gl) {
 
         if (lastDripSlot >= 0) {
             drips[lastDripSlot].started = -100000;
+            lastDripSlot = -1;
         }
     }
 
@@ -1053,6 +1015,9 @@ if (gl) {
     container.addEventListener("pointerdown", function (event) {
 
         if (!window.SecondSourceExperience.motionEnabled) return;
+        if (event.pointerType === "mouse" && event.button !== 0) return;
+        if (viewPointers.size >= 2) return;
+        if (viewPointers.size === 0) lastDripSlot = -1;
 
         viewPointers.set(event.pointerId, {
             x: event.clientX,
@@ -1078,10 +1043,13 @@ if (gl) {
 
             targetDraggingAmount = 0;
 
-            updateShaderPointer(event.clientX, event.clientY);
+            updateShaderPointer(event.clientX, event.clientY, true);
 
             previousDragX = targetPointerX;
             previousDragY = targetPointerY;
+            lastWakeX = targetPointerX;
+            lastWakeY = targetPointerY;
+            lastWakeTime = simulationTime;
 
 
             /* Every click/tap adds another independent drop. */
@@ -1161,7 +1129,7 @@ if (gl) {
             const midpoint = viewPointerMidpoint();
 
             viewScale = clamp(
-                pinchStartScale * (distance / pinchStartDistance),
+                pinchStartScale * (distance / Math.max(pinchStartDistance, 1)),
                 1,
                 3.5
             );
@@ -1252,6 +1220,7 @@ if (gl) {
 
 
         if (event.pointerId === dragPointerId) {
+            const wasDragging = dragHasStarted;
 
             dragPointerId = null;
 
@@ -1262,7 +1231,9 @@ if (gl) {
 
             /* Keep some of the whirl alive after release. */
 
-            targetWhirlEnergy = Math.max(whirlEnergy, 0.30);
+            if (wasDragging && event.type === "pointerup") {
+                targetWhirlEnergy = Math.max(whirlEnergy, 0.30);
+            }
         }
 
 
@@ -1282,6 +1253,37 @@ if (gl) {
 
     container.addEventListener("pointerup", releasePointer);
     container.addEventListener("pointercancel", releasePointer);
+    container.addEventListener("lostpointercapture", releasePointer);
+    container.addEventListener("pointerenter", event => {
+        if (!viewPointers.size) updateShaderPointer(event.clientX, event.clientY, true);
+    });
+    container.addEventListener("keydown", event => {
+        if (event.target !== container || event.repeat ||
+            !window.SecondSourceExperience.motionEnabled ||
+            (event.key !== " " && event.key !== "Enter")) return;
+        event.preventDefault();
+        const rect = container.getBoundingClientRect();
+        createDrip(rect.left + rect.width / 2, rect.top + rect.height / 2);
+    });
+
+    function clearGesture() {
+        for (const id of viewPointers.keys()) {
+            if (container.hasPointerCapture(id)) container.releasePointerCapture(id);
+        }
+        viewPointers.clear();
+        dragPointerId = null;
+        dragHasStarted = false;
+        panning = false;
+        pinchStartDistance = 0;
+        targetDraggingAmount = 0;
+        targetWhirlEnergy = 0;
+        targetMotion = 0;
+        targetVelocityX = targetVelocityY = 0;
+    }
+    window.addEventListener("blur", clearGesture);
+    window.addEventListener("experience:motionchange", () => {
+        if (!window.SecondSourceExperience.motionEnabled) clearGesture();
+    });
 
 
     /* =========================================
@@ -1328,44 +1330,48 @@ if (gl) {
 
 
         resizeCanvas();
+        const seconds = previousFrameTime === null ? 1 / 60
+            : clamp((elapsed - previousFrameTime) / 1000, 0, 0.064);
+        previousFrameTime = elapsed;
+        simulationTime = elapsed / 1000;
+        const frames = seconds * 60;
+        const smoothing = amount => 1 - Math.pow(1 - amount, frames);
 
 
         /* SMOOTH POINTER */
 
-        pointerX += (targetPointerX - pointerX) * 0.14;
-        pointerY += (targetPointerY - pointerY) * 0.14;
+        pointerX += (targetPointerX - pointerX) * smoothing(0.14);
+        pointerY += (targetPointerY - pointerY) * smoothing(0.14);
 
-        velocityX += (targetVelocityX - velocityX) * 0.10;
-        velocityY += (targetVelocityY - velocityY) * 0.10;
+        velocityX += (targetVelocityX - velocityX) * smoothing(0.10);
+        velocityY += (targetVelocityY - velocityY) * smoothing(0.10);
 
-        motion += (targetMotion - motion) * 0.09;
+        motion += (targetMotion - motion) * smoothing(0.09);
 
         draggingAmount +=
-            (targetDraggingAmount - draggingAmount) * 0.075;
+            (targetDraggingAmount - draggingAmount) * smoothing(0.075);
 
         whirlEnergy +=
-            (targetWhirlEnergy - whirlEnergy) * 0.055;
+            (targetWhirlEnergy - whirlEnergy) * smoothing(0.055);
 
         whirlSpin +=
-            (targetWhirlSpin - whirlSpin) * 0.08;
+            (targetWhirlSpin - whirlSpin) * smoothing(0.08);
 
 
         /* NATURAL DECAY */
 
-        targetVelocityX *= 0.82;
-        targetVelocityY *= 0.82;
+        targetVelocityX *= Math.pow(0.82, frames);
+        targetVelocityY *= Math.pow(0.82, frames);
 
-        targetMotion *= 0.88;
+        targetMotion *= Math.pow(0.88, frames);
 
         if (targetDraggingAmount === 0) {
-            targetWhirlEnergy *= 0.965;
+            targetWhirlEnergy *= Math.pow(0.965, frames);
         }
 
 
-        const now = performance.now();
-
         const time = elapsed / 1000;
-        soundEnergy += (window.SecondSourceExperience.sampleBass() - soundEnergy) * 0.08;
+        soundEnergy += (window.SecondSourceExperience.sampleBass() - soundEnergy) * smoothing(0.08);
 
 
         /* MULTIPLE DROP UNIFORMS */
@@ -1374,13 +1380,11 @@ if (gl) {
 
             const drip = drips[index];
 
-            dripCenters[index * 2] = drip.x;
-            dripCenters[index * 2 + 1] = drip.y;
-
-            dripAges[index] =
-                drip.started < 0
-                    ? -1
-                    : (now - drip.started) / 1000;
+            const offset = index * 4;
+            dripData[offset] = drip.x;
+            dripData[offset + 1] = drip.y;
+            dripData[offset + 2] = drip.started < 0 ? -1 : simulationTime - drip.started;
+            dripData[offset + 3] = drip.strength;
         }
 
 
@@ -1402,10 +1406,8 @@ if (gl) {
             gl.uniform1f(uniforms.whirlSpin, whirlSpin);
 
             gl.uniform2f(uniforms.coverScale, coverX, coverY);
-
-            gl.uniform2fv(uniforms.dripCenters, dripCenters);
-
-            gl.uniform1fv(uniforms.dripAges, dripAges);
+            gl.uniform1f(uniforms.aspect, canvas.width / canvas.height);
+            gl.uniform4fv(uniforms.drips, dripData);
 
             gl.drawArrays(gl.TRIANGLES, 0, 6);
         }

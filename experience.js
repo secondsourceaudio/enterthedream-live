@@ -6,7 +6,10 @@
     if (!space) return;
 
     const audio = space.querySelector("audio");
+    const trackTitle = audio.dataset.trackTitle || "Sage Counsel";
     const soundButton = space.querySelector("[data-sound]");
+    const compactSound = soundButton.hasAttribute("data-compact-sound");
+    const muteButton = space.querySelector("[data-mute]");
     const volumeInput = space.querySelector("[data-volume]");
     const volumeOutput = space.querySelector("[data-volume-output]");
     const motionButton = space.querySelector("[data-motion-toggle]");
@@ -26,7 +29,7 @@
     const savedVolume = readPreference("second-source-volume");
     let volume = savedVolume === null ? 0.35 : Number(savedVolume);
     if (!Number.isFinite(volume) || volume < 0 || volume > 1) volume = 0.35;
-    let motionEnabled = !reducedMotion.matches && readPreference("second-source-motion") !== "off";
+    let motionEnabled = !reducedMotion.matches;
     let context = null;
     let analyser = null;
     let gain = null;
@@ -85,12 +88,31 @@
 
     function updateSound() {
         const playing = !audio.paused;
+        const silent = audio.muted || volume === 0;
         soundButton.setAttribute("aria-pressed", String(playing));
-        soundButton.setAttribute("aria-label", loading ? "Loading sound" : playing ? "Sound on: pause sound" : hasStarted ? "Sound off: resume sound" : "Enter with sound");
-        soundButton.textContent = loading ? "LOADING SOUND" : playing ? "SOUND ON" : hasStarted ? "SOUND OFF" : "ENTER WITH SOUND";
+        if (compactSound) {
+            const label = loading ? "Loading sound" : `${playing ? "Pause" : "Play"} ${trackTitle}`;
+            soundButton.setAttribute("aria-label", label);
+            soundButton.title = label;
+            soundButton.querySelector("[data-play-symbol]").textContent = loading ? "…" : playing ? "Ⅱ" : "▶\uFE0E";
+        } else {
+            soundButton.setAttribute("aria-label", loading ? "Loading sound" : playing ? "Sound on: pause sound" : hasStarted ? "Sound off: resume sound" : "Enter with sound");
+            soundButton.textContent = loading ? "LOADING SOUND" : playing ? "SOUND ON" : hasStarted ? "SOUND OFF" : "ENTER WITH SOUND";
+        }
         soundButton.disabled = loading;
-        space.classList.toggle("sound-is-on", playing && volume > 0);
+        space.classList.toggle("sound-is-on", playing && !silent);
+        if (muteButton) {
+            muteButton.setAttribute("aria-pressed", String(audio.muted));
+            muteButton.setAttribute("aria-label", audio.muted ? "Unmute" : "Mute");
+            muteButton.title = audio.muted ? "Unmute" : "Mute";
+            muteButton.querySelector("[data-mute-symbol]").textContent = silent ? "×" : "◖))";
+        }
     }
+    if (muteButton) muteButton.addEventListener("click", () => {
+        audio.muted = !audio.muted;
+        updateSound();
+        status.textContent = audio.muted ? "Sound muted." : "Sound unmuted.";
+    });
 
     soundButton.addEventListener("click", async () => {
         if (loading) return;
@@ -101,7 +123,7 @@
         }
         loading = true;
         updateSound();
-        status.textContent = "Loading Sage Counsel…";
+        status.textContent = `Loading ${trackTitle}…`;
         let timeout;
         const failed = new Promise((_, reject) => {
             rejectPlayback = reject;
@@ -117,7 +139,7 @@
                 failed
             ]);
             hasStarted = true;
-            status.textContent = "Playing Sage Counsel. Use the sound button to pause.";
+            status.textContent = `Playing ${trackTitle}. Use the sound button to pause.`;
         } catch {
             audio.pause();
             status.textContent = "Sound could not start. Select the sound button to try again.";
@@ -151,12 +173,11 @@
     }
     motionButton.addEventListener("click", () => {
         motionEnabled = !motionEnabled;
-        savePreference("second-source-motion", motionEnabled ? "on" : "off");
         updateMotion();
         status.textContent = motionEnabled ? "Artwork motion enabled." : "Static artwork selected.";
     });
     reducedMotion.addEventListener("change", () => {
-        motionEnabled = !reducedMotion.matches && readPreference("second-source-motion") !== "off";
+        motionEnabled = !reducedMotion.matches;
         updateMotion();
     });
 
@@ -216,7 +237,7 @@
         if (event.key === "Escape") { event.preventDefault(); exitImmersive(); }
         // Contain keyboard focus in the in-page fullscreen fallback.
         if (event.key === "Tab") {
-            const controls = [...space.querySelectorAll("button:not([disabled]), input, a[href]")]
+            const controls = [...space.querySelectorAll("button:not([disabled]), input, a[href], [tabindex='0']")]
                 .filter(element => element.getClientRects().length && !element.closest("dialog"));
             const first = controls[0];
             const last = controls[controls.length - 1];

@@ -68,7 +68,8 @@ class WebsiteTests(unittest.TestCase):
         self.visit(path)
         self.page.wait_for_function("document.querySelector('#visual').classList.contains('is-ready') && window.__drawCalls > 0")
         self.assertEqual(audio_requests, [], "Sound should not download before consent")
-        expect(self.page.locator("[data-sound]")).to_have_attribute("aria-label", "Enter with sound")
+        expect(self.page.locator("[data-sound]")).to_have_attribute("aria-label",
+            "Play Sage Counsel" if path == "index.html" else "Enter with sound")
         audio = self.page.locator("audio")
         self.assertTrue(audio.evaluate("a => a.paused"))
         art = self.page.locator("#visual-container")
@@ -93,6 +94,16 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator("[data-volume-output]")).to_have_text("50%")
         expect(self.page.locator("[data-volume]")).to_have_attribute("aria-valuetext", "50 percent")
         self.assertEqual(self.page.evaluate("localStorage.getItem('second-source-volume')"), "0.5")
+        if path == "index.html":
+            mute = self.page.locator("[data-mute]")
+            mute.click()
+            self.assertTrue(audio.evaluate("a => a.muted && !a.paused"))
+            self.assertEqual(self.page.evaluate("window.SecondSourceExperience.sampleBass()"), 0)
+            expect(self.page.locator("[data-volume-output]")).to_have_text("50%")
+            expect(mute).to_have_attribute("aria-label", "Unmute")
+            mute.click()
+            self.assertFalse(audio.evaluate("a => a.muted"))
+            expect(self.page.locator("[data-volume]")).to_have_value("0.5")
         self.page.locator("[data-volume]").fill("0")
         self.assertEqual(self.page.evaluate("window.SecondSourceExperience.sampleBass()"), 0)
         self.page.locator("[data-sound]").click()
@@ -102,10 +113,87 @@ class WebsiteTests(unittest.TestCase):
     def test_landing_sound_and_actual_audio_reactivity(self):
         self.check_study("index.html")
 
-    def test_ripple_sound_and_pointer_interaction(self):
+    def drip_uniforms(self):
+        return self.page.evaluate("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const program = gl.getParameter(gl.CURRENT_PROGRAM);
+            return Array.from({length: 12}, (_, index) =>
+                Array.from(gl.getUniform(program, gl.getUniformLocation(program, `u_drips[${index}]`))));
+        }""")
+
+    def test_drip_impacts_overlap_and_drag_leaves_a_separate_wake(self):
+        self.visit()
+        self.page.wait_for_function("window.__drawCalls > 0")
+        art = self.page.locator('#visual-container')
+        box = art.bounding_box()
+        art.click(position={'x': box['width'] * .2, 'y': box['height'] * .3})
+        art.click(position={'x': box['width'] * .8, 'y': box['height'] * .7})
+        self.wait_for_frames(2)
+        drops = self.drip_uniforms()
+        self.assertAlmostEqual(drops[0][0], .2, places=2)
+        self.assertAlmostEqual(drops[0][1], .7, places=2)
+        self.assertAlmostEqual(drops[1][0], .8, places=2)
+        self.assertAlmostEqual(drops[1][1], .3, places=2)
+        self.assertTrue(all(d[2] >= 0 and d[3] == 1 for d in drops[:2]))
+        self.page.mouse.move(box['x'] + box['width'] * .25, box['y'] + box['height'] * .5)
+        self.page.mouse.down()
+        self.wait_for_frames(3)
+        self.page.mouse.move(box['x'] + box['width'] * .65, box['y'] + box['height'] * .55, steps=6)
+        self.page.mouse.up()
+        self.wait_for_frames(3)
+        drops = self.drip_uniforms()
+        self.assertTrue(any(d[2] >= 0 and 0 < d[3] < 1 for d in drops[8:]))
+        self.assertTrue(all(d[2] >= 0 and d[3] == 1 for d in drops[:2]))
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
+
+    def test_drip_keyboard_ripple_pauses_and_ignores_right_click(self):
+        self.visit()
+        self.page.wait_for_function("window.__drawCalls > 0")
+        art = self.page.locator('#visual-container')
+        art.focus()
+        self.page.keyboard.press('Space')
+        self.wait_for_frames(2)
+        self.assertTrue(self.drip_uniforms()[0][2] >= 0)
+        art.click(button='right')
+        self.wait_for_frames(2)
+        self.assertLess(self.drip_uniforms()[1][2], 0)
+        self.page.keyboard.press('Escape')
+        self.page.locator('[data-motion-toggle]').click()
+        age = self.drip_uniforms()[0][2]
+        self.wait_for_frames(10)
+        self.assertEqual(self.drip_uniforms()[0][2], age)
+        self.page.locator('[data-motion-toggle]').click()
+        self.wait_for_frames(2)
+        self.assertGreater(self.drip_uniforms()[0][2], age)
+        self.assertLess(self.drip_uniforms()[0][2] - age, .15)
+
+    def test_drip_two_finger_zoom_cancels_its_tap(self):
+        self.visit()
+        self.page.wait_for_function("window.__drawCalls > 0")
+        session = self.context.new_cdp_session(self.page)
+        session.send('Emulation.setTouchEmulationEnabled', {'enabled': True, 'maxTouchPoints': 2})
+        box = self.page.locator('#visual-container').bounding_box()
+        x, y, width = box['x'], box['y'] + box['height'] / 2, box['width']
+        def touch(kind, points):
+            session.send('Input.dispatchTouchEvent', {'type': kind, 'touchPoints': points})
+        def point(id, fraction):
+            return {'id': id, 'x': x + width * fraction, 'y': y}
+        touch('touchStart', [point(1, .4)])
+        self.wait_for_frames(2)
+        self.assertGreaterEqual(self.drip_uniforms()[0][2], 0)
+        touch('touchStart', [point(1, .4), point(2, .6)])
+        touch('touchMove', [point(1, .3), point(2, .7)])
+        self.wait_for_frames(2)
+        self.assertLess(self.drip_uniforms()[0][2], 0)
+        self.assertAlmostEqual(self.page.locator('#visual-media').evaluate(
+            'e => new DOMMatrixReadOnly(getComputedStyle(e).transform).a'), 2, places=1)
+        touch('touchEnd', [])
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
+
+    def test_interference_sound_and_pointer_interaction(self):
         self.check_study("experiment.html")
 
-    def test_static_mode_stops_rendering_and_persists(self):
+    def test_static_mode_stops_rendering_and_new_visit_starts_motion(self):
         self.visit()
         self.page.wait_for_function("window.__drawCalls > 0")
         self.page.locator("[data-motion-toggle]").click()
@@ -115,10 +203,89 @@ class WebsiteTests(unittest.TestCase):
         self.assertEqual(self.page.evaluate("window.__drawCalls"), before)
         self.assertEqual(self.page.locator("#visual").evaluate("e => getComputedStyle(e).visibility"), "hidden")
         self.visit("experiment.html")
-        expect(self.page.locator("html")).to_have_attribute("data-motion", "off")
-        self.assertEqual(self.page.evaluate("window.__drawCalls"), 0)
-        self.page.locator("[data-motion-toggle]").click()
+        expect(self.page.locator("html")).to_have_attribute("data-motion", "on")
         self.page.wait_for_function("window.__drawCalls > 0")
+
+    def test_drip_has_no_visible_label_and_ignores_previous_motion_off(self):
+        self.context.add_init_script("localStorage.setItem('second-source-motion', 'off');")
+        self.visit()
+        expect(self.page.locator("h1")).to_have_text("DRIP")
+        self.assertEqual(self.page.locator("h1").evaluate("e => getComputedStyle(e).position"), "absolute")
+        expect(self.page.locator(".study-caption, .interaction-cue")).to_have_count(0)
+        expect(self.page.locator("html")).to_have_attribute("data-motion", "on")
+        self.page.wait_for_function("window.__drawCalls > 0")
+        self.page.locator("[data-info]").click()
+        expect(self.page.locator("#info-title")).to_have_text("DRIP")
+
+    def test_experiments_have_distinct_previews_and_preview_is_silent(self):
+        audio_requests = []
+        self.page.on("request", lambda request: audio_requests.append(request.url) if "/audio/" in request.url else None)
+        self.visit("experiments.html")
+        expect(self.page.locator(".study-card h2").first).to_contain_text("DRIP")
+        expect(self.page.locator(".study-card h2").nth(1)).to_contain_text("INTERFERENCE")
+        images = self.page.locator(".study-card img").evaluate_all("images => images.map(i => i.getAttribute('src'))")
+        self.assertNotEqual(images[0], images[1])
+        self.assertTrue(images[1].endswith("interference.svg"))
+        before = self.page.evaluate("window.__drawCalls")
+        self.page.locator(".study-card").nth(1).hover()
+        self.page.wait_for_function("before => window.__drawCalls > before + 4", arg=before)
+        self.page.mouse.move(5, 5)
+        self.wait_for_frames(3)
+        after = self.page.evaluate("window.__drawCalls")
+        self.wait_for_frames()
+        self.assertEqual(self.page.evaluate("window.__drawCalls"), after)
+        self.assertEqual(audio_requests, [])
+
+    def test_interference_keyboard_and_reset(self):
+        self.visit("experiment.html")
+        self.page.wait_for_function("window.__drawCalls > 0")
+        stage = self.page.locator("#visual-container")
+        def pointer():
+            return self.page.evaluate("""() => {
+                const gl=document.querySelector('#visual').getContext('webgl');
+                return Array.from(gl.getUniform(gl.getParameter(gl.CURRENT_PROGRAM), gl.getUniformLocation(gl.getParameter(gl.CURRENT_PROGRAM),'u_pointer')));
+            }""")
+        before = pointer()
+        stage.focus()
+        self.page.keyboard.press("ArrowLeft")
+        self.wait_for_frames(12)
+        self.assertLess(pointer()[0], before[0])
+        self.page.keyboard.press("Space")
+        self.page.locator("[data-reset-field]").click()
+        self.wait_for_frames()
+        self.assertAlmostEqual(pointer()[0], .67, places=3)
+        self.assertAlmostEqual(pointer()[1], .52, places=3)
+        time = self.page.evaluate("""() => {
+            document.querySelector('[data-reset-field]').click();
+            return new Promise(resolve => requestAnimationFrame(() => {
+                const gl=document.querySelector('#visual').getContext('webgl');
+                resolve(gl.getUniform(gl.getParameter(gl.CURRENT_PROGRAM), gl.getUniformLocation(gl.getParameter(gl.CURRENT_PROGRAM),'u_time')));
+            }));
+        }""")
+        self.assertLess(time, .15)
+        self.assertEqual(self.page.locator("audio source").get_attribute("src"), "./audio/tone-field.mp3")
+
+    def test_field_preview_respects_reduced_motion(self):
+        self.page.emulate_media(reduced_motion="reduce")
+        self.visit("experiments.html")
+        self.page.locator(".study-card").nth(1).hover()
+        self.wait_for_frames()
+        self.assertEqual(self.page.evaluate("window.__drawCalls"), 0)
+        self.assertEqual(self.page.locator(".field-preview-canvas").evaluate("e => getComputedStyle(e).visibility"), "hidden")
+
+    def test_touch_devices_get_an_appropriate_preview_instruction(self):
+        context = self.browser.new_context(viewport={"width":390,"height":844},is_mobile=True,has_touch=True)
+        try:
+            page=context.new_page()
+            page.goto(BASE_URL+'/experiments.html',wait_until='networkidle')
+            expect(page.locator('.preview-touch')).to_be_visible()
+            expect(page.locator('.preview-desktop')).not_to_be_visible()
+            page.locator('.study-card').nth(1).tap()
+            page.wait_for_url('**/experiment.html')
+            page.locator('#visual-container').tap()
+            expect(page.locator('[data-reset-field]')).to_be_visible()
+        finally:
+            context.close()
 
     def test_reduced_motion_is_static_by_default_and_updates(self):
         self.page.emulate_media(reduced_motion="reduce")
@@ -201,9 +368,8 @@ class WebsiteTests(unittest.TestCase):
         expect(opener).to_be_focused()
 
     def test_experiments_navigation_transitions_and_back(self):
-        self.visit()
-        self.page.get_by_role("link", name="EXPERIMENTS", exact=True).click()
-        self.page.wait_for_url("**/experiments.html")
+        # Workshop pages remain available by direct URL, outside public navigation.
+        self.visit("experiments.html")
         expect(self.page.locator(".study-card")).to_have_count(2)
         self.assertEqual(self.page.locator("body").get_attribute("class"), None)
         self.page.locator(".study-card").nth(1).click()

@@ -9,6 +9,7 @@ html.experience-page { overflow-x: hidden; overflow-y: auto; }
 }
 .landing-study .landing-experiment { padding-top: 40px; padding-bottom: 48px; }
 .landing-study .visual-container { width: min(64vmin, 760px); }
+.landing-study .visual-container:focus-visible { outline: 1px solid #899aa5; outline-offset: 4px; }
 
 .study-caption {
     margin: 0;
@@ -91,6 +92,30 @@ html[data-motion="off"] .visual-container { touch-action: pan-y pinch-zoom; }
 }
 .experience-volume output { min-width: 30px; }
 
+/* The original compact player, with larger touch targets. */
+.compact-player { display: flex; align-items: center; justify-content: center; gap: 9px; max-width: 100%; }
+.compact-player .player-button,
+.compact-player .sound-button {
+    width: 44px; min-width: 44px; height: 44px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-family: Arial, Helvetica, sans-serif; font-size: 12px; letter-spacing: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+.compact-player .volume-slider {
+    width: 90px; height: 44px; margin: 0;
+    appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer;
+}
+.compact-player .volume-slider::-webkit-slider-runnable-track { height: 1px; background: rgb(255 255 255 / .35); }
+.compact-player .volume-slider::-webkit-slider-thumb {
+    width: 9px; height: 9px; margin-top: -4px; border-radius: 50%;
+    appearance: none; -webkit-appearance: none; background: #fff;
+}
+.compact-player .volume-slider::-moz-range-track { height: 1px; background: rgb(255 255 255 / .35); }
+.compact-player .volume-slider::-moz-range-thumb { width: 9px; height: 9px; border: 0; border-radius: 50%; background: #fff; }
+.compact-player .volume-percent { min-width: 36px; color: #fff; font-family: Arial, Helvetica, sans-serif; font-size: 11px; text-align: right; }
+.compact-player .volume-slider:focus-visible { outline: 1px solid #eee; outline-offset: 4px; }
+.landing-study .experience-controls { margin-top: -12px; }
+
 .visually-hidden {
     position: absolute;
     width: 1px;
@@ -123,6 +148,10 @@ body.listening-mode { overflow: hidden; }
     width: min(76dvh, calc(100vw - 48px));
     max-width: 100%;
 }
+.landing-study .listening-space.is-immersive .visual-container,
+.landing-study .listening-space:fullscreen .visual-container {
+    width: min(calc(100dvh - 180px), calc(100vw - 48px));
+}
 
 .experience-info {
     width: min(480px, calc(100vw - 32px));
@@ -152,17 +181,23 @@ body.listening-mode { overflow: hidden; }
 .experience-info dt { font-size: 9px; letter-spacing: .18em; color: #888; }
 .experience-info dd { margin: 8px 0 20px; font-size: 11px; line-height: 1.6; letter-spacing: .08em; }
 
-/* The ripple study now uses the same mobile-safe controls as the landing. */
-body.ripple-study { height: auto; min-height: 100dvh; overflow: auto; }
-.ripple-study .experiment-main {
+/* The generative field has its own wider stage. */
+body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
+.field-study .experiment-main {
     flex: 1;
     padding: 40px 16px 56px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
-.ripple-study .visual-container { width: min(64vmin, 760px); aspect-ratio: 1; height: auto; }
-.ripple-study .visual-media { width: 100%; height: 100%; }
+.field-study .visual-container { width: min(100%, 960px); max-width: calc(100vw - 48px); aspect-ratio: 16 / 10; height: auto; }
+.field-study .visual-media { width: 100%; height: 100%; }
+.field-study .study-caption { font-size: 12px; letter-spacing: .18em; }
+.field-surface:focus-visible { outline: 1px solid #899aa5; outline-offset: 4px; }
+.field-study .listening-space.is-immersive .visual-container,
+.field-study .listening-space:fullscreen .visual-container {
+    width: min(calc(100vw - 48px), calc((100dvh - 180px) * 1.6));
+}
 
 @media (max-width: 750px) {
     .landing-study .site-header { padding: 18px 16px 10px; }
@@ -172,13 +207,17 @@ body.ripple-study { height: auto; min-height: 100dvh; overflow: auto; }
     .experience-button { font-size: 8px; }
     .study-caption { font-size: 8px; }
     .landing-study .visual-container { width: min(calc(100vw - 24px), 620px); }
-    .ripple-study .visual-container { width: min(calc(100vw - 32px), 620px); }
-    .ripple-study .experiment-main { padding-top: 32px; }
+    .field-study .visual-container { width: min(calc(100vw - 32px), 620px); aspect-ratio: 1; }
+    .field-study .experiment-main { padding-top: 32px; }
     .listening-space.is-immersive,
     .listening-space:fullscreen { padding: 12px; gap: 12px; }
     .listening-space.is-immersive .visual-container,
     .listening-space:fullscreen .visual-container {
         width: min(calc(100dvh - 200px), calc(100vw - 24px));
+    }
+    .field-study .listening-space.is-immersive .visual-container,
+    .field-study .listening-space:fullscreen .visual-container {
+        width: min(calc(100dvh - 230px), calc(100vw - 24px));
     }
 }
 

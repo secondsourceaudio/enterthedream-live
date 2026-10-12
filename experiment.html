@@ -5,35 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#050505">
     <meta name="description" content="Interactive artwork and optional sound from SECOND SOURCE AUDIO.">
+    <meta name="robots" content="noindex, nofollow">
     <link rel="icon" href="data:,">
-    <title>SECOND SOURCE — RIPPLE STUDY</title>
+    <title>SECOND SOURCE — INTERFERENCE</title>
     <link rel="stylesheet" href="./site.css?v=4">
-    <link rel="stylesheet" href="./experiment.css?v=15">
-    <link rel="stylesheet" href="./experience.css?v=1">
+    <link rel="stylesheet" href="./experiment.css?v=16">
+    <link rel="stylesheet" href="./experience.css?v=3">
     <script src="./site.js?v=1" defer></script>
-    <link rel="preload" as="image" href="./images/drip_cover_front.webp">
-    <script src="./experience.js?v=1" defer></script>
-    <script src="./experiment.js?v=19" defer></script>
+    <link rel="preload" as="image" href="./images/experiments/interference.svg">
+    <script src="./experience.js?v=3" defer></script>
+    <script src="./experiment.js?v=20" defer></script>
 </head>
-<body class="ripple-study">
+<body class="field-study">
     <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
     <header class="site-header">
         <a class="site-logo" href="./index.html">SECOND SOURCE</a>
         <nav class="site-nav" aria-label="Main navigation">
             <a href="./gallery.html">IMAGES</a>
-            <a href="./experiments.html">EXPERIMENTS</a>
             <a href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP <svg class="external-arrow" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 10 10 2M2 2h8v8" fill="none" stroke="currentColor" stroke-width="1"/></svg></a>
         </nav>
     </header>
     <main tabindex="-1" id="main-content" class="experiment-main">
-        <section id="listening-space" class="listening-space" data-experience aria-label="Ripple Study audiovisual experience">
-            <h1 class="study-caption">02 / RIPPLE STUDY</h1>
-            <div id="visual-container" class="visual-container">
+        <section id="listening-space" class="listening-space" data-experience aria-label="Interference audiovisual experience">
+            <h1 class="study-caption">02 / INTERFERENCE</h1>
+            <div id="visual-container" class="visual-container field-surface" data-field-surface tabindex="0" role="group" aria-label="Interactive interference field. Use arrow keys to shift the source and Space to send a pulse.">
                 <div id="visual-media" class="visual-media">
-                    <img id="fallback-image" class="fallback-image" src="./images/drip_cover_front.webp" alt="Blue liquid forms in reflective light" width="4096" height="4096" fetchpriority="high" decoding="async" draggable="false">
+                    <img id="fallback-image" class="fallback-image" src="./images/experiments/interference.svg" alt="Interwoven contours from two overlapping wave sources" width="960" height="600" fetchpriority="high" decoding="async" draggable="false">
                     <canvas id="visual" class="visual-canvas" aria-hidden="true"></canvas>
                 </div>
-                <p id="interaction-message" class="interaction-cue">TOUCH / DRAG / PINCH</p>
+                <p id="interaction-message" class="interaction-cue">DRAG TO SHIFT / TAP TO PULSE</p>
             </div>
             <div class="experience-controls" aria-label="Sound and viewing controls">
                 <button class="experience-button" type="button" data-sound aria-pressed="false" aria-label="Enter with sound">ENTER WITH SOUND</button>
@@ -44,24 +44,25 @@
                 </label>
                 <button class="experience-button" type="button" data-motion-toggle aria-pressed="true" aria-label="Use static artwork">MOTION ON</button>
                 <button class="experience-button" type="button" data-fullscreen aria-pressed="false" aria-label="Enter fullscreen listening mode">FULLSCREEN</button>
+                <button class="experience-button" type="button" data-reset-field>RESET FIELD</button>
                 <button class="experience-button" type="button" data-info aria-haspopup="dialog" aria-controls="experience-info">INFO</button>
             </div>
             <p class="visually-hidden" role="status" data-status></p>
-            <audio id="experience-audio" loop preload="none">
-                <source src="./audio/sage-counsel.mp3" type="audio/mpeg">
+            <audio id="experience-audio" data-track-title="Tone Field" loop preload="none">
+                <source src="./audio/tone-field.mp3" type="audio/mpeg">
             </audio>
             <dialog id="experience-info" class="experience-info" aria-labelledby="info-title">
                 <p class="info-number">STUDY 02</p>
                 <div class="info-heading">
-                    <h2 id="info-title">RIPPLE STUDY</h2>
+                    <h2 id="info-title">INTERFERENCE</h2>
                     <button class="experience-button" type="button" data-close-info aria-label="Close information">CLOSE</button>
                 </div>
-                <p>A study in expanding ripples. Touch the surface to create a drop; drag to disturb it.</p>
-                <p>Enter with sound to let the artwork respond to the music. Sound and motion are optional.</p>
+                <p data-copy-slot="interference-description">[DESCRIPTION]</p>
+                <p data-copy-slot="interference-notes">[NOTES]</p>
                 <dl>
-                    <dt>SOUND</dt><dd>SAGE COUNSEL</dd>
+                    <dt>SOUND</dt><dd>TONE FIELD — ORIGINAL SYNTHESIZED LOOP</dd>
                     <dt>PROJECT</dt><dd>SECOND SOURCE AUDIO</dd>
-                    <dt>CONTROLS</dt><dd>Drag to disturb · Pinch to zoom<br>Escape to leave fullscreen</dd>
+                    <dt>CONTROLS</dt><dd>Drag to shift · Tap to pulse<br>Arrow keys to shift · Space to pulse<br>Reset field to return to the starting composition<br>Escape to leave fullscreen</dd>
                 </dl>
             </dialog>
         </section>
