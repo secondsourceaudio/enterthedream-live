@@ -152,6 +152,47 @@ class WebsiteTests(unittest.TestCase):
         self.assertGreater(energy, .35, 'Dragging should leave a sustained whirl after release')
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
 
+    def test_click_and_small_moves_do_not_start_the_whirl(self):
+        self.visit()
+        self.page.wait_for_function('window.__drawCalls > 0')
+        box = self.page.locator('#visual-container').bounding_box()
+        x, y = box['x'] + box['width'] * .5, box['y'] + box['height'] * .5
+        self.page.mouse.move(x, y)
+        self.page.mouse.down()
+        self.page.mouse.move(x + 3, y + 2)
+        self.wait_for_frames(5)
+        def whirl():
+            return self.page.evaluate("""() => {
+                const gl = document.querySelector('#visual').getContext('webgl');
+                const program = gl.getParameter(gl.CURRENT_PROGRAM);
+                return ['u_dragging', 'u_whirlEnergy'].map(name => gl.getUniform(program, gl.getUniformLocation(program, name)));
+            }""")
+        self.assertEqual(whirl(), [0, 0])
+        self.assertGreaterEqual(self.drip_uniforms()[0][2], 0)
+        self.page.mouse.move(x + 60, y + 30, steps=5)
+        self.wait_for_frames(8)
+        self.assertTrue(all(value > .4 for value in whirl()))
+        self.page.mouse.up()
+        self.page.mouse.down()
+        self.wait_for_frames(3)
+        self.assertEqual(whirl(), [0, 0], 'A new click must not restart a previous whirl')
+        self.page.mouse.up()
+
+    def test_file_preview_embeds_visual_assets_and_handles_mobile_layout(self):
+        requests = []
+        self.page.on('request', lambda request: requests.append(request.url))
+        self.visit('preview.html')
+        self.page.wait_for_function('window.__drawCalls > 0')
+        self.assertTrue(self.page.locator('#fallback-image').evaluate('e => e.complete && e.naturalWidth > 0'))
+        self.assertEqual(self.page.locator('.compact-player').evaluate('e => getComputedStyle(e).display'), 'flex')
+        self.assertTrue(self.page.evaluate("document.fonts.check('12px Microgramma')"))
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
+        self.assertTrue(all(url.endswith('/preview.html') or url.startswith('data:') for url in requests), requests)
+        self.page.set_viewport_size({'width': 390, 'height': 844})
+        self.assertLessEqual(self.page.evaluate('document.documentElement.scrollWidth'), 390)
+        self.page.locator('[data-info]').click()
+        expect(self.page.locator('[data-glitch-toggle]')).to_be_visible()
+
     def test_drip_keyboard_ripple_pauses_and_ignores_right_click(self):
         self.visit()
         self.page.wait_for_function("window.__drawCalls > 0")
@@ -335,17 +376,21 @@ class WebsiteTests(unittest.TestCase):
                 return pixels;
             };
             const normal = read(0), broken = read(1), restored = read(0);
-            let changed = 0, samples = 0, restoredDifference = 0;
+            let changed = 0, samples = 0, restoredDifference = 0, difference = 0;
             for (let i = 0; i < normal.length; i += 64) {
                 samples++;
-                if (Math.abs(normal[i] - broken[i]) + Math.abs(normal[i+1] - broken[i+1]) + Math.abs(normal[i+2] - broken[i+2]) > 30) changed++;
+                const delta = Math.abs(normal[i] - broken[i]) + Math.abs(normal[i+1] - broken[i+1]) + Math.abs(normal[i+2] - broken[i+2]);
+                if (delta > 6) changed++;
+                difference += delta;
                 restoredDifference += Math.abs(normal[i] - restored[i]);
             }
             gl.uniform1f(location, previous);
             gl.drawArrays(gl.TRIANGLES, 0, 6);
-            return {fraction: changed / samples, restoredDifference};
+            return {fraction: changed / samples, restoredDifference, mean: difference / (samples * 3)};
         }""")
-        self.assertGreater(result['fraction'], .5)
+        self.assertGreater(result['fraction'], .05)
+        self.assertGreater(result['mean'], .5)
+        self.assertLess(result['mean'], 35, 'Glitch should preserve the original artwork and palette')
         self.assertEqual(result['restoredDifference'], 0)
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
         self.page.locator('[data-motion-toggle]').click()

@@ -490,7 +490,6 @@ if (gl) {
 
             vec2 surfaceScale = vec2(u_aspect, 1.0);
             vec2 rippleOffset = vec2(0.0);
-            vec2 impactWhirl = vec2(0.0);
             for (int i = 0; i < 12; i++) {
                 vec4 drip = u_drips[i];
                 float age = drip.z;
@@ -509,38 +508,32 @@ if (gl) {
                         * exp(-age * 9.0);
                     rippleOffset += (direction * wave * 0.020
                         - delta * impact * 0.12) * drip.w / surfaceScale;
-                    // Each click leaves its own short-lived local vortex.
-                    if (i < 8) {
-                        float twist = 1.20 * exp(-distance * 4.5)
-                            * (1.0 - smoothstep(0.18, 0.40, distance))
-                            * exp(-age * 1.8) * smoothstep(0.0, 0.08, age);
-                        impactWhirl += (rotate2D(twist * u_whirlSpin) * delta
-                            - delta) * drip.w / surfaceScale;
-                    }
                 }
             }
             // Soft limits keep overlapping drops from tearing the image.
             uv += clamp(rippleOffset, vec2(-0.045), vec2(0.045));
-            uv += clamp(impactWhirl, vec2(-0.08), vec2(0.08));
 
-            // SRC_GLITCH: folded refraction and independent horizontal tears.
+            // SRC_GLITCH: subtle tears, with extra folding only while stirring.
             float band = floor(baseUV.y * 24.0);
-            float beat = floor(u_time * 4.0);
-            float tear = smoothstep(0.45, 0.9, fragmentNoise(vec2(band, beat)));
+            float clock = u_time * 1.8;
+            float beat = floor(clock);
+            float bandNoise = mix(fragmentNoise(vec2(band, beat)),
+                fragmentNoise(vec2(band, beat + 1.0)), smoothstep(0.0, 1.0, fract(clock)));
+            float tear = smoothstep(0.70, 0.98, bandNoise);
             if (u_glitch > 0.001) {
                 vec2 offset = uv - u_pointer;
                 float fold = exp(-length(offset) * 2.8)
-                    * (0.85 + u_dragging + u_whirlEnergy);
+                    * (u_dragging * 0.30 + u_whirlEnergy * 0.25);
                 vec2 broken = u_pointer + rotate2D(
                     sin(u_time * 0.65 + length(offset) * 18.0) * fold
                 ) * offset;
                 broken.x += (fragmentNoise(vec2(band + 71.0, beat)) - 0.5)
-                    * tear * (0.48 + u_sound * 0.25 + u_motion * 0.15);
+                    * tear * (0.065 + u_sound * 0.035 + u_motion * 0.025);
                 broken.y += sin(broken.x * 28.0 + u_time * 1.8)
-                    * (0.025 + u_dragging * 0.04);
+                    * (0.006 + u_dragging * 0.008);
                 vec2 tile = floor(baseUV * vec2(16.0, 12.0));
                 broken += (vec2(fragmentNoise(tile + beat),
-                    fragmentNoise(tile.yx - beat)) - 0.5) * tear * 0.08;
+                    fragmentNoise(tile.yx - beat)) - 0.5) * tear * 0.012;
                 uv = mix(uv, mirrorUV(broken), u_glitch);
             }
 
@@ -583,18 +576,18 @@ if (gl) {
 
             vec4 color = mix(mainSample, softTrail, trailBlend);
             if (u_glitch > 0.001) {
-                vec2 split = vec2(0.012 + tear * 0.035,
-                    sin(u_time * 0.8 + band) * 0.004) * u_glitch;
+                vec2 split = vec2(0.002 + tear * 0.004,
+                    sin(u_time * 0.8 + band) * 0.001) * u_glitch;
                 vec3 separated = vec3(
                     texture2D(u_texture, coverUV(mirrorUV(uv + split))).r,
                     color.g,
                     texture2D(u_texture, coverUV(mirrorUV(uv - split))).b
                 );
-                // Crushed digital colour and displaced channels, without flashes.
-                vec3 crushed = floor(clamp(separated, 0.0, 1.0) * 7.0 + 0.5) / 7.0;
-                vec3 damaged = crushed.brg * vec3(1.25, 0.75, 1.1);
-                float lines = 0.88 + 0.12 * sin(baseUV.y * 460.0);
-                color.rgb = mix(color.rgb, damaged * lines, u_glitch);
+                // A light digital fringe preserves the artwork's blue palette.
+                vec3 crushed = floor(clamp(separated, 0.0, 1.0) * 31.0 + 0.5) / 31.0;
+                vec3 damaged = mix(separated, crushed.brg * vec3(1.1, 0.95, 1.05), 0.10);
+                float lines = 0.98 + 0.02 * sin(baseUV.y * 460.0);
+                color.rgb = mix(color.rgb, damaged * lines, u_glitch * 0.60);
             }
             gl_FragColor = vec4(color.rgb, 1.0);
         }
@@ -1101,6 +1094,10 @@ if (gl) {
             dragHasStarted = false;
 
             targetDraggingAmount = 0;
+
+            // A fresh tap is radial only; stirring starts after the drag threshold.
+            draggingAmount = 0;
+            whirlEnergy = targetWhirlEnergy = 0;
 
             updateShaderPointer(event.clientX, event.clientY, true);
 

@@ -20,6 +20,10 @@ them locally.
 `gallery.html` is the image archive. `src001.html` remains a work-in-progress
 release page and is not linked from the public navigation.
 
+`preview.html` embeds the homepage artwork, font, styles and scripts for file
+viewers that cannot load relative assets. Play streams the existing public track
+from GitHub. Rebuild it after homepage changes with `python3 scripts/build_preview.py`.
+
 ## Listening and viewing
 
 Both studies load silently. Select **Enter with sound** to play the bundled
@@ -46,7 +50,7 @@ and restore it when closed.
 `experience.js` and `experience.css` provide the shared controls. The DRIP
 renderer retains its reflective artwork and pointer effects.
 DRIP uses damped ripple crests and troughs for clicks or taps, with a quieter
-wake along a drag. Clicks also create localized vortices; dragging creates a
+wake along a drag. Clicks create radial ripples only; dragging creates a
 broader, stronger whirl that follows stirring around the initial touch and
 coasts after release. Eight click impacts and four wake samples overlap without
 the drag replacing the click impacts. The motion settles using elapsed time,
@@ -55,7 +59,8 @@ also creates a ripple. Pinch gestures zoom instead of creating a second impact.
 The original compact play/pause, mute and volume player sits beneath DRIP;
 sound still starts only when Play is selected.
 DRIP's INFO panel also contains SRC_GLITCH, an opt-in modifier with folded
-refraction, horizontal tearing, channel separation and reduced colour levels.
+refraction, occasional small horizontal tears and light channel separation
+that preserves the artwork's blue palette.
 It starts off on each visit, responds to drag and optional audio, and pauses
 with the motion toggle. Turning it off eases back to the original artwork.
 INTERFERENCE uses a separate procedural shader with draggable sources, pulse
