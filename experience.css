@@ -1,0 +1,187 @@
+/* Viewing and listening controls shared by the audiovisual studies. */
+html.experience-page { overflow-x: hidden; overflow-y: auto; }
+.listening-space {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+}
+.landing-study .landing-experiment { padding-top: 40px; padding-bottom: 48px; }
+.landing-study .visual-container { width: min(64vmin, 760px); }
+
+.study-caption {
+    margin: 0;
+    font-size: 9px;
+    font-weight: normal;
+    letter-spacing: .24em;
+    color: #a7a7a7;
+    text-align: center;
+}
+
+.interaction-cue {
+    position: absolute;
+    bottom: 16px;
+    left: 0;
+    right: 0;
+    z-index: 3;
+    margin: 0;
+    pointer-events: none;
+    font-size: 9px;
+    line-height: 1.6;
+    letter-spacing: .2em;
+    text-align: center;
+    text-shadow: 0 1px 8px #000;
+    transition: opacity .6s ease;
+}
+
+.has-interacted .interaction-cue { opacity: 0; }
+html[data-motion="off"] .interaction-cue { visibility: hidden; }
+html[data-motion="off"] .visual-canvas { opacity: 0; visibility: hidden; }
+html[data-motion="off"] .visual-container { touch-action: pan-y pinch-zoom; }
+
+.experience-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px 18px;
+    flex-wrap: wrap;
+    max-width: 100%;
+}
+
+.experience-button {
+    min-height: 44px;
+    padding: 10px 6px;
+    border: 0;
+    background: transparent;
+    color: #c9c9c9;
+    cursor: pointer;
+    font-size: 9px;
+    letter-spacing: .16em;
+    transition: color .25s ease;
+}
+
+.experience-button:hover { color: #fff; }
+.experience-button[aria-pressed="true"] { color: #fff; }
+.experience-button[data-sound] { min-width: 156px; }
+.experience-button:disabled { opacity: .65; cursor: default; }
+.experience-button[data-sound]:disabled { cursor: progress; }
+.experience-button:focus-visible,
+.experience-volume input:focus-visible {
+    outline: 1px solid #eee;
+    outline-offset: 4px;
+}
+
+.experience-volume {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    color: #a7a7a7;
+    font-size: 8px;
+    letter-spacing: .12em;
+}
+
+.experience-volume input {
+    width: 70px;
+    height: 32px;
+    margin: 0;
+    accent-color: #fff;
+    cursor: pointer;
+}
+.experience-volume output { min-width: 30px; }
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+body.listening-mode { overflow: hidden; }
+.listening-space.is-immersive,
+.listening-space:fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 4500;
+    width: 100%;
+    height: 100dvh;
+    padding: 24px;
+    justify-content: center;
+    gap: 18px;
+    background: #050505;
+    overflow: auto;
+}
+.listening-space.is-immersive .visual-container,
+.listening-space:fullscreen .visual-container {
+    flex: 0 0 auto;
+    width: min(76dvh, calc(100vw - 48px));
+    max-width: 100%;
+}
+
+.experience-info {
+    width: min(480px, calc(100vw - 32px));
+    max-height: calc(100dvh - 48px);
+    padding: 28px;
+    border: 1px solid #333;
+    background: #080808;
+    color: #eee;
+    overflow: auto;
+}
+.experience-info::backdrop { background: rgb(0 0 0 / .8); }
+.info-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+.info-heading h2 { font-size: 14px; line-height: 1.5; letter-spacing: .16em; }
+.info-number { margin: 0 0 16px; color: #999; font-size: 9px; letter-spacing: .22em; }
+.experience-info p:not(.info-number) {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    line-height: 1.8;
+    color: #bbb;
+}
+.experience-info dl { margin-top: 28px; }
+.experience-info dt { font-size: 9px; letter-spacing: .18em; color: #888; }
+.experience-info dd { margin: 8px 0 20px; font-size: 11px; line-height: 1.6; letter-spacing: .08em; }
+
+/* The ripple study now uses the same mobile-safe controls as the landing. */
+body.ripple-study { height: auto; min-height: 100dvh; overflow: auto; }
+.ripple-study .experiment-main {
+    flex: 1;
+    padding: 40px 16px 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ripple-study .visual-container { width: min(64vmin, 760px); aspect-ratio: 1; height: auto; }
+.ripple-study .visual-media { width: 100%; height: 100%; }
+
+@media (max-width: 750px) {
+    .landing-study .site-header { padding: 18px 16px 10px; }
+    .landing-study .site-logo { margin-bottom: 8px; }
+    .landing-study .site-nav { gap: 4px 18px; }
+    .experience-controls { gap: 0 14px; max-width: 370px; }
+    .experience-button { font-size: 8px; }
+    .study-caption { font-size: 8px; }
+    .landing-study .visual-container { width: min(calc(100vw - 24px), 620px); }
+    .ripple-study .visual-container { width: min(calc(100vw - 32px), 620px); }
+    .ripple-study .experiment-main { padding-top: 32px; }
+    .listening-space.is-immersive,
+    .listening-space:fullscreen { padding: 12px; gap: 12px; }
+    .listening-space.is-immersive .visual-container,
+    .listening-space:fullscreen .visual-container {
+        width: min(calc(100dvh - 200px), calc(100vw - 24px));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .interaction-cue, .experience-button { transition: none; }
+}

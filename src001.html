@@ -30,7 +30,7 @@
 
     <link
         rel="stylesheet"
-        href="./site.css?v=3"
+        href="./site.css?v=4"
     >
 
     <link
@@ -38,6 +38,7 @@
         href="./src001.css?v=1"
     >
 
+    <script src="./site.js?v=1" defer></script>
 </head>
 
 
@@ -48,32 +49,14 @@
          HEADER
     ========================================== -->
 
+    <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
     <header class="site-header">
-
-        <a
-            class="site-logo"
-            href="./index.html"
-        >
-            SECOND SOURCE
-        </a>
-
-
-        <nav class="site-nav">
-
-            <a href="./gallery.html">
-                IMAGES
-            </a>
-
-            <a
-                href="https://secondsource.bandcamp.com"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                BANDCAMP ↗
-            </a>
-
+        <a class="site-logo" href="./index.html">SECOND SOURCE</a>
+        <nav class="site-nav" aria-label="Main navigation">
+            <a href="./gallery.html">IMAGES</a>
+            <a href="./experiments.html">EXPERIMENTS</a>
+            <a href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP <svg class="external-arrow" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 10 10 2M2 2h8v8" fill="none" stroke="currentColor" stroke-width="1"/></svg></a>
         </nav>
-
     </header>
 
 
@@ -82,7 +65,7 @@
          RELEASE
     ========================================== -->
 
-    <main class="release-page">
+    <main tabindex="-1" id="main-content" class="release-page">
 
 
         <section class="release-intro">
@@ -204,7 +187,7 @@
     <footer class="legal-footer">
 
         <p class="copyright-line">
-            © 2026 SECOND SOURCE AUDIO. ALL RIGHTS RESERVED.
+            <span class="copyright-symbol">©</span> 2026 SECOND SOURCE AUDIO. ALL RIGHTS RESERVED.
         </p>
 
         <p class="legal-line">
@@ -224,7 +207,7 @@
 
     <div
         id="artwork-viewer"
-        class="artwork-viewer"
+        class="artwork-viewer" data-artwork-dialog role="dialog" aria-modal="true" aria-label="DRIP artwork viewer"
         aria-hidden="true"
     >
 

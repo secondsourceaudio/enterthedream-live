@@ -7,6 +7,7 @@
 
     font-weight: normal;
     font-style: normal;
+    font-display: swap;
 }
 
 
@@ -255,6 +256,7 @@ h2 {
     color: #ffffff;
 
     font-size: var(--font-footer);
+    line-height: 1.6;
 
     letter-spacing: 0.2em;
 }
@@ -378,4 +380,31 @@ h2 {
             32px;
     }
 
+}
+
+/* A quiet entrance, with a short fade when following an internal link. */
+body { opacity: 1; transition: opacity .24s ease; }
+body.page-is-leaving { opacity: 0; }
+main { animation: scene-arrive .6s ease both; }
+@keyframes scene-arrive { from { opacity: 0; } to { opacity: 1; } }
+.external-arrow { font-family: Arial, Helvetica, sans-serif; }
+.copyright-symbol { font-family: Arial, Helvetica, sans-serif; }
+.site-nav a { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; }
+.site-nav a:focus-visible, .site-logo:focus-visible { outline: 1px solid #eee; outline-offset: 5px; }
+.skip-link {
+    position: fixed; top: 12px; left: 16px; z-index: 10000;
+    padding: 14px; background: #fff; color: #050505;
+    font-size: 11px; text-decoration: none; transform: translateY(-180%);
+}
+.skip-link:focus { transform: none; }
+@media (max-width: 750px) {
+    .site-header { padding: 18px 16px 10px; }
+    .site-logo { margin-bottom: 8px; }
+    .site-nav { gap: 4px 18px; }
+    .site-nav a { font-size: 10px; letter-spacing: .1em; }
+}
+@media (prefers-reduced-motion: reduce) {
+    body { transition: none; }
+    main { animation: none; }
+    .site-nav a, .site-nav a::after, .site-logo { transition: none; }
 }

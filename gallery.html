@@ -14,14 +14,15 @@
 
     <link
         rel="stylesheet"
-        href="./site.css?v=3"
+        href="./site.css?v=4"
     >
 
     <link
         rel="stylesheet"
-        href="./gallery.css?v=10"
+        href="./gallery.css?v=11"
     >
 
+    <script src="./site.js?v=1" defer></script>
 </head>
 
 
@@ -32,32 +33,14 @@
          HEADER
     ========================================== -->
 
+    <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
     <header class="site-header">
-
-        <a
-            class="site-logo"
-            href="./index.html"
-        >
-            SECOND SOURCE
-        </a>
-
-
-        <nav class="site-nav">
-
-            <a href="./gallery.html">
-                IMAGES
-            </a>
-
-            <a
-                href="https://secondsource.bandcamp.com"
-                target="_blank"
-                rel="noopener noreferrer"
-            >
-                BANDCAMP ↗
-            </a>
-
+        <a class="site-logo" href="./index.html">SECOND SOURCE</a>
+        <nav class="site-nav" aria-label="Main navigation">
+            <a href="./gallery.html">IMAGES</a>
+            <a href="./experiments.html">EXPERIMENTS</a>
+            <a href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP <svg class="external-arrow" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 10 10 2M2 2h8v8" fill="none" stroke="currentColor" stroke-width="1"/></svg></a>
         </nav>
-
     </header>
 
 
@@ -66,7 +49,7 @@
          IMAGE ARCHIVE
     ========================================== -->
 
-    <main class="archive">
+    <main tabindex="-1" id="main-content" class="archive">
 
 
         <!-- 01 -->
@@ -80,15 +63,13 @@
                 aria-label="Open image 1"
             >
 
-            <img
+            <img width="1200" height="1200"
     src="./images/gallery/thumbs/cloud_patterns.jpg.webp"
-    alt=""
+    alt="Cloud patterns"
     loading="eager"
     fetchpriority="high"
     decoding="async"
     draggable="false"
->
-    
 >
 
             </button>
@@ -108,9 +89,9 @@
                 aria-label="Open image 2"
             >
 
-                <img
+                <img width="1400" height="1400"
                     src="./images/gallery/thumbs/flower_1.webp"
-                    alt=""
+                    alt="Flower study 1"
                     loading="lazy"
                     decoding="async"
                     draggable="false"
@@ -126,9 +107,9 @@
                 aria-label="Open image 3"
             >
 
-                <img
+                <img width="1400" height="1400"
                     src="./images/gallery/thumbs/flower_2.webp"
-                    alt=""
+                    alt="Flower study 2"
                     loading="lazy"
                     decoding="async"
                     draggable="false"
@@ -151,9 +132,9 @@
                 aria-label="Open image 4"
             >
 
-                <img
+                <img width="1400" height="1400"
                     src="./images/gallery/thumbs/flower_3.webp"
-                    alt=""
+                    alt="Flower study 3"
                     loading="lazy"
                     decoding="async"
                     draggable="false"
@@ -176,9 +157,9 @@
                 aria-label="Open image 5"
             >
 
-                <img
+                <img width="1400" height="1400"
                     src="./images/gallery/thumbs/flower_4.webp"
-                    alt=""
+                    alt="Flower study 4"
                     loading="lazy"
                     decoding="async"
                     draggable="false"
@@ -194,9 +175,9 @@
                 aria-label="Open image 6"
             >
 
-                <img
+                <img width="1400" height="1400"
                     src="./images/gallery/thumbs/flower_5.webp"
-                    alt=""
+                    alt="Flower study 5"
                     loading="lazy"
                     decoding="async"
                     draggable="false"
@@ -219,9 +200,9 @@
                 aria-label="Open image 7"
             >
 
-                <img
+                <img width="1400" height="1400"
                     src="./images/gallery/thumbs/flower_6.webp"
-                    alt=""
+                    alt="Flower study 6"
                     loading="lazy"
                     decoding="async"
                     draggable="false"
@@ -243,7 +224,7 @@
     <footer class="legal-footer">
 
         <p class="copyright-line">
-            © 2026 SECOND SOURCE AUDIO. ALL RIGHTS RESERVED.
+            <span class="copyright-symbol">©</span> 2026 SECOND SOURCE AUDIO. ALL RIGHTS RESERVED.
         </p>
 
         <p class="legal-line">
@@ -263,7 +244,7 @@
 
     <div
         id="gallery-viewer"
-        class="gallery-viewer"
+        class="gallery-viewer" data-artwork-dialog role="dialog" aria-modal="true" aria-label="Image viewer"
         aria-hidden="true"
     >
 
@@ -272,7 +253,7 @@
 
             <div
                 id="viewer-count"
-                class="viewer-count"
+                class="viewer-count" aria-live="polite"
             >
                 01 / 07
             </div>
@@ -313,7 +294,7 @@
                 <img
                     id="viewer-image"
                     class="viewer-image"
-                    src=""
+
                     alt=""
                     draggable="false"
                 >
@@ -393,6 +374,12 @@
                 "viewer-image"
             );
 
+
+        viewerImage.addEventListener("load", function () {
+            if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && viewerImage.animate) {
+                viewerImage.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 450, easing: "ease-out" });
+            }
+        });
 
         const viewerImageArea =
             document.getElementById(
@@ -589,6 +576,8 @@
                 %
                 images.length;
 
+
+            viewerImage.alt = currentIndex === 0 ? "Cloud patterns" : "Flower study " + currentIndex;
 
             viewerImage.src =
                 images[

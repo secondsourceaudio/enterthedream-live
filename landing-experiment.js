@@ -154,6 +154,7 @@ const gl = canvas.getContext("webgl", {
 
 if (!gl) {
     canvas.style.display = "none";
+    window.SecondSourceExperience.useStaticArtwork();
 }
 
 
@@ -202,6 +203,7 @@ if (gl) {
         uniform float u_time;
 
         uniform float u_motion;
+        uniform float u_sound;
 
         uniform float u_dragging;
 
@@ -244,6 +246,14 @@ if (gl) {
             vec2 baseUV = v_uv;
 
             vec2 uv = baseUV;
+
+            /* A restrained response to the actual low-frequency audio energy. */
+            vec2 audioCenter = baseUV - vec2(0.5);
+            float audioRadius = length(audioCenter);
+            uv += normalize(audioCenter + vec2(0.0001))
+                * sin(audioRadius * 28.0 - u_time * 2.0)
+                * u_sound * 0.010
+                * smoothstep(0.8, 0.0, audioRadius);
 
 
             /* =================================
@@ -768,6 +778,7 @@ if (gl) {
             velocity:    gl.getUniformLocation(program, "u_velocity"),
             time:        gl.getUniformLocation(program, "u_time"),
             motion:      gl.getUniformLocation(program, "u_motion"),
+            sound:       gl.getUniformLocation(program, "u_sound"),
             dragging:    gl.getUniformLocation(program, "u_dragging"),
             whirlEnergy: gl.getUniformLocation(program, "u_whirlEnergy"),
             whirlSpin:   gl.getUniformLocation(program, "u_whirlSpin"),
@@ -876,6 +887,7 @@ if (gl) {
     let targetVelocityY = 0;
 
     let motion = 0;
+    let soundEnergy = 0;
     let targetMotion = 0;
 
     let draggingAmount = 0;
@@ -1040,6 +1052,8 @@ if (gl) {
 
     container.addEventListener("pointerdown", function (event) {
 
+        if (!window.SecondSourceExperience.motionEnabled) return;
+
         viewPointers.set(event.pointerId, {
             x: event.clientX,
             y: event.clientY,
@@ -1123,6 +1137,8 @@ if (gl) {
     ========================================== */
 
     container.addEventListener("pointermove", function (event) {
+
+        if (!window.SecondSourceExperience.motionEnabled) return;
 
         if (viewPointers.has(event.pointerId)) {
 
@@ -1298,12 +1314,12 @@ if (gl) {
        is lost it just waits.
     ========================================== */
 
-    const start = performance.now();
 
 
-    function render() {
 
-        requestAnimationFrame(render);
+    function render(elapsed) {
+
+
 
 
         if (!glActive) {
@@ -1348,7 +1364,8 @@ if (gl) {
 
         const now = performance.now();
 
-        const time = (now - start) / 1000;
+        const time = elapsed / 1000;
+        soundEnergy += (window.SecondSourceExperience.sampleBass() - soundEnergy) * 0.08;
 
 
         /* MULTIPLE DROP UNIFORMS */
@@ -1376,6 +1393,7 @@ if (gl) {
             gl.uniform1f(uniforms.time, time);
 
             gl.uniform1f(uniforms.motion, motion);
+            gl.uniform1f(uniforms.sound, soundEnergy);
 
             gl.uniform1f(uniforms.dragging, draggingAmount);
 
@@ -1395,6 +1413,6 @@ if (gl) {
 
 
     if (setupGL()) {
-        render();
+        window.SecondSourceExperience.createRenderLoop(render, container);
     }
 }

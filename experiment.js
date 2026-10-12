@@ -1,386 +1,6 @@
-/* =========================================
-   SECOND SOURCE — EXPERIMENT
-========================================= */
+/* RIPPLE STUDY — sound and viewing controls live in experience.js. */
 
-
-/* =========================================
-   AUDIO
-========================================= */
-
-const audio = document.getElementById("experiment-audio");
-
-const playButton = document.getElementById("play-button");
-const playSymbol = document.getElementById("play-symbol");
-
-const soundButton = document.getElementById("sound-button");
-const speakerSymbol = document.getElementById("speaker-symbol");
-
-const volumeSlider = document.getElementById("volume-slider");
-const volumePercent = document.getElementById("volume-percent");
-
-const progressTrack = document.getElementById("progress-track");
-const progressFill = document.getElementById("progress-fill");
-const playerTime = document.getElementById("player-time");
-
-
-let selectedVolume = 0.35;
-let muted = false;
-let wantsPlayback = true;
-
-
-/* =========================================
-   IPHONE VOLUME SUPPORT (Web Audio)
-
-   iOS ignores audio.volume (it is read-only
-   there). On those devices we send the audio
-   through a gain node and control volume with
-   that instead. Everywhere else the normal
-   audio.volume is used, exactly as before.
-========================================= */
-
-const volumeIsReadOnly = (function () {
-
-    const test = new Audio();
-
-    test.volume = 0.5;
-
-    return test.volume === 1;
-})();
-
-
-let audioContext = null;
-let gainNode = null;
-
-
-function setupWebAudio() {
-
-    const AudioContextClass =
-        window.AudioContext || window.webkitAudioContext;
-
-    if (!AudioContextClass) {
-        return;
-    }
-
-    try {
-
-        audioContext = new AudioContextClass();
-
-        const source = audioContext.createMediaElementSource(audio);
-
-        gainNode = audioContext.createGain();
-
-        source.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-
-    } catch (error) {
-
-        audioContext = null;
-        gainNode = null;
-    }
-}
-
-
-if (volumeIsReadOnly) {
-    setupWebAudio();
-}
-
-
-/* Browsers keep the audio context "suspended"
-   until a tap. This wakes it up. */
-
-function resumeAudio() {
-
-    if (audioContext && audioContext.state === "suspended") {
-        audioContext.resume().catch(function () {});
-    }
-}
-
-
-/* Single place that applies volume + mute. */
-
-function applyOutput() {
-
-    if (gainNode) {
-
-        audio.muted = false;
-        audio.volume = 1;
-
-        gainNode.gain.setTargetAtTime(
-            muted ? 0 : selectedVolume,
-            audioContext.currentTime,
-            0.015
-        );
-
-    } else {
-
-        audio.muted = muted;
-        audio.volume = selectedVolume;
-    }
-}
-
-
-applyOutput();
-
-
-/* =========================================
-   HELPERS
-========================================= */
-
-function clamp(value, minimum, maximum) {
-    return Math.max(minimum, Math.min(maximum, value));
-}
-
-
-function formatTime(seconds) {
-
-    if (!Number.isFinite(seconds)) {
-        return "0:00";
-    }
-
-    const minutes = Math.floor(seconds / 60);
-    const secondsLeft = Math.floor(seconds % 60);
-
-    return minutes + ":" + String(secondsLeft).padStart(2, "0");
-}
-
-
-/* =========================================
-   PLAYER DISPLAY
-========================================= */
-
-function updatePlayer() {
-
-    playSymbol.textContent = audio.paused ? "▶" : "Ⅱ";
-
-    speakerSymbol.textContent =
-        (muted || selectedVolume <= 0) ? "×" : "◖))";
-
-    volumePercent.textContent = Math.round(selectedVolume * 100) + "%";
-
-    volumeSlider.value = selectedVolume * 100;
-
-    if (Number.isFinite(audio.duration) && audio.duration > 0) {
-        progressFill.style.width =
-            (audio.currentTime / audio.duration * 100) + "%";
-    }
-
-    playerTime.textContent =
-        formatTime(audio.currentTime) + " / " + formatTime(audio.duration);
-}
-
-
-/* =========================================
-   PLAYBACK
-========================================= */
-
-function attemptPlayback() {
-
-    if (!wantsPlayback || muted) {
-        return;
-    }
-
-    applyOutput();
-    resumeAudio();
-
-    audio
-        .play()
-        .then(updatePlayer)
-        .catch(updatePlayer);
-}
-
-
-attemptPlayback();
-
-
-/* First tap anywhere (except the player controls)
-   starts the audio if the browser blocked autoplay.
-
-   iPhones only accept audio starts on touchend /
-   click, so we listen for all three. The handler is
-   cheap and only acts when audio is still paused. */
-
-function firstGesture(event) {
-
-    if (event.target.closest(".compact-player")) {
-        return;
-    }
-
-    resumeAudio();
-
-    if (wantsPlayback && !muted && audio.paused) {
-        attemptPlayback();
-    }
-}
-
-["pointerdown", "touchend", "click"].forEach(function (name) {
-    document.addEventListener(name, firstGesture, true);
-});
-
-
-/* =========================================
-   PLAY / PAUSE
-========================================= */
-
-playButton.addEventListener("click", function () {
-
-    resumeAudio();
-
-    if (audio.paused) {
-
-        wantsPlayback = true;
-        muted = false;
-
-        attemptPlayback();
-
-    } else {
-
-        wantsPlayback = false;
-
-        audio.pause();
-    }
-
-    updatePlayer();
-});
-
-
-/* =========================================
-   MUTE
-========================================= */
-
-soundButton.addEventListener("click", function () {
-
-    resumeAudio();
-
-    muted = !muted;
-
-    applyOutput();
-
-    if (!muted && wantsPlayback && audio.paused) {
-        attemptPlayback();
-    }
-
-    updatePlayer();
-});
-
-
-/* =========================================
-   VOLUME
-========================================= */
-
-function setVolume(value) {
-
-    selectedVolume = clamp(value, 0, 1);
-
-    if (selectedVolume > 0) {
-        muted = false;
-    }
-
-    applyOutput();
-
-    updatePlayer();
-}
-
-
-volumeSlider.addEventListener("input", function () {
-
-    resumeAudio();
-
-    setVolume(Number(volumeSlider.value) / 100);
-
-    if (wantsPlayback && audio.paused) {
-        attemptPlayback();
-    }
-});
-
-
-/* =========================================
-   VERTICAL VOLUME DRAG
-========================================= */
-
-let volumeDragging = false;
-
-let volumeStartY = 0;
-let volumeStartValue = selectedVolume;
-
-
-volumePercent.addEventListener("pointerdown", function (event) {
-
-    volumeDragging = true;
-
-    volumeStartY = event.clientY;
-    volumeStartValue = selectedVolume;
-
-    try {
-        volumePercent.setPointerCapture(event.pointerId);
-    } catch (error) {
-    }
-});
-
-
-volumePercent.addEventListener("pointermove", function (event) {
-
-    if (!volumeDragging) {
-        return;
-    }
-
-    const movement = volumeStartY - event.clientY;
-
-    setVolume(volumeStartValue + movement / 220);
-
-    if (wantsPlayback && audio.paused) {
-        attemptPlayback();
-    }
-});
-
-
-function stopVolumeDrag() {
-    volumeDragging = false;
-}
-
-volumePercent.addEventListener("pointerup", stopVolumeDrag);
-volumePercent.addEventListener("pointercancel", stopVolumeDrag);
-
-
-/* =========================================
-   SEEK
-========================================= */
-
-progressTrack.addEventListener("click", function (event) {
-
-    if (!Number.isFinite(audio.duration)) {
-        return;
-    }
-
-    const rect = progressTrack.getBoundingClientRect();
-
-    const position = clamp(
-        (event.clientX - rect.left) / rect.width,
-        0,
-        1
-    );
-
-    audio.currentTime = position * audio.duration;
-
-    updatePlayer();
-});
-
-
-/* =========================================
-   AUDIO EVENTS
-========================================= */
-
-audio.addEventListener("timeupdate", updatePlayer);
-audio.addEventListener("loadedmetadata", updatePlayer);
-audio.addEventListener("play", updatePlayer);
-audio.addEventListener("pause", updatePlayer);
-
-
-updatePlayer();
-
-
-/* =========================================
-   EXPERIMENT
-========================================= */
+function clamp(value, minimum, maximum) { return Math.max(minimum, Math.min(maximum, value)); }
 
 const canvas = document.getElementById("visual");
 const container = document.getElementById("visual-container");
@@ -528,6 +148,7 @@ const gl = canvas.getContext("webgl", {
 
 if (!gl) {
     canvas.style.display = "none";
+    window.SecondSourceExperience.useStaticArtwork();
 }
 
 
@@ -574,6 +195,7 @@ if (gl) {
 
         uniform float u_time;
         uniform float u_motion;
+        uniform float u_sound;
         uniform float u_dragging;
 
 
@@ -594,6 +216,14 @@ if (gl) {
             vec2 baseUV = v_uv;
 
             vec2 uv = baseUV;
+
+            /* A restrained response to the actual low-frequency audio energy. */
+            vec2 audioCenter = baseUV - vec2(0.5);
+            float audioRadius = length(audioCenter);
+            uv += normalize(audioCenter + vec2(0.0001))
+                * sin(audioRadius * 28.0 - u_time * 2.0)
+                * u_sound * 0.010
+                * smoothstep(0.8, 0.0, audioRadius);
 
 
             /* =================================
@@ -1004,6 +634,7 @@ if (gl) {
             drips:    gl.getUniformLocation(program, "u_drips"),
             time:     gl.getUniformLocation(program, "u_time"),
             motion:   gl.getUniformLocation(program, "u_motion"),
+            sound:       gl.getUniformLocation(program, "u_sound"),
             dragging: gl.getUniformLocation(program, "u_dragging"),
             texture:  gl.getUniformLocation(program, "u_texture")
         };
@@ -1107,6 +738,7 @@ if (gl) {
     let targetVelocityY = 0;
 
     let motion = 0;
+    let soundEnergy = 0;
     let targetMotion = 0;
 
     let draggingAmount = 0;
@@ -1231,6 +863,8 @@ if (gl) {
 
     container.addEventListener("pointerdown", function (event) {
 
+        if (!window.SecondSourceExperience.motionEnabled) return;
+
         viewPointers.set(event.pointerId, {
             x: event.clientX,
             y: event.clientY,
@@ -1310,9 +944,6 @@ if (gl) {
         }
 
 
-        if (audio.paused && wantsPlayback && !muted) {
-            attemptPlayback();
-        }
     });
 
 
@@ -1321,6 +952,8 @@ if (gl) {
     ========================================== */
 
     container.addEventListener("pointermove", function (event) {
+
+        if (!window.SecondSourceExperience.motionEnabled) return;
 
         if (viewPointers.has(event.pointerId)) {
 
@@ -1483,12 +1116,12 @@ if (gl) {
        is lost it just waits.
     ========================================== */
 
-    const start = performance.now();
 
 
-    function render() {
 
-        requestAnimationFrame(render);
+    function render(elapsed) {
+
+
 
 
         if (!glActive) {
@@ -1527,7 +1160,8 @@ if (gl) {
 
         const now = performance.now();
 
-        const time = (now - start) / 1000;
+        const time = elapsed / 1000;
+        soundEnergy += (window.SecondSourceExperience.sampleBass() - soundEnergy) * 0.08;
 
 
         if (imageReady) {
@@ -1554,6 +1188,7 @@ if (gl) {
             gl.uniform1f(uniforms.time, time);
 
             gl.uniform1f(uniforms.motion, motion);
+            gl.uniform1f(uniforms.sound, soundEnergy);
 
             gl.uniform1f(uniforms.dragging, draggingAmount);
 
@@ -1563,6 +1198,6 @@ if (gl) {
 
 
     if (setupGL()) {
-        render();
+        window.SecondSourceExperience.createRenderLoop(render, container);
     }
 }
