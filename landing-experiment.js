@@ -877,6 +877,7 @@ if (gl) {
     let holdSpin = 1;
     let holdReleaseTime = -1;
     let holdReleaseAngle = 0;
+    let holdAnchored = false;
     const holdCoastDuration = 1.1;
     const holdReverseRamp = 0.65;
 
@@ -886,6 +887,7 @@ if (gl) {
         holdPull = 0;
         holdReleaseTime = -1;
         holdReleaseAngle = 0;
+        holdAnchored = false;
     }
 
 
@@ -1192,6 +1194,10 @@ if (gl) {
             return;
         }
 
+        // Once a stationary hold has started, pointer motion must not turn
+        // its accumulated vortex into a new drag with a different center/spin.
+        if (holdAnchored && event.pointerId === dragPointerId) return;
+
 
         /* NORMAL CURSOR MOVEMENT */
 
@@ -1382,9 +1388,11 @@ if (gl) {
         const smoothing = amount => 1 - Math.pow(1 - amount, frames);
 
         // Simulation time excludes hidden, offscreen and motion-off periods.
-        const holding = dragPointerId !== null && viewPointers.size === 1 && viewScale === 1;
+        const holding = dragPointerId !== null && viewPointers.size === 1 &&
+            viewScale === 1 && !dragHasStarted;
         if (holding) {
             holdElapsed += seconds;
+            if (holdElapsed >= 0.65) holdAnchored = true;
             const charge = clamp((holdElapsed - 0.65) / 7, 0, 1);
             holdStrength += (charge - holdStrength) * smoothing(0.10);
             if (holdStrength > 0.001) holdPhase += seconds * (0.5 + holdStrength * 2.0);
@@ -1436,7 +1444,7 @@ if (gl) {
         whirlSpin +=
             (targetWhirlSpin - whirlSpin) * smoothing(0.08);
 
-        if (holding) {
+        if (holding && !holdAnchored) {
             holdCenterX = pointerX;
             holdCenterY = pointerY;
             holdSpin = whirlSpin;

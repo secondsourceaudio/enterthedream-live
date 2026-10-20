@@ -294,6 +294,74 @@ class WebsiteTests(unittest.TestCase):
         self.assertEqual(self.hold_uniforms(), [0, 0], 'A new tap must start fresh')
         self.page.mouse.up()
 
+    def test_mouse_movement_keeps_a_started_hold_vortex_continuous(self):
+        self.visit()
+        self.page.wait_for_function("window.__drawCalls > 0")
+        box = self.page.locator('#visual-container').bounding_box()
+        self.page.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+        self.page.mouse.down()
+        self.page.wait_for_function("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_holdStrength')) > .12;
+        }""")
+
+        def state():
+            return self.page.evaluate("""() => {
+                const gl = document.querySelector('#visual').getContext('webgl');
+                const p = gl.getParameter(gl.CURRENT_PROGRAM);
+                const value = name => gl.getUniform(p, gl.getUniformLocation(p, name));
+                return {strength: value('u_holdStrength'), angle: value('u_holdAngle'),
+                    center: Array.from(value('u_holdCenter')), spin: value('u_holdSpin'),
+                    dragging: value('u_dragging')};
+            }""")
+
+        original = previous = state()
+        for x, y in [(.8, .5), (.65, .8), (.2, .5), (.5, .2), (1.1, .8), (.5, .5)]:
+            self.page.mouse.move(box['x'] + box['width'] * x, box['y'] + box['height'] * y, steps=3)
+            self.wait_for_frames(2)
+            current = state()
+            self.assertEqual(current['center'], original['center'], 'Moving a held mouse must not restart the vortex at a new point')
+            self.assertEqual(current['spin'], original['spin'], 'A started hold must keep its rotational direction')
+            self.assertGreater(current['angle'], previous['angle'], 'The accumulated rotation must keep increasing')
+            self.assertGreaterEqual(current['strength'], previous['strength'])
+            self.assertEqual(current['dragging'], 0, 'A started hold must not switch into a drag')
+            previous = current
+        self.assertEqual(sum(d[2] >= 0 for d in self.drip_uniforms()), 1)
+        self.page.mouse.up()
+        self.wait_for_frames(3)
+        self.assertGreater(state()['angle'], previous['angle'], 'Releasing after movement should retain the forward coast')
+
+    def test_drag_from_the_start_keeps_stirring_without_a_hold_vortex(self):
+        self.visit()
+        self.page.wait_for_function("window.__drawCalls > 0")
+        box = self.page.locator('#visual-container').bounding_box()
+        self.page.mouse.move(box['x'] + box['width'] * .2, box['y'] + box['height'] * .3)
+        self.page.mouse.down()
+        self.page.mouse.move(box['x'] + box['width'] * .6, box['y'] + box['height'] * .7, steps=3)
+        start = self.page.evaluate("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_time'));
+        }""")
+        self.page.wait_for_function("""start => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_time')) > start + 1.2;
+        }""", arg=start)
+        self.assertEqual(self.hold_uniforms(), [0, 0], 'Dragging must not turn into an anchored long press')
+        self.page.mouse.move(box['x'] + box['width'] * .8, box['y'] + box['height'] * .4, steps=3)
+        self.wait_for_frames(3)
+        state = self.page.evaluate("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return {dragging: gl.getUniform(p, gl.getUniformLocation(p, 'u_dragging')),
+                pointer: Array.from(gl.getUniform(p, gl.getUniformLocation(p, 'u_pointer')))};
+        }""")
+        self.assertGreater(state['dragging'], .8)
+        self.assertGreater(state['pointer'][0], .65, 'The normal drag should continue following the mouse')
+        self.page.mouse.up()
+
     def hold_image_difference(self, baseline=False):
         return self.page.evaluate("""baseline => {
             const canvas = document.querySelector('#visual');
