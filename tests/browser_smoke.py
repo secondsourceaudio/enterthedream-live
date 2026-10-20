@@ -293,6 +293,37 @@ class WebsiteTests(unittest.TestCase):
         self.assertEqual(self.hold_uniforms(), [0, 0], 'A new tap must start fresh')
         self.page.mouse.up()
 
+    def test_long_press_reverses_more_slowly_on_release(self):
+        self.visit()
+        self.page.wait_for_function("window.__drawCalls > 0")
+        box = self.page.locator('#visual-container').bounding_box()
+        self.page.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+        self.page.mouse.down()
+        self.page.wait_for_function("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_holdStrength')) > .2;
+        }""")
+
+        def rotation():
+            return self.page.evaluate("""() => {
+                const gl = document.querySelector('#visual').getContext('webgl');
+                const p = gl.getParameter(gl.CURRENT_PROGRAM);
+                return ['u_holdAngle', 'u_time'].map(name => gl.getUniform(p, gl.getUniformLocation(p, name)));
+            }""")
+
+        before = rotation()
+        self.wait_for_frames(8)
+        peak = rotation()
+        forward_speed = (peak[0] - before[0]) / (peak[1] - before[1])
+        self.page.mouse.up()
+        self.wait_for_frames(8)
+        released = rotation()
+        reverse_speed = (peak[0] - released[0]) / (released[1] - peak[1])
+        self.assertGreater(released[0], 0, 'Release must not snap the image back')
+        self.assertGreater(reverse_speed, 0, 'The held whirl should reverse on release')
+        self.assertLess(reverse_speed, forward_speed * .6, 'Reversing must be slower than winding up')
+
     def test_touch_hold_cancels_for_pinch_and_window_blur(self):
         self.visit()
         self.page.wait_for_function("window.__drawCalls > 0")

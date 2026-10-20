@@ -1810,9 +1810,9 @@ if (gl) {
                 1.0 - smoothstep(0.0, 0.58, pointerDistance);
 
             /* A sustained press expands the vortex across the artwork. */
-            float holdFalloff = 1.0 - smoothstep(
-                0.0, 0.22 + u_holdStrength * 0.80, pointerDistance
-            );
+            float holdRadius = max(0.0001, u_holdStrength * 0.80 +
+                0.22 * smoothstep(0.0, 0.12, u_holdStrength));
+            float holdFalloff = 1.0 - smoothstep(0.0, holdRadius, pointerDistance);
             pointerInfluence = max(pointerInfluence, holdFalloff * u_holdStrength);
 
             vec2 pointerDirection =
@@ -1859,8 +1859,7 @@ if (gl) {
                     u_motion * 0.65
                 );
 
-            rotationAngle += u_whirlSpin * u_holdStrength *
-                (1.2 + u_holdAngle * 2.0) * holdFalloff * holdFalloff;
+            rotationAngle += u_whirlSpin * u_holdAngle * holdFalloff * holdFalloff;
 
 
             vec2 rotatedDelta =
@@ -2328,9 +2327,13 @@ if (gl) {
     let holdElapsed = 0;
     let holdStrength = 0;
     let holdAngle = 0;
+    let holdPhase = 0;
+    let holdForwardSpeed = 0;
+    let holdReverseSpeed = 0;
 
     function clearHold() {
         holdElapsed = holdStrength = holdAngle = 0;
+        holdPhase = holdForwardSpeed = holdReverseSpeed = 0;
     }
 
 
@@ -2697,7 +2700,11 @@ if (gl) {
         if (event.pointerId === dragPointerId) {
             const wasDragging = dragHasStarted;
             holdElapsed = 0;
-            if (event.type !== "pointerup") clearHold();
+            if (event.type === "pointerup") {
+                holdReverseSpeed = Math.max(0.08, holdForwardSpeed * 0.25);
+            } else {
+                clearHold();
+            }
 
             dragPointerId = null;
 
@@ -2826,13 +2833,15 @@ if (gl) {
             holdElapsed += seconds;
             const charge = clamp((holdElapsed - 0.65) / 7, 0, 1);
             holdStrength += (charge - holdStrength) * smoothing(0.10);
+            if (holdStrength > 0.001) holdPhase += seconds * (0.5 + holdStrength * 2.0);
+            const nextAngle = holdStrength * (1.2 + holdPhase * 2.0);
+            if (seconds > 0) holdForwardSpeed = (nextAngle - holdAngle) / seconds;
+            holdAngle = nextAngle;
         } else {
-            holdStrength *= Math.exp(-seconds * 1.25);
-        }
-        if (holdStrength > 0.001) {
-            holdAngle += seconds * (0.5 + holdStrength * 2.0);
-        } else if (!holding) {
-            clearHold();
+            // Unwind at a quarter of the release speed, independently of fading.
+            holdAngle = Math.max(0, holdAngle - holdReverseSpeed * seconds);
+            holdStrength *= Math.exp(-seconds * 0.35);
+            if (holdStrength < 0.001) clearHold();
         }
 
 
