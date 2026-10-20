@@ -868,7 +868,6 @@ if (gl) {
     let holdElapsed = 0;
     let holdStrength = 0;
     let holdAngle = 0;
-    let holdPhase = 0;
     let holdForwardSpeed = 0;
     let holdReverseSpeed = 0;
     let holdPull = 0;
@@ -879,11 +878,12 @@ if (gl) {
     let holdReleaseAngle = 0;
     let holdStarted = false;
     const holdCoastDuration = 1.1;
-    const holdReverseRamp = 0.65;
+    const holdReverseRamp = 0.8;
+    const holdFollowSpeed = 0.55;
 
     function clearHold() {
         holdElapsed = holdStrength = holdAngle = 0;
-        holdPhase = holdForwardSpeed = holdReverseSpeed = 0;
+        holdForwardSpeed = holdReverseSpeed = 0;
         holdPull = 0;
         holdReleaseTime = -1;
         holdReleaseAngle = 0;
@@ -1283,7 +1283,7 @@ if (gl) {
             const wasDragging = dragHasStarted;
             holdElapsed = 0;
             if (event.type === "pointerup") {
-                holdReverseSpeed = Math.max(0.08, holdForwardSpeed * 0.25);
+                holdReverseSpeed = Math.max(0.06, holdForwardSpeed * 0.20);
                 holdReleaseTime = 0;
                 holdReleaseAngle = holdAngle;
             } else {
@@ -1424,15 +1424,25 @@ if (gl) {
         // Simulation time excludes hidden, offscreen and motion-off periods.
         const holding = dragPointerId !== null && viewPointers.size === 1 &&
             viewScale === 1 && !dragHasStarted;
+        const holdFollowDistance = Math.hypot(
+            targetPointerX - holdCenterX, targetPointerY - holdCenterY
+        );
+        const holdFollowing = holdStarted && holdFollowDistance > 0.003;
         if (holding) {
             holdElapsed += seconds;
-            if (holdElapsed >= 0.65) holdStarted = true;
+            if (holdElapsed >= 0.65 && !holdStarted) {
+                holdStarted = true;
+                holdForwardSpeed = 0.15;
+            }
             const charge = clamp((holdElapsed - 0.65) / 7, 0, 1);
             holdStrength += (charge - holdStrength) * smoothing(0.10);
-            if (holdStrength > 0.001) holdPhase += seconds * (0.5 + holdStrength * 2.0);
-            const nextAngle = holdStrength * (1.2 + holdPhase * 2.0);
-            if (seconds > 0) holdForwardSpeed = (nextAngle - holdAngle) / seconds;
-            holdAngle = nextAngle;
+            // Grow the field independently of its angular speed. Moving it keeps
+            // the existing spin rate; stationary buildup eases toward a faster spin.
+            if (holdStrength > 0.001 && !holdFollowing) {
+                const targetSpeed = 0.15 + holdStrength * 4.85;
+                holdForwardSpeed += (targetSpeed - holdForwardSpeed) * smoothing(0.045);
+            }
+            holdAngle += holdForwardSpeed * seconds;
             holdPull = holdStrength;
         } else if (holdReleaseTime >= 0 && holdStrength > 0) {
             holdReleaseTime += seconds;
@@ -1480,8 +1490,12 @@ if (gl) {
 
         if (holding) {
             if (holdStarted) {
-                holdCenterX += (targetPointerX - holdCenterX) * smoothing(0.16);
-                holdCenterY += (targetPointerY - holdCenterY) * smoothing(0.16);
+                // A large pointer jump must not sweep the twisted field across
+                // the artwork in a burst, which looks like extra rotation.
+                const followAmount = Math.min(smoothing(0.12),
+                    holdFollowSpeed * seconds / Math.max(holdFollowDistance, 0.0001));
+                holdCenterX += (targetPointerX - holdCenterX) * followAmount;
+                holdCenterY += (targetPointerY - holdCenterY) * followAmount;
             } else {
                 holdCenterX = pointerX;
                 holdCenterY = pointerY;

@@ -60,12 +60,15 @@ A stationary press begins building a separate whirlpool after 650 ms.
 Once started, it follows the held pointer smoothly while preserving its
 accumulated strength, rotation and spin direction. Its last visible position
 is kept for the forward coast and reverse after release.
+Following is speed-limited to avoid sudden sweeps through the twisted image.
+The spin rate stays constant during movement; the field keeps growing, and
+stationary buildup eases the rotation toward a faster pace.
 Temporary mouse capture loss does not cancel it; release is tracked across the
 window, including outside the artwork and through compatibility mouse events.
 Dragging from the start remains a separate stirring gesture.
 Its reach and rotation increase over the next seven seconds, then keep turning
 while held. Releasing lets it coast forward for 1.1 seconds, then smoothly reverse
-at roughly a quarter of its forward speed. Its center and reach stay fixed as
+at roughly a fifth of its forward speed. Its center and reach stay fixed as
 the rotation and inward pull return completely to zero, restoring the original
 artwork rather than shrinking the vortex away. A new press, pinch, loss of focus or
 turning motion off clears the held gesture.

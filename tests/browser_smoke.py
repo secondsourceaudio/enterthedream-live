@@ -341,6 +341,66 @@ class WebsiteTests(unittest.TestCase):
         self.wait_for_frames(4)
         self.assertEqual(state()['center'], released['center'], 'Hovering after release must not move the coasting vortex')
 
+    def test_following_hold_keeps_its_spin_rate_and_moves_without_jumps(self):
+        # Control frame time so pointer-event frequency cannot affect the result.
+        self.context.add_init_script("""(() => {
+            let experience;
+            Object.defineProperty(window, 'SecondSourceExperience', {
+                get: () => experience,
+                set(value) {
+                    experience = value;
+                    value.createRenderLoop = draw => {
+                        let elapsed = 0;
+                        window.__stepDrip = frames => {
+                            for (let i = 0; i < frames; i++) draw(elapsed += 1000 / 60);
+                        };
+                        window.__stepDrip(1);
+                    };
+                }
+            });
+        })();""")
+        self.visit()
+        self.page.wait_for_function("window.__stepDrip && document.querySelector('#visual').classList.contains('is-ready')")
+        box = self.page.locator('#visual-container').bounding_box()
+        self.page.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+        self.page.mouse.down()
+
+        def step(frames):
+            return self.page.evaluate("""frames => {
+                window.__stepDrip(frames);
+                const gl = document.querySelector('#visual').getContext('webgl');
+                const p = gl.getParameter(gl.CURRENT_PROGRAM);
+                const value = name => gl.getUniform(p, gl.getUniformLocation(p, name));
+                return {strength: value('u_holdStrength'), angle: value('u_holdAngle'),
+                    time: value('u_time'), center: Array.from(value('u_holdCenter'))};
+            }""", frames)
+
+        before = step(180)
+        previous = step(1)
+        speed = (previous['angle'] - before['angle']) / (previous['time'] - before['time'])
+        self.assertGreater(speed, 0)
+        initial_strength = previous['strength']
+        for x, y in [(.85, .5), (.8, .8), (.2, .8), (.2, .2), (.8, .2)]:
+            self.page.mouse.move(box['x'] + box['width'] * x, box['y'] + box['height'] * y, steps=12)
+            for _ in range(12):
+                current = step(1)
+                elapsed = current['time'] - previous['time']
+                rate = (current['angle'] - previous['angle']) / elapsed
+                self.assertAlmostEqual(rate, speed, delta=speed * .03,
+                    msg='Moving a held vortex must preserve its current rotation rate')
+                travel = sum((a - b) ** 2 for a, b in zip(current['center'], previous['center'])) ** .5
+                self.assertLess(travel / elapsed, .7, 'The vortex center must travel smoothly without a burst')
+                previous = current
+        self.assertGreater(previous['strength'], initial_strength, 'The field should still grow while following')
+        self.page.mouse.up()
+        # Following immediately after the hold threshold must also begin spinning.
+        self.page.mouse.down()
+        step(40)
+        self.page.mouse.move(box['x'] + box['width'] * .2, box['y'] + box['height'] * .8)
+        early_follow = step(30)
+        self.assertGreater(early_follow['angle'], .01, 'Starting to follow early must not leave the rotation at zero')
+        self.page.mouse.up()
+
     def test_held_vortex_survives_mouse_pointer_capture_loss(self):
         self.visit()
         self.page.wait_for_function("window.__drawCalls > 0")
@@ -521,11 +581,11 @@ class WebsiteTests(unittest.TestCase):
                     ...gl.getUniform(p, gl.getUniformLocation(p, 'u_holdCenter'))];
             }""")
 
+        self.assertGreater(self.hold_image_difference(), 1, 'The held vortex must visibly deform the artwork')
         before = rotation()
         self.wait_for_frames(8)
         peak = rotation()
         forward_speed = (peak[0] - before[0]) / (peak[1] - before[1])
-        self.assertGreater(self.hold_image_difference(), 1, 'The held vortex must visibly deform the artwork')
         self.page.mouse.up()
         self.page.wait_for_function("""start => {
             const gl = document.querySelector('#visual').getContext('webgl');
@@ -546,7 +606,7 @@ class WebsiteTests(unittest.TestCase):
         reverse_speed = (reversing[0] - released[0]) / (released[1] - reversing[1])
         self.assertGreater(released[0], 0, 'Release must not snap the image back')
         self.assertGreater(reverse_speed, 0, 'The held whirl should reverse on release')
-        self.assertLess(reverse_speed, forward_speed * .6, 'Reversing must be slower than winding up')
+        self.assertLess(reverse_speed, forward_speed * .24, 'The reverse should be about a fifth of the forward speed')
         self.assertEqual(released[2:], coasting[2:], 'The field must keep its size and center while unwinding')
         self.page.wait_for_function("""() => {
             const gl = document.querySelector('#visual').getContext('webgl');
