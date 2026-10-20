@@ -58,6 +58,8 @@ broader, stronger whirl that follows stirring around the initial touch and
 coasts after release. Up to eight click impacts can overlap independently.
 A stationary press begins building a separate whirlpool after 650 ms.
 Once started, it keeps its center and direction even if the held mouse moves.
+Temporary mouse capture loss does not cancel it; release is tracked across the
+window, including outside the artwork and through compatibility mouse events.
 Dragging from the start remains a separate stirring gesture.
 Its reach and rotation increase over the next seven seconds, then keep turning
 while held. Releasing lets it coast forward for 1.1 seconds, then smoothly reverse

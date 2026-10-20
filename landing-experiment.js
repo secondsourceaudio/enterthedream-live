@@ -1136,9 +1136,17 @@ if (gl) {
        POINTER MOVE
     ========================================== */
 
-    container.addEventListener("pointermove", function (event) {
+    window.addEventListener("pointermove", function (event) {
 
         if (!window.SecondSourceExperience.motionEnabled) return;
+        const tracked = viewPointers.get(event.pointerId);
+        const overArtwork = event.target instanceof Node && container.contains(event.target);
+        if (!tracked && !overArtwork) return;
+
+        // Recover a mouse release missed while the pointer was outside the artwork.
+        if (tracked && tracked.type === "mouse" && !(event.buttons & 1)) {
+            releasePointer({ type: "pointerup", pointerId: event.pointerId });
+        }
 
         if (viewPointers.has(event.pointerId)) {
 
@@ -1252,6 +1260,17 @@ if (gl) {
 
     function releasePointer(event) {
 
+        const pointer = viewPointers.get(event.pointerId);
+        if (!pointer) return;
+
+        if (pointer.type === "mouse" &&
+            (event.type === "lostpointercapture" || event.type === "pointercancel")) {
+            // A browser capture interruption is not a physical mouse release.
+            // Keep the vortex and follow events at window level until actual up.
+            try { container.setPointerCapture(event.pointerId); } catch (error) {}
+            return;
+        }
+
         viewPointers.delete(event.pointerId);
 
 
@@ -1295,9 +1314,19 @@ if (gl) {
     }
 
 
-    container.addEventListener("pointerup", releasePointer);
-    container.addEventListener("pointercancel", releasePointer);
+    window.addEventListener("pointerup", releasePointer);
+    window.addEventListener("pointercancel", releasePointer);
     container.addEventListener("lostpointercapture", releasePointer);
+    function releaseMousePointers(event) {
+        if (event.type === "mousemove" && (event.buttons & 1)) return;
+        if (event.type === "mouseup" && event.button !== 0) return;
+        for (const [pointerId, pointer] of viewPointers) {
+            if (pointer.type === "mouse") releasePointer({ type: "pointerup", pointerId });
+        }
+    }
+    window.addEventListener("mouseup", releaseMousePointers);
+    window.addEventListener("mousemove", releaseMousePointers);
+    container.addEventListener("dragstart", event => event.preventDefault());
     container.addEventListener("pointerenter", event => {
         if (!viewPointers.size) updateShaderPointer(event.clientX, event.clientY, true);
     });

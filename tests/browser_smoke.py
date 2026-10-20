@@ -332,6 +332,94 @@ class WebsiteTests(unittest.TestCase):
         self.wait_for_frames(3)
         self.assertGreater(state()['angle'], previous['angle'], 'Releasing after movement should retain the forward coast')
 
+    def test_held_vortex_survives_mouse_pointer_capture_loss(self):
+        self.visit()
+        self.page.wait_for_function("window.__drawCalls > 0")
+        self.page.evaluate("""() => {
+            const art = document.querySelector('#visual-container');
+            art.addEventListener('pointerdown', event => window.__heldMouseId = event.pointerId, {once:true});
+            window.__captureEvents = [];
+            art.addEventListener('lostpointercapture', event => window.__captureEvents.push(event.type));
+        }""")
+        box = self.page.locator('#visual-container').bounding_box()
+        x, y = box['x'] + box['width'] / 2, box['y'] + box['height'] / 2
+        self.page.mouse.move(x, y)
+        self.page.mouse.down()
+        self.page.mouse.move(x + 1, y + 1)
+        self.page.wait_for_function("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_holdStrength')) > .12;
+        }""")
+        self.assertTrue(self.page.evaluate("document.querySelector('#visual-container').hasPointerCapture(window.__heldMouseId)"))
+        before = self.hold_uniforms()
+        self.page.evaluate("document.querySelector('#visual-container').releasePointerCapture(window.__heldMouseId)")
+        self.page.mouse.move(x + box['width'] * .15, y - box['height'] * .1, steps=3)
+        self.wait_for_frames(3)
+        self.assertTrue(self.page.evaluate("window.__captureEvents.includes('lostpointercapture')"))
+        after = self.hold_uniforms()
+        self.assertGreaterEqual(after[0], before[0], 'Losing pointer capture while pressed must not erase the vortex')
+        self.assertGreater(after[1], before[1], 'The held vortex must keep building after capture loss')
+        self.page.mouse.up()
+
+    def test_mouse_hold_releases_outside_artwork_without_pointer_capture(self):
+        self.visit()
+        self.page.wait_for_function("window.__drawCalls > 0")
+        self.page.evaluate("""() => {
+            document.querySelector('#visual-container').setPointerCapture = () => {
+                throw new DOMException('Pointer capture unavailable', 'InvalidStateError');
+            };
+        }""")
+        box = self.page.locator('#visual-container').bounding_box()
+        self.page.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+        self.page.mouse.down()
+        self.page.wait_for_function("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_holdStrength')) > .12;
+        }""")
+        before = self.hold_uniforms()
+        self.page.mouse.move(box['x'] + box['width'] + 25, box['y'] + box['height'] / 2, steps=3)
+        self.wait_for_frames(3)
+        self.assertGreater(self.hold_uniforms()[1], before[1], 'A held pointer outside the artwork must keep building')
+        self.page.mouse.up()
+        release_angle = self.hold_uniforms()[1]
+        self.page.wait_for_function("""angle => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_holdAngle')) < angle * .8;
+        }""", arg=release_angle, timeout=20000)
+
+    def test_mouse_cancel_keeps_hold_until_compatibility_mouseup(self):
+        self.visit()
+        self.page.wait_for_function("window.__drawCalls > 0")
+        self.page.evaluate("document.querySelector('#visual-container').addEventListener('pointerdown', e => window.__heldMouseId=e.pointerId, {once:true})")
+        box = self.page.locator('#visual-container').bounding_box()
+        self.page.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+        self.page.mouse.down()
+        self.page.wait_for_function("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_holdStrength')) > .12;
+        }""")
+        before = self.hold_uniforms()
+        self.page.evaluate("""() => {
+            document.querySelector('#visual-container').dispatchEvent(new PointerEvent('pointercancel', {
+                pointerId: window.__heldMouseId, pointerType: 'mouse', buttons: 1, bubbles: true
+            }));
+        }""")
+        self.page.mouse.move(box['x'] + box['width'] * .8, box['y'] + box['height'] * .3, steps=3)
+        self.wait_for_frames(3)
+        self.assertGreaterEqual(self.hold_uniforms()[0], before[0], 'A mouse cancellation notification must not erase the held vortex')
+        self.page.evaluate("window.addEventListener('pointerup', e => e.stopImmediatePropagation(), {capture:true, once:true})")
+        release_angle = self.hold_uniforms()[1]
+        self.page.mouse.up()
+        self.page.wait_for_function("""angle => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_holdAngle')) < angle * .8;
+        }""", arg=release_angle, timeout=20000)
+
     def test_drag_from_the_start_keeps_stirring_without_a_hold_vortex(self):
         self.visit()
         self.page.wait_for_function("window.__drawCalls > 0")
