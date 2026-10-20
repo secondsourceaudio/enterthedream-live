@@ -214,6 +214,9 @@ if (gl) {
 
         uniform float u_holdStrength;
         uniform float u_holdAngle;
+        uniform float u_holdPull;
+        uniform vec2 u_holdCenter;
+        uniform float u_holdSpin;
 
         /* Crops the texture like CSS object-fit: cover,
            so the canvas matches the <img> underneath. */
@@ -339,12 +342,6 @@ if (gl) {
             float pointerInfluence =
                 1.0 - smoothstep(0.0, 0.58, pointerDistance);
 
-            /* A sustained press expands the vortex across the artwork. */
-            float holdRadius = max(0.0001, u_holdStrength * 0.80 +
-                0.22 * smoothstep(0.0, 0.12, u_holdStrength));
-            float holdFalloff = 1.0 - smoothstep(0.0, holdRadius, pointerDistance);
-            pointerInfluence = max(pointerInfluence, holdFalloff * u_holdStrength);
-
             vec2 pointerDirection =
                 normalize(pointerDelta + vec2(0.0001));
 
@@ -389,9 +386,6 @@ if (gl) {
                     u_motion * 0.65
                 );
 
-            rotationAngle += u_whirlSpin * u_holdAngle * holdFalloff * holdFalloff;
-
-
             vec2 rotatedDelta =
                 rotate2D(rotationAngle) * pointerDelta;
 
@@ -408,7 +402,21 @@ if (gl) {
                 clamp(u_dragging + u_whirlEnergy * 0.55, 0.0, 1.0);
             uv += tangent * u_whirlSpin * whirlHalo * (0.006 + speed * 0.012);
             uv -= pointerDelta * whirlHalo * (0.012 + speed * 0.020);
-            uv -= pointerDelta * holdFalloff * u_holdStrength * 0.10;
+
+            /* Keep the held vortex's field fixed while unwinding. Both the
+               rotation and inward pull reach zero to restore the source image. */
+            vec2 holdDelta = baseUV - u_holdCenter;
+            float holdDistance = length(holdDelta);
+            float holdRadius = max(0.0001, u_holdStrength * 0.80 +
+                0.22 * smoothstep(0.0, 0.12, u_holdStrength));
+            float holdFalloff = 1.0 - smoothstep(0.0, holdRadius, holdDistance);
+            float holdInfluence = max(
+                1.0 - smoothstep(0.0, 0.58, holdDistance),
+                holdFalloff * u_holdStrength
+            );
+            float heldRotation = u_holdSpin * u_holdAngle * holdFalloff * holdFalloff;
+            uv += (rotate2D(heldRotation) * holdDelta - holdDelta) * holdInfluence * 0.92;
+            uv -= holdDelta * holdFalloff * u_holdPull * 0.10;
 
 
             /* Continue circular movement
@@ -739,6 +747,9 @@ if (gl) {
             whirlSpin:   gl.getUniformLocation(program, "u_whirlSpin"),
             holdStrength: gl.getUniformLocation(program, "u_holdStrength"),
             holdAngle:   gl.getUniformLocation(program, "u_holdAngle"),
+            holdPull:    gl.getUniformLocation(program, "u_holdPull"),
+            holdCenter:  gl.getUniformLocation(program, "u_holdCenter"),
+            holdSpin:    gl.getUniformLocation(program, "u_holdSpin"),
             coverScale:  gl.getUniformLocation(program, "u_coverScale"),
             aspect:      gl.getUniformLocation(program, "u_aspect"),
             drips:       gl.getUniformLocation(program, "u_drips[0]"),
@@ -860,10 +871,21 @@ if (gl) {
     let holdPhase = 0;
     let holdForwardSpeed = 0;
     let holdReverseSpeed = 0;
+    let holdPull = 0;
+    let holdCenterX = 0.5;
+    let holdCenterY = 0.5;
+    let holdSpin = 1;
+    let holdReleaseTime = -1;
+    let holdReleaseAngle = 0;
+    const holdCoastDuration = 1.1;
+    const holdReverseRamp = 0.65;
 
     function clearHold() {
         holdElapsed = holdStrength = holdAngle = 0;
         holdPhase = holdForwardSpeed = holdReverseSpeed = 0;
+        holdPull = 0;
+        holdReleaseTime = -1;
+        holdReleaseAngle = 0;
     }
 
 
@@ -1232,6 +1254,8 @@ if (gl) {
             holdElapsed = 0;
             if (event.type === "pointerup") {
                 holdReverseSpeed = Math.max(0.08, holdForwardSpeed * 0.25);
+                holdReleaseTime = 0;
+                holdReleaseAngle = holdAngle;
             } else {
                 clearHold();
             }
@@ -1367,11 +1391,29 @@ if (gl) {
             const nextAngle = holdStrength * (1.2 + holdPhase * 2.0);
             if (seconds > 0) holdForwardSpeed = (nextAngle - holdAngle) / seconds;
             holdAngle = nextAngle;
+            holdPull = holdStrength;
+        } else if (holdReleaseTime >= 0 && holdStrength > 0) {
+            holdReleaseTime += seconds;
+            // Integrate the slowing forward spin, then ease into a slow reverse.
+            // The same spatial field stays in place until its deformation is zero.
+            const coastTime = Math.min(holdReleaseTime, holdCoastDuration);
+            const coastAngle = holdReleaseAngle + holdForwardSpeed *
+                (coastTime - coastTime * coastTime / (2 * holdCoastDuration));
+            if (holdReleaseTime <= holdCoastDuration) {
+                holdAngle = coastAngle;
+            } else {
+                const reverseTime = holdReleaseTime - holdCoastDuration;
+                const ramp = clamp(reverseTime / holdReverseRamp, 0, 1);
+                const reverseDistance = holdReverseSpeed * (
+                    holdReverseRamp * (Math.pow(ramp, 3) - 0.5 * Math.pow(ramp, 4)) +
+                    Math.max(0, reverseTime - holdReverseRamp)
+                );
+                holdAngle = Math.max(0, coastAngle - reverseDistance);
+                holdPull = holdStrength * holdAngle / Math.max(coastAngle, 0.0001);
+                if (holdAngle === 0) clearHold();
+            }
         } else {
-            // Unwind at a quarter of the release speed, independently of fading.
-            holdAngle = Math.max(0, holdAngle - holdReverseSpeed * seconds);
-            holdStrength *= Math.exp(-seconds * 0.35);
-            if (holdStrength < 0.001) clearHold();
+            clearHold();
         }
 
 
@@ -1393,6 +1435,12 @@ if (gl) {
 
         whirlSpin +=
             (targetWhirlSpin - whirlSpin) * smoothing(0.08);
+
+        if (holding) {
+            holdCenterX = pointerX;
+            holdCenterY = pointerY;
+            holdSpin = whirlSpin;
+        }
 
 
         /* NATURAL DECAY */
@@ -1445,6 +1493,9 @@ if (gl) {
             gl.uniform1f(uniforms.whirlSpin, whirlSpin);
             gl.uniform1f(uniforms.holdStrength, holdStrength);
             gl.uniform1f(uniforms.holdAngle, holdAngle);
+            gl.uniform1f(uniforms.holdPull, holdPull);
+            gl.uniform2f(uniforms.holdCenter, holdCenterX, holdCenterY);
+            gl.uniform1f(uniforms.holdSpin, holdSpin);
 
             gl.uniform2f(uniforms.coverScale, coverX, coverY);
             gl.uniform1f(uniforms.aspect, canvas.width / canvas.height);

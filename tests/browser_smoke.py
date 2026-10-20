@@ -283,19 +283,61 @@ class WebsiteTests(unittest.TestCase):
         self.page.mouse.up()
         self.wait_for_frames(3)
         self.assertGreater(self.hold_uniforms()[0], 0, 'The whirl should settle rather than disappear')
-        self.page.wait_for_function("""peak => {
+        self.page.wait_for_function("""() => {
             const gl = document.querySelector('#visual').getContext('webgl');
             const p = gl.getParameter(gl.CURRENT_PROGRAM);
-            return gl.getUniform(p, gl.getUniformLocation(p, 'u_holdStrength')) < peak * .6;
-        }""", arg=later[0])
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_holdStrength')) === 0 &&
+                gl.getUniform(p, gl.getUniformLocation(p, 'u_holdAngle')) === 0;
+        }""", timeout=25000)
         self.page.mouse.down()
         self.wait_for_frames(2)
         self.assertEqual(self.hold_uniforms(), [0, 0], 'A new tap must start fresh')
         self.page.mouse.up()
 
-    def test_long_press_reverses_more_slowly_on_release(self):
+    def hold_image_difference(self, baseline=False):
+        return self.page.evaluate("""baseline => {
+            const canvas = document.querySelector('#visual');
+            const gl = canvas.getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            const scalars = ['u_time', 'u_motion', 'u_sound', 'u_glitch', 'u_dragging', 'u_whirlEnergy']
+                .map(name => { const location = gl.getUniformLocation(p, name);
+                    return {location, value: gl.getUniform(p, location)}; });
+            const velocity = gl.getUniformLocation(p, 'u_velocity');
+            const savedVelocity = gl.getUniform(p, velocity);
+            const drips = Array.from({length: 8}, (_, i) => {
+                const location = gl.getUniformLocation(p, `u_drips[${i}]`);
+                return {location, value: gl.getUniform(p, location)};
+            });
+            try {
+                // Freeze ambient waves and other gestures, leaving the actual held
+                // deformation untouched so a shrinking leftover vortex cannot pass.
+                for (const {location} of scalars) gl.uniform1f(location, 0);
+                gl.uniform2f(velocity, 0, 0);
+                for (const {location} of drips) gl.uniform4f(location, .5, .5, -1, 0);
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+                const pixels = new Uint8Array(canvas.width * canvas.height * 4);
+                gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+                if (baseline) window.__holdOriginalPixels = pixels;
+                let difference = 0, samples = 0;
+                for (let i = 0; i < pixels.length; i += 16) {
+                    for (let channel = 0; channel < 3; channel++) {
+                        difference += Math.abs(pixels[i + channel] - window.__holdOriginalPixels[i + channel]);
+                        samples++;
+                    }
+                }
+                return difference / samples;
+            } finally {
+                for (const {location, value} of scalars) gl.uniform1f(location, value);
+                gl.uniform2fv(velocity, savedVelocity);
+                for (const {location, value} of drips) gl.uniform4fv(location, value);
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+            }
+        }""", baseline)
+
+    def test_long_press_coasts_then_unwinds_to_original_image(self):
         self.visit()
         self.page.wait_for_function("window.__drawCalls > 0")
+        self.hold_image_difference(baseline=True)
         box = self.page.locator('#visual-container').bounding_box()
         self.page.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
         self.page.mouse.down()
@@ -309,20 +351,46 @@ class WebsiteTests(unittest.TestCase):
             return self.page.evaluate("""() => {
                 const gl = document.querySelector('#visual').getContext('webgl');
                 const p = gl.getParameter(gl.CURRENT_PROGRAM);
-                return ['u_holdAngle', 'u_time'].map(name => gl.getUniform(p, gl.getUniformLocation(p, name)));
+                return [...['u_holdAngle', 'u_time', 'u_holdStrength'].map(name =>
+                    gl.getUniform(p, gl.getUniformLocation(p, name))),
+                    ...gl.getUniform(p, gl.getUniformLocation(p, 'u_holdCenter'))];
             }""")
 
         before = rotation()
         self.wait_for_frames(8)
         peak = rotation()
         forward_speed = (peak[0] - before[0]) / (peak[1] - before[1])
+        self.assertGreater(self.hold_image_difference(), 1, 'The held vortex must visibly deform the artwork')
         self.page.mouse.up()
+        self.page.wait_for_function("""start => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_time')) > start + .25;
+        }""", arg=peak[1])
+        coasting = rotation()
+        self.assertGreater(coasting[0], peak[0], 'The vortex should keep spinning forward briefly after release')
+        self.page.mouse.move(box['x'] + box['width'] * .8, box['y'] + box['height'] * .2)
+        self.page.wait_for_function("""angle => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_holdAngle')) < angle * .8;
+        }""", arg=coasting[0], timeout=25000)
+        reversing = rotation()
         self.wait_for_frames(8)
         released = rotation()
-        reverse_speed = (peak[0] - released[0]) / (released[1] - peak[1])
+        reverse_speed = (reversing[0] - released[0]) / (released[1] - reversing[1])
         self.assertGreater(released[0], 0, 'Release must not snap the image back')
         self.assertGreater(reverse_speed, 0, 'The held whirl should reverse on release')
         self.assertLess(reverse_speed, forward_speed * .6, 'Reversing must be slower than winding up')
+        self.assertEqual(released[2:], coasting[2:], 'The field must keep its size and center while unwinding')
+        self.page.wait_for_function("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_holdAngle')) === 0 &&
+                gl.getUniform(p, gl.getUniformLocation(p, 'u_holdStrength')) === 0;
+        }""", timeout=25000)
+        self.assertLess(self.hold_image_difference(), .01,
+            'The recovered artwork must match the original pixels, not a faded vortex')
 
     def test_touch_hold_cancels_for_pinch_and_window_blur(self):
         self.visit()

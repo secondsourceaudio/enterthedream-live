@@ -58,8 +58,10 @@ broader, stronger whirl that follows stirring around the initial touch and
 coasts after release. Up to eight click impacts can overlap independently.
 A single held press begins building a separate whirlpool after 650 ms.
 Its reach and rotation increase over the next seven seconds, then keep turning
-while held. Releasing reverses its rotation at roughly a quarter of its forward
-speed while its reach gradually shrinks. A new press, pinch, loss of focus or
+while held. Releasing lets it coast forward for 1.1 seconds, then smoothly reverse
+at roughly a quarter of its forward speed. Its center and reach stay fixed as
+the rotation and inward pull return completely to zero, restoring the original
+artwork rather than shrinking the vortex away. A new press, pinch, loss of focus or
 turning motion off clears the held gesture.
 The motion settles using elapsed time,
 and ripples pause with the motion toggle. Space or Enter on the focused artwork
