@@ -877,7 +877,7 @@ if (gl) {
     let holdSpin = 1;
     let holdReleaseTime = -1;
     let holdReleaseAngle = 0;
-    let holdAnchored = false;
+    let holdStarted = false;
     const holdCoastDuration = 1.1;
     const holdReverseRamp = 0.65;
 
@@ -887,7 +887,7 @@ if (gl) {
         holdPull = 0;
         holdReleaseTime = -1;
         holdReleaseAngle = 0;
-        holdAnchored = false;
+        holdStarted = false;
     }
 
 
@@ -1202,9 +1202,14 @@ if (gl) {
             return;
         }
 
-        // Once a stationary hold has started, pointer motion must not turn
-        // its accumulated vortex into a new drag with a different center/spin.
-        if (holdAnchored && event.pointerId === dragPointerId) return;
+        // Move the existing vortex without starting a drag, reversing its spin,
+        // or resetting the accumulated rotation and strength.
+        if (holdStarted && event.pointerId === dragPointerId) {
+            const point = surfacePoint(event.clientX, event.clientY);
+            targetPointerX = point.x;
+            targetPointerY = point.y;
+            return;
+        }
 
 
         /* NORMAL CURSOR MOVEMENT */
@@ -1421,7 +1426,7 @@ if (gl) {
             viewScale === 1 && !dragHasStarted;
         if (holding) {
             holdElapsed += seconds;
-            if (holdElapsed >= 0.65) holdAnchored = true;
+            if (holdElapsed >= 0.65) holdStarted = true;
             const charge = clamp((holdElapsed - 0.65) / 7, 0, 1);
             holdStrength += (charge - holdStrength) * smoothing(0.10);
             if (holdStrength > 0.001) holdPhase += seconds * (0.5 + holdStrength * 2.0);
@@ -1473,10 +1478,15 @@ if (gl) {
         whirlSpin +=
             (targetWhirlSpin - whirlSpin) * smoothing(0.08);
 
-        if (holding && !holdAnchored) {
-            holdCenterX = pointerX;
-            holdCenterY = pointerY;
-            holdSpin = whirlSpin;
+        if (holding) {
+            if (holdStarted) {
+                holdCenterX += (targetPointerX - holdCenterX) * smoothing(0.16);
+                holdCenterY += (targetPointerY - holdCenterY) * smoothing(0.16);
+            } else {
+                holdCenterX = pointerX;
+                holdCenterY = pointerY;
+                holdSpin = whirlSpin;
+            }
         }
 
 

@@ -294,7 +294,7 @@ class WebsiteTests(unittest.TestCase):
         self.assertEqual(self.hold_uniforms(), [0, 0], 'A new tap must start fresh')
         self.page.mouse.up()
 
-    def test_mouse_movement_keeps_a_started_hold_vortex_continuous(self):
+    def test_held_vortex_follows_mouse_without_restarting(self):
         self.visit()
         self.page.wait_for_function("window.__drawCalls > 0")
         box = self.page.locator('#visual-container').bounding_box()
@@ -319,9 +319,13 @@ class WebsiteTests(unittest.TestCase):
         original = previous = state()
         for x, y in [(.8, .5), (.65, .8), (.2, .5), (.5, .2), (1.1, .8), (.5, .5)]:
             self.page.mouse.move(box['x'] + box['width'] * x, box['y'] + box['height'] * y, steps=3)
-            self.wait_for_frames(2)
+            self.wait_for_frames(6)
             current = state()
-            self.assertEqual(current['center'], original['center'], 'Moving a held mouse must not restart the vortex at a new point')
+            target = (min(1, max(0, x)), 1 - min(1, max(0, y)))
+            previous_distance = sum((previous['center'][i] - target[i]) ** 2 for i in range(2))
+            current_distance = sum((current['center'][i] - target[i]) ** 2 for i in range(2))
+            self.assertLess(current_distance, previous_distance, 'The existing vortex must follow the held pointer')
+            self.assertTrue(all(0 <= value <= 1 for value in current['center']))
             self.assertEqual(current['spin'], original['spin'], 'A started hold must keep its rotational direction')
             self.assertGreater(current['angle'], previous['angle'], 'The accumulated rotation must keep increasing')
             self.assertGreaterEqual(current['strength'], previous['strength'])
@@ -329,8 +333,13 @@ class WebsiteTests(unittest.TestCase):
             previous = current
         self.assertEqual(sum(d[2] >= 0 for d in self.drip_uniforms()), 1)
         self.page.mouse.up()
+        released = state()
         self.wait_for_frames(3)
         self.assertGreater(state()['angle'], previous['angle'], 'Releasing after movement should retain the forward coast')
+        self.assertEqual(state()['center'], released['center'], 'Release must freeze the last visible vortex position')
+        self.page.mouse.move(box['x'] + box['width'] * .1, box['y'] + box['height'] * .8, steps=3)
+        self.wait_for_frames(4)
+        self.assertEqual(state()['center'], released['center'], 'Hovering after release must not move the coasting vortex')
 
     def test_held_vortex_survives_mouse_pointer_capture_loss(self):
         self.visit()

@@ -57,7 +57,9 @@ Dragging adds no repeated drops or fine ripple bands; it creates a
 broader, stronger whirl that follows stirring around the initial touch and
 coasts after release. Up to eight click impacts can overlap independently.
 A stationary press begins building a separate whirlpool after 650 ms.
-Once started, it keeps its center and direction even if the held mouse moves.
+Once started, it follows the held pointer smoothly while preserving its
+accumulated strength, rotation and spin direction. Its last visible position
+is kept for the forward coast and reverse after release.
 Temporary mouse capture loss does not cancel it; release is tracked across the
 window, including outside the artwork and through compatibility mouse events.
 Dragging from the start remains a separate stirring gesture.
