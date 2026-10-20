@@ -336,10 +336,19 @@ class WebsiteTests(unittest.TestCase):
         released = state()
         self.wait_for_frames(3)
         self.assertGreater(state()['angle'], previous['angle'], 'Releasing after movement should retain the forward coast')
-        self.assertEqual(state()['center'], released['center'], 'Release must freeze the last visible vortex position')
-        self.page.mouse.move(box['x'] + box['width'] * .1, box['y'] + box['height'] * .8, steps=3)
-        self.wait_for_frames(4)
-        self.assertEqual(state()['center'], released['center'], 'Hovering after release must not move the coasting vortex')
+        for x, y in [(.1, .8), (1.1, .8)]:
+            before = state()
+            self.page.mouse.move(box['x'] + box['width'] * x, box['y'] + box['height'] * y, steps=3)
+            self.wait_for_frames(6)
+            after = state()
+            target = (min(1, x), 1 - y)
+            self.assertLess(sum((after['center'][i] - target[i]) ** 2 for i in range(2)),
+                sum((before['center'][i] - target[i]) ** 2 for i in range(2)),
+                'The coasting vortex should follow the released mouse, including outside the artwork')
+            self.assertEqual(after['strength'], released['strength'], 'Following must not recharge the released vortex')
+            self.assertEqual(after['spin'], released['spin'])
+            self.assertEqual(after['dragging'], 0)
+        self.assertEqual(sum(d[2] >= 0 for d in self.drip_uniforms()), 1)
 
     def test_following_hold_keeps_its_spin_rate_and_moves_without_jumps(self):
         # Control frame time so pointer-event frequency cannot affect the result.
@@ -582,11 +591,34 @@ class WebsiteTests(unittest.TestCase):
             }""")
 
         self.assertGreater(self.hold_image_difference(), 1, 'The held vortex must visibly deform the artwork')
-        before = rotation()
+        # Observe the actual last frame before release; browser input latency can
+        # otherwise make an earlier average underestimate the growing spin rate.
+        self.page.evaluate("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            const angle = gl.getUniformLocation(p, 'u_holdAngle');
+            const time = gl.getUniformLocation(p, 'u_time');
+            const originalDraw = gl.drawArrays;
+            let previous = null;
+            let speed = 0;
+            gl.drawArrays = function (...args) {
+                const current = [gl.getUniform(p, angle), gl.getUniform(p, time)];
+                if (previous && current[1] > previous[1]) {
+                    speed = (current[0] - previous[0]) / (current[1] - previous[1]);
+                }
+                previous = current;
+                return originalDraw.apply(this, args);
+            };
+            window.addEventListener('pointerup', () => {
+                window.__holdReleaseSpeed = speed;
+                gl.drawArrays = originalDraw;
+            }, {capture: true, once: true});
+        }""")
         self.wait_for_frames(8)
         peak = rotation()
-        forward_speed = (peak[0] - before[0]) / (peak[1] - before[1])
         self.page.mouse.up()
+        forward_speed = self.page.evaluate("window.__holdReleaseSpeed")
+        self.assertGreater(forward_speed, 0)
         self.page.wait_for_function("""start => {
             const gl = document.querySelector('#visual').getContext('webgl');
             const p = gl.getParameter(gl.CURRENT_PROGRAM);
@@ -606,8 +638,18 @@ class WebsiteTests(unittest.TestCase):
         reverse_speed = (reversing[0] - released[0]) / (released[1] - reversing[1])
         self.assertGreater(released[0], 0, 'Release must not snap the image back')
         self.assertGreater(reverse_speed, 0, 'The held whirl should reverse on release')
-        self.assertLess(reverse_speed, forward_speed * .24, 'The reverse should be about a fifth of the forward speed')
-        self.assertEqual(released[2:], coasting[2:], 'The field must keep its size and center while unwinding')
+        self.assertAlmostEqual(reverse_speed, forward_speed * .2, delta=forward_speed * .01,
+            msg='The reverse should be about a fifth of the speed at release')
+        self.assertEqual(released[2], coasting[2], 'The field must keep its size while unwinding')
+        self.assertAlmostEqual(released[3], .8, delta=.02, msg='The reversing vortex must follow the mouse horizontally')
+        self.assertAlmostEqual(released[4], .8, delta=.02, msg='The reversing vortex must follow the mouse vertically')
+        self.page.mouse.move(box['x'] + box['width'] * .1, box['y'] + box['height'] * .9, steps=8)
+        self.wait_for_frames(8)
+        moving = rotation()
+        self.assertLess(moving[3], released[3], 'Following must continue during the reverse')
+        moving_speed = (released[0] - moving[0]) / (moving[1] - released[1])
+        self.assertAlmostEqual(moving_speed, reverse_speed, delta=reverse_speed * .03,
+            msg='Moving the released vortex must not accelerate its reverse')
         self.page.wait_for_function("""() => {
             const gl = document.querySelector('#visual').getContext('webgl');
             const p = gl.getParameter(gl.CURRENT_PROGRAM);
@@ -616,6 +658,11 @@ class WebsiteTests(unittest.TestCase):
         }""", timeout=25000)
         self.assertLess(self.hold_image_difference(), .01,
             'The recovered artwork must match the original pixels, not a faded vortex')
+        restored = rotation()
+        self.page.mouse.move(box['x'] + box['width'] * .9, box['y'] + box['height'] * .5)
+        self.wait_for_frames(8)
+        self.assertEqual(rotation()[3:], restored[3:], 'Following must stop when the vortex has completely unwound')
+        self.assertEqual(self.hold_uniforms(), [0, 0], 'Hovering after recovery must not revive the vortex')
 
     def test_touch_hold_cancels_for_pinch_and_window_blur(self):
         self.visit()

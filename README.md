@@ -58,8 +58,10 @@ broader, stronger whirl that follows stirring around the initial touch and
 coasts after release. Up to eight click impacts can overlap independently.
 A stationary press begins building a separate whirlpool after 650 ms.
 Once started, it follows the held pointer smoothly while preserving its
-accumulated strength, rotation and spin direction. Its last visible position
-is kept for the forward coast and reverse after release.
+accumulated strength, rotation and spin direction. After release, it continues
+following the mouse through the forward coast and reverse, including outside
+the artwork where its position is clamped to the edge. Following stops once
+the original image is restored.
 Following is speed-limited to avoid sudden sweeps through the twisted image.
 The spin rate stays constant during movement; the field keeps growing, and
 stationary buildup eases the rotation toward a faster pace.
@@ -68,7 +70,7 @@ window, including outside the artwork and through compatibility mouse events.
 Dragging from the start remains a separate stirring gesture.
 Its reach and rotation increase over the next seven seconds, then keep turning
 while held. Releasing lets it coast forward for 1.1 seconds, then smoothly reverse
-at roughly a fifth of its forward speed. Its center and reach stay fixed as
+at roughly a fifth of its forward speed. Its reach stays fixed as
 the rotation and inward pull return completely to zero, restoring the original
 artwork rather than shrinking the vortex away. A new press, pinch, loss of focus or
 turning motion off clears the held gesture.

@@ -403,7 +403,7 @@ if (gl) {
             uv += tangent * u_whirlSpin * whirlHalo * (0.006 + speed * 0.012);
             uv -= pointerDelta * whirlHalo * (0.012 + speed * 0.020);
 
-            /* Keep the held vortex's field fixed while unwinding. Both the
+            /* Keep the held vortex's reach fixed while unwinding. Both the
                rotation and inward pull reach zero to restore the source image. */
             vec2 holdDelta = baseUV - u_holdCenter;
             float holdDistance = length(holdDelta);
@@ -1140,13 +1140,14 @@ if (gl) {
 
         if (!window.SecondSourceExperience.motionEnabled) return;
         const tracked = viewPointers.get(event.pointerId);
-        const overArtwork = event.target instanceof Node && container.contains(event.target);
-        if (!tracked && !overArtwork) return;
-
         // Recover a mouse release missed while the pointer was outside the artwork.
         if (tracked && tracked.type === "mouse" && !(event.buttons & 1)) {
             releasePointer({ type: "pointerup", pointerId: event.pointerId });
         }
+        const overArtwork = event.target instanceof Node && container.contains(event.target);
+        const releasedHoldMouse = event.pointerType === "mouse" &&
+            holdStarted && holdReleaseTime >= 0 && holdStrength > 0;
+        if (!tracked && !overArtwork && !releasedHoldMouse) return;
 
         if (viewPointers.has(event.pointerId)) {
 
@@ -1204,7 +1205,7 @@ if (gl) {
 
         // Move the existing vortex without starting a drag, reversing its spin,
         // or resetting the accumulated rotation and strength.
-        if (holdStarted && event.pointerId === dragPointerId) {
+        if (holdStarted && (event.pointerId === dragPointerId || releasedHoldMouse)) {
             const point = surfacePoint(event.clientX, event.clientY);
             targetPointerX = point.x;
             targetPointerY = point.y;
@@ -1447,7 +1448,7 @@ if (gl) {
         } else if (holdReleaseTime >= 0 && holdStrength > 0) {
             holdReleaseTime += seconds;
             // Integrate the slowing forward spin, then ease into a slow reverse.
-            // The same spatial field stays in place until its deformation is zero.
+            // Preserve the field's reach as it follows the pointer back to zero deformation.
             const coastTime = Math.min(holdReleaseTime, holdCoastDuration);
             const coastAngle = holdReleaseAngle + holdForwardSpeed *
                 (coastTime - coastTime * coastTime / (2 * holdCoastDuration));
@@ -1488,19 +1489,17 @@ if (gl) {
         whirlSpin +=
             (targetWhirlSpin - whirlSpin) * smoothing(0.08);
 
-        if (holding) {
-            if (holdStarted) {
-                // A large pointer jump must not sweep the twisted field across
-                // the artwork in a burst, which looks like extra rotation.
-                const followAmount = Math.min(smoothing(0.12),
-                    holdFollowSpeed * seconds / Math.max(holdFollowDistance, 0.0001));
-                holdCenterX += (targetPointerX - holdCenterX) * followAmount;
-                holdCenterY += (targetPointerY - holdCenterY) * followAmount;
-            } else {
-                holdCenterX = pointerX;
-                holdCenterY = pointerY;
-                holdSpin = whirlSpin;
-            }
+        if (holdStarted) {
+            // Follow during the hold, forward coast and reverse. A pointer jump
+            // must not sweep the twisted field across the artwork in a burst.
+            const followAmount = Math.min(smoothing(0.12),
+                holdFollowSpeed * seconds / Math.max(holdFollowDistance, 0.0001));
+            holdCenterX += (targetPointerX - holdCenterX) * followAmount;
+            holdCenterY += (targetPointerY - holdCenterY) * followAmount;
+        } else if (holding) {
+            holdCenterX = pointerX;
+            holdCenterY = pointerY;
+            holdSpin = whirlSpin;
         }
 
 
