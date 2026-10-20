@@ -68,7 +68,7 @@ window, including outside the artwork and through compatibility mouse events.
 Dragging from the start remains a separate stirring gesture.
 Its reach and rotation increase over the next seven seconds, then keep turning
 while held. Releasing lets it coast forward for 1.1 seconds, then smoothly reverse
-at roughly a fifth of its forward speed. Its center and reach stay fixed as
+at roughly 27% of its forward speed. Its center and reach stay fixed as
 the rotation and inward pull return completely to zero, restoring the original
 artwork rather than shrinking the vortex away. Pressing again before recovery
 resumes the current rotation, size and inward pull without a new impact or a

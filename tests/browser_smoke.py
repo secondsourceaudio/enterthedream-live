@@ -694,8 +694,8 @@ class WebsiteTests(unittest.TestCase):
         reverse_speed = (reversing[0] - released[0]) / (released[1] - reversing[1])
         self.assertGreater(released[0], 0, 'Release must not snap the image back')
         self.assertGreater(reverse_speed, 0, 'The held whirl should reverse on release')
-        self.assertAlmostEqual(reverse_speed, forward_speed * .2, delta=forward_speed * .01,
-            msg='The reverse should be about a fifth of the speed at release')
+        self.assertAlmostEqual(reverse_speed, forward_speed * .27, delta=forward_speed * .01,
+            msg='The reverse should be about 27% of the speed at release')
         self.assertEqual(released[2:], coasting[2:], 'The field must keep its size and center while unwinding')
         self.page.mouse.move(box['x'] + box['width'] * .1, box['y'] + box['height'] * .9, steps=8)
         self.wait_for_frames(8)

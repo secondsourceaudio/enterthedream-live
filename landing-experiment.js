@@ -1295,7 +1295,7 @@ if (gl) {
             const wasDragging = dragHasStarted;
             holdElapsed = 0;
             if (event.type === "pointerup") {
-                holdReverseSpeed = Math.max(0.06, holdForwardSpeed * 0.20);
+                holdReverseSpeed = Math.max(0.06, holdForwardSpeed * 0.20) * 1.35;
                 holdReleaseTime = 0;
                 holdReleaseAngle = holdAngle;
                 holdReleasePull = holdPull;
