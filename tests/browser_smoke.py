@@ -117,11 +117,11 @@ class WebsiteTests(unittest.TestCase):
         return self.page.evaluate("""() => {
             const gl = document.querySelector('#visual').getContext('webgl');
             const program = gl.getParameter(gl.CURRENT_PROGRAM);
-            return Array.from({length: 12}, (_, index) =>
+            return Array.from({length: 8}, (_, index) =>
                 Array.from(gl.getUniform(program, gl.getUniformLocation(program, `u_drips[${index}]`))));
         }""")
 
-    def test_drip_impacts_overlap_and_drag_leaves_a_separate_wake(self):
+    def test_drip_impacts_overlap_and_drag_only_stirs(self):
         self.visit()
         self.page.wait_for_function("window.__drawCalls > 0")
         art = self.page.locator('#visual-container')
@@ -142,7 +142,8 @@ class WebsiteTests(unittest.TestCase):
         self.page.mouse.up()
         self.wait_for_frames(3)
         drops = self.drip_uniforms()
-        self.assertTrue(any(d[2] >= 0 and 0 < d[3] < 1 for d in drops[8:]))
+        self.assertEqual(sum(d[2] >= 0 for d in drops), 3,
+            'The two clicks and initial press create drops; the drag must not add any')
         self.assertTrue(all(d[2] >= 0 and d[3] == 1 for d in drops[:2]))
         energy = self.page.evaluate("""() => {
             const gl = document.querySelector('#visual').getContext('webgl');

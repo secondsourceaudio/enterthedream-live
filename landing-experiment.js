@@ -218,9 +218,8 @@ if (gl) {
         uniform float u_aspect;
 
 
-        /* Eight impacts and four quieter drag-wake samples.
-           Pack position, age and strength into one vector per drop. */
-        uniform vec4 u_drips[12];
+        /* Eight click impacts. Dragging never emits extra drops. */
+        uniform vec4 u_drips[8];
 
 
         vec2 coverUV(vec2 p) {
@@ -392,49 +391,12 @@ if (gl) {
                 0.92;
 
 
-            /* =================================
-               5. WHIRL HALO
-
-               The visible spiral around the
-               cursor while holding and moving.
-            ================================= */
-
-            float pointerAngle =
-                atan(pointerDelta.y, pointerDelta.x);
-
-
+            /* Smooth circulation, without repeated small ripple bands. */
             float whirlHalo =
                 (1.0 - smoothstep(0.025, 0.40, pointerDistance)) *
                 clamp(u_dragging + u_whirlEnergy * 0.55, 0.0, 1.0);
-
-
-            /* Circular water bands rotating around the pointer. */
-
-            float whirlBand =
-                sin(
-                    pointerDistance * 36.0
-                    - pointerAngle * 4.0 * u_whirlSpin
-                    - u_time * 3.2 * u_whirlSpin
-                );
-
-
-            /* Tangential movement = the circular stirring motion. */
-
-            uv +=
-                tangent *
-                whirlBand *
-                whirlHalo *
-                (0.007 + speed * 0.018);
-
-
-            /* A very small inward/outward pull makes it
-               feel more fluid and less like a flat rotation. */
-
-            uv +=
-                pointerDirection *
-                sin(pointerDistance * 42.0 - u_time * 2.5) *
-                whirlHalo *
-                0.0040;
+            uv += tangent * u_whirlSpin * whirlHalo * (0.006 + speed * 0.012);
+            uv -= pointerDelta * whirlHalo * (0.012 + speed * 0.020);
 
 
             /* Continue circular movement
@@ -446,28 +408,6 @@ if (gl) {
                 u_whirlEnergy *
                 whirlFalloff *
                 0.0070;
-
-
-            /* =================================
-               6. POINTER WATER
-            ================================= */
-
-            float pointerWaveOne =
-                sin(pointerDistance * 56.0 - u_time * 6.0);
-
-            float pointerWaveTwo =
-                sin(pointerDistance * 26.0 - u_time * 3.2);
-
-            float pointerWave =
-                pointerWaveOne * 0.68 +
-                pointerWaveTwo * 0.32;
-
-
-            uv +=
-                pointerDirection *
-                pointerWave *
-                pointerInfluence *
-                (u_motion * 0.009 + u_dragging * 0.002);
 
 
             /* =================================
@@ -490,7 +430,7 @@ if (gl) {
 
             vec2 surfaceScale = vec2(u_aspect, 1.0);
             vec2 rippleOffset = vec2(0.0);
-            for (int i = 0; i < 12; i++) {
+            for (int i = 0; i < 8; i++) {
                 vec4 drip = u_drips[i];
                 float age = drip.z;
                 if (age >= 0.0 && age < 3.8) {
@@ -915,9 +855,6 @@ if (gl) {
     let dragCenterX = 0.5;
     let dragCenterY = 0.5;
     let lastPointerTime = 0;
-    let lastWakeTime = -1000;
-    let lastWakeX = 0.5;
-    let lastWakeY = 0.5;
     let simulationTime = 0;
     let previousFrameTime = null;
 
@@ -926,8 +863,7 @@ if (gl) {
        MULTIPLE DRIPS
     ========================================== */
 
-    const maximumDrips = 12;
-    const impactSlots = 8;
+    const maximumDrips = 8;
 
     const drips = [];
 
@@ -937,7 +873,6 @@ if (gl) {
 
     let nextDripSlot = 0;
     let lastDripSlot = -1;
-    let nextWakeSlot = impactSlots;
 
 
     /* Reused every frame instead of allocating new arrays
@@ -1007,17 +942,6 @@ if (gl) {
                 1,
                 0.70 + targetMotion * 0.30
             );
-            if (simulationTime - lastWakeTime >= 0.08 &&
-                Math.hypot(nextX - lastWakeX, nextY - lastWakeY) >= 0.035) {
-                drips[nextWakeSlot] = {
-                    x: nextX, y: nextY, started: simulationTime,
-                    strength: 0.18 + targetMotion * 0.22
-                };
-                nextWakeSlot = impactSlots + (nextWakeSlot - impactSlots + 1) % 4;
-                lastWakeTime = simulationTime;
-                lastWakeX = nextX;
-                lastWakeY = nextY;
-            }
         }
 
 
@@ -1045,7 +969,7 @@ if (gl) {
 
         lastDripSlot = nextDripSlot;
 
-        nextDripSlot = (nextDripSlot + 1) % impactSlots;
+        nextDripSlot = (nextDripSlot + 1) % maximumDrips;
     }
 
 
@@ -1105,9 +1029,6 @@ if (gl) {
             previousDragY = targetPointerY;
             dragCenterX = targetPointerX;
             dragCenterY = targetPointerY;
-            lastWakeX = targetPointerX;
-            lastWakeY = targetPointerY;
-            lastWakeTime = simulationTime;
 
 
             /* Every click/tap adds another independent drop. */
