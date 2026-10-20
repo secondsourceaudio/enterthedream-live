@@ -5,6 +5,7 @@ Requires Python Playwright and Chromium. SITE_BASE_URL and CHROMIUM_PATH
 override the local server URL and browser executable.
 """
 import os
+from pathlib import Path
 import unittest
 
 from playwright.sync_api import expect, sync_playwright
@@ -18,6 +19,28 @@ WebGLRenderingContext.prototype.drawArrays = function (...args) {
     return originalDraw.apply(this, args);
 };
 """
+
+
+def serve_seekable_audio(page):
+    """Model GitHub Pages' byte-range support, absent from Python's dev server."""
+    data = (Path(__file__).resolve().parents[1] / "audio/sage-counsel.mp3").read_bytes()
+
+    def respond(route):
+        headers = {"Content-Type": "audio/mpeg", "Accept-Ranges": "bytes"}
+        requested = route.request.headers.get("range", "")
+        if requested.startswith("bytes="):
+            first, last = requested[6:].split("-", 1)
+            start = int(first) if first else max(0, len(data) - int(last))
+            end = min(int(last), len(data) - 1) if first and last else len(data) - 1
+            if start >= len(data) or end < start:
+                route.fulfill(status=416, headers={**headers, "Content-Range": f"bytes */{len(data)}"}, body=b"")
+                return
+            headers["Content-Range"] = f"bytes {start}-{end}/{len(data)}"
+            route.fulfill(status=206, headers=headers, body=data[start:end + 1])
+        else:
+            route.fulfill(status=200, headers=headers, body=data)
+
+    page.route("**/audio/sage-counsel.mp3", respond)
 
 
 class WebsiteTests(unittest.TestCase):
@@ -113,6 +136,53 @@ class WebsiteTests(unittest.TestCase):
     def test_landing_sound_and_actual_audio_reactivity(self):
         self.check_study("index.html")
 
+    def test_timeline_waits_for_play_and_seeks_without_changing_playback(self):
+        serve_seekable_audio(self.page)
+        audio_requests = []
+        self.page.on("request", lambda request: audio_requests.append(request.url)
+                     if "/audio/" in request.url else None)
+        self.visit()
+        seek = self.page.locator("[data-seek]")
+        expect(seek).to_be_visible()
+        expect(seek).to_be_disabled()
+        expect(self.page.locator("[data-current-time]")).to_have_text("0:00")
+        expect(self.page.locator("[data-duration]")).to_have_text("--:--")
+        self.assertEqual(audio_requests, [], "The timeline must not preload sound")
+        self.page.locator("[data-sound]").click()
+        expect(seek).to_be_enabled()
+        self.page.wait_for_function("document.querySelector('audio').currentTime > 0.1")
+        duration = self.page.locator("audio").evaluate("a => a.duration")
+        self.assertAlmostEqual(float(seek.get_attribute("max")), duration)
+        expect(self.page.locator("[data-duration]")).not_to_have_text("--:--")
+        self.page.locator("[data-sound]").click()
+        self.assertTrue(self.page.locator("audio").evaluate("a => a.paused"))
+        box = seek.bounding_box()
+        seek.click(position={"x": box["width"] / 2, "y": box["height"] / 2})
+        self.page.wait_for_function("""() => {
+            const audio = document.querySelector('audio');
+            return !audio.seeking && Math.abs(audio.currentTime - audio.duration / 2) < 2;
+        }""")
+        self.assertAlmostEqual(self.page.locator("audio").evaluate("a => a.currentTime"), duration / 2, delta=2)
+        self.assertTrue(self.page.locator("audio").evaluate("a => a.paused"), "Seeking must keep paused sound paused")
+        self.assertIn(" of ", seek.get_attribute("aria-valuetext"))
+        seek.focus()
+        self.page.keyboard.press("Home")
+        self.assertLess(self.page.locator("audio").evaluate("a => a.currentTime"), .2)
+        self.page.keyboard.press("ArrowRight")
+        self.assertGreater(self.page.locator("audio").evaluate("a => a.currentTime"), 0)
+        self.page.locator("[data-sound]").click()
+        seek.click(position={"x": box["width"] * .7, "y": box["height"] / 2})
+        self.page.wait_for_function("""() => {
+            const audio = document.querySelector('audio');
+            return !audio.seeking && Math.abs(audio.currentTime - audio.duration * .7) < audio.duration * .03;
+        }""")
+        self.assertAlmostEqual(self.page.locator("audio").evaluate("a => a.currentTime"), duration * .7, delta=duration * .03)
+        self.assertFalse(self.page.locator("audio").evaluate("a => a.paused"))
+        seek.focus()
+        self.page.keyboard.press("End")
+        self.page.wait_for_function("document.querySelector('audio').currentTime < 1")
+        self.assertLess(float(seek.input_value()), 1, "The timeline should follow the audio loop")
+
     def drip_uniforms(self):
         return self.page.evaluate("""() => {
             const gl = document.querySelector('#visual').getContext('webgl');
@@ -178,6 +248,79 @@ class WebsiteTests(unittest.TestCase):
         self.wait_for_frames(3)
         self.assertEqual(whirl(), [0, 0], 'A new click must not restart a previous whirl')
         self.page.mouse.up()
+
+    def hold_uniforms(self):
+        return self.page.evaluate("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const program = gl.getParameter(gl.CURRENT_PROGRAM);
+            return ['u_holdStrength', 'u_holdAngle'].map(name =>
+                gl.getUniform(program, gl.getUniformLocation(program, name)));
+        }""")
+
+    def test_long_press_grows_without_movement_and_coasts_after_release(self):
+        self.visit()
+        self.page.wait_for_function("window.__drawCalls > 0")
+        box = self.page.locator('#visual-container').bounding_box()
+        self.page.mouse.move(box['x'] + box['width'] * .5, box['y'] + box['height'] * .5)
+        self.page.mouse.down()
+        self.wait_for_frames(2)
+        self.assertEqual(self.hold_uniforms(), [0, 0], 'A short tap must stay radial')
+        self.page.wait_for_function("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            return gl.getUniform(gl.getParameter(gl.CURRENT_PROGRAM),
+                gl.getUniformLocation(gl.getParameter(gl.CURRENT_PROGRAM), 'u_holdStrength')) > .12;
+        }""")
+        early = self.hold_uniforms()
+        self.page.wait_for_function("""early => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_holdStrength')) > early + .15;
+        }""", arg=early[0])
+        later = self.hold_uniforms()
+        self.assertGreater(later[1], early[1], 'The whirl should keep rotating while stationary')
+        self.assertEqual(sum(d[2] >= 0 for d in self.drip_uniforms()), 1, 'Holding must not emit repeated drops')
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
+        self.page.mouse.up()
+        self.wait_for_frames(3)
+        self.assertGreater(self.hold_uniforms()[0], 0, 'The whirl should settle rather than disappear')
+        self.page.wait_for_function("""peak => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_holdStrength')) < peak * .6;
+        }""", arg=later[0])
+        self.page.mouse.down()
+        self.wait_for_frames(2)
+        self.assertEqual(self.hold_uniforms(), [0, 0], 'A new tap must start fresh')
+        self.page.mouse.up()
+
+    def test_touch_hold_cancels_for_pinch_and_window_blur(self):
+        self.visit()
+        self.page.wait_for_function("window.__drawCalls > 0")
+        session = self.context.new_cdp_session(self.page)
+        session.send('Emulation.setTouchEmulationEnabled', {'enabled': True, 'maxTouchPoints': 2})
+        box = self.page.locator('#visual-container').bounding_box()
+        points = [{'id': 1, 'x': box['x'] + box['width'] * .4, 'y': box['y'] + box['height'] * .5}]
+        session.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': points})
+        self.page.wait_for_function("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_holdStrength')) > .08;
+        }""")
+        points.append({'id': 2, 'x': box['x'] + box['width'] * .6, 'y': points[0]['y']})
+        session.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': points})
+        self.wait_for_frames(2)
+        self.assertEqual(self.hold_uniforms(), [0, 0])
+        session.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+        session.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': points[:1]})
+        self.page.wait_for_function("""() => {
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(p, gl.getUniformLocation(p, 'u_holdStrength')) > .08;
+        }""")
+        self.page.evaluate("window.dispatchEvent(new Event('blur'))")
+        self.wait_for_frames(3)
+        self.assertEqual(self.hold_uniforms(), [0, 0], 'Losing focus must cancel a held press')
+        session.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
 
     def test_file_preview_embeds_visual_assets_and_handles_mobile_layout(self):
         requests = []
@@ -503,6 +646,13 @@ class WebsiteTests(unittest.TestCase):
                         "links => links.every(a => {const r=a.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.height >= 44;})"
                     ))
                     if path in ["index.html", "experiment.html"]:
+                        if path == "index.html":
+                            seek = self.page.locator("[data-seek]")
+                            expect(seek).to_be_visible()
+                            seek_box = seek.bounding_box()
+                            self.assertGreaterEqual(seek_box["height"], 44)
+                            self.assertGreaterEqual(seek_box["x"], 0)
+                            self.assertLessEqual(seek_box["x"] + seek_box["width"], width)
                         for control in self.page.locator(".experience-controls button").all():
                             expect(control).to_be_visible()
                             box = control.bounding_box()

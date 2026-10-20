@@ -212,6 +212,9 @@ if (gl) {
 
         uniform float u_whirlSpin;
 
+        uniform float u_holdStrength;
+        uniform float u_holdAngle;
+
         /* Crops the texture like CSS object-fit: cover,
            so the canvas matches the <img> underneath. */
         uniform vec2 u_coverScale;
@@ -336,6 +339,12 @@ if (gl) {
             float pointerInfluence =
                 1.0 - smoothstep(0.0, 0.58, pointerDistance);
 
+            /* A sustained press expands the vortex across the artwork. */
+            float holdFalloff = 1.0 - smoothstep(
+                0.0, 0.22 + u_holdStrength * 0.80, pointerDistance
+            );
+            pointerInfluence = max(pointerInfluence, holdFalloff * u_holdStrength);
+
             vec2 pointerDirection =
                 normalize(pointerDelta + vec2(0.0001));
 
@@ -380,6 +389,9 @@ if (gl) {
                     u_motion * 0.65
                 );
 
+            rotationAngle += u_whirlSpin * u_holdStrength *
+                (1.2 + u_holdAngle * 2.0) * holdFalloff * holdFalloff;
+
 
             vec2 rotatedDelta =
                 rotate2D(rotationAngle) * pointerDelta;
@@ -397,6 +409,7 @@ if (gl) {
                 clamp(u_dragging + u_whirlEnergy * 0.55, 0.0, 1.0);
             uv += tangent * u_whirlSpin * whirlHalo * (0.006 + speed * 0.012);
             uv -= pointerDelta * whirlHalo * (0.012 + speed * 0.020);
+            uv -= pointerDelta * holdFalloff * u_holdStrength * 0.10;
 
 
             /* Continue circular movement
@@ -725,6 +738,8 @@ if (gl) {
             dragging:    gl.getUniformLocation(program, "u_dragging"),
             whirlEnergy: gl.getUniformLocation(program, "u_whirlEnergy"),
             whirlSpin:   gl.getUniformLocation(program, "u_whirlSpin"),
+            holdStrength: gl.getUniformLocation(program, "u_holdStrength"),
+            holdAngle:   gl.getUniformLocation(program, "u_holdAngle"),
             coverScale:  gl.getUniformLocation(program, "u_coverScale"),
             aspect:      gl.getUniformLocation(program, "u_aspect"),
             drips:       gl.getUniformLocation(program, "u_drips[0]"),
@@ -839,6 +854,14 @@ if (gl) {
 
     let whirlEnergy = 0;
     let targetWhirlEnergy = 0;
+
+    let holdElapsed = 0;
+    let holdStrength = 0;
+    let holdAngle = 0;
+
+    function clearHold() {
+        holdElapsed = holdStrength = holdAngle = 0;
+    }
 
 
     /* Current rotational direction:
@@ -1019,9 +1042,10 @@ if (gl) {
 
             targetDraggingAmount = 0;
 
-            // A fresh tap is radial only; stirring starts after the drag threshold.
+            // Short taps stay radial; a sustained press builds a separate vortex.
             draggingAmount = 0;
             whirlEnergy = targetWhirlEnergy = 0;
+            clearHold();
 
             updateShaderPointer(event.clientX, event.clientY, true);
 
@@ -1043,6 +1067,7 @@ if (gl) {
 
             /* Cancel the drop the first finger started. */
             cancelLastDrip();
+            clearHold();
 
             dragPointerId = null;
 
@@ -1067,6 +1092,7 @@ if (gl) {
         } else if (viewScale > 1) {
 
             targetDraggingAmount = 0;
+            clearHold();
 
             panning = true;
 
@@ -1200,6 +1226,8 @@ if (gl) {
 
         if (event.pointerId === dragPointerId) {
             const wasDragging = dragHasStarted;
+            holdElapsed = 0;
+            if (event.type !== "pointerup") clearHold();
 
             dragPointerId = null;
 
@@ -1258,8 +1286,14 @@ if (gl) {
         targetWhirlEnergy = 0;
         targetMotion = 0;
         targetVelocityX = targetVelocityY = 0;
+        clearHold();
     }
     window.addEventListener("blur", clearGesture);
+    window.addEventListener("pagehide", clearGesture);
+    document.addEventListener("visibilitychange", () => {
+        if (document.hidden) clearGesture();
+    });
+    container.addEventListener("contextmenu", event => event.preventDefault());
     window.addEventListener("experience:motionchange", () => {
         if (!window.SecondSourceExperience.motionEnabled) clearGesture();
     });
@@ -1315,6 +1349,21 @@ if (gl) {
         simulationTime = elapsed / 1000;
         const frames = seconds * 60;
         const smoothing = amount => 1 - Math.pow(1 - amount, frames);
+
+        // Simulation time excludes hidden, offscreen and motion-off periods.
+        const holding = dragPointerId !== null && viewPointers.size === 1 && viewScale === 1;
+        if (holding) {
+            holdElapsed += seconds;
+            const charge = clamp((holdElapsed - 0.65) / 7, 0, 1);
+            holdStrength += (charge - holdStrength) * smoothing(0.10);
+        } else {
+            holdStrength *= Math.exp(-seconds * 1.25);
+        }
+        if (holdStrength > 0.001) {
+            holdAngle += seconds * (0.5 + holdStrength * 2.0);
+        } else if (!holding) {
+            clearHold();
+        }
 
 
         /* SMOOTH POINTER */
@@ -1385,6 +1434,8 @@ if (gl) {
             gl.uniform1f(uniforms.whirlEnergy, whirlEnergy);
 
             gl.uniform1f(uniforms.whirlSpin, whirlSpin);
+            gl.uniform1f(uniforms.holdStrength, holdStrength);
+            gl.uniform1f(uniforms.holdAngle, holdAngle);
 
             gl.uniform2f(uniforms.coverScale, coverX, coverY);
             gl.uniform1f(uniforms.aspect, canvas.width / canvas.height);

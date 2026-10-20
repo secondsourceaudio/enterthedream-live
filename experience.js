@@ -12,6 +12,9 @@
     const muteButton = space.querySelector("[data-mute]");
     const volumeInput = space.querySelector("[data-volume]");
     const volumeOutput = space.querySelector("[data-volume-output]");
+    const seekInput = space.querySelector("[data-seek]");
+    const currentTimeOutput = space.querySelector("[data-current-time]");
+    const durationOutput = space.querySelector("[data-duration]");
     const motionButton = space.querySelector("[data-motion-toggle]");
     const glitchButton = space.querySelector("[data-glitch-toggle]");
     const fullscreenButton = space.querySelector("[data-fullscreen]");
@@ -166,6 +169,39 @@
         updateSound();
         savePreference("second-source-volume", String(volume));
     });
+
+    function formatTime(seconds) {
+        const whole = Math.floor(Number.isFinite(seconds) ? Math.max(0, seconds) : 0);
+        return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, "0")}`;
+    }
+
+    function updateTimeline() {
+        if (!seekInput) return;
+        const duration = audio.duration;
+        const ready = Number.isFinite(duration) && duration > 0 && !audio.error;
+        const current = ready ? Math.min(duration, Math.max(0, audio.currentTime)) : 0;
+        seekInput.disabled = !ready;
+        seekInput.max = ready ? duration : 1;
+        seekInput.value = current;
+        seekInput.style.setProperty("--progress", `${ready ? current / duration * 100 : 0}%`);
+        seekInput.setAttribute("aria-valuetext", ready
+            ? `${formatTime(current)} of ${formatTime(duration)}` : "Playback not started");
+        currentTimeOutput.textContent = formatTime(current);
+        durationOutput.textContent = ready ? formatTime(duration) : "--:--";
+    }
+
+    if (seekInput) {
+        // Metadata loads only after Play; seeking never starts or resumes sound.
+        for (const event of ["loadedmetadata", "durationchange", "timeupdate", "seeking", "seeked", "emptied", "error"]) {
+            audio.addEventListener(event, updateTimeline);
+        }
+        seekInput.addEventListener("input", () => {
+            if (seekInput.disabled || !Number.isFinite(audio.duration)) return;
+            audio.currentTime = Math.min(audio.duration, Math.max(0, Number(seekInput.value)));
+            updateTimeline();
+        });
+        updateTimeline();
+    }
 
     function updateMotion() {
         document.documentElement.dataset.motion = motionEnabled ? "on" : "off";

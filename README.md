@@ -20,6 +20,9 @@ them locally.
 `gallery.html` is the image archive. `src001.html` remains a work-in-progress
 release page and is not linked from the public navigation.
 
+Audio seeking requires a server with HTTP byte-range support, as provided by
+GitHub Pages. Python's basic local server supports playback but not seeking.
+
 `preview.html` embeds the homepage artwork, font, styles and scripts for file
 viewers that cannot load relative assets. Play streams the existing public track
 from GitHub. Rebuild it after homepage changes with `python3 scripts/build_preview.py`.
@@ -53,11 +56,17 @@ DRIP uses damped ripple crests and troughs for clicks or taps.
 Dragging adds no repeated drops or fine ripple bands; it creates a
 broader, stronger whirl that follows stirring around the initial touch and
 coasts after release. Up to eight click impacts can overlap independently.
+A single held press begins building a separate whirlpool after 650 ms.
+Its reach and rotation increase over the next seven seconds, then keep turning
+while held. Releasing lets it settle; a new press, pinch, loss of focus or
+turning motion off clears the held gesture.
 The motion settles using elapsed time,
 and ripples pause with the motion toggle. Space or Enter on the focused artwork
 also creates a ripple. Pinch gestures zoom instead of creating a second impact.
 The original compact play/pause, mute and volume player sits beneath DRIP;
-sound still starts only when Play is selected.
+it includes a seekable timeline with elapsed time and duration. Metadata and
+audio still load only when Play is selected. Seeking with touch, mouse or the
+keyboard preserves the current playing or paused state.
 DRIP's INFO panel also contains SRC_GLITCH, an opt-in modifier with folded
 refraction, occasional small horizontal tears and light channel separation
 that preserves the artwork's blue palette.
