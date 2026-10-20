@@ -876,6 +876,7 @@ if (gl) {
     let holdSpin = 1;
     let holdReleaseTime = -1;
     let holdReleaseAngle = 0;
+    let holdReleasePull = 0;
     let holdStarted = false;
     const holdCoastDuration = 1.1;
     const holdReverseRamp = 0.8;
@@ -887,7 +888,19 @@ if (gl) {
         holdPull = 0;
         holdReleaseTime = -1;
         holdReleaseAngle = 0;
+        holdReleasePull = 0;
         holdStarted = false;
+    }
+
+    function resumeHold() {
+        if (!holdStarted || holdReleaseTime < 0 || holdStrength <= 0) return false;
+        // Preserve the visible deformation. Resume the slowing forward spin,
+        // or gently start winding forward again if it was already reversing.
+        holdForwardSpeed = holdReleaseTime < holdCoastDuration
+            ? holdForwardSpeed * (1 - holdReleaseTime / holdCoastDuration) : 0;
+        holdElapsed = 0.65 + holdStrength * 7;
+        holdReleaseTime = -1;
+        return true;
     }
 
 
@@ -1069,10 +1082,11 @@ if (gl) {
 
             targetDraggingAmount = 0;
 
-            // Short taps stay radial; a sustained press builds a separate vortex.
+            // Re-pressing an active vortex resumes it; fresh taps stay radial.
             draggingAmount = 0;
             whirlEnergy = targetWhirlEnergy = 0;
-            clearHold();
+            const resumingHold = resumeHold();
+            if (!resumingHold) clearHold();
 
             updateShaderPointer(event.clientX, event.clientY, true);
 
@@ -1082,9 +1096,8 @@ if (gl) {
             dragCenterY = targetPointerY;
 
 
-            /* Every click/tap adds another independent drop. */
-
-            createDrip(event.clientX, event.clientY);
+            // A resumed vortex keeps its existing impact and deformation.
+            if (!resumingHold) createDrip(event.clientX, event.clientY);
         }
 
 
@@ -1145,9 +1158,7 @@ if (gl) {
             releasePointer({ type: "pointerup", pointerId: event.pointerId });
         }
         const overArtwork = event.target instanceof Node && container.contains(event.target);
-        const releasedHoldMouse = event.pointerType === "mouse" &&
-            holdStarted && holdReleaseTime >= 0 && holdStrength > 0;
-        if (!tracked && !overArtwork && !releasedHoldMouse) return;
+        if (!tracked && !overArtwork) return;
 
         if (viewPointers.has(event.pointerId)) {
 
@@ -1205,7 +1216,7 @@ if (gl) {
 
         // Move the existing vortex without starting a drag, reversing its spin,
         // or resetting the accumulated rotation and strength.
-        if (holdStarted && (event.pointerId === dragPointerId || releasedHoldMouse)) {
+        if (holdStarted && event.pointerId === dragPointerId) {
             const point = surfacePoint(event.clientX, event.clientY);
             targetPointerX = point.x;
             targetPointerY = point.y;
@@ -1287,6 +1298,7 @@ if (gl) {
                 holdReverseSpeed = Math.max(0.06, holdForwardSpeed * 0.20);
                 holdReleaseTime = 0;
                 holdReleaseAngle = holdAngle;
+                holdReleasePull = holdPull;
             } else {
                 clearHold();
             }
@@ -1439,16 +1451,16 @@ if (gl) {
             holdStrength += (charge - holdStrength) * smoothing(0.10);
             // Grow the field independently of its angular speed. Moving it keeps
             // the existing spin rate; stationary buildup eases toward a faster spin.
-            if (holdStrength > 0.001 && !holdFollowing) {
-                const targetSpeed = 0.15 + holdStrength * 4.85;
+            if (holdStrength > 0.001 && (!holdFollowing || holdForwardSpeed < 0.15)) {
+                const targetSpeed = holdFollowing ? 0.15 : 0.15 + holdStrength * 4.85;
                 holdForwardSpeed += (targetSpeed - holdForwardSpeed) * smoothing(0.045);
             }
             holdAngle += holdForwardSpeed * seconds;
-            holdPull = holdStrength;
+            holdPull += (holdStrength - holdPull) * smoothing(0.06);
         } else if (holdReleaseTime >= 0 && holdStrength > 0) {
             holdReleaseTime += seconds;
             // Integrate the slowing forward spin, then ease into a slow reverse.
-            // Preserve the field's reach as it follows the pointer back to zero deformation.
+            // Keep the last visible position and reach until deformation is zero.
             const coastTime = Math.min(holdReleaseTime, holdCoastDuration);
             const coastAngle = holdReleaseAngle + holdForwardSpeed *
                 (coastTime - coastTime * coastTime / (2 * holdCoastDuration));
@@ -1462,7 +1474,7 @@ if (gl) {
                     Math.max(0, reverseTime - holdReverseRamp)
                 );
                 holdAngle = Math.max(0, coastAngle - reverseDistance);
-                holdPull = holdStrength * holdAngle / Math.max(coastAngle, 0.0001);
+                holdPull = holdReleasePull * holdAngle / Math.max(coastAngle, 0.0001);
                 if (holdAngle === 0) clearHold();
             }
         } else {
@@ -1489,8 +1501,8 @@ if (gl) {
         whirlSpin +=
             (targetWhirlSpin - whirlSpin) * smoothing(0.08);
 
-        if (holdStarted) {
-            // Follow during the hold, forward coast and reverse. A pointer jump
+        if (holding && holdStarted) {
+            // Follow only while held, then stay at the release position. A jump
             // must not sweep the twisted field across the artwork in a burst.
             const followAmount = Math.min(smoothing(0.12),
                 holdFollowSpeed * seconds / Math.max(holdFollowDistance, 0.0001));
