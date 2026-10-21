@@ -1661,7 +1661,7 @@ class WebsiteTests(unittest.TestCase):
         self.assertGreater(later['radius'], early['radius'] + .08, 'The ring must expand outward like a homepage click')
         self.assertLess(ripple_impact(200)['difference'], .01, 'Expired rings must leave no lasting displacement')
 
-    def test_visualizer_emits_one_drip_per_kick_preserves_older_rings_and_freezes_on_pause(self):
+    def test_visualizer_spaces_drips_preserves_older_rings_and_freezes_on_pause(self):
         serve_seekable_audio(self.page)
         self.start_controlled_fluid()
         self.page.locator('[data-visual-mode="visualizer"]').click()
@@ -1685,6 +1685,9 @@ class WebsiteTests(unittest.TestCase):
         first = drips_after(15)
         self.assertEqual(len(first), 1, 'A held beat envelope must emit only one drop')
         self.page.evaluate('window.__music.beatId = 2; window.__music.beat = .7')
+        self.assertEqual(len(drips_after(1)), 1, 'Closely spaced kicks must leave the existing ring alone')
+        self.assertEqual(len(drips_after(45)), 1, 'A skipped kick must not become a delayed drop')
+        self.page.evaluate('window.__music.beatId = 3; window.__music.beat = .7')
         overlapping = drips_after(1)
         self.assertEqual(len(overlapping), 2)
         self.assertEqual(overlapping[0][:2], first[0][:2], 'The next kick must not relocate an existing ring')

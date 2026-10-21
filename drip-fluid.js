@@ -104,6 +104,7 @@ SOFTWARE.
         const dripData = new Float32Array(drips.length * 4);
         let nextDrip = 0;
         let consumedBeat = 0;
+        let dripCooldown = 0;
         function randomCurrent() {
             const angle = Math.random() * Math.PI * 2;
             return {x: .18 + Math.random() * .64, y: .18 + Math.random() * .64,
@@ -441,6 +442,7 @@ SOFTWARE.
             for (const drip of drips) { drip.age = -1; drip.strength = 0; }
             nextDrip = 0;
             consumedBeat = experience.sampleAudio().beatId || 0;
+            dripCooldown = 0;
             gl.clearColor(0, 0, 0, 0);
             for (const value of targets) {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, value.framebuffer);
@@ -598,12 +600,14 @@ SOFTWARE.
                     if (drip.age >= 0) drip.age += dt;
                     if (returningNow) drip.strength *= Math.exp(-dt * 10);
                 }
+                dripCooldown = Math.max(0, dripCooldown - dt);
                 // Consume each onset once, rather than emitting drops on every frame
-                // of its decaying beat envelope. RESET/RETURN discard suppressed hits.
-                if (automatic && signal.beatId > consumedBeat) {
+                // of its decaying beat envelope. Skip closely spaced hits without queuing them.
+                if (automatic && signal.beatId > consumedBeat && !dripCooldown) {
                     drips[nextDrip] = {x: .16 + Math.random() * .68, y: .16 + Math.random() * .68,
                         age: 0, strength: .35 + signal.beat * .35};
                     nextDrip = (nextDrip + 1) % drips.length;
+                    dripCooldown = .75;
                 }
                 consumedBeat = signal.beatId || 0;
                 const twist = automatic ? autoAmount * currents[0].spin * (.06 + signal.mid * .1) : 0;
