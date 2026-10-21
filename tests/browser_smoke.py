@@ -1407,27 +1407,28 @@ class WebsiteTests(unittest.TestCase):
         self.page.keyboard.press("Escape")
         expect(button).to_be_focused()
 
-    def test_gallery_images_viewer_and_focus(self):
-        self.visit("gallery.html")
-        buttons = self.page.locator(".archive-image-button")
-        self.assertEqual(buttons.count(), 7)
-        self.assertEqual(buttons.first.inner_text(), "")
-        self.assertTrue(buttons.evaluate_all("buttons => buttons.every(b => b.getBoundingClientRect().height > 100)"))
-        buttons.first.focus()
-        self.page.keyboard.press("Enter")
-        expect(self.page.locator("#viewer-close")).to_be_focused()
-        for index in range(7):
-            expect(self.page.locator("#viewer-count")).to_have_text(f"{index + 1:02d} / 07")
-            self.page.wait_for_function("document.querySelector('#viewer-image').complete && document.querySelector('#viewer-image').naturalWidth > 0")
-            if index < 6:
-                self.page.keyboard.press("ArrowRight")
-        self.page.keyboard.press("ArrowLeft")
-        expect(self.page.locator("#viewer-count")).to_have_text("06 / 07")
-        self.page.locator("#viewer-next").focus()
-        self.page.keyboard.press("Tab")
-        expect(self.page.locator("#viewer-close")).to_be_focused()
-        self.page.keyboard.press("Escape")
-        expect(buttons.first).to_be_focused()
+    def test_releases_navigation_shows_only_cover_artist_and_title(self):
+        self.visit()
+        expect(self.page.locator('.site-nav a')).to_have_text(['RELEASES', 'SOURCES', 'BANDCAMP'])
+        self.page.locator('.site-nav').get_by_role('link', name='RELEASES').click()
+        self.page.wait_for_url('**/releases.html')
+        expect(self.page.locator('h1')).to_have_text('RELEASES')
+        expect(self.page.locator('.site-nav [aria-current="page"]')).to_have_text('RELEASES')
+        expect(self.page.locator('.release-entry')).to_have_count(1)
+        expect(self.page.locator('.release-catalogue')).to_have_text('SRC001')
+        expect(self.page.locator('.release-title')).to_have_text('DRIP')
+        expect(self.page.locator('.release-artist')).to_have_text('MARTIN SOLLI')
+        self.assertTrue(self.page.locator('.release-cover').evaluate('image => image.complete && image.naturalWidth === 3200'))
+        expect(self.page.locator('.release-entry a, .release-entry button, .tracklist, a[href*="src001"], [data-artwork-dialog]')).to_have_count(0)
+        expect(self.page.locator('meta[name="robots"]')).to_have_count(0)
+        self.page.go_back(wait_until='networkidle')
+        self.assertNotIn('page-is-leaving', self.page.locator('body').get_attribute('class') or '')
+
+    def test_retired_images_page_redirects_to_releases(self):
+        self.visit('gallery.html')
+        self.page.wait_for_url('**/releases.html')
+        expect(self.page.locator('h1')).to_have_text('RELEASES')
+        expect(self.page.locator('.archive, #gallery-viewer, a[href*="gallery.html"]')).to_have_count(0)
 
     def test_sources_navigation_transitions_and_back(self):
         self.visit()
@@ -1445,7 +1446,7 @@ class WebsiteTests(unittest.TestCase):
     def test_mobile_layout_and_player_controls(self):
         for width in [320, 390, 768]:
             self.page.set_viewport_size({"width": width, "height": 844})
-            for path in ["index.html", "drip-fluid.html", "experiment.html", "experiments.html", "gallery.html", "src001.html"]:
+            for path in ["index.html", "drip-fluid.html", "experiment.html", "experiments.html", "releases.html", "src001.html"]:
                 with self.subTest(width=width, path=path):
                     self.visit(path)
                     self.assertLessEqual(self.page.evaluate("document.body.scrollWidth"), width)

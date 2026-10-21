@@ -15,7 +15,10 @@ Open the local server in your browser. The homepage is DRIP, with a WHIRL / FLUI
 switch. **SOURCES** in the top navigation opens `experiments.html`, which lists
 only FLOWER. `experiment.html` is the public, silent FLOWER fluid source,
 using the pink gallery photograph.
-`gallery.html` is the image archive. `src001.html` remains a work-in-progress
+**RELEASES** opens `releases.html`, which shows SRC001 / DRIP with its static
+cover, artist and title. It has no tracklist, release date or vinyl details.
+The former `gallery.html` URL redirects to RELEASES; its image assets remain
+available for FLOWER and future sources. `src001.html` remains a work-in-progress
 release page and is not linked from the public navigation. Its cover is a static
 image without a link or artwork viewer. The unlisted
 `drip-fluid.html` page provides the same DRIP fluid mode on a separate URL. It also
@@ -38,7 +41,7 @@ starting composition. A mode that cannot render shows the static artwork while
 the other mode remains available. The mode is not remembered between visits.
 
 The studies load silently. Select **Play** to play the bundled Sage Counsel
-track on DRIP or enable the live sine instrument on FLOWER.
+track on DRIP. FLOWER remains silent.
 Audio is analyzed in the browser; low-frequency energy gently influences the
 artwork. Volume is applied through a gain node
 when Web Audio is available, including on iOS. The sound button pauses and
@@ -108,7 +111,7 @@ link, without a personal creator credit.
 FLOWER uses the shared fluid renderer with the gallery's `flower_3.webp` image
 and an ink material that transports and diffuses its original colours.
 `site.js` handles internal-link fades, browser Back navigation, and artwork
-viewer focus. Reduced-motion preferences disable the page and gallery fades.
+viewer focus. Reduced-motion preferences disable page fades.
 
 ## Fluid studies
 
@@ -156,8 +159,8 @@ executable. These tools are not needed to run or publish the site.
 
 The checks cover opt-in audio, actual audio analysis and shader response,
 volume and pause, pointer interaction, motion preferences and rendering pauses,
-native and fallback fullscreen, keyboard dialogs, all seven gallery images,
-navigation and Back, mobile layouts, and audio/storage/WebGL failure paths.
+native and fallback fullscreen, keyboard dialogs, release navigation and the
+legacy gallery redirect, Back, mobile layouts, and audio/storage/WebGL failure paths.
 They also check touch RETURN without triggering pinch, fluid image transport,
 exact restoration of the original image after RESET, mode switching during
 playback, inactive renderers pausing, and independent mode fallback.
