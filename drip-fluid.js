@@ -27,21 +27,22 @@ SOFTWARE.
 // artwork and palette instead of adding coloured dye. No external services.
 (() => {
     'use strict';
-    const canvas = document.querySelector('#visual');
-    const container = document.querySelector('#visual-container');
-    const image = document.querySelector('#fallback-image');
+    const canvas = document.querySelector('#fluid-visual') || document.querySelector('#visual');
+    const container = document.querySelector('#fluid-container') || document.querySelector('#visual-container');
+    const image = container?.querySelector('.fallback-image');
     const experience = window.SecondSourceExperience;
     const resetButton = document.querySelector('[data-fluid-reset]');
     const returnButton = document.querySelector('[data-fluid-return]');
     if (!canvas || !container || !image || !experience) return;
 
     let running = true;
+    const fluidMotionEnabled = () => running && experience.motionEnabled && experience.isVisualActive('fluid');
     function fallback() {
         running = false;
         canvas.classList.remove('is-ready');
         canvas.dataset.fluid = 'unavailable';
         resetButton.disabled = returnButton.disabled = true;
-        experience.useStaticArtwork();
+        experience.useStaticArtwork('fluid');
     }
 
     let gl;
@@ -349,6 +350,12 @@ SOFTWARE.
             returnButton.setAttribute('aria-pressed', String(returning()));
         }
         function clearInput() {
+            for (const id of pointers.keys()) {
+                if (container.hasPointerCapture(id)) container.releasePointerCapture(id);
+            }
+            for (const id of returnPointers) {
+                if (returnButton.hasPointerCapture(id)) returnButton.releasePointerCapture(id);
+            }
             pointers.clear(); returnPointers.clear();
             rightHeld = returnKey = false;
             hover = hoverForce = null;
@@ -356,7 +363,7 @@ SOFTWARE.
         }
 
         container.addEventListener('pointerdown', event => {
-            if (!experience.motionEnabled || (event.pointerType === 'mouse' && event.button !== 0)) return;
+            if (!fluidMotionEnabled() || (event.pointerType === 'mouse' && event.button !== 0)) return;
             event.preventDefault();
             if (pointers.size >= 3) return;
             const location = point(event);
@@ -365,7 +372,7 @@ SOFTWARE.
             inject(location, 0, 0, 700);
         });
         window.addEventListener('pointermove', event => {
-            if (!experience.motionEnabled) return;
+            if (!fluidMotionEnabled()) return;
             const tracked = pointers.get(event.pointerId);
             if (tracked) {
                 if (tracked.type === 'mouse' && !(event.buttons & 1)) { pointers.delete(event.pointerId); return; }
@@ -386,7 +393,7 @@ SOFTWARE.
         window.addEventListener('pointercancel', releasePointer);
         container.addEventListener('lostpointercapture', releasePointer);
         container.addEventListener('mousedown', event => {
-            if (event.button === 2 && experience.motionEnabled) { event.preventDefault(); rightHeld = true; updateReturn(); }
+            if (event.button === 2 && fluidMotionEnabled()) { event.preventDefault(); rightHeld = true; updateReturn(); }
         });
         for (const type of ['mouseup', 'mousemove']) window.addEventListener(type, event => {
             if (!(event.buttons & 2)) rightHeld = false;
@@ -398,20 +405,20 @@ SOFTWARE.
         container.addEventListener('contextmenu', event => event.preventDefault());
         container.addEventListener('dragstart', event => event.preventDefault());
         container.addEventListener('keydown', event => {
-            if (event.target !== container || event.repeat || !experience.motionEnabled) return;
+            if (event.target !== container || event.repeat || !fluidMotionEnabled()) return;
             if (event.key === ' ' || event.key === 'Enter') {
                 event.preventDefault(); inject({x: .5, y: .5}, 0, 0, 900);
             }
         });
         returnButton.addEventListener('pointerdown', event => {
-            if (!experience.motionEnabled || (event.pointerType === 'mouse' && event.button !== 0)) return;
+            if (!fluidMotionEnabled() || (event.pointerType === 'mouse' && event.button !== 0)) return;
             event.preventDefault(); returnPointers.add(event.pointerId);
             try { returnButton.setPointerCapture(event.pointerId); } catch (error) {}
             updateReturn();
         });
         returnButton.addEventListener('lostpointercapture', releasePointer);
         returnButton.addEventListener('keydown', event => {
-            if ((event.key === ' ' || event.key === 'Enter') && experience.motionEnabled) {
+            if ((event.key === ' ' || event.key === 'Enter') && fluidMotionEnabled()) {
                 event.preventDefault(); returnKey = true; updateReturn();
             }
         });
@@ -420,14 +427,19 @@ SOFTWARE.
         });
         returnButton.addEventListener('blur', () => { returnKey = false; updateReturn(); });
         returnButton.addEventListener('contextmenu', event => event.preventDefault());
+        window.addEventListener('experience:visualchange', () => {
+            clearInput();
+            if (running) clearFields();
+            resetButton.disabled = returnButton.disabled = !fluidMotionEnabled();
+        });
         window.addEventListener('blur', clearInput);
         window.addEventListener('pagehide', clearInput);
         document.addEventListener('visibilitychange', () => { if (document.hidden) clearInput(); });
         window.addEventListener('experience:motionchange', () => {
-            if (!experience.motionEnabled) { clearInput(); if (running) clearFields(); }
-            resetButton.disabled = returnButton.disabled = !experience.motionEnabled;
+            if (!fluidMotionEnabled()) { clearInput(); if (running) clearFields(); }
+            resetButton.disabled = returnButton.disabled = !fluidMotionEnabled();
         });
-        resetButton.disabled = returnButton.disabled = !experience.motionEnabled;
+        resetButton.disabled = returnButton.disabled = !fluidMotionEnabled();
         resetButton.addEventListener('click', () => { clearInput(); clearFields(); });
         canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); clearInput(); fallback(); });
 

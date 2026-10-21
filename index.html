@@ -9,11 +9,12 @@
     <title>SECOND SOURCE</title>
     <link rel="stylesheet" href="./site.css?v=4">
     <link rel="stylesheet" href="./new.css?v=32">
-    <link rel="stylesheet" href="./experience.css?v=6">
+    <link rel="stylesheet" href="./experience.css?v=7">
     <script src="./site.js?v=1" defer></script>
     <link rel="preload" as="image" href="./images/drip_cover_front_2.webp">
-    <script src="./experience.js?v=5" defer></script>
-    <script src="./landing-experiment.js?v=23" defer></script>
+    <script src="./experience.js?v=6" defer></script>
+    <script src="./landing-experiment.js?v=24" defer></script>
+    <script src="./drip-fluid.js?v=3" defer></script>
 </head>
 <body class="landing-study">
     <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
@@ -27,10 +28,16 @@
     <main tabindex="-1" id="main-content" class="landing-experiment">
         <section id="listening-space" class="listening-space" data-experience data-motion-default-on aria-label="DRIP audiovisual experience">
             <h1 class="visually-hidden">DRIP</h1>
-            <div id="visual-container" class="visual-container" tabindex="0" role="group" aria-label="Interactive DRIP artwork. Click or tap for ripples, hold for a growing whirlpool, drag to stir, or press Space or Enter for a ripple.">
+            <div id="visual-container" class="visual-container" data-visual-panel="whirl" tabindex="0" role="group" aria-label="Interactive DRIP artwork. Click or tap for ripples, hold for a growing whirlpool, drag to stir, or press Space or Enter for a ripple.">
                 <div id="visual-media" class="visual-media">
                     <img id="fallback-image" class="fallback-image" src="./images/drip_cover_front_2.webp" alt="Blue liquid forms in reflective light" width="3200" height="3200" fetchpriority="high" decoding="async" draggable="false">
                     <canvas id="visual" class="visual-canvas" aria-hidden="true"></canvas>
+                </div>
+            </div>
+            <div id="fluid-container" class="visual-container" data-visual-panel="fluid" tabindex="0" role="group" aria-label="Interactive DRIP fluid artwork. Drag to move the image, hold to stir, or press Space or Enter for a vortex." hidden>
+                <div class="visual-media">
+                    <img id="fluid-fallback-image" class="fallback-image" src="./images/drip_cover_front_2.webp" alt="Blue liquid forms in reflective light" width="3200" height="3200" decoding="async" draggable="false">
+                    <canvas id="fluid-visual" class="visual-canvas" aria-hidden="true"></canvas>
                 </div>
             </div>
             <div class="compact-player" role="group" aria-label="Sage Counsel player">
@@ -47,10 +54,16 @@
                 </div>
             </div>
             <div class="experience-controls" aria-label="Viewing controls">
+                <div class="visual-mode-switch" role="group" aria-label="Visual mode">
+                    <button class="experience-button" type="button" data-visual-mode="whirl" aria-controls="visual-container" aria-pressed="true">WHIRL</button>
+                    <button class="experience-button" type="button" data-visual-mode="fluid" aria-controls="fluid-container" aria-pressed="false">FLUID</button>
+                </div>
                 <button class="experience-button" type="button" data-motion-toggle aria-pressed="true" aria-label="Use static artwork">MOTION ON</button>
                 <button class="experience-button" type="button" data-fullscreen aria-pressed="false" aria-label="Enter fullscreen listening mode">FULLSCREEN</button>
                 <button class="experience-button" type="button" data-info aria-haspopup="dialog" aria-controls="experience-info">INFO</button>
                 <button class="experience-button vortex-return" type="button" data-vortex-return aria-pressed="false" aria-label="Hold to return the whirlpool faster" hidden disabled>RETURN</button>
+                <button class="experience-button vortex-return" type="button" data-fluid-return data-mode-controls="fluid" aria-pressed="false" aria-label="Hold to return to the original artwork" hidden>RETURN</button>
+                <button class="experience-button" type="button" data-fluid-reset data-mode-controls="fluid" hidden>RESET</button>
             </div>
             <p class="visually-hidden" role="status" data-status></p>
             <audio id="experience-audio" loop preload="none">
@@ -67,9 +80,9 @@
                 <dl>
                     <dt>SOUND</dt><dd>SAGE COUNSEL</dd>
                     <dt>PROJECT</dt><dd>SECOND SOURCE AUDIO<span class="info-project-description">Music, images and audiovisual experiments.</span><a class="info-project-link" href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP ↗</a></dd>
-                    <dt>CONTROLS</dt><dd>Click or tap for ripples · Hold to build a whirlpool<br>Drag to stir · Pinch to zoom<br>Hold right-click or RETURN for a faster return<br>Escape to leave fullscreen</dd>
+                    <dt>CONTROLS</dt><dd><span data-mode-controls="whirl">Click or tap for ripples · Hold to build a whirlpool<br>Drag to stir · Pinch to zoom<br>Hold right-click or RETURN for a faster return</span><span data-mode-controls="fluid" hidden>Drag to move the image · Hold to stir<br>Hold right-click or RETURN to settle<br>Reset to restore the original image</span><br>Escape to leave fullscreen</dd>
                 </dl>
-                <button class="experience-button info-modifier" type="button" data-glitch-toggle aria-pressed="false" aria-label="SRC_GLITCH: off">SRC_GLITCH / OFF</button>
+                <button class="experience-button info-modifier" type="button" data-glitch-toggle data-mode-controls="whirl" aria-pressed="false" aria-label="SRC_GLITCH: off">SRC_GLITCH / OFF</button>
             </dialog>
         </section>
     </main>

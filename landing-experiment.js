@@ -12,6 +12,11 @@ const visualMedia = document.getElementById("visual-media");
 
 const fallbackImage = document.getElementById("fallback-image");
 
+function whirlMotionEnabled() {
+    return window.SecondSourceExperience.motionEnabled &&
+        window.SecondSourceExperience.isVisualActive('whirl');
+}
+
 
 /* =========================================
    HELPERS
@@ -154,7 +159,7 @@ const gl = canvas.getContext("webgl", {
 
 if (!gl) {
     canvas.style.display = "none";
-    window.SecondSourceExperience.useStaticArtwork();
+    window.SecondSourceExperience.useStaticArtwork("whirl");
 }
 
 
@@ -897,7 +902,7 @@ if (gl) {
     function updateReturnButton() {
         if (!returnButton) return;
         const available = touchReturnLayout.matches && holdStarted && holdStrength > 0 &&
-            window.SecondSourceExperience.motionEnabled;
+            whirlMotionEnabled();
         if (returnButton.hidden === available) returnButton.hidden = !available;
         if (returnButton.disabled === available) returnButton.disabled = !available;
         const pressed = String(returnButtonPointers.size > 0 || returnKeyHeld);
@@ -1136,7 +1141,7 @@ if (gl) {
     // Mouse events also report right-button presses while left is already held;
     // pointerdown alone does not fire for that button combination.
     container.addEventListener("mousedown", function (event) {
-        if (event.button !== 2 || !window.SecondSourceExperience.motionEnabled) return;
+        if (event.button !== 2 || !whirlMotionEnabled()) return;
         event.preventDefault();
         rightReturnHeld = true;
         beginHoldReturn(true);
@@ -1144,7 +1149,7 @@ if (gl) {
 
     container.addEventListener("pointerdown", function (event) {
 
-        if (!window.SecondSourceExperience.motionEnabled) return;
+        if (!whirlMotionEnabled()) return;
         if (event.pointerType === "mouse" && event.button !== 0) return;
         if (viewPointers.size >= 2) return;
         if (viewPointers.size === 0) lastDripSlot = -1;
@@ -1242,7 +1247,7 @@ if (gl) {
 
     window.addEventListener("pointermove", function (event) {
 
-        if (!window.SecondSourceExperience.motionEnabled) return;
+        if (!whirlMotionEnabled()) return;
         const tracked = viewPointers.get(event.pointerId);
         // Recover a mouse release missed while the pointer was outside the artwork.
         if (tracked && tracked.type === "mouse" && !(event.buttons & 1)) {
@@ -1439,7 +1444,7 @@ if (gl) {
     });
     container.addEventListener("keydown", event => {
         if (event.target !== container || event.repeat ||
-            !window.SecondSourceExperience.motionEnabled ||
+            !whirlMotionEnabled() ||
             (event.key !== " " && event.key !== "Enter")) return;
         event.preventDefault();
         const rect = container.getBoundingClientRect();
@@ -1464,6 +1469,14 @@ if (gl) {
         targetVelocityX = targetVelocityY = 0;
         clearHold();
     }
+    window.addEventListener('experience:visualchange', () => {
+        clearGesture();
+        viewScale = 1;
+        viewX = viewY = 0;
+        updateViewTransform();
+        motion = velocityX = velocityY = draggingAmount = whirlEnergy = 0;
+        for (const drip of drips) { drip.started = -100000; drip.strength = 0; }
+    });
     window.addEventListener("blur", clearGesture);
     window.addEventListener("pagehide", clearGesture);
     document.addEventListener("visibilitychange", () => {
@@ -1471,7 +1484,7 @@ if (gl) {
     });
     container.addEventListener("contextmenu", event => event.preventDefault());
     window.addEventListener("experience:motionchange", () => {
-        if (!window.SecondSourceExperience.motionEnabled) clearGesture();
+        if (!whirlMotionEnabled()) clearGesture();
     });
 
 
@@ -1677,5 +1690,7 @@ if (gl) {
 
     if (setupGL()) {
         window.SecondSourceExperience.createRenderLoop(render, container);
+    } else {
+        window.SecondSourceExperience.useStaticArtwork('whirl');
     }
 }

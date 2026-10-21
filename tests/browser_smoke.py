@@ -13,9 +13,12 @@ from playwright.sync_api import expect, sync_playwright
 BASE_URL = os.environ.get("SITE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 DRAW_COUNTER = """
 window.__drawCalls = 0;
+window.__drawsByCanvas = {};
 const originalDraw = WebGLRenderingContext.prototype.drawArrays;
 WebGLRenderingContext.prototype.drawArrays = function (...args) {
     window.__drawCalls++;
+    const key = this.canvas.id;
+    window.__drawsByCanvas[key] = (window.__drawsByCanvas[key] || 0) + 1;
     return originalDraw.apply(this, args);
 };
 """
@@ -92,7 +95,8 @@ class WebsiteTests(unittest.TestCase):
                 get: () => experience,
                 set(value) {
                     experience = value;
-                    value.createRenderLoop = draw => {
+                    value.createRenderLoop = (draw, element) => {
+                        if (element.id !== 'visual-container') return;
                         let elapsed = 0;
                         window.__stepDrip = frames => {
                             for (let i = 0; i < frames; i++) draw(elapsed += 1000 / 60);
@@ -561,16 +565,21 @@ class WebsiteTests(unittest.TestCase):
         self.assertGreaterEqual(resumed['strength'], held['strength'])
         session.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
 
-    def check_fluid_study(self, path, source_width, keyboard=False):
+    def check_fluid_study(self, path, source_width, keyboard=False, front=False):
         self.visit(path)
-        self.page.wait_for_function("document.querySelector('#visual').dataset.fluid")
-        expect(self.page.locator('#visual')).to_have_attribute('data-fluid', 'ready')
-        expect(self.page.locator('meta[name="robots"]')).to_have_attribute('content', 'noindex, nofollow')
-        self.assertEqual(self.page.locator('#fallback-image').evaluate('image => image.naturalWidth'), source_width)
+        if front:
+            self.page.locator('[data-visual-mode="fluid"]').click()
+        canvas_selector = '#fluid-visual' if front else '#visual'
+        panel = self.page.locator('#fluid-container' if front else '#visual-container')
+        self.page.wait_for_function('selector => document.querySelector(selector).dataset.fluid', arg=canvas_selector)
+        expect(self.page.locator(canvas_selector)).to_have_attribute('data-fluid', 'ready')
+        if not front:
+            expect(self.page.locator('meta[name="robots"]')).to_have_attribute('content', 'noindex, nofollow')
+        self.assertEqual(panel.locator('img').evaluate('image => image.naturalWidth'), source_width)
 
         def pixels(baseline=False):
-            return self.page.evaluate("""baseline => new Promise(resolve => {
-                const canvas = document.querySelector('#visual');
+            return self.page.evaluate("""({baseline, selector}) => new Promise(resolve => {
+                const canvas = document.querySelector(selector);
                 const gl = canvas.getContext('webgl');
                 const draw = gl.drawArrays;
                 gl.drawArrays = function (...args) {
@@ -589,10 +598,10 @@ class WebsiteTests(unittest.TestCase):
                     }
                     resolve(difference / count);
                 };
-            })""", baseline)
+            })""", {'baseline': baseline, 'selector': canvas_selector})
 
         pixels(baseline=True)
-        box = self.page.locator('#visual-container').bounding_box()
+        box = panel.bounding_box()
         self.page.mouse.move(box['x'] + box['width'] * .35, box['y'] + box['height'] * .45)
         self.page.mouse.down()
         self.page.mouse.move(box['x'] + box['width'] * .7, box['y'] + box['height'] * .6, steps=12)
@@ -602,7 +611,7 @@ class WebsiteTests(unittest.TestCase):
         self.page.locator('[data-fluid-reset]').click()
         self.assertLess(pixels(), .01, 'Reset must recover the exact starting image')
         if keyboard:
-            self.page.locator('#visual-container').focus()
+            panel.focus()
             self.page.keyboard.press('Space')
             self.wait_for_frames(12)
             self.assertGreater(pixels(), .01, 'Keyboard interaction must move the artwork')
@@ -612,6 +621,112 @@ class WebsiteTests(unittest.TestCase):
 
     def test_fluid_study_moves_artwork_and_reset_recovers_the_original(self):
         self.check_fluid_study('drip-fluid.html', 3200)
+
+    def test_front_fluid_moves_artwork_and_resets_exactly(self):
+        self.check_fluid_study('index.html', 3200, keyboard=True, front=True)
+
+    def test_front_modes_keep_audio_playing_and_pause_the_hidden_renderer(self):
+        serve_seekable_audio(self.page)
+        self.visit()
+        self.page.wait_for_function("document.querySelector('#fluid-visual').dataset.fluid === 'ready'")
+        fluid = self.page.locator('[data-visual-mode="fluid"]')
+        whirl = self.page.locator('[data-visual-mode="whirl"]')
+        expect(whirl).to_have_attribute('aria-pressed', 'true')
+        expect(self.page.locator('#fluid-container')).to_be_hidden()
+        before = self.page.evaluate('({...window.__drawsByCanvas})')
+        self.wait_for_frames(6)
+        counts = self.page.evaluate('window.__drawsByCanvas')
+        self.assertGreater(counts['visual'], before['visual'])
+        self.assertEqual(counts['fluid-visual'], before['fluid-visual'])
+
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function("document.querySelector('audio').currentTime > 0")
+        started = self.page.evaluate("window.__modeAudio = document.querySelector('audio'); window.__modeAudio.currentTime")
+        fluid.click()
+        expect(fluid).to_have_attribute('aria-pressed', 'true')
+        expect(self.page.locator('#visual-container')).to_be_hidden()
+        expect(self.page.locator('#fluid-container')).to_be_visible()
+        stopped_whirl = self.page.evaluate('window.__drawsByCanvas.visual')
+        self.page.wait_for_function("before => window.__drawsByCanvas['fluid-visual'] > before + 20", arg=counts['fluid-visual'])
+        self.assertEqual(self.page.evaluate('window.__drawsByCanvas.visual'), stopped_whirl)
+        self.assertTrue(self.page.evaluate("document.querySelector('audio') === window.__modeAudio && !window.__modeAudio.paused"))
+        self.assertGreaterEqual(self.page.locator('audio').evaluate('audio => audio.currentTime'), started)
+        expect(self.page.locator('[data-fluid-return]')).to_be_visible()
+        expect(self.page.locator('[data-vortex-return]')).to_be_hidden()
+        self.page.locator('[data-info]').click()
+        expect(self.page.locator('[data-glitch-toggle]')).to_be_hidden()
+        expect(self.page.locator('#experience-info [data-mode-controls="fluid"]')).to_contain_text('Drag to move the image')
+        self.page.keyboard.press('Escape')
+
+        # Switching with the keyboard preserves focus and clears a held return.
+        self.page.locator('[data-fluid-return]').focus()
+        self.page.keyboard.down('Space')
+        expect(self.page.locator('[data-fluid-return]')).to_have_attribute('aria-pressed', 'true')
+        whirl.focus()
+        self.page.keyboard.press('Enter')
+        self.page.keyboard.up('Space')
+        expect(whirl).to_be_focused()
+        expect(self.page.locator('[data-fluid-return]')).to_have_attribute('aria-pressed', 'false')
+        self.wait_for_frames(3)
+        stopped = self.page.evaluate("window.__drawsByCanvas['fluid-visual']")
+        self.wait_for_frames(6)
+        self.assertEqual(self.page.evaluate("window.__drawsByCanvas['fluid-visual']"), stopped)
+        self.assertFalse(self.page.locator('audio').evaluate('audio => audio.paused'))
+        self.page.locator('[data-motion-toggle]').click()
+        fluid.click()
+        expect(self.page.locator('html')).to_have_attribute('data-motion', 'off')
+        paused = self.page.evaluate('({...window.__drawsByCanvas})')
+        self.wait_for_frames(6)
+        self.assertEqual(self.page.evaluate('window.__drawsByCanvas'), paused)
+        expect(self.page.locator('[data-fluid-reset]')).to_be_disabled()
+
+    def test_front_fluid_unavailable_keeps_whirl_usable(self):
+        self.page.add_init_script("""(() => {
+            const extension = WebGLRenderingContext.prototype.getExtension;
+            WebGLRenderingContext.prototype.getExtension = function (name) {
+                if (this.canvas.id === 'fluid-visual' && /OES_texture_(half_)?float$/.test(name)) return null;
+                return extension.call(this, name);
+            };
+        })();""")
+        self.visit()
+        expect(self.page.locator('#fluid-visual')).to_have_attribute('data-fluid', 'unavailable')
+        expect(self.page.locator('html')).to_have_attribute('data-motion', 'on')
+        self.page.locator('[data-visual-mode="fluid"]').click()
+        expect(self.page.locator('html')).to_have_attribute('data-motion', 'off')
+        expect(self.page.locator('[data-motion-toggle]')).to_be_disabled()
+        expect(self.page.locator('#fluid-fallback-image')).to_be_visible()
+        self.page.locator('[data-visual-mode="whirl"]').click()
+        expect(self.page.locator('html')).to_have_attribute('data-motion', 'on')
+        expect(self.page.locator('[data-motion-toggle]')).to_be_enabled()
+        before = self.page.evaluate('window.__drawsByCanvas.visual')
+        self.page.wait_for_function('before => window.__drawsByCanvas.visual > before', arg=before)
+
+    def test_front_modes_clear_held_whirl_and_switch_with_touch(self):
+        self.page.set_viewport_size({'width': 390, 'height': 844})
+        self.start_controlled_drip()
+        session = self.context.new_cdp_session(self.page)
+        session.send('Emulation.setTouchEmulationEnabled', {'enabled': True, 'maxTouchPoints': 2})
+        box = self.page.locator('#visual-container').bounding_box()
+        point = {'id': 1, 'x': box['x'] + box['width'] / 2, 'y': box['y'] + box['height'] / 2}
+        session.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [point]})
+        self.assertGreater(self.step_drip(150)['strength'], .1)
+        session.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+
+        def tap_mode(mode):
+            box = self.page.locator(f'[data-visual-mode="{mode}"]').bounding_box()
+            touch = {'id': 2, 'x': box['x'] + box['width'] / 2, 'y': box['y'] + box['height'] / 2}
+            session.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [touch]})
+            session.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+
+        tap_mode('fluid')
+        expect(self.page.locator('#fluid-container')).to_be_visible()
+        expect(self.page.locator('[data-fluid-reset]')).to_be_visible()
+        tap_mode('whirl')
+        expect(self.page.locator('#visual-container')).to_be_visible()
+        fresh = self.step_drip(1)
+        self.assertEqual(fresh['strength'], 0)
+        self.assertEqual(fresh['angle'], 0)
+        expect(self.page.locator('[data-vortex-return]')).to_be_hidden()
 
     def test_fluid_study_falls_back_to_the_artwork_without_webgl(self):
         self.page.add_init_script("""(() => {
@@ -1055,18 +1170,16 @@ class WebsiteTests(unittest.TestCase):
         self.page.locator("[data-info]").click()
         expect(self.page.locator("#info-title")).to_have_text("DRIP")
 
-    def test_experiments_have_distinct_previews_and_preview_is_silent(self):
+    def test_experiments_only_lists_flower_and_preview_is_silent(self):
         audio_requests = []
         self.page.on("request", lambda request: audio_requests.append(request.url) if "/audio/" in request.url else None)
         self.visit("experiments.html")
-        expect(self.page.locator(".study-card h2").first).to_contain_text("DRIP")
-        expect(self.page.locator(".study-card h2").nth(1)).to_contain_text("FLOWER")
-        images = self.page.locator(".study-card img").evaluate_all("images => images.map(i => i.getAttribute('src'))")
-        self.assertNotEqual(images[0], images[1])
-        self.assertTrue(images[1].endswith("flower_3.webp"))
-        self.page.locator(".study-card").nth(1).hover()
+        expect(self.page.locator('.study-card')).to_have_count(1)
+        expect(self.page.locator('.study-card h2')).to_contain_text('FLOWER')
+        expect(self.page.locator('.study-card img')).to_have_attribute('src', './images/gallery/thumbs/flower_3.webp')
+        self.page.locator('.study-card').hover()
         self.wait_for_frames()
-        self.assertEqual(self.page.evaluate("window.__drawCalls"), 0)
+        self.assertEqual(self.page.evaluate('window.__drawCalls'), 0)
         self.assertEqual(audio_requests, [])
 
     def test_flower_fluid_keyboard_and_reset(self):
@@ -1091,7 +1204,7 @@ class WebsiteTests(unittest.TestCase):
         try:
             page = context.new_page()
             page.goto(BASE_URL + '/experiments.html', wait_until='networkidle')
-            card = page.locator('.study-card').nth(1)
+            card = page.locator('.study-card')
             expect(card.locator('.study-card-detail')).to_contain_text('DRAG TO STIR')
             card.tap()
             page.wait_for_url('**/experiment.html')
@@ -1244,9 +1357,9 @@ class WebsiteTests(unittest.TestCase):
     def test_experiments_navigation_transitions_and_back(self):
         # Workshop pages remain available by direct URL, outside public navigation.
         self.visit("experiments.html")
-        expect(self.page.locator(".study-card")).to_have_count(2)
+        expect(self.page.locator(".study-card")).to_have_count(1)
         self.assertEqual(self.page.locator("body").get_attribute("class"), None)
-        self.page.locator(".study-card").nth(1).click()
+        self.page.locator(".study-card").click()
         self.page.wait_for_url("**/experiment.html")
         self.page.go_back(wait_until="networkidle")
         self.assertNotIn("page-is-leaving", self.page.locator("body").get_attribute("class") or "")
@@ -1271,7 +1384,7 @@ class WebsiteTests(unittest.TestCase):
                             self.assertGreaterEqual(seek_box["height"], 44)
                             self.assertGreaterEqual(seek_box["x"], 0)
                             self.assertLessEqual(seek_box["x"] + seek_box["width"], width)
-                        for control in self.page.locator(".experience-controls button:not([data-vortex-return])").all():
+                        for control in self.page.locator(".experience-controls button:not([data-vortex-return]):not([hidden])").all():
                             expect(control).to_be_visible()
                             box = control.bounding_box()
                             self.assertGreaterEqual(box["height"], 44)

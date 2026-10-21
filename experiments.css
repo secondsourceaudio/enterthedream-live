@@ -15,6 +15,7 @@
 .studies-description { margin: 0; color: #a0a0a0; font-family: Arial, Helvetica, sans-serif; font-size: 14px; line-height: 1.8; max-width: 370px; }
 .studies-index { display: flex; justify-content: space-between; gap: 16px; padding: 18px 0; border-top: 1px solid #292929; color: #777; font-size: 8px; letter-spacing: .16em; }
 .studies-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px; }
+.studies-grid:has(> .study-card:only-child) { grid-template-columns: minmax(0, 560px); }
 .study-card { display: block; min-width: 0; color: #eee; text-decoration: none; }
 .study-card-image { position: relative; aspect-ratio: 1; overflow: hidden; background: #07090b; }
 .study-card img {

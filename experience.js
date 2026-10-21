@@ -22,6 +22,12 @@
     const dialog = space.querySelector("dialog");
     const status = space.querySelector("[data-status]");
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const modeButtons = [...space.querySelectorAll('[data-visual-mode]')];
+    const modePanels = [...space.querySelectorAll('[data-visual-panel]')];
+    const unavailableModes = new Set();
+    let visualMode = modeButtons.length ? 'whirl' : null;
+    const rendererKey = mode => modeButtons.length ? mode : 'default';
+    const isVisualActive = mode => !modeButtons.length || mode === visualMode;
 
     const readPreference = (key) => {
         try { return localStorage.getItem(key); } catch { return null; }
@@ -34,7 +40,8 @@
     let volume = savedVolume === null ? 0.35 : Number(savedVolume);
     if (!Number.isFinite(volume) || volume < 0 || volume > 1) volume = 0.35;
     const motionDefaultOn = space.hasAttribute("data-motion-default-on");
-    let motionEnabled = motionDefaultOn || !reducedMotion.matches;
+    let motionRequested = motionDefaultOn || !reducedMotion.matches;
+    let motionEnabled = motionRequested;
     let glitchEnabled = false;
     let context = null;
     let analyser = null;
@@ -204,6 +211,10 @@
     }
 
     function updateMotion() {
+        const unavailable = unavailableModes.has(rendererKey(visualMode));
+        motionEnabled = motionRequested && !unavailable;
+        motionButton.disabled = unavailable;
+        if (glitchButton) glitchButton.disabled = unavailable;
         document.documentElement.dataset.motion = motionEnabled ? "on" : "off";
         motionButton.textContent = motionEnabled ? "MOTION ON" : "MOTION OFF";
         motionButton.setAttribute("aria-pressed", String(motionEnabled));
@@ -211,14 +222,32 @@
         window.dispatchEvent(new Event("experience:motionchange"));
     }
     motionButton.addEventListener("click", () => {
-        motionEnabled = !motionEnabled;
+        motionRequested = !motionRequested;
         updateMotion();
         status.textContent = motionEnabled ? "Artwork motion enabled." : "Static artwork selected.";
     });
     reducedMotion.addEventListener("change", () => {
         if (motionDefaultOn) return;
-        motionEnabled = !reducedMotion.matches;
+        motionRequested = !reducedMotion.matches;
         updateMotion();
+    });
+
+    function selectVisualMode(mode, announce = true) {
+        if (!modeButtons.some(button => button.dataset.visualMode === mode)) return;
+        visualMode = mode;
+        space.dataset.activeVisual = mode;
+        for (const button of modeButtons) button.setAttribute('aria-pressed', String(button.dataset.visualMode === mode));
+        for (const panel of modePanels) panel.hidden = panel.dataset.visualPanel !== mode;
+        for (const control of space.querySelectorAll('[data-mode-controls]')) {
+            control.hidden = control.dataset.modeControls !== mode;
+        }
+        updateMotion();
+        window.dispatchEvent(new Event('experience:visualchange'));
+        window.dispatchEvent(new Event('resize'));
+        if (announce) status.textContent = `${mode === 'fluid' ? 'Fluid' : 'Whirl'} selected.`;
+    }
+    for (const button of modeButtons) button.addEventListener('click', () => {
+        if (button.dataset.visualMode !== visualMode) selectVisualMode(button.dataset.visualMode);
     });
 
     if (glitchButton) glitchButton.addEventListener("click", () => {
@@ -301,10 +330,10 @@
     window.SecondSourceExperience = {
         get motionEnabled() { return motionEnabled; },
         get glitchEnabled() { return glitchEnabled; },
-        useStaticArtwork() {
-            motionEnabled = false;
-            motionButton.disabled = true;
-            if (glitchButton) glitchButton.disabled = true;
+        get visualMode() { return visualMode; },
+        isVisualActive,
+        useStaticArtwork(mode = visualMode) {
+            unavailableModes.add(rendererKey(mode));
             updateMotion();
         },
         sampleBass() {
@@ -320,7 +349,8 @@
             let visible = true;
             let previous = null;
             let elapsed = 0;
-            const allowed = () => motionEnabled && visible && !document.hidden;
+            const allowed = () => motionEnabled && visible && !document.hidden &&
+                (!element.dataset.visualPanel || isVisualActive(element.dataset.visualPanel));
             function tick(now) {
                 frame = 0;
                 if (!allowed()) return;
@@ -346,6 +376,7 @@
             observer.observe(element);
             document.addEventListener("visibilitychange", reconcile);
             window.addEventListener("experience:motionchange", reconcile);
+            window.addEventListener("experience:visualchange", reconcile);
             window.addEventListener("pagehide", () => {
                 cancelAnimationFrame(frame);
                 frame = 0;
@@ -359,4 +390,5 @@
     applyVolume();
     updateSound();
     updateMotion();
+    if (modeButtons.length) selectVisualMode(visualMode, false);
 })();

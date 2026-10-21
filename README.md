@@ -11,16 +11,16 @@ From the repository root:
 python3 -m http.server 8000
 ```
 
-Open the local server in your browser. The homepage is DRIP;
-`experiment.html` is FLOWER, a fluid study using the pink gallery photograph;
-`experiments.html` collects both. The experiments index and FLOWER page
+Open the local server in your browser. The homepage is DRIP, with a WHIRL / FLUID
+switch. `experiment.html` is FLOWER, a fluid study using the pink gallery
+photograph; `experiments.html` lists only FLOWER. The experiments index and FLOWER page
 are unlisted workshop drafts: no site navigation links to them, and both request
 that search engines do not index them. Open their filenames directly to work on
 them locally.
 `gallery.html` is the image archive. `src001.html` remains a work-in-progress
 release page and is not linked from the public navigation. Its cover is a static
 image without a link or artwork viewer. The unlisted
-`drip-fluid.html` prototype explores fluid motion using DRIP's artwork. It also
+`drip-fluid.html` page provides the same DRIP fluid mode on a separate URL. It also
 requests that search engines do not index it.
 
 Audio seeking requires a server with HTTP byte-range support, as provided by
@@ -31,6 +31,13 @@ viewers that cannot load relative assets. Play streams the existing public track
 from GitHub. Rebuild it after homepage changes with `python3 scripts/build_preview.py`.
 
 ## Listening and viewing
+
+The homepage starts in **WHIRL**. Select **FLUID** to use the fluid study with the
+same DRIP artwork. Switching stays on the page and keeps the audio, playback
+position, volume, fullscreen and motion choice. Only the selected renderer runs;
+switching clears held gestures and returns the newly selected image to its
+starting composition. A mode that cannot render shows the static artwork while
+the other mode remains available. The mode is not remembered between visits.
 
 The studies load silently. Select **Play** to play the bundled
 Sage Counsel track on DRIP or the original Tone Field loop on FLOWER.
@@ -107,8 +114,8 @@ viewer focus. Reduced-motion preferences disable the page and gallery fades.
 
 ## Fluid studies
 
-`drip-fluid.html` is a separate prototype, with no link in the public navigation.
-It uses a fluid velocity field to transport coordinates in the original DRIP
+The homepage's FLUID mode and `drip-fluid.html` use a fluid velocity field to
+transport coordinates in the original DRIP
 image, preserving its blue palette. Drag to push the image, hold to stir, or
 press Space or Enter on the artwork for a central vortex. Holding right-click
 or **RETURN** settles the image faster; **RESET** restores it immediately.
@@ -119,8 +126,8 @@ artwork fallback and the shared player work as on the homepage.
 The fluid kernels in `drip-fluid.js` are adapted from
 [Pavel Dobryakov's WebGL Fluid Simulation](https://github.com/PavelDoGreat/WebGL-Fluid-Simulation)
 under the MIT license, retained at the top of that file. Both studies run
-locally in the browser and load no third-party scripts. The homepage keeps its
-existing renderer.
+locally in the browser and load no third-party scripts. WHIRL keeps its existing
+renderer.
 
 ## Validation
 
@@ -142,20 +149,21 @@ volume and pause, pointer interaction, motion preferences and rendering pauses,
 native and fallback fullscreen, keyboard dialogs, all seven gallery images,
 navigation and Back, mobile layouts, and audio/storage/WebGL failure paths.
 They also check touch RETURN without triggering pinch, fluid image transport,
-and exact restoration of the original image after RESET.
+exact restoration of the original image after RESET, mode switching during
+playback, inactive renderers pausing, and independent mode fallback.
 
 The image conversion tool is `scripts/optimize_images.py`. Use `--dry-run` to
 preview changes before converting any additional PNG or JPEG artwork.
 
 ## Local studio revision
 
-The experiments index presents DRIP with its artwork and Sage Counsel, and
-FLOWER with the pink photograph and an optional synthesized tone loop. The index
-uses static, silent image previews. Reduced motion shows the original photograph
+The experiments index presents only FLOWER with the pink photograph and an
+optional synthesized tone loop. The index uses a static, silent image preview.
+Reduced motion shows the original photograph
 on FLOWER until motion is enabled. The homepage artwork has no visible title or
 instruction overlay.
 
 The 32-second stereo tone loop was generated locally with
 `scripts/generate_field_assets.py`. Regeneration requires FFmpeg; viewing the
-site needs no additional dependencies. The script also retains the earlier
-wave-field SVG generator. These study pages remain unlisted workshop drafts.
+site needs no additional dependencies. INTERFERENCE and its vector fallback have
+been removed. The FLOWER study and its index remain unlisted workshop drafts.
