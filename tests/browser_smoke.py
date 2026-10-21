@@ -1688,6 +1688,9 @@ class WebsiteTests(unittest.TestCase):
         self.assertEqual(len(drips_after(1)), 1, 'Closely spaced kicks must leave the existing ring alone')
         self.assertEqual(len(drips_after(45)), 1, 'A skipped kick must not become a delayed drop')
         self.page.evaluate('window.__music.beatId = 3; window.__music.beat = .7')
+        self.assertEqual(len(drips_after(1)), 1, 'A kick at the previous drip rate must now be skipped')
+        self.assertEqual(len(drips_after(45)), 1, 'Skipped kicks must not accumulate')
+        self.page.evaluate('window.__music.beatId = 4; window.__music.beat = .7')
         overlapping = drips_after(1)
         self.assertEqual(len(overlapping), 2)
         self.assertEqual(overlapping[0][:2], first[0][:2], 'The next kick must not relocate an existing ring')
@@ -1723,7 +1726,7 @@ class WebsiteTests(unittest.TestCase):
                 }
                 overlapping = Math.max(overlapping, active);
             }, 30);
-            setTimeout(() => { clearInterval(timer); resolve({hits, overlapping}); }, 3500);
+            setTimeout(() => { clearInterval(timer); resolve({hits, overlapping}); }, 5500);
         })""")
         self.assertGreaterEqual(result['hits'], 2, 'Bass detection must keep finding attacks after startup, even in this loud master')
         self.assertGreaterEqual(result['overlapping'], 2, 'Real music must create overlapping drips in the actual renderer')

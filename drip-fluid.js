@@ -607,7 +607,7 @@ SOFTWARE.
                     drips[nextDrip] = {x: .16 + Math.random() * .68, y: .16 + Math.random() * .68,
                         age: 0, strength: .35 + signal.beat * .35};
                     nextDrip = (nextDrip + 1) % drips.length;
-                    dripCooldown = .75;
+                    dripCooldown = 1.5;
                 }
                 consumedBeat = signal.beatId || 0;
                 const twist = automatic ? autoAmount * currents[0].spin * (.06 + signal.mid * .1) : 0;

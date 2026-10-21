@@ -68,7 +68,7 @@ framed fullscreen view.
 VISUALIZER uses a 2048-point FFT and RMS loudness from the track already playing.
 Bass (35–220 Hz) drives the gentle underlying flow. Detected low-frequency
 onsets emit drops at random positions, using the same expanding wave packet
-as a click in WHIRL. A 0.75-second gap between drops lets the rings spread;
+as a click in WHIRL. A 1.5-second gap between drops lets the rings spread;
 closely spaced hits are skipped without being queued. Drops overlap independently and fade over 3.8 seconds;
 midrange (220–2500 Hz) and treble (2500–10000 Hz) add smaller changes in the curls.
 Fast attack and slower release smooth the response, with a short beat cooldown
