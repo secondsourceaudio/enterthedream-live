@@ -12,11 +12,9 @@ python3 -m http.server 8000
 ```
 
 Open the local server in your browser. The homepage is DRIP, with a WHIRL / FLUID
-switch. `experiment.html` is FLOWER, a fluid study using the pink gallery
-photograph; `experiments.html` lists only FLOWER. The experiments index and FLOWER page
-are unlisted workshop drafts: no site navigation links to them, and both request
-that search engines do not index them. Open their filenames directly to work on
-them locally.
+switch. **SOURCES** in the top navigation opens `experiments.html`, which lists
+only FLOWER. `experiment.html` is the public FLOWER fluid and X/Y sound source,
+using the pink gallery photograph.
 `gallery.html` is the image archive. `src001.html` remains a work-in-progress
 release page and is not linked from the public navigation. Its cover is a static
 image without a link or artwork viewer. The unlisted
@@ -39,8 +37,8 @@ switching clears held gestures and returns the newly selected image to its
 starting composition. A mode that cannot render shows the static artwork while
 the other mode remains available. The mode is not remembered between visits.
 
-The studies load silently. Select **Play** to play the bundled
-Sage Counsel track on DRIP or the original Tone Field loop on FLOWER.
+The studies load silently. Select **Play** to play the bundled Sage Counsel
+track on DRIP or enable the live sine instrument on FLOWER.
 Audio is analyzed in the browser; low-frequency energy gently influences the
 artwork. Volume is applied through a gain node
 when Web Audio is available, including on iOS. The sound button pauses and
@@ -119,8 +117,8 @@ transport coordinates in the original DRIP
 image, preserving its blue palette. Drag to push the image, hold to stir, or
 press Space or Enter on the artwork for a central vortex. Holding right-click
 or **RETURN** settles the image faster; **RESET** restores it immediately.
-`experiment.html` uses the same interactions with the FLOWER image and the
-optional Tone Field loop. Audio remains optional. Motion off, hidden tabs, static
+`experiment.html` uses the same fluid interactions with the FLOWER image and a
+live X/Y tone. Audio remains optional. Motion off, hidden tabs, static
 artwork fallback and the shared player work as on the homepage.
 
 The fluid kernels in `drip-fluid.js` are adapted from
@@ -128,6 +126,20 @@ The fluid kernels in `drip-fluid.js` are adapted from
 under the MIT license, retained at the top of that file. Both studies run
 locally in the browser and load no third-party scripts. WHIRL keeps its existing
 renderer.
+
+## FLOWER X/Y sound
+
+After selecting **Play**, hold and drag on the image. X moves continuously through
+three octaves (55–440 Hz); Y changes the tone from a plain sine to a brighter
+sound with sine modulation. Pitch and timbre ease between positions. Releasing
+keeps the last tone; Pause stops it. Mute and volume use the shared controls.
+The arrow keys also adjust X/Y; Shift makes larger steps. Reset restores the
+image and the centre tone. The instrument works with static artwork and without
+WebGL. Leaving the page stops sound.
+
+`flower-tone.js` creates its oscillator graph only after Play, using the shared
+audio analyser and volume output in `experience.js`. It downloads no audio and
+has no fixed-duration timeline. The DRIP player keeps its track and seek bar.
 
 ## Validation
 
@@ -151,19 +163,19 @@ navigation and Back, mobile layouts, and audio/storage/WebGL failure paths.
 They also check touch RETURN without triggering pinch, fluid image transport,
 exact restoration of the original image after RESET, mode switching during
 playback, inactive renderers pausing, and independent mode fallback.
+The sound checks measure FLOWER's actual output spectrum, touch and keyboard
+pitch changes, timbre, mute, volume and pause.
 
 The image conversion tool is `scripts/optimize_images.py`. Use `--dry-run` to
 preview changes before converting any additional PNG or JPEG artwork.
 
 ## Local studio revision
 
-The experiments index presents only FLOWER with the pink photograph and an
-optional synthesized tone loop. The index uses a static, silent image preview.
+SOURCES presents only FLOWER with the pink photograph and its live X/Y tone.
+The index uses a static, silent image preview.
 Reduced motion shows the original photograph
 on FLOWER until motion is enabled. The homepage artwork has no visible title or
 instruction overlay.
 
-The 32-second stereo tone loop was generated locally with
-`scripts/generate_field_assets.py`. Regeneration requires FFmpeg; viewing the
-site needs no additional dependencies. INTERFERENCE and its vector fallback have
-been removed. The FLOWER study and its index remain unlisted workshop drafts.
+INTERFERENCE and its vector fallback have been removed. SOURCES and FLOWER are
+public; the release draft and the standalone DRIP fluid URL remain unlisted.

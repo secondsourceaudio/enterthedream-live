@@ -5,7 +5,9 @@
     const space = document.querySelector("[data-experience]");
     if (!space) return;
 
-    const audio = space.querySelector("audio");
+    const audio = space.hasAttribute('data-xy-tone') && window.SecondSourceTone
+        ? window.SecondSourceTone.create() : space.querySelector('audio');
+    if (!audio) return;
     const trackTitle = audio.dataset.trackTitle || "Sage Counsel";
     const soundButton = space.querySelector("[data-sound]");
     const compactSound = soundButton.hasAttribute("data-compact-sound");
@@ -76,7 +78,7 @@
             candidateAnalyser.fftSize = 512;
             candidateAnalyser.smoothingTimeConstant = 0.8;
             const candidateGain = candidate.createGain();
-            source = candidate.createMediaElementSource(audio);
+            source = audio.createSource ? audio.createSource(candidate) : candidate.createMediaElementSource(audio);
             source.connect(candidateAnalyser);
             candidateAnalyser.connect(candidateGain);
             candidateGain.connect(candidate.destination);
@@ -165,6 +167,7 @@
     });
     audio.addEventListener("play", updateSound);
     audio.addEventListener("pause", updateSound);
+    window.addEventListener('pagehide', () => audio.pause());
     audio.addEventListener("error", () => {
         if (rejectPlayback) rejectPlayback(new Error("Sound could not load"));
         audio.pause();
@@ -331,6 +334,8 @@
         get motionEnabled() { return motionEnabled; },
         get glitchEnabled() { return glitchEnabled; },
         get visualMode() { return visualMode; },
+        get soundPlaying() { return !audio.paused; },
+        setTonePosition(x, y) { if (audio.setPosition) audio.setPosition(x, y); },
         isVisualActive,
         useStaticArtwork(mode = visualMode) {
             unavailableModes.add(rendererKey(mode));
@@ -380,7 +385,6 @@
             window.addEventListener("pagehide", () => {
                 cancelAnimationFrame(frame);
                 frame = 0;
-                audio.pause();
             });
             window.addEventListener("pageshow", reconcile);
             reconcile();

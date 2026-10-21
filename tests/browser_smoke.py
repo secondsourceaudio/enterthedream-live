@@ -121,16 +121,6 @@ class WebsiteTests(unittest.TestCase):
         }""", frames)
 
     def check_study(self, path):
-        if path == 'experiment.html':
-            self.page.add_init_script("""(() => {
-                const draw = WebGLRenderingContext.prototype.drawArrays;
-                WebGLRenderingContext.prototype.drawArrays = function (...args) {
-                    const program = this.getParameter(this.CURRENT_PROGRAM);
-                    const curl = this.getUniformLocation(program, 'u_curlStrength');
-                    if (curl) window.__fluidCurl = this.getUniform(program, curl);
-                    return draw.apply(this, args);
-                };
-            })();""")
         audio_requests = []
         self.page.on("request", lambda request: audio_requests.append(request.url)
                      if "/audio/" in request.url else None)
@@ -138,7 +128,7 @@ class WebsiteTests(unittest.TestCase):
         self.page.wait_for_function("document.querySelector('#visual').classList.contains('is-ready') && window.__drawCalls > 0")
         self.assertEqual(audio_requests, [], "Sound should not download before consent")
         expect(self.page.locator("[data-sound]")).to_have_attribute("aria-label",
-            "Play Sage Counsel" if path == "index.html" else "Play Tone Field")
+            "Play Sage Counsel")
         audio = self.page.locator("audio")
         self.assertTrue(audio.evaluate("a => a.paused"))
         art = self.page.locator("#visual-container")
@@ -154,14 +144,11 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator("[data-sound]")).to_have_attribute("aria-pressed", "true")
         audio.evaluate("a => { a.currentTime = 30; }")
         self.page.wait_for_function("window.SecondSourceExperience.sampleBass() > 0.01")
-        if path == 'experiment.html':
-            self.page.wait_for_function('window.__fluidCurl > 18.08')
-        else:
-            self.page.wait_for_function("""() => {
-                const gl = document.querySelector('canvas').getContext('webgl');
-                const program = gl.getParameter(gl.CURRENT_PROGRAM);
-                return gl.getUniform(program, gl.getUniformLocation(program, 'u_sound')) > 0.01;
-            }""")
+        self.page.wait_for_function("""() => {
+            const gl = document.querySelector('canvas').getContext('webgl');
+            const program = gl.getParameter(gl.CURRENT_PROGRAM);
+            return gl.getUniform(program, gl.getUniformLocation(program, 'u_sound')) > 0.01;
+        }""")
         self.page.locator("[data-volume]").fill("0.5")
         expect(self.page.locator("[data-volume-output]")).to_have_text("50%")
         expect(self.page.locator("[data-volume]")).to_have_attribute("aria-valuetext", "50 percent")
@@ -184,6 +171,143 @@ class WebsiteTests(unittest.TestCase):
 
     def test_landing_sound_and_actual_audio_reactivity(self):
         self.check_study("index.html")
+
+    def prepare_flower_tone(self):
+        # Probe the real signal just before it reaches the speakers.
+        self.page.add_init_script("""(() => {
+            const Native = window.AudioContext;
+            window.__toneContexts = [];
+            window.AudioContext = class extends Native {
+                constructor(...args) { super(...args); window.__toneContexts.push(this); }
+                createGain() {
+                    const node = super.createGain();
+                    const connect = node.connect;
+                    const context = this;
+                    node.connect = function (destination, ...args) {
+                        if (destination === context.destination) window.__toneOutput = node;
+                        return connect.call(this, destination, ...args);
+                    };
+                    return node;
+                }
+            };
+        })();""")
+        self.visit('experiment.html')
+
+    def play_flower_tone(self):
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function('window.SecondSourceExperience.soundPlaying')
+        self.page.evaluate("""() => {
+            const context = window.__toneContexts[0];
+            const probe = context.createAnalyser();
+            probe.fftSize = 8192;
+            probe.smoothingTimeConstant = 0;
+            window.__toneOutput.connect(probe);
+            const samples = new Float32Array(probe.fftSize);
+            const spectrum = new Float32Array(probe.frequencyBinCount);
+            window.__readFlowerTone = () => {
+                probe.getFloatTimeDomainData(samples);
+                probe.getFloatFrequencyData(spectrum);
+                let power = 0, peak = 1, total = 0, upper = 0;
+                for (const sample of samples) power += sample * sample;
+                for (let i = 2; i < spectrum.length; i++) if (spectrum[i] > spectrum[peak]) peak = i;
+                for (let i = 1; i < spectrum.length; i++) {
+                    const energy = Math.pow(10, spectrum[i] / 10);
+                    total += energy;
+                    if (i > peak * 2) upper += energy;
+                }
+                return {rms: Math.sqrt(power / samples.length), peak: peak * context.sampleRate / probe.fftSize,
+                    harmonics: upper / Math.max(total, 1e-20)};
+            };
+        }""")
+        self.page.wait_for_function('window.__readFlowerTone().rms > .005')
+
+    def test_flower_xy_changes_real_pitch_and_timbre_with_working_sound_controls(self):
+        requests = []
+        self.page.on('request', lambda request: requests.append(request.url) if '/audio/' in request.url else None)
+        self.prepare_flower_tone()
+        self.assertEqual(self.page.evaluate('window.__toneContexts.length'), 0)
+        self.page.locator('#visual-container').click()
+        self.assertEqual(self.page.evaluate('window.__toneContexts.length'), 0, 'Artwork must not start audio before Play')
+        self.assertFalse(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
+        self.play_flower_tone()
+        box = self.page.locator('#visual-container').bounding_box()
+        def point(x, y):
+            self.page.mouse.move(box['x'] + box['width'] * x, box['y'] + box['height'] * (1 - y), steps=3)
+
+        point(.15, .05)
+        self.page.mouse.down()
+        self.page.wait_for_function('window.__readFlowerTone().peak < 120')
+        low = self.page.evaluate('window.__readFlowerTone().peak')
+        point(.85, .05)
+        self.page.wait_for_function('window.__readFlowerTone().peak > 260')
+        self.assertGreater(self.page.evaluate('window.__readFlowerTone().peak'), low * 2.5)
+        point(.5, .05)
+        self.page.wait_for_function('window.__readFlowerTone().peak > 130 && window.__readFlowerTone().peak < 180 && window.__readFlowerTone().harmonics < .01')
+        warm = self.page.evaluate('window.__readFlowerTone().harmonics')
+        point(.5, .95)
+        self.page.wait_for_function('before => window.__readFlowerTone().harmonics > before + .015', arg=warm)
+        self.page.mouse.up()
+        settled = self.page.evaluate('window.__readFlowerTone()')
+        point(.1, .1)
+        self.wait_for_frames(8)
+        self.assertAlmostEqual(self.page.evaluate('window.__readFlowerTone().peak'), settled['peak'], delta=12)
+        self.page.locator('[data-fluid-reset]').click()
+        self.page.wait_for_function('window.__readFlowerTone().rms > .005')
+        self.wait_for_frames(6)
+        original = self.page.evaluate('window.__readFlowerTone().rms')
+        self.page.locator('[data-volume]').fill('0.7')
+        self.page.wait_for_function('before => window.__readFlowerTone().rms > before * 1.8', arg=original)
+        self.page.locator('[data-mute]').click()
+        self.page.wait_for_function('window.__readFlowerTone().rms < .0001')
+        self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
+        self.page.locator('[data-mute]').click()
+        self.page.wait_for_function('window.__readFlowerTone().rms > .005')
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function('window.__readFlowerTone().rms < .0001')
+        self.assertFalse(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function('window.__readFlowerTone().rms > .005')
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function('window.__readFlowerTone().rms < .0001')
+        self.assertEqual(self.page.evaluate('window.__toneContexts.length'), 1)
+        self.assertEqual(requests, [], 'The live tone must not download an audio file')
+
+    def test_flower_xy_touch_and_keyboard_work_with_motion_off(self):
+        self.page.set_viewport_size({'width': 390, 'height': 844})
+        self.prepare_flower_tone()
+        self.play_flower_tone()
+        self.page.locator('[data-motion-toggle]').click()
+        self.assertEqual(self.page.locator('#visual-container').evaluate('e => getComputedStyle(e).touchAction'), 'none')
+        session = self.context.new_cdp_session(self.page)
+        session.send('Emulation.setTouchEmulationEnabled', {'enabled': True, 'maxTouchPoints': 2})
+        box = self.page.locator('#visual-container').bounding_box()
+        def point(x):
+            return {'id': 1, 'x': box['x'] + box['width'] * x, 'y': box['y'] + box['height'] * .8}
+        session.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [point(.15)]})
+        self.page.wait_for_function('window.__readFlowerTone().peak < 120')
+        session.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [point(.85)]})
+        self.page.wait_for_function('window.__readFlowerTone().peak > 310')
+        high = self.page.evaluate('window.__readFlowerTone().peak')
+        session.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+        self.page.locator('#visual-container').focus()
+        self.page.keyboard.press('Shift+ArrowLeft')
+        self.page.wait_for_function('high => window.__readFlowerTone().peak < high * .9', arg=high)
+        self.page.evaluate("window.dispatchEvent(new Event('pagehide'))")
+        self.page.wait_for_function('window.__readFlowerTone().rms < .0001')
+        self.assertFalse(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
+
+    def test_flower_tone_still_plays_without_webgl(self):
+        self.page.add_init_script("""(() => {
+            const getContext = HTMLCanvasElement.prototype.getContext;
+            HTMLCanvasElement.prototype.getContext = function (type, ...args) {
+                return type === 'webgl' ? null : getContext.call(this, type, ...args);
+            };
+        })();""")
+        self.prepare_flower_tone()
+        expect(self.page.locator('[data-motion-toggle]')).to_be_disabled()
+        self.play_flower_tone()
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function('window.__readFlowerTone().rms < .0001')
 
     def test_timeline_waits_for_play_and_seeks_without_changing_playback(self):
         serve_seekable_audio(self.page)
@@ -540,7 +664,7 @@ class WebsiteTests(unittest.TestCase):
         self.assertNotIn('Martin', self.page.locator('#experience-info').inner_text())
         self.assertNotIn('Solli', self.page.locator('#experience-info').inner_text())
         self.assertTrue(self.page.locator('.site-nav a').evaluate_all(
-            "links => links.every(link => !/src001|experiments|drip-fluid/.test(link.getAttribute('href')))"))
+            "links => links.every(link => !/src001|drip-fluid/.test(link.getAttribute('href')))"))
 
     def test_mobile_return_with_artwork_finger_does_not_start_pinch(self):
         self.page.set_viewport_size({'width': 390, 'height': 844})
@@ -573,7 +697,7 @@ class WebsiteTests(unittest.TestCase):
         panel = self.page.locator('#fluid-container' if front else '#visual-container')
         self.page.wait_for_function('selector => document.querySelector(selector).dataset.fluid', arg=canvas_selector)
         expect(self.page.locator(canvas_selector)).to_have_attribute('data-fluid', 'ready')
-        if not front:
+        if path == 'drip-fluid.html':
             expect(self.page.locator('meta[name="robots"]')).to_have_attribute('content', 'noindex, nofollow')
         self.assertEqual(panel.locator('img').evaluate('image => image.naturalWidth'), source_width)
 
@@ -617,7 +741,7 @@ class WebsiteTests(unittest.TestCase):
             self.assertGreater(pixels(), .01, 'Keyboard interaction must move the artwork')
             self.page.locator('[data-fluid-reset]').click()
             self.assertLess(pixels(), .01)
-        self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
+        self.assertFalse(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
 
     def test_fluid_study_moves_artwork_and_reset_recovers_the_original(self):
         self.check_fluid_study('drip-fluid.html', 3200)
@@ -1143,9 +1267,6 @@ class WebsiteTests(unittest.TestCase):
         touch('touchEnd', [])
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
 
-    def test_flower_fluid_sound_and_pointer_interaction(self):
-        self.check_study("experiment.html")
-
     def test_static_mode_stops_rendering_and_new_visit_starts_motion(self):
         self.visit()
         self.page.wait_for_function("window.__drawCalls > 0")
@@ -1354,13 +1475,16 @@ class WebsiteTests(unittest.TestCase):
         self.page.keyboard.press("Escape")
         expect(buttons.first).to_be_focused()
 
-    def test_experiments_navigation_transitions_and_back(self):
-        # Workshop pages remain available by direct URL, outside public navigation.
-        self.visit("experiments.html")
+    def test_sources_navigation_transitions_and_back(self):
+        self.visit()
+        self.page.locator('.site-nav').get_by_role('link', name='SOURCES').click()
+        self.page.wait_for_url('**/experiments.html')
+        expect(self.page.locator('h1')).to_have_text('SOURCES')
+        expect(self.page.locator('meta[name="robots"]')).to_have_count(0)
         expect(self.page.locator(".study-card")).to_have_count(1)
-        self.assertEqual(self.page.locator("body").get_attribute("class"), None)
         self.page.locator(".study-card").click()
         self.page.wait_for_url("**/experiment.html")
+        expect(self.page.locator('meta[name="robots"]')).to_have_count(0)
         self.page.go_back(wait_until="networkidle")
         self.assertNotIn("page-is-leaving", self.page.locator("body").get_attribute("class") or "")
 
@@ -1377,7 +1501,7 @@ class WebsiteTests(unittest.TestCase):
                     if path in ["index.html", "drip-fluid.html", "experiment.html"]:
                         if path == "index.html":
                             expect(self.page.locator('[data-vortex-return]')).to_be_hidden()
-                        if path in ["index.html", "drip-fluid.html", "experiment.html"]:
+                        if path in ["index.html", "drip-fluid.html"]:
                             seek = self.page.locator("[data-seek]")
                             expect(seek).to_be_visible()
                             seek_box = seek.bounding_box()
