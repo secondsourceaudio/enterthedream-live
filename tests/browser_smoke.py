@@ -84,6 +84,38 @@ class WebsiteTests(unittest.TestCase):
             requestAnimationFrame(next);
         })""", count)
 
+    def start_controlled_drip(self):
+        # Advance the renderer explicitly, independently of browser input latency.
+        self.context.add_init_script("""(() => {
+            let experience;
+            Object.defineProperty(window, 'SecondSourceExperience', {
+                get: () => experience,
+                set(value) {
+                    experience = value;
+                    value.createRenderLoop = draw => {
+                        let elapsed = 0;
+                        window.__stepDrip = frames => {
+                            for (let i = 0; i < frames; i++) draw(elapsed += 1000 / 60);
+                        };
+                        window.__stepDrip(1);
+                    };
+                }
+            });
+        })();""")
+        self.visit()
+        self.page.wait_for_function("window.__stepDrip && document.querySelector('#visual').classList.contains('is-ready')")
+
+    def step_drip(self, frames):
+        return self.page.evaluate("""frames => {
+            window.__stepDrip(frames);
+            const gl = document.querySelector('#visual').getContext('webgl');
+            const p = gl.getParameter(gl.CURRENT_PROGRAM);
+            const value = name => gl.getUniform(p, gl.getUniformLocation(p, name));
+            return {strength: value('u_holdStrength'), angle: value('u_holdAngle'),
+                time: value('u_time'), center: Array.from(value('u_holdCenter')),
+                pull: value('u_holdPull'), spin: value('u_holdSpin')};
+        }""", frames)
+
     def check_study(self, path):
         audio_requests = []
         self.page.on("request", lambda request: audio_requests.append(request.url)
@@ -224,14 +256,13 @@ class WebsiteTests(unittest.TestCase):
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
 
     def test_click_and_small_moves_do_not_start_the_whirl(self):
-        self.visit()
-        self.page.wait_for_function('window.__drawCalls > 0')
+        self.start_controlled_drip()
         box = self.page.locator('#visual-container').bounding_box()
         x, y = box['x'] + box['width'] * .5, box['y'] + box['height'] * .5
         self.page.mouse.move(x, y)
         self.page.mouse.down()
         self.page.mouse.move(x + 3, y + 2)
-        self.wait_for_frames(5)
+        self.step_drip(5)
         def whirl():
             return self.page.evaluate("""() => {
                 const gl = document.querySelector('#visual').getContext('webgl');
@@ -241,11 +272,11 @@ class WebsiteTests(unittest.TestCase):
         self.assertEqual(whirl(), [0, 0])
         self.assertGreaterEqual(self.drip_uniforms()[0][2], 0)
         self.page.mouse.move(x + 60, y + 30, steps=5)
-        self.wait_for_frames(8)
+        self.step_drip(8)
         self.assertTrue(all(value > .4 for value in whirl()))
         self.page.mouse.up()
         self.page.mouse.down()
-        self.wait_for_frames(3)
+        self.step_drip(3)
         self.assertEqual(whirl(), [0, 0], 'A new click must not restart a previous whirl')
         self.page.mouse.up()
 
@@ -347,38 +378,12 @@ class WebsiteTests(unittest.TestCase):
         self.assertEqual(sum(d[2] >= 0 for d in self.drip_uniforms()), 1)
 
     def test_following_hold_keeps_its_spin_rate_and_moves_without_jumps(self):
-        # Control frame time so pointer-event frequency cannot affect the result.
-        self.context.add_init_script("""(() => {
-            let experience;
-            Object.defineProperty(window, 'SecondSourceExperience', {
-                get: () => experience,
-                set(value) {
-                    experience = value;
-                    value.createRenderLoop = draw => {
-                        let elapsed = 0;
-                        window.__stepDrip = frames => {
-                            for (let i = 0; i < frames; i++) draw(elapsed += 1000 / 60);
-                        };
-                        window.__stepDrip(1);
-                    };
-                }
-            });
-        })();""")
-        self.visit()
-        self.page.wait_for_function("window.__stepDrip && document.querySelector('#visual').classList.contains('is-ready')")
+        self.start_controlled_drip()
         box = self.page.locator('#visual-container').bounding_box()
         self.page.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
         self.page.mouse.down()
 
-        def step(frames):
-            return self.page.evaluate("""frames => {
-                window.__stepDrip(frames);
-                const gl = document.querySelector('#visual').getContext('webgl');
-                const p = gl.getParameter(gl.CURRENT_PROGRAM);
-                const value = name => gl.getUniform(p, gl.getUniformLocation(p, name));
-                return {strength: value('u_holdStrength'), angle: value('u_holdAngle'),
-                    time: value('u_time'), center: Array.from(value('u_holdCenter'))};
-            }""", frames)
+        step = self.step_drip
 
         before = step(180)
         previous = step(1)
@@ -406,6 +411,70 @@ class WebsiteTests(unittest.TestCase):
         early_follow = step(30)
         self.assertGreater(early_follow['angle'], .01, 'Starting to follow early must not leave the rotation at zero')
         self.page.mouse.up()
+
+    def test_right_hold_boosts_return_and_releases_outside_artwork(self):
+        self.start_controlled_drip()
+        box = self.page.locator('#visual-container').bounding_box()
+        self.page.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+        self.page.mouse.down()
+        early = self.step_drip(36)
+        self.assertGreater(early['angle'], 0, 'Wind-up should now begin within 600 ms')
+        grown = self.step_drip(144)
+        self.assertGreater(grown['strength'], .4, 'The shorter wind-up must build a substantial field within three seconds')
+        self.page.mouse.up()
+        before = self.step_drip(90)
+        normal = self.step_drip(4)
+        normal_speed = (before['angle'] - normal['angle']) / (normal['time'] - before['time'])
+        self.assertGreater(normal_speed, 0)
+        self.page.evaluate("document.addEventListener('contextmenu', e => window.__rightMenuPrevented = e.defaultPrevented)")
+        self.page.mouse.down(button='right')
+        self.assertTrue(self.page.evaluate('window.__rightMenuPrevented'), 'The artwork must prevent the native right-click menu')
+        boosted = self.step_drip(4)
+        boosted_speed = (normal['angle'] - boosted['angle']) / (boosted['time'] - normal['time'])
+        self.assertAlmostEqual(boosted_speed, normal_speed * 3, delta=normal_speed * .03)
+        self.assertEqual(boosted['center'], normal['center'])
+        self.assertEqual(boosted['strength'], normal['strength'])
+        self.assertEqual(sum(d[2] >= 0 for d in self.drip_uniforms()), 1, 'Right-click must not create another impact')
+        self.page.mouse.move(box['x'] + box['width'] * 1.1, box['y'] + box['height'] * .8)
+        self.page.mouse.up(button='right')
+        released = self.step_drip(4)
+        released_speed = (boosted['angle'] - released['angle']) / (released['time'] - boosted['time'])
+        self.assertAlmostEqual(released_speed, normal_speed, delta=normal_speed * .03,
+            msg='Releasing right-click outside the artwork must remove the boost')
+        self.assertEqual(released['center'], normal['center'])
+
+    def test_right_button_chord_unwinds_and_left_can_resume(self):
+        self.start_controlled_drip()
+        box = self.page.locator('#visual-container').bounding_box()
+        self.page.mouse.move(box['x'] + box['width'] / 2, box['y'] + box['height'] / 2)
+        self.page.mouse.down()
+        held = self.step_drip(180)
+        # Native mouse events cover the chord that produces no second pointerdown.
+        self.page.mouse.down(button='right')
+        self.page.mouse.move(box['x'] + box['width'] * .8, box['y'] + box['height'] * .2)
+        reversing = self.step_drip(12)
+        self.assertLess(reversing['angle'], held['angle'], 'Right-click should immediately return an existing held vortex')
+        self.assertEqual(reversing['strength'], held['strength'])
+        self.assertEqual(reversing['center'], held['center'], 'Right-click return must stay at its original position')
+        self.page.mouse.up(button='right')
+        resumed = self.step_drip(12)
+        self.assertGreater(resumed['angle'], reversing['angle'], 'Keeping left held should resume winding after right is released')
+        self.assertGreaterEqual(resumed['strength'], held['strength'])
+        self.assertNotEqual(resumed['center'], reversing['center'])
+        self.assertEqual(resumed['spin'], held['spin'])
+        self.assertEqual(sum(d[2] >= 0 for d in self.drip_uniforms()), 1)
+        self.page.mouse.down(button='right')
+        boosted = self.step_drip(12)
+        self.page.mouse.up()
+        still_boosted = self.step_drip(4)
+        self.assertLess(still_boosted['angle'], boosted['angle'],
+            'Releasing left while right is held must not restart the coast or reset the vortex')
+        self.assertEqual(still_boosted['strength'], boosted['strength'])
+        boost_speed = (boosted['angle'] - still_boosted['angle']) / (still_boosted['time'] - boosted['time'])
+        self.page.mouse.up(button='right')
+        normal = self.step_drip(4)
+        normal_speed = (still_boosted['angle'] - normal['angle']) / (normal['time'] - still_boosted['time'])
+        self.assertAlmostEqual(normal_speed * 3, boost_speed, delta=boost_speed * .03)
 
     def test_press_before_recovery_resumes_the_existing_vortex(self):
         self.visit()
@@ -694,8 +763,8 @@ class WebsiteTests(unittest.TestCase):
         reverse_speed = (reversing[0] - released[0]) / (released[1] - reversing[1])
         self.assertGreater(released[0], 0, 'Release must not snap the image back')
         self.assertGreater(reverse_speed, 0, 'The held whirl should reverse on release')
-        self.assertAlmostEqual(reverse_speed, forward_speed * .27, delta=forward_speed * .01,
-            msg='The reverse should be about 27% of the speed at release')
+        self.assertAlmostEqual(reverse_speed, forward_speed * .4, delta=forward_speed * .01,
+            msg='The reverse should be about 40% of the speed at release')
         self.assertEqual(released[2:], coasting[2:], 'The field must keep its size and center while unwinding')
         self.page.mouse.move(box['x'] + box['width'] * .1, box['y'] + box['height'] * .9, steps=8)
         self.wait_for_frames(8)

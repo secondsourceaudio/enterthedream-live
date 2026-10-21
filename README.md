@@ -56,7 +56,7 @@ DRIP uses damped ripple crests and troughs for clicks or taps.
 Dragging adds no repeated drops or fine ripple bands; it creates a
 broader, stronger whirl that follows stirring around the initial touch and
 coasts after release. Up to eight click impacts can overlap independently.
-A stationary press begins building a separate whirlpool after 650 ms.
+A stationary press begins building a separate whirlpool after 450 ms.
 Once started, it follows the held pointer smoothly while preserving its
 accumulated strength, rotation and spin direction. Its last visible position
 stays fixed during the forward coast and reverse after release.
@@ -66,9 +66,14 @@ stationary buildup eases the rotation toward a faster pace.
 Temporary mouse capture loss does not cancel it; release is tracked across the
 window, including outside the artwork and through compatibility mouse events.
 Dragging from the start remains a separate stirring gesture.
-Its reach and rotation increase over the next seven seconds, then keep turning
-while held. Releasing lets it coast forward for 1.1 seconds, then smoothly reverse
-at roughly 27% of its forward speed. Its center and reach stay fixed as
+Its reach and rotation increase over the next five seconds, then keep turning
+while held. Releasing lets it coast forward for 0.75 seconds, then smoothly reverse
+at roughly 40% of its forward speed. Holding right-click on the artwork skips
+the coast and boosts the return by 3×, including while left-click is held.
+Releasing right-click restores the normal return speed, or resumes winding up
+if left-click is still held. Mouse release outside the artwork, blur and motion
+off clear the boost. Right-click creates no impact or browser context menu.
+Its center and reach stay fixed as
 the rotation and inward pull return completely to zero, restoring the original
 artwork rather than shrinking the vortex away. Pressing again before recovery
 resumes the current rotation, size and inward pull without a new impact or a

@@ -2348,8 +2348,12 @@ if (gl) {
     let holdReleaseAngle = 0;
     let holdReleasePull = 0;
     let holdStarted = false;
-    const holdCoastDuration = 1.1;
-    const holdReverseRamp = 0.8;
+    let rightReturnHeld = false;
+    const holdDelay = 0.45;
+    const holdChargeDuration = 5;
+    const holdCoastDuration = 0.75;
+    const holdReverseRamp = 0.55;
+    const holdReverseBoost = 3;
     const holdFollowSpeed = 0.55;
 
     function clearHold() {
@@ -2368,9 +2372,22 @@ if (gl) {
         // or gently start winding forward again if it was already reversing.
         holdForwardSpeed = holdReleaseTime < holdCoastDuration
             ? holdForwardSpeed * (1 - holdReleaseTime / holdCoastDuration) : 0;
-        holdElapsed = 0.65 + holdStrength * 7;
+        holdElapsed = holdDelay + holdStrength * holdChargeDuration;
         holdReleaseTime = -1;
         return true;
+    }
+
+    function beginHoldReturn(immediate = false) {
+        if (!holdStarted || holdStrength <= 0) return;
+        if (holdReleaseTime >= 0 && (!immediate || holdReleaseTime >= holdCoastDuration)) return;
+        if (holdReleaseTime < 0) {
+            holdReverseSpeed = Math.max(0.12, holdForwardSpeed * 0.40);
+        }
+        holdReleaseAngle = holdAngle;
+        holdReleasePull = holdPull;
+        // Right-click interrupts the coast at the current angle without a jump.
+        if (immediate) holdForwardSpeed = 0;
+        holdReleaseTime = immediate ? holdCoastDuration : 0;
     }
 
 
@@ -2520,6 +2537,15 @@ if (gl) {
     /* =========================================
        POINTER DOWN
     ========================================== */
+
+    // Mouse events also report right-button presses while left is already held;
+    // pointerdown alone does not fire for that button combination.
+    container.addEventListener("mousedown", function (event) {
+        if (event.button !== 2 || !window.SecondSourceExperience.motionEnabled) return;
+        event.preventDefault();
+        rightReturnHeld = true;
+        beginHoldReturn(true);
+    });
 
     container.addEventListener("pointerdown", function (event) {
 
@@ -2765,10 +2791,7 @@ if (gl) {
             const wasDragging = dragHasStarted;
             holdElapsed = 0;
             if (event.type === "pointerup") {
-                holdReverseSpeed = Math.max(0.06, holdForwardSpeed * 0.20) * 1.35;
-                holdReleaseTime = 0;
-                holdReleaseAngle = holdAngle;
-                holdReleasePull = holdPull;
+                beginHoldReturn(rightReturnHeld);
             } else {
                 clearHold();
             }
@@ -2806,6 +2829,7 @@ if (gl) {
     window.addEventListener("pointercancel", releasePointer);
     container.addEventListener("lostpointercapture", releasePointer);
     function releaseMousePointers(event) {
+        if (!(event.buttons & 2)) rightReturnHeld = false;
         if (event.type === "mousemove" && (event.buttons & 1)) return;
         if (event.type === "mouseup" && event.button !== 0) return;
         for (const [pointerId, pointer] of viewPointers) {
@@ -2828,6 +2852,7 @@ if (gl) {
     });
 
     function clearGesture() {
+        rightReturnHeld = false;
         for (const id of viewPointers.keys()) {
             if (container.hasPointerCapture(id)) container.releasePointerCapture(id);
         }
@@ -2906,18 +2931,20 @@ if (gl) {
 
         // Simulation time excludes hidden, offscreen and motion-off periods.
         const holding = dragPointerId !== null && viewPointers.size === 1 &&
-            viewScale === 1 && !dragHasStarted;
+            viewScale === 1 && !dragHasStarted && !rightReturnHeld;
         const holdFollowDistance = Math.hypot(
             targetPointerX - holdCenterX, targetPointerY - holdCenterY
         );
         const holdFollowing = holdStarted && holdFollowDistance > 0.003;
         if (holding) {
+            // Releasing right-click while left remains held resumes this vortex.
+            if (holdReleaseTime >= 0) resumeHold();
             holdElapsed += seconds;
-            if (holdElapsed >= 0.65 && !holdStarted) {
+            if (holdElapsed >= holdDelay && !holdStarted) {
                 holdStarted = true;
                 holdForwardSpeed = 0.15;
             }
-            const charge = clamp((holdElapsed - 0.65) / 7, 0, 1);
+            const charge = clamp((holdElapsed - holdDelay) / holdChargeDuration, 0, 1);
             holdStrength += (charge - holdStrength) * smoothing(0.10);
             // Grow the field independently of its angular speed. Moving it keeps
             // the existing spin rate; stationary buildup eases toward a faster spin.
@@ -2928,7 +2955,9 @@ if (gl) {
             holdAngle += holdForwardSpeed * seconds;
             holdPull += (holdStrength - holdPull) * smoothing(0.06);
         } else if (holdReleaseTime >= 0 && holdStrength > 0) {
-            holdReleaseTime += seconds;
+            // Advance a continuous return clock so changing the boost cannot
+            // reset the phase or jump to a different image deformation.
+            holdReleaseTime += seconds * (rightReturnHeld ? holdReverseBoost : 1);
             // Integrate the slowing forward spin, then ease into a slow reverse.
             // Keep the last visible position and reach until deformation is zero.
             const coastTime = Math.min(holdReleaseTime, holdCoastDuration);
