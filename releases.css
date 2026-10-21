@@ -1,4 +1,4 @@
-/* The release catalogue keeps the cover and its essential details together. */
+/* Keep the release artwork, notes and credits together. */
 .releases-page {
     flex: 1;
     width: 100%;
@@ -30,6 +30,33 @@
 .release-title { margin: 0 0 16px; font-size: clamp(30px, 4vw, 52px); line-height: 1.1; letter-spacing: .06em; }
 .release-artist { margin: 0; color: #c9c9c9; font-size: 12px; line-height: 1.8; letter-spacing: .12em; }
 
+.release-description {
+    margin-top: 28px;
+    color: #b7b7b7;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    line-height: 1.8;
+}
+.release-description p { margin: 0 0 16px; }
+.release-description p:last-child { margin-bottom: 0; }
+.release-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    margin: 28px 0 0;
+    padding-top: 24px;
+    border-top: 1px solid #292929;
+}
+.release-facts dt { color: #929292; font-size: 8px; line-height: 1.6; letter-spacing: .16em; }
+.release-facts dd {
+    margin: 8px 0 0;
+    color: #d2d2d2;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.release-distribution { grid-column: 1 / -1; }
+
 @media (max-width: 750px) {
     .releases-page { padding: 40px 20px 64px; }
     .releases-heading { margin-bottom: 28px; padding-bottom: 20px; }
@@ -38,4 +65,5 @@
     .release-catalogue { margin-bottom: 16px; }
     .release-title { margin-bottom: 12px; font-size: 32px; }
     .release-artist { font-size: 11px; }
+    .release-description { margin-top: 24px; }
 }

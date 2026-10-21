@@ -1753,7 +1753,7 @@ class WebsiteTests(unittest.TestCase):
         self.page.keyboard.press("Escape")
         expect(button).to_be_focused()
 
-    def test_releases_navigation_shows_only_cover_artist_and_title(self):
+    def test_releases_navigation_shows_release_information(self):
         self.visit()
         expect(self.page.locator('.site-nav a')).to_have_text(['RELEASES', 'SOURCES', 'BANDCAMP'])
         self.page.locator('.site-nav').get_by_role('link', name='RELEASES').click()
