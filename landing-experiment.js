@@ -879,12 +879,30 @@ if (gl) {
     let holdReleasePull = 0;
     let holdStarted = false;
     let rightReturnHeld = false;
+    const returnButton = document.querySelector('[data-vortex-return]');
+    const touchReturnLayout = window.matchMedia('(any-pointer: coarse), (max-width: 750px)');
+    const returnButtonPointers = new Set();
+    let returnKeyHeld = false;
     const holdDelay = 0.45;
     const holdChargeDuration = 5;
     const holdCoastDuration = 0.75;
     const holdReverseRamp = 0.55;
     const holdReverseBoost = 3;
     const holdFollowSpeed = 0.55;
+
+    function returnBoostHeld() {
+        return rightReturnHeld || returnButtonPointers.size > 0 || returnKeyHeld;
+    }
+
+    function updateReturnButton() {
+        if (!returnButton) return;
+        const available = touchReturnLayout.matches && holdStarted && holdStrength > 0 &&
+            window.SecondSourceExperience.motionEnabled;
+        if (returnButton.hidden === available) returnButton.hidden = !available;
+        if (returnButton.disabled === available) returnButton.disabled = !available;
+        const pressed = String(returnButtonPointers.size > 0 || returnKeyHeld);
+        if (returnButton.getAttribute('aria-pressed') !== pressed) returnButton.setAttribute('aria-pressed', pressed);
+    }
 
     function clearHold() {
         holdElapsed = holdStrength = holdAngle = 0;
@@ -894,6 +912,7 @@ if (gl) {
         holdReleaseAngle = 0;
         holdReleasePull = 0;
         holdStarted = false;
+        updateReturnButton();
     }
 
     function resumeHold() {
@@ -918,6 +937,52 @@ if (gl) {
         // Right-click interrupts the coast at the current angle without a jump.
         if (immediate) holdForwardSpeed = 0;
         holdReleaseTime = immediate ? holdCoastDuration : 0;
+    }
+
+    if (returnButton) {
+        returnButton.addEventListener('pointerdown', event => {
+            if (returnButton.disabled || (event.pointerType === 'mouse' && event.button !== 0)) return;
+            event.preventDefault();
+            returnButtonPointers.add(event.pointerId);
+            try { returnButton.setPointerCapture(event.pointerId); } catch (error) {}
+            beginHoldReturn(true);
+            updateReturnButton();
+        });
+        const releaseReturnPointer = event => {
+            returnButtonPointers.delete(event.pointerId);
+            updateReturnButton();
+        };
+        for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+            returnButton.addEventListener(type, releaseReturnPointer);
+        }
+        // Window fallback also releases a touch when pointer capture is unavailable.
+        window.addEventListener('pointerup', releaseReturnPointer);
+        window.addEventListener('pointercancel', releaseReturnPointer);
+        returnButton.addEventListener('keydown', event => {
+            if (returnButton.disabled || (event.key !== ' ' && event.key !== 'Enter')) return;
+            event.preventDefault();
+            returnKeyHeld = true;
+            beginHoldReturn(true);
+            updateReturnButton();
+        });
+        returnButton.addEventListener('keyup', event => {
+            if (event.key !== ' ' && event.key !== 'Enter') return;
+            event.preventDefault();
+            returnKeyHeld = false;
+            updateReturnButton();
+        });
+        returnButton.addEventListener('blur', () => {
+            returnKeyHeld = false;
+            updateReturnButton();
+        });
+        returnButton.addEventListener('contextmenu', event => event.preventDefault());
+        touchReturnLayout.addEventListener('change', () => {
+            if (!touchReturnLayout.matches) {
+                returnButtonPointers.clear();
+                returnKeyHeld = false;
+            }
+            updateReturnButton();
+        });
     }
 
 
@@ -1321,7 +1386,7 @@ if (gl) {
             const wasDragging = dragHasStarted;
             holdElapsed = 0;
             if (event.type === "pointerup") {
-                beginHoldReturn(rightReturnHeld);
+                beginHoldReturn(returnBoostHeld());
             } else {
                 clearHold();
             }
@@ -1383,6 +1448,8 @@ if (gl) {
 
     function clearGesture() {
         rightReturnHeld = false;
+        returnButtonPointers.clear();
+        returnKeyHeld = false;
         for (const id of viewPointers.keys()) {
             if (container.hasPointerCapture(id)) container.releasePointerCapture(id);
         }
@@ -1461,7 +1528,7 @@ if (gl) {
 
         // Simulation time excludes hidden, offscreen and motion-off periods.
         const holding = dragPointerId !== null && viewPointers.size === 1 &&
-            viewScale === 1 && !dragHasStarted && !rightReturnHeld;
+            viewScale === 1 && !dragHasStarted && !returnBoostHeld();
         const holdFollowDistance = Math.hypot(
             targetPointerX - holdCenterX, targetPointerY - holdCenterY
         );
@@ -1487,7 +1554,7 @@ if (gl) {
         } else if (holdReleaseTime >= 0 && holdStrength > 0) {
             // Advance a continuous return clock so changing the boost cannot
             // reset the phase or jump to a different image deformation.
-            holdReleaseTime += seconds * (rightReturnHeld ? holdReverseBoost : 1);
+            holdReleaseTime += seconds * (returnBoostHeld() ? holdReverseBoost : 1);
             // Integrate the slowing forward spin, then ease into a slow reverse.
             // Keep the last visible position and reach until deformation is zero.
             const coastTime = Math.min(holdReleaseTime, holdCoastDuration);
@@ -1509,6 +1576,7 @@ if (gl) {
         } else {
             clearHold();
         }
+        updateReturnButton();
 
 
         /* SMOOTH POINTER */

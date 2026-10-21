@@ -18,7 +18,9 @@ are unlisted workshop drafts: no site navigation links to them, and both request
 that search engines do not index them. Open their filenames directly to work on
 them locally.
 `gallery.html` is the image archive. `src001.html` remains a work-in-progress
-release page and is not linked from the public navigation.
+release page and is not linked from the public navigation. The unlisted
+`drip-fluid.html` prototype explores fluid motion using DRIP's artwork. It also
+requests that search engines do not index it.
 
 Audio seeking requires a server with HTTP byte-range support, as provided by
 GitHub Pages. Python's basic local server supports playback but not seeking.
@@ -73,6 +75,9 @@ the coast and boosts the return by 3×, including while left-click is held.
 Releasing right-click restores the normal return speed, or resumes winding up
 if left-click is still held. Mouse release outside the artwork, blur and motion
 off clear the boost. Right-click creates no impact or browser context menu.
+On touch devices and narrow screens, **RETURN** appears while the whirlpool is
+active. Hold it for the same 3× return boost; it also works with one finger still
+on the artwork. Releasing the button resumes winding if the artwork is held.
 Its center and reach stay fixed as
 the rotation and inward pull return completely to zero, restoring the original
 artwork rather than shrinking the vortex away. Pressing again before recovery
@@ -92,10 +97,28 @@ refraction, occasional small horizontal tears and light channel separation
 that preserves the artwork's blue palette.
 It starts off on each visit, responds to drag and optional audio, and pauses
 with the motion toggle. Turning it off eases back to the original artwork.
+Project information stays inside INFO: one short description and a Bandcamp
+link, without a personal creator credit.
 INTERFERENCE uses a separate procedural shader with draggable sources, pulse
 interaction, arrow-key controls, and reset. It uses no photographic texture.
 `site.js` handles internal-link fades, browser Back navigation, and artwork
 viewer focus. Reduced-motion preferences disable the page and gallery fades.
+
+## Fluid study
+
+`drip-fluid.html` is a separate prototype, with no link in the public navigation.
+It uses a fluid velocity field to transport coordinates in the original DRIP
+image, preserving its blue palette. Drag to push the image, hold to stir, or
+press Space or Enter on the artwork for a central vortex. Holding right-click
+or **RETURN** settles the image faster; **RESET** restores it immediately.
+Audio remains optional. Motion off, hidden tabs, static artwork fallback and
+the shared player work as on the homepage.
+
+The fluid kernels in `drip-fluid.js` are adapted from
+[Pavel Dobryakov's WebGL Fluid Simulation](https://github.com/PavelDoGreat/WebGL-Fluid-Simulation)
+under the MIT license, retained at the top of that file. This prototype runs
+locally in the browser and loads no third-party scripts. The homepage keeps its
+existing renderer.
 
 ## Validation
 
@@ -116,6 +139,8 @@ The checks cover opt-in audio, actual audio analysis and shader response,
 volume and pause, pointer interaction, motion preferences and rendering pauses,
 native and fallback fullscreen, keyboard dialogs, all seven gallery images,
 navigation and Back, mobile layouts, and audio/storage/WebGL failure paths.
+They also check touch RETURN without triggering pinch, fluid image transport,
+and exact restoration of the original image after RESET.
 
 The image conversion tool is `scripts/optimize_images.py`. Use `--dry-run` to
 preview changes before converting any additional PNG or JPEG artwork.
@@ -131,5 +156,4 @@ fallback. The homepage artwork has no visible title or instruction overlay.
 The new vector fallback and 32-second stereo tone loop are generated locally
 with `scripts/generate_field_assets.py`. Regeneration requires FFmpeg; viewing
 the site needs no additional dependencies. That script replaces only those two
-generated assets. The current draft is local work and has not been pushed or
-deployed.
+generated assets. These study pages remain unlisted workshop drafts.

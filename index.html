@@ -9,11 +9,11 @@
     <title>SECOND SOURCE</title>
     <link rel="stylesheet" href="./site.css?v=4">
     <link rel="stylesheet" href="./new.css?v=32">
-    <link rel="stylesheet" href="./experience.css?v=5">
+    <link rel="stylesheet" href="./experience.css?v=6">
     <script src="./site.js?v=1" defer></script>
     <link rel="preload" as="image" href="./images/drip_cover_front_2.webp">
     <script src="./experience.js?v=5" defer></script>
-    <script src="./landing-experiment.js?v=22" defer></script>
+    <script src="./landing-experiment.js?v=23" defer></script>
 </head>
 <body class="landing-study">
     <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
@@ -50,6 +50,7 @@
                 <button class="experience-button" type="button" data-motion-toggle aria-pressed="true" aria-label="Use static artwork">MOTION ON</button>
                 <button class="experience-button" type="button" data-fullscreen aria-pressed="false" aria-label="Enter fullscreen listening mode">FULLSCREEN</button>
                 <button class="experience-button" type="button" data-info aria-haspopup="dialog" aria-controls="experience-info">INFO</button>
+                <button class="experience-button vortex-return" type="button" data-vortex-return aria-pressed="false" aria-label="Hold to return the whirlpool faster" hidden disabled>RETURN</button>
             </div>
             <p class="visually-hidden" role="status" data-status></p>
             <audio id="experience-audio" loop preload="none">
@@ -65,8 +66,8 @@
                 <p data-copy-slot="drip-notes">Click around.</p>
                 <dl>
                     <dt>SOUND</dt><dd>SAGE COUNSEL</dd>
-                    <dt>PROJECT</dt><dd>SECOND SOURCE AUDIO</dd>
-                    <dt>CONTROLS</dt><dd>Click or tap for ripples · Hold to build a whirlpool<br>Drag to stir · Pinch to zoom<br>Escape to leave fullscreen</dd>
+                    <dt>PROJECT</dt><dd>SECOND SOURCE AUDIO<span class="info-project-description">Music, images and audiovisual experiments.</span><a class="info-project-link" href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP ↗</a></dd>
+                    <dt>CONTROLS</dt><dd>Click or tap for ripples · Hold to build a whirlpool<br>Drag to stir · Pinch to zoom<br>Hold right-click or RETURN for a faster return<br>Escape to leave fullscreen</dd>
                 </dl>
                 <button class="experience-button info-modifier" type="button" data-glitch-toggle aria-pressed="false" aria-label="SRC_GLITCH: off">SRC_GLITCH / OFF</button>
             </dialog>

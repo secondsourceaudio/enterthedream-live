@@ -476,6 +476,134 @@ class WebsiteTests(unittest.TestCase):
         normal_speed = (still_boosted['angle'] - normal['angle']) / (normal['time'] - still_boosted['time'])
         self.assertAlmostEqual(normal_speed * 3, boost_speed, delta=boost_speed * .03)
 
+    def test_mobile_return_button_boosts_and_clears_on_motion_off(self):
+        self.page.set_viewport_size({'width': 390, 'height': 844})
+        self.start_controlled_drip()
+        button = self.page.locator('[data-vortex-return]')
+        expect(button).to_be_hidden()
+        session = self.context.new_cdp_session(self.page)
+        session.send('Emulation.setTouchEmulationEnabled', {'enabled': True, 'maxTouchPoints': 2})
+        box = self.page.locator('#visual-container').bounding_box()
+        point = {'id': 1, 'x': box['x'] + box['width'] / 2, 'y': box['y'] + box['height'] / 2}
+        session.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [point]})
+        self.step_drip(180)
+        session.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+        before = self.step_drip(90)
+        normal = self.step_drip(4)
+        speed = (before['angle'] - normal['angle']) / (normal['time'] - before['time'])
+        expect(button).to_be_visible()
+        target = button.bounding_box()
+        self.assertGreaterEqual(target['height'], 44)
+        self.assertGreaterEqual(target['x'], 0)
+        self.assertLessEqual(target['x'] + target['width'], 390)
+        touch = {'id': 2, 'x': target['x'] + target['width'] / 2, 'y': target['y'] + target['height'] / 2}
+        session.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [touch]})
+        expect(button).to_have_attribute('aria-pressed', 'true')
+        boosted = self.step_drip(4)
+        rate = (normal['angle'] - boosted['angle']) / (boosted['time'] - normal['time'])
+        self.assertAlmostEqual(rate, speed * 3, delta=speed * .03)
+        self.assertEqual(boosted['center'], normal['center'])
+        session.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+        released = self.step_drip(4)
+        rate = (boosted['angle'] - released['angle']) / (released['time'] - boosted['time'])
+        self.assertAlmostEqual(rate, speed, delta=speed * .03)
+        button.focus()
+        self.page.keyboard.down('Space')
+        expect(button).to_have_attribute('aria-pressed', 'true')
+        self.page.locator('[data-motion-toggle]').evaluate('element => element.click()')
+        expect(button).to_be_hidden()
+        expect(button).to_have_attribute('aria-pressed', 'false')
+        self.page.keyboard.up('Space')
+        self.page.locator('[data-motion-toggle]').evaluate('element => element.click()')
+        session.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [point]})
+        self.assertGreater(self.step_drip(90)['angle'], 0, 'Motion off must clear a held return control')
+        session.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+        self.page.locator('[data-info]').click()
+        expect(self.page.locator('.info-project-description')).to_have_text('Music, images and audiovisual experiments.')
+        self.assertNotIn('Martin', self.page.locator('#experience-info').inner_text())
+        self.assertNotIn('Solli', self.page.locator('#experience-info').inner_text())
+        self.assertTrue(self.page.locator('.site-nav a').evaluate_all(
+            "links => links.every(link => !/src001|experiments|drip-fluid/.test(link.getAttribute('href')))"))
+
+    def test_mobile_return_with_artwork_finger_does_not_start_pinch(self):
+        self.page.set_viewport_size({'width': 390, 'height': 844})
+        self.start_controlled_drip()
+        session = self.context.new_cdp_session(self.page)
+        session.send('Emulation.setTouchEmulationEnabled', {'enabled': True, 'maxTouchPoints': 2})
+        box = self.page.locator('#visual-container').bounding_box()
+        point = {'id': 1, 'x': box['x'] + box['width'] / 2, 'y': box['y'] + box['height'] / 2}
+        session.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [point]})
+        held = self.step_drip(180)
+        button = self.page.locator('[data-vortex-return]')
+        target = button.bounding_box()
+        control = {'id': 2, 'x': target['x'] + target['width'] / 2, 'y': target['y'] + target['height'] / 2}
+        session.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [point, control]})
+        reversing = self.step_drip(12)
+        self.assertLess(reversing['angle'], held['angle'])
+        self.assertEqual(reversing['strength'], held['strength'], 'The return control must not cancel the artwork gesture as a pinch')
+        self.assertEqual(reversing['center'], held['center'])
+        session.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': [control]})
+        resumed = self.step_drip(12)
+        self.assertGreater(resumed['angle'], reversing['angle'], 'The artwork finger must resume winding after RETURN is released')
+        self.assertGreaterEqual(resumed['strength'], held['strength'])
+        session.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
+
+    def test_fluid_study_moves_artwork_and_reset_recovers_the_original(self):
+        self.visit('drip-fluid.html')
+        self.page.wait_for_function("document.querySelector('#visual').dataset.fluid")
+        expect(self.page.locator('#visual')).to_have_attribute('data-fluid', 'ready')
+        expect(self.page.locator('meta[name="robots"]')).to_have_attribute('content', 'noindex, nofollow')
+        self.assertTrue(self.page.locator('#fallback-image').evaluate('image => image.naturalWidth === 3200'))
+
+        def pixels(baseline=False):
+            return self.page.evaluate("""baseline => new Promise(resolve => {
+                const canvas = document.querySelector('#visual');
+                const gl = canvas.getContext('webgl');
+                const draw = gl.drawArrays;
+                gl.drawArrays = function (...args) {
+                    draw.apply(this, args);
+                    if (gl.getParameter(gl.FRAMEBUFFER_BINDING)) return;
+                    gl.drawArrays = draw;
+                    const result = new Uint8Array(canvas.width * canvas.height * 4);
+                    gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, result);
+                    if (baseline) window.__fluidOriginalPixels = result;
+                    let difference = 0, count = 0;
+                    for (let i = 0; i < result.length; i += 64) {
+                        for (let channel = 0; channel < 3; channel++) {
+                            difference += Math.abs(result[i + channel] - window.__fluidOriginalPixels[i + channel]);
+                            count++;
+                        }
+                    }
+                    resolve(difference / count);
+                };
+            })""", baseline)
+
+        pixels(baseline=True)
+        box = self.page.locator('#visual-container').bounding_box()
+        self.page.mouse.move(box['x'] + box['width'] * .35, box['y'] + box['height'] * .45)
+        self.page.mouse.down()
+        self.page.mouse.move(box['x'] + box['width'] * .7, box['y'] + box['height'] * .6, steps=12)
+        self.wait_for_frames(12)
+        self.page.mouse.up()
+        self.assertGreater(pixels(), 1, 'Fluid motion must visibly transport the original artwork')
+        self.page.locator('[data-fluid-reset]').click()
+        self.assertLess(pixels(), .01, 'Reset must recover the exact starting image')
+        self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
+
+    def test_fluid_study_falls_back_to_the_artwork_without_webgl(self):
+        self.page.add_init_script("""(() => {
+            const getContext = HTMLCanvasElement.prototype.getContext;
+            HTMLCanvasElement.prototype.getContext = function (type, ...args) {
+                return type === 'webgl' ? null : getContext.call(this, type, ...args);
+            };
+        })();""")
+        self.visit('drip-fluid.html')
+        expect(self.page.locator('#visual')).to_have_attribute('data-fluid', 'unavailable')
+        expect(self.page.locator('[data-motion-toggle]')).to_be_disabled()
+        self.assertTrue(self.page.locator('#fallback-image').evaluate('image => image.complete && image.naturalWidth > 0'))
+        self.page.locator('[data-info]').click()
+        expect(self.page.locator('#info-title')).to_have_text('DRIP / FLUID')
+
     def test_press_before_recovery_resumes_the_existing_vortex(self):
         self.visit()
         self.page.wait_for_function("window.__drawCalls > 0")
@@ -1132,22 +1260,24 @@ class WebsiteTests(unittest.TestCase):
     def test_mobile_layout_and_player_controls(self):
         for width in [320, 390, 768]:
             self.page.set_viewport_size({"width": width, "height": 844})
-            for path in ["index.html", "experiment.html", "experiments.html", "gallery.html", "src001.html"]:
+            for path in ["index.html", "drip-fluid.html", "experiment.html", "experiments.html", "gallery.html", "src001.html"]:
                 with self.subTest(width=width, path=path):
                     self.visit(path)
                     self.assertLessEqual(self.page.evaluate("document.body.scrollWidth"), width)
                     self.assertTrue(self.page.locator(".site-nav a").evaluate_all(
                         "links => links.every(a => {const r=a.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.height >= 44;})"
                     ))
-                    if path in ["index.html", "experiment.html"]:
+                    if path in ["index.html", "drip-fluid.html", "experiment.html"]:
                         if path == "index.html":
+                            expect(self.page.locator('[data-vortex-return]')).to_be_hidden()
+                        if path in ["index.html", "drip-fluid.html"]:
                             seek = self.page.locator("[data-seek]")
                             expect(seek).to_be_visible()
                             seek_box = seek.bounding_box()
                             self.assertGreaterEqual(seek_box["height"], 44)
                             self.assertGreaterEqual(seek_box["x"], 0)
                             self.assertLessEqual(seek_box["x"] + seek_box["width"], width)
-                        for control in self.page.locator(".experience-controls button").all():
+                        for control in self.page.locator(".experience-controls button:not([data-vortex-return])").all():
                             expect(control).to_be_visible()
                             box = control.bounding_box()
                             self.assertGreaterEqual(box["height"], 44)

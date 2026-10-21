@@ -803,6 +803,8 @@ html[data-motion="off"] .visual-container { touch-action: pan-y pinch-zoom; }
 .experience-button[aria-pressed="true"] { color: #fff; }
 .experience-button[data-sound] { min-width: 156px; }
 .experience-button:disabled { opacity: .65; cursor: default; }
+.vortex-return { touch-action: none; user-select: none; -webkit-touch-callout: none; min-width: 54px; }
+.vortex-return[hidden] { display: none; }
 .experience-button[data-sound]:disabled { cursor: progress; }
 .experience-button:focus-visible,
 .experience-volume input:focus-visible {
@@ -929,6 +931,10 @@ body.listening-mode { overflow: hidden; }
 .experience-info dl { margin-top: 28px; }
 .experience-info dt { font-size: 9px; letter-spacing: .18em; color: #888; }
 .experience-info dd { margin: 8px 0 20px; font-size: 11px; line-height: 1.6; letter-spacing: .08em; }
+.info-project-description { display: block; margin-top: 6px; font: 12px/1.7 Arial, Helvetica, sans-serif; letter-spacing: 0; color: #bbb; }
+.info-project-link { display: inline-block; padding: 10px 0 4px; color: #c9c9c9; font-size: 9px; letter-spacing: .16em; text-decoration: none; }
+.info-project-link:hover { color: #fff; }
+.info-project-link:focus-visible { outline: 1px solid #eee; outline-offset: 4px; }
 .info-modifier { width: 100%; margin-top: 8px; padding: 18px 0 4px; border-top: 1px solid #333; text-align: left; }
 .info-modifier[aria-pressed="true"] { color: #b8f4d6; }
 
@@ -1016,6 +1022,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
                 <button class="experience-button" type="button" data-motion-toggle aria-pressed="true" aria-label="Use static artwork">MOTION ON</button>
                 <button class="experience-button" type="button" data-fullscreen aria-pressed="false" aria-label="Enter fullscreen listening mode">FULLSCREEN</button>
                 <button class="experience-button" type="button" data-info aria-haspopup="dialog" aria-controls="experience-info">INFO</button>
+                <button class="experience-button vortex-return" type="button" data-vortex-return aria-pressed="false" aria-label="Hold to return the whirlpool faster" hidden disabled>RETURN</button>
             </div>
             <p class="visually-hidden" role="status" data-status></p>
             <audio crossorigin="anonymous" id="experience-audio" loop preload="none">
@@ -1031,8 +1038,8 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
                 <p data-copy-slot="drip-notes">Click around.</p>
                 <dl>
                     <dt>SOUND</dt><dd>SAGE COUNSEL</dd>
-                    <dt>PROJECT</dt><dd>SECOND SOURCE AUDIO</dd>
-                    <dt>CONTROLS</dt><dd>Click or tap for ripples · Hold to build a whirlpool<br>Drag to stir · Pinch to zoom<br>Escape to leave fullscreen</dd>
+                    <dt>PROJECT</dt><dd>SECOND SOURCE AUDIO<span class="info-project-description">Music, images and audiovisual experiments.</span><a class="info-project-link" href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP ↗</a></dd>
+                    <dt>CONTROLS</dt><dd>Click or tap for ripples · Hold to build a whirlpool<br>Drag to stir · Pinch to zoom<br>Hold right-click or RETURN for a faster return<br>Escape to leave fullscreen</dd>
                 </dl>
                 <button class="experience-button info-modifier" type="button" data-glitch-toggle aria-pressed="false" aria-label="SRC_GLITCH: off">SRC_GLITCH / OFF</button>
             </dialog>
@@ -2349,12 +2356,30 @@ if (gl) {
     let holdReleasePull = 0;
     let holdStarted = false;
     let rightReturnHeld = false;
+    const returnButton = document.querySelector('[data-vortex-return]');
+    const touchReturnLayout = window.matchMedia('(any-pointer: coarse), (max-width: 750px)');
+    const returnButtonPointers = new Set();
+    let returnKeyHeld = false;
     const holdDelay = 0.45;
     const holdChargeDuration = 5;
     const holdCoastDuration = 0.75;
     const holdReverseRamp = 0.55;
     const holdReverseBoost = 3;
     const holdFollowSpeed = 0.55;
+
+    function returnBoostHeld() {
+        return rightReturnHeld || returnButtonPointers.size > 0 || returnKeyHeld;
+    }
+
+    function updateReturnButton() {
+        if (!returnButton) return;
+        const available = touchReturnLayout.matches && holdStarted && holdStrength > 0 &&
+            window.SecondSourceExperience.motionEnabled;
+        if (returnButton.hidden === available) returnButton.hidden = !available;
+        if (returnButton.disabled === available) returnButton.disabled = !available;
+        const pressed = String(returnButtonPointers.size > 0 || returnKeyHeld);
+        if (returnButton.getAttribute('aria-pressed') !== pressed) returnButton.setAttribute('aria-pressed', pressed);
+    }
 
     function clearHold() {
         holdElapsed = holdStrength = holdAngle = 0;
@@ -2364,6 +2389,7 @@ if (gl) {
         holdReleaseAngle = 0;
         holdReleasePull = 0;
         holdStarted = false;
+        updateReturnButton();
     }
 
     function resumeHold() {
@@ -2388,6 +2414,52 @@ if (gl) {
         // Right-click interrupts the coast at the current angle without a jump.
         if (immediate) holdForwardSpeed = 0;
         holdReleaseTime = immediate ? holdCoastDuration : 0;
+    }
+
+    if (returnButton) {
+        returnButton.addEventListener('pointerdown', event => {
+            if (returnButton.disabled || (event.pointerType === 'mouse' && event.button !== 0)) return;
+            event.preventDefault();
+            returnButtonPointers.add(event.pointerId);
+            try { returnButton.setPointerCapture(event.pointerId); } catch (error) {}
+            beginHoldReturn(true);
+            updateReturnButton();
+        });
+        const releaseReturnPointer = event => {
+            returnButtonPointers.delete(event.pointerId);
+            updateReturnButton();
+        };
+        for (const type of ['pointerup', 'pointercancel', 'lostpointercapture']) {
+            returnButton.addEventListener(type, releaseReturnPointer);
+        }
+        // Window fallback also releases a touch when pointer capture is unavailable.
+        window.addEventListener('pointerup', releaseReturnPointer);
+        window.addEventListener('pointercancel', releaseReturnPointer);
+        returnButton.addEventListener('keydown', event => {
+            if (returnButton.disabled || (event.key !== ' ' && event.key !== 'Enter')) return;
+            event.preventDefault();
+            returnKeyHeld = true;
+            beginHoldReturn(true);
+            updateReturnButton();
+        });
+        returnButton.addEventListener('keyup', event => {
+            if (event.key !== ' ' && event.key !== 'Enter') return;
+            event.preventDefault();
+            returnKeyHeld = false;
+            updateReturnButton();
+        });
+        returnButton.addEventListener('blur', () => {
+            returnKeyHeld = false;
+            updateReturnButton();
+        });
+        returnButton.addEventListener('contextmenu', event => event.preventDefault());
+        touchReturnLayout.addEventListener('change', () => {
+            if (!touchReturnLayout.matches) {
+                returnButtonPointers.clear();
+                returnKeyHeld = false;
+            }
+            updateReturnButton();
+        });
     }
 
 
@@ -2791,7 +2863,7 @@ if (gl) {
             const wasDragging = dragHasStarted;
             holdElapsed = 0;
             if (event.type === "pointerup") {
-                beginHoldReturn(rightReturnHeld);
+                beginHoldReturn(returnBoostHeld());
             } else {
                 clearHold();
             }
@@ -2853,6 +2925,8 @@ if (gl) {
 
     function clearGesture() {
         rightReturnHeld = false;
+        returnButtonPointers.clear();
+        returnKeyHeld = false;
         for (const id of viewPointers.keys()) {
             if (container.hasPointerCapture(id)) container.releasePointerCapture(id);
         }
@@ -2931,7 +3005,7 @@ if (gl) {
 
         // Simulation time excludes hidden, offscreen and motion-off periods.
         const holding = dragPointerId !== null && viewPointers.size === 1 &&
-            viewScale === 1 && !dragHasStarted && !rightReturnHeld;
+            viewScale === 1 && !dragHasStarted && !returnBoostHeld();
         const holdFollowDistance = Math.hypot(
             targetPointerX - holdCenterX, targetPointerY - holdCenterY
         );
@@ -2957,7 +3031,7 @@ if (gl) {
         } else if (holdReleaseTime >= 0 && holdStrength > 0) {
             // Advance a continuous return clock so changing the boost cannot
             // reset the phase or jump to a different image deformation.
-            holdReleaseTime += seconds * (rightReturnHeld ? holdReverseBoost : 1);
+            holdReleaseTime += seconds * (returnBoostHeld() ? holdReverseBoost : 1);
             // Integrate the slowing forward spin, then ease into a slow reverse.
             // Keep the last visible position and reach until deformation is zero.
             const coastTime = Math.min(holdReleaseTime, holdCoastDuration);
@@ -2979,6 +3053,7 @@ if (gl) {
         } else {
             clearHold();
         }
+        updateReturnButton();
 
 
         /* SMOOTH POINTER */

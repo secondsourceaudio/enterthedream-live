@@ -67,6 +67,8 @@ html[data-motion="off"] .visual-container { touch-action: pan-y pinch-zoom; }
 .experience-button[aria-pressed="true"] { color: #fff; }
 .experience-button[data-sound] { min-width: 156px; }
 .experience-button:disabled { opacity: .65; cursor: default; }
+.vortex-return { touch-action: none; user-select: none; -webkit-touch-callout: none; min-width: 54px; }
+.vortex-return[hidden] { display: none; }
 .experience-button[data-sound]:disabled { cursor: progress; }
 .experience-button:focus-visible,
 .experience-volume input:focus-visible {
@@ -193,6 +195,10 @@ body.listening-mode { overflow: hidden; }
 .experience-info dl { margin-top: 28px; }
 .experience-info dt { font-size: 9px; letter-spacing: .18em; color: #888; }
 .experience-info dd { margin: 8px 0 20px; font-size: 11px; line-height: 1.6; letter-spacing: .08em; }
+.info-project-description { display: block; margin-top: 6px; font: 12px/1.7 Arial, Helvetica, sans-serif; letter-spacing: 0; color: #bbb; }
+.info-project-link { display: inline-block; padding: 10px 0 4px; color: #c9c9c9; font-size: 9px; letter-spacing: .16em; text-decoration: none; }
+.info-project-link:hover { color: #fff; }
+.info-project-link:focus-visible { outline: 1px solid #eee; outline-offset: 4px; }
 .info-modifier { width: 100%; margin-top: 8px; padding: 18px 0 4px; border-top: 1px solid #333; text-align: left; }
 .info-modifier[aria-pressed="true"] { color: #b8f4d6; }
 
