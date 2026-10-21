@@ -748,6 +748,22 @@ html.experience-page { overflow-x: hidden; overflow-y: auto; }
 .landing-study .visual-container:focus-visible { outline: 1px solid #899aa5; outline-offset: 4px; }
 .landing-study .visual-container { -webkit-touch-callout: none; user-select: none; }
 
+/* Keep the feather fixed to the frame, including when the artwork is zoomed. */
+.landing-study .visual-container::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    --artwork-feather: clamp(14px, 2.4vmin, 28px);
+    --artwork-edge: #050505, rgb(5 5 5 / .84) 25%, rgb(5 5 5 / .5) 50%, rgb(5 5 5 / .16) 75%, rgb(5 5 5 / 0);
+    background:
+        linear-gradient(to right, var(--artwork-edge)) left / var(--artwork-feather) 100% no-repeat,
+        linear-gradient(to left, var(--artwork-edge)) right / var(--artwork-feather) 100% no-repeat,
+        linear-gradient(to bottom, var(--artwork-edge)) top / 100% var(--artwork-feather) no-repeat,
+        linear-gradient(to top, var(--artwork-edge)) bottom / 100% var(--artwork-feather) no-repeat;
+}
+
 .study-caption {
     margin: 0;
     font-size: 9px;
@@ -809,8 +825,6 @@ html[data-motion="off"] .visual-container { touch-action: pan-y pinch-zoom; }
 .visual-mode-switch { display: flex; gap: 0; }
 .visual-mode-switch .experience-button { min-width: 58px; color: #777; }
 .visual-mode-switch .experience-button[aria-pressed="true"] { color: #fff; box-shadow: inset 0 -1px #aaa; }
-.tone-instructions { margin: 6px 0 0; color: #999; font-size: 8px; line-height: 1.7; letter-spacing: .12em; text-align: center; }
-html[data-motion="off"] [data-xy-tone] .visual-container { touch-action: none; }
 .experience-button[data-sound]:disabled { cursor: progress; }
 .experience-button:focus-visible,
 .experience-volume input:focus-visible {
@@ -1140,12 +1154,10 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
     const space = document.querySelector("[data-experience]");
     if (!space) return;
 
-    const audio = space.hasAttribute('data-xy-tone') && window.SecondSourceTone
-        ? window.SecondSourceTone.create() : space.querySelector('audio');
-    if (!audio) return;
-    const trackTitle = audio.dataset.trackTitle || "Sage Counsel";
+    const audio = space.querySelector('audio');
+    const trackTitle = audio?.dataset.trackTitle || "Sage Counsel";
     const soundButton = space.querySelector("[data-sound]");
-    const compactSound = soundButton.hasAttribute("data-compact-sound");
+    const compactSound = soundButton?.hasAttribute("data-compact-sound");
     const muteButton = space.querySelector("[data-mute]");
     const volumeInput = space.querySelector("[data-volume]");
     const volumeOutput = space.querySelector("[data-volume-output]");
@@ -1192,6 +1204,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
     const inertElements = new Map();
 
     function applyVolume() {
+        if (!audio) return;
         if (gain) {
             gain.gain.setTargetAtTime(volume, context.currentTime, 0.02);
         } else {
@@ -1213,7 +1226,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
             candidateAnalyser.fftSize = 512;
             candidateAnalyser.smoothingTimeConstant = 0.8;
             const candidateGain = candidate.createGain();
-            source = audio.createSource ? audio.createSource(candidate) : candidate.createMediaElementSource(audio);
+            source = candidate.createMediaElementSource(audio);
             source.connect(candidateAnalyser);
             candidateAnalyser.connect(candidateGain);
             candidateGain.connect(candidate.destination);
@@ -1237,6 +1250,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
     }
 
     function updateSound() {
+        if (!audio) return;
         const playing = !audio.paused;
         const silent = audio.muted || volume === 0;
         soundButton.setAttribute("aria-pressed", String(playing));
@@ -1264,7 +1278,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
         status.textContent = audio.muted ? "Sound muted." : "Sound unmuted.";
     });
 
-    soundButton.addEventListener("click", async () => {
+    soundButton?.addEventListener("click", async () => {
         if (loading) return;
         if (!audio.paused) {
             audio.pause();
@@ -1300,15 +1314,15 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
             updateSound();
         }
     });
-    audio.addEventListener("play", updateSound);
-    audio.addEventListener("pause", updateSound);
-    window.addEventListener('pagehide', () => audio.pause());
-    audio.addEventListener("error", () => {
+    audio?.addEventListener("play", updateSound);
+    audio?.addEventListener("pause", updateSound);
+    window.addEventListener('pagehide', () => audio?.pause());
+    audio?.addEventListener("error", () => {
         if (rejectPlayback) rejectPlayback(new Error("Sound could not load"));
         audio.pause();
         status.textContent = "Sound could not load. Select the sound button to try again.";
     }, true);
-    volumeInput.addEventListener("input", () => {
+    volumeInput?.addEventListener("input", () => {
         volume = Number(volumeInput.value);
         applyVolume();
         updateSound();
@@ -1402,7 +1416,8 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
         document.body.classList.toggle("listening-mode", enabled);
         fullscreenButton.textContent = enabled ? "EXIT FULLSCREEN" : "FULLSCREEN";
         fullscreenButton.setAttribute("aria-pressed", String(enabled));
-        fullscreenButton.setAttribute("aria-label", enabled ? "Exit fullscreen listening mode" : "Enter fullscreen listening mode");
+        const modeLabel = audio ? "listening" : "viewing";
+        fullscreenButton.setAttribute("aria-label", `${enabled ? "Exit" : "Enter"} fullscreen ${modeLabel} mode`);
         if (enabled) {
             for (const element of document.body.children) {
                 if (element.contains(space) || element.tagName === "SCRIPT") continue;
@@ -1469,15 +1484,14 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
         get motionEnabled() { return motionEnabled; },
         get glitchEnabled() { return glitchEnabled; },
         get visualMode() { return visualMode; },
-        get soundPlaying() { return !audio.paused; },
-        setTonePosition(x, y) { if (audio.setPosition) audio.setPosition(x, y); },
+        get soundPlaying() { return !!audio && !audio.paused; },
         isVisualActive,
         useStaticArtwork(mode = visualMode) {
             unavailableModes.add(rendererKey(mode));
             updateMotion();
         },
         sampleBass() {
-            if (!analyser || audio.paused || audio.muted || volume === 0) return 0;
+            if (!audio || !analyser || audio.paused || audio.muted || volume === 0) return 0;
             analyser.getByteFrequencyData(frequencies);
             const lastBassBin = Math.max(2, Math.floor(250 / (context.sampleRate / analyser.fftSize)));
             let total = 0;

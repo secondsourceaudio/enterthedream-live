@@ -5,12 +5,10 @@
     const space = document.querySelector("[data-experience]");
     if (!space) return;
 
-    const audio = space.hasAttribute('data-xy-tone') && window.SecondSourceTone
-        ? window.SecondSourceTone.create() : space.querySelector('audio');
-    if (!audio) return;
-    const trackTitle = audio.dataset.trackTitle || "Sage Counsel";
+    const audio = space.querySelector('audio');
+    const trackTitle = audio?.dataset.trackTitle || "Sage Counsel";
     const soundButton = space.querySelector("[data-sound]");
-    const compactSound = soundButton.hasAttribute("data-compact-sound");
+    const compactSound = soundButton?.hasAttribute("data-compact-sound");
     const muteButton = space.querySelector("[data-mute]");
     const volumeInput = space.querySelector("[data-volume]");
     const volumeOutput = space.querySelector("[data-volume-output]");
@@ -57,6 +55,7 @@
     const inertElements = new Map();
 
     function applyVolume() {
+        if (!audio) return;
         if (gain) {
             gain.gain.setTargetAtTime(volume, context.currentTime, 0.02);
         } else {
@@ -78,7 +77,7 @@
             candidateAnalyser.fftSize = 512;
             candidateAnalyser.smoothingTimeConstant = 0.8;
             const candidateGain = candidate.createGain();
-            source = audio.createSource ? audio.createSource(candidate) : candidate.createMediaElementSource(audio);
+            source = candidate.createMediaElementSource(audio);
             source.connect(candidateAnalyser);
             candidateAnalyser.connect(candidateGain);
             candidateGain.connect(candidate.destination);
@@ -102,6 +101,7 @@
     }
 
     function updateSound() {
+        if (!audio) return;
         const playing = !audio.paused;
         const silent = audio.muted || volume === 0;
         soundButton.setAttribute("aria-pressed", String(playing));
@@ -129,7 +129,7 @@
         status.textContent = audio.muted ? "Sound muted." : "Sound unmuted.";
     });
 
-    soundButton.addEventListener("click", async () => {
+    soundButton?.addEventListener("click", async () => {
         if (loading) return;
         if (!audio.paused) {
             audio.pause();
@@ -165,15 +165,15 @@
             updateSound();
         }
     });
-    audio.addEventListener("play", updateSound);
-    audio.addEventListener("pause", updateSound);
-    window.addEventListener('pagehide', () => audio.pause());
-    audio.addEventListener("error", () => {
+    audio?.addEventListener("play", updateSound);
+    audio?.addEventListener("pause", updateSound);
+    window.addEventListener('pagehide', () => audio?.pause());
+    audio?.addEventListener("error", () => {
         if (rejectPlayback) rejectPlayback(new Error("Sound could not load"));
         audio.pause();
         status.textContent = "Sound could not load. Select the sound button to try again.";
     }, true);
-    volumeInput.addEventListener("input", () => {
+    volumeInput?.addEventListener("input", () => {
         volume = Number(volumeInput.value);
         applyVolume();
         updateSound();
@@ -267,7 +267,8 @@
         document.body.classList.toggle("listening-mode", enabled);
         fullscreenButton.textContent = enabled ? "EXIT FULLSCREEN" : "FULLSCREEN";
         fullscreenButton.setAttribute("aria-pressed", String(enabled));
-        fullscreenButton.setAttribute("aria-label", enabled ? "Exit fullscreen listening mode" : "Enter fullscreen listening mode");
+        const modeLabel = audio ? "listening" : "viewing";
+        fullscreenButton.setAttribute("aria-label", `${enabled ? "Exit" : "Enter"} fullscreen ${modeLabel} mode`);
         if (enabled) {
             for (const element of document.body.children) {
                 if (element.contains(space) || element.tagName === "SCRIPT") continue;
@@ -334,15 +335,14 @@
         get motionEnabled() { return motionEnabled; },
         get glitchEnabled() { return glitchEnabled; },
         get visualMode() { return visualMode; },
-        get soundPlaying() { return !audio.paused; },
-        setTonePosition(x, y) { if (audio.setPosition) audio.setPosition(x, y); },
+        get soundPlaying() { return !!audio && !audio.paused; },
         isVisualActive,
         useStaticArtwork(mode = visualMode) {
             unavailableModes.add(rendererKey(mode));
             updateMotion();
         },
         sampleBass() {
-            if (!analyser || audio.paused || audio.muted || volume === 0) return 0;
+            if (!audio || !analyser || audio.paused || audio.muted || volume === 0) return 0;
             analyser.getByteFrequencyData(frequencies);
             const lastBassBin = Math.max(2, Math.floor(250 / (context.sampleRate / analyser.fftSize)));
             let total = 0;

@@ -172,142 +172,51 @@ class WebsiteTests(unittest.TestCase):
     def test_landing_sound_and_actual_audio_reactivity(self):
         self.check_study("index.html")
 
-    def prepare_flower_tone(self):
-        # Probe the real signal just before it reaches the speakers.
+    def test_flower_stays_silent_and_viewing_controls_work_without_a_player(self):
+        requests = []
+        self.page.on('request', lambda request: requests.append(request.url))
         self.page.add_init_script("""(() => {
             const Native = window.AudioContext;
-            window.__toneContexts = [];
+            window.__audioContextsCreated = 0;
             window.AudioContext = class extends Native {
-                constructor(...args) { super(...args); window.__toneContexts.push(this); }
-                createGain() {
-                    const node = super.createGain();
-                    const connect = node.connect;
-                    const context = this;
-                    node.connect = function (destination, ...args) {
-                        if (destination === context.destination) window.__toneOutput = node;
-                        return connect.call(this, destination, ...args);
-                    };
-                    return node;
-                }
+                constructor(...args) { super(...args); window.__audioContextsCreated++; }
             };
         })();""")
         self.visit('experiment.html')
-
-    def play_flower_tone(self):
-        self.page.locator('[data-sound]').click()
-        self.page.wait_for_function('window.SecondSourceExperience.soundPlaying')
-        self.page.evaluate("""() => {
-            const context = window.__toneContexts[0];
-            const probe = context.createAnalyser();
-            probe.fftSize = 8192;
-            probe.smoothingTimeConstant = 0;
-            window.__toneOutput.connect(probe);
-            const samples = new Float32Array(probe.fftSize);
-            const spectrum = new Float32Array(probe.frequencyBinCount);
-            window.__readFlowerTone = () => {
-                probe.getFloatTimeDomainData(samples);
-                probe.getFloatFrequencyData(spectrum);
-                let power = 0, peak = 1, total = 0, upper = 0;
-                for (const sample of samples) power += sample * sample;
-                for (let i = 2; i < spectrum.length; i++) if (spectrum[i] > spectrum[peak]) peak = i;
-                for (let i = 1; i < spectrum.length; i++) {
-                    const energy = Math.pow(10, spectrum[i] / 10);
-                    total += energy;
-                    if (i > peak * 2) upper += energy;
-                }
-                return {rms: Math.sqrt(power / samples.length), peak: peak * context.sampleRate / probe.fftSize,
-                    harmonics: upper / Math.max(total, 1e-20)};
-            };
-        }""")
-        self.page.wait_for_function('window.__readFlowerTone().rms > .005')
-
-    def test_flower_xy_changes_real_pitch_and_timbre_with_working_sound_controls(self):
-        requests = []
-        self.page.on('request', lambda request: requests.append(request.url) if '/audio/' in request.url else None)
-        self.prepare_flower_tone()
-        self.assertEqual(self.page.evaluate('window.__toneContexts.length'), 0)
+        expect(self.page.locator('#visual')).to_have_attribute('data-fluid', 'ready')
+        expect(self.page.locator('audio, .compact-player, [data-sound], [data-volume], [data-seek]')).to_have_count(0)
         self.page.locator('#visual-container').click()
-        self.assertEqual(self.page.evaluate('window.__toneContexts.length'), 0, 'Artwork must not start audio before Play')
-        self.assertFalse(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
-        self.play_flower_tone()
-        box = self.page.locator('#visual-container').bounding_box()
-        def point(x, y):
-            self.page.mouse.move(box['x'] + box['width'] * x, box['y'] + box['height'] * (1 - y), steps=3)
-
-        point(.15, .05)
-        self.page.mouse.down()
-        self.page.wait_for_function('window.__readFlowerTone().peak < 120')
-        low = self.page.evaluate('window.__readFlowerTone().peak')
-        point(.85, .05)
-        self.page.wait_for_function('window.__readFlowerTone().peak > 260')
-        self.assertGreater(self.page.evaluate('window.__readFlowerTone().peak'), low * 2.5)
-        point(.5, .05)
-        self.page.wait_for_function('window.__readFlowerTone().peak > 130 && window.__readFlowerTone().peak < 180 && window.__readFlowerTone().harmonics < .01')
-        warm = self.page.evaluate('window.__readFlowerTone().harmonics')
-        point(.5, .95)
-        self.page.wait_for_function('before => window.__readFlowerTone().harmonics > before + .015', arg=warm)
-        self.page.mouse.up()
-        settled = self.page.evaluate('window.__readFlowerTone()')
-        point(.1, .1)
-        self.wait_for_frames(8)
-        self.assertAlmostEqual(self.page.evaluate('window.__readFlowerTone().peak'), settled['peak'], delta=12)
-        self.page.locator('[data-fluid-reset]').click()
-        self.page.wait_for_function('window.__readFlowerTone().rms > .005')
-        self.wait_for_frames(6)
-        original = self.page.evaluate('window.__readFlowerTone().rms')
-        self.page.locator('[data-volume]').fill('0.7')
-        self.page.wait_for_function('before => window.__readFlowerTone().rms > before * 1.8', arg=original)
-        self.page.locator('[data-mute]').click()
-        self.page.wait_for_function('window.__readFlowerTone().rms < .0001')
-        self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
-        self.page.locator('[data-mute]').click()
-        self.page.wait_for_function('window.__readFlowerTone().rms > .005')
-        self.page.locator('[data-sound]').click()
-        self.page.wait_for_function('window.__readFlowerTone().rms < .0001')
-        self.assertFalse(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
-        self.page.locator('[data-sound]').click()
-        self.page.wait_for_function('window.__readFlowerTone().rms > .005')
-        self.page.locator('[data-sound]').click()
-        self.page.wait_for_function('window.__readFlowerTone().rms < .0001')
-        self.assertEqual(self.page.evaluate('window.__toneContexts.length'), 1)
-        self.assertEqual(requests, [], 'The live tone must not download an audio file')
-
-    def test_flower_xy_touch_and_keyboard_work_with_motion_off(self):
-        self.page.set_viewport_size({'width': 390, 'height': 844})
-        self.prepare_flower_tone()
-        self.play_flower_tone()
         self.page.locator('[data-motion-toggle]').click()
-        self.assertEqual(self.page.locator('#visual-container').evaluate('e => getComputedStyle(e).touchAction'), 'none')
-        session = self.context.new_cdp_session(self.page)
-        session.send('Emulation.setTouchEmulationEnabled', {'enabled': True, 'maxTouchPoints': 2})
-        box = self.page.locator('#visual-container').bounding_box()
-        def point(x):
-            return {'id': 1, 'x': box['x'] + box['width'] * x, 'y': box['y'] + box['height'] * .8}
-        session.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [point(.15)]})
-        self.page.wait_for_function('window.__readFlowerTone().peak < 120')
-        session.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [point(.85)]})
-        self.page.wait_for_function('window.__readFlowerTone().peak > 310')
-        high = self.page.evaluate('window.__readFlowerTone().peak')
-        session.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
-        self.page.locator('#visual-container').focus()
-        self.page.keyboard.press('Shift+ArrowLeft')
-        self.page.wait_for_function('high => window.__readFlowerTone().peak < high * .9', arg=high)
+        expect(self.page.locator('html')).to_have_attribute('data-motion', 'off')
+        self.assertEqual(self.page.locator('#visual-container').evaluate('e => getComputedStyle(e).touchAction'), 'pan-y pinch-zoom')
+        self.page.locator('[data-motion-toggle]').click()
+        self.page.locator('[data-fluid-reset]').click()
+        self.page.locator('[data-info]').click()
+        expect(self.page.locator('dialog')).to_be_visible()
+        self.assertNotIn('SOUND', self.page.locator('dialog').inner_text())
+        self.page.keyboard.press('Escape')
+        self.page.locator('[data-fullscreen]').click()
+        expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-label', 'Exit fullscreen viewing mode')
+        self.page.locator('[data-fullscreen]').click()
         self.page.evaluate("window.dispatchEvent(new Event('pagehide'))")
-        self.page.wait_for_function('window.__readFlowerTone().rms < .0001')
         self.assertFalse(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
+        self.assertEqual(self.page.evaluate('window.SecondSourceExperience.sampleBass()'), 0)
+        self.assertEqual(self.page.evaluate('window.__audioContextsCreated'), 0)
+        self.assertFalse(any('/audio/' in url or 'flower-tone.js' in url for url in requests))
 
-    def test_flower_tone_still_plays_without_webgl(self):
+    def test_silent_flower_keeps_info_available_without_webgl(self):
         self.page.add_init_script("""(() => {
             const getContext = HTMLCanvasElement.prototype.getContext;
             HTMLCanvasElement.prototype.getContext = function (type, ...args) {
                 return type === 'webgl' ? null : getContext.call(this, type, ...args);
             };
         })();""")
-        self.prepare_flower_tone()
+        self.visit('experiment.html')
         expect(self.page.locator('[data-motion-toggle]')).to_be_disabled()
-        self.play_flower_tone()
-        self.page.locator('[data-sound]').click()
-        self.page.wait_for_function('window.__readFlowerTone().rms < .0001')
+        expect(self.page.locator('#fallback-image')).to_be_visible()
+        self.page.locator('[data-info]').click()
+        expect(self.page.locator('dialog')).to_be_visible()
+        self.assertFalse(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
 
     def test_timeline_waits_for_play_and_seeks_without_changing_playback(self):
         serve_seekable_audio(self.page)

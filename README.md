@@ -13,7 +13,7 @@ python3 -m http.server 8000
 
 Open the local server in your browser. The homepage is DRIP, with a WHIRL / FLUID
 switch. **SOURCES** in the top navigation opens `experiments.html`, which lists
-only FLOWER. `experiment.html` is the public FLOWER fluid and X/Y sound source,
+only FLOWER. `experiment.html` is the public, silent FLOWER fluid source,
 using the pink gallery photograph.
 `gallery.html` is the image archive. `src001.html` remains a work-in-progress
 release page and is not linked from the public navigation. Its cover is a static
@@ -123,8 +123,10 @@ or **RETURN** settles the image faster; **RESET** restores it immediately.
 diffused into soft trails and clouds, with finer, more turbulent stirring.
 An activity mask keeps untouched areas sharp and fades back to the original
 photograph. Reset reseeds the colour field and restores the exact original image.
-The live X/Y tone follows the same pointer. Audio remains optional. Motion off, hidden tabs, static
-artwork fallback and the shared player work as on the homepage.
+FLOWER is silent and has no audio player. Motion off, hidden tabs, static
+artwork fallback, fullscreen and information controls work as on the homepage.
+The DRIP player keeps its optional track and seek bar. A narrow feather around
+the artwork blends its edges into the page, fixed to the frame during zoom.
 
 The fluid kernels in `drip-fluid.js` are adapted from
 [Pavel Dobryakov's WebGL Fluid Simulation](https://github.com/PavelDoGreat/WebGL-Fluid-Simulation)
@@ -136,20 +138,6 @@ Set `data-fluid-material="oil"` or `"ink"` on the fluid container to choose its
 behaviour. Both materials use elapsed time and scale input to the simulation
 resolution. Oil uses an implicit velocity-diffusion solve; ink carries RGB colour
 and an activity mask instead of the oil material's coordinate displacement map.
-
-## FLOWER X/Y sound
-
-After selecting **Play**, hold and drag on the image. X moves continuously through
-three octaves (55–440 Hz); Y changes the tone from a plain sine to a brighter
-sound with sine modulation. Pitch and timbre ease between positions. Releasing
-keeps the last tone; Pause stops it. Mute and volume use the shared controls.
-The arrow keys also adjust X/Y; Shift makes larger steps. Reset restores the
-image and the centre tone. The instrument works with static artwork and without
-WebGL. Leaving the page stops sound.
-
-`flower-tone.js` creates its oscillator graph only after Play, using the shared
-audio analyser and volume output in `experience.js`. It downloads no audio and
-has no fixed-duration timeline. The DRIP player keeps its track and seek bar.
 
 ## Validation
 
@@ -173,15 +161,15 @@ navigation and Back, mobile layouts, and audio/storage/WebGL failure paths.
 They also check touch RETURN without triggering pinch, fluid image transport,
 exact restoration of the original image after RESET, mode switching during
 playback, inactive renderers pausing, and independent mode fallback.
-The sound checks measure FLOWER's actual output spectrum, touch and keyboard
-pitch changes, timbre, mute, volume and pause.
+FLOWER checks confirm that interaction stays silent and its viewing controls
+work without an audio player, including the static fallback.
 
 The image conversion tool is `scripts/optimize_images.py`. Use `--dry-run` to
 preview changes before converting any additional PNG or JPEG artwork.
 
 ## Local studio revision
 
-SOURCES presents only FLOWER with the pink photograph and its live X/Y tone.
+SOURCES presents only FLOWER with the pink photograph and its ink simulation.
 The index uses a static, silent image preview.
 Reduced motion shows the original photograph
 on FLOWER until motion is enabled. The homepage artwork has no visible title or
