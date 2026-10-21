@@ -70,7 +70,9 @@ midrange (220–2500 Hz) and treble (2500–10000 Hz) add smaller changes in the
 Fast attack and slower release smooth the response, with a short beat cooldown
 and an adaptive bass average. This is signal analysis in the browser, with no
 model or external service. Three independent currents smoothly approach random
-positions, directions and spin targets, chosen again every 3–9 seconds. They run
+positions, directions and spin targets, chosen again every 4–11 seconds. Softer
+forces, slower steering and a gentle pull toward the original image keep the
+motion restrained, including on bass hits. The currents run
 independently of audio; pausing or muting the track returns to their quieter
 baseline. Mouse hover and drag never stir VISUALIZER. FLOWER remains silent.
 

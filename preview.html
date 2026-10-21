@@ -3459,7 +3459,7 @@ SOFTWARE.
                 spin: (Math.random() < .5 ? -1 : 1) * (.4 + Math.random() * .6)};
         }
         const currents = Array.from({length: 3}, () => ({...randomCurrent(),
-            target: randomCurrent(), remaining: 3 + Math.random() * 6}));
+            target: randomCurrent(), remaining: 4 + Math.random() * 7}));
         const returning = () => rightHeld || returnKey || returnPointers.size > 0;
         const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
@@ -3903,18 +3903,18 @@ SOFTWARE.
                 autoAmount += ((automatic ? 1 : 0) - autoAmount) * (1 - Math.exp(-dt * 3));
                 if (automatic) {
                     // Independent currents wander between random targets, even without audio.
-                    const strength = autoAmount * (700 + bass * 650 + signal.beat * 1500 + signal.level * 80 + signal.mid * 70);
-                    const response = 1 - Math.exp(-dt * (.45 + bass * .35 + signal.beat * .4));
+                    const strength = autoAmount * (525 + bass * 490 + signal.beat * 1050 + signal.level * 60 + signal.mid * 50);
+                    const response = 1 - Math.exp(-dt * (.34 + bass * .26 + signal.beat * .28));
                     for (const current of currents) {
                         current.remaining -= dt;
                         if (current.remaining <= 0) {
                             current.target = randomCurrent();
-                            current.remaining = 3 + Math.random() * 6;
+                            current.remaining = 4 + Math.random() * 7;
                         }
                         for (const key of ['x', 'y', 'fx', 'fy', 'spin']) current[key] += (current.target[key] - current[key]) * response;
                         inject(current, current.fx * strength * dt, current.fy * strength * dt,
                             current.spin * autoAmount * dt *
-                                (1600 + bass * 1900 + signal.beat * 2600 + signal.mid * 250 + signal.treble * 100));
+                                (1200 + bass * 1400 + signal.beat * 1800 + signal.mid * 180 + signal.treble * 75));
                     }
                 }
                 if (hoverForce && !returningNow) inject(hoverForce,
@@ -3963,7 +3963,7 @@ SOFTWARE.
                 const textures = {u_velocity: velocity.read.texture, u_map: imageMap.read.texture};
                 if (ink) textures.u_artwork = artwork;
                 draw(ink ? advectInk : advectImage, imageMap.write, textures,
-                    {u_dt: dt, u_restore: returningNow ? 5 : pointers.size ? .02 : material.restore * (experience.visualizerEnabled ? 1.8 : 1)});
+                    {u_dt: dt, u_restore: returningNow ? 5 : pointers.size ? .02 : material.restore * (experience.visualizerEnabled ? 2.1 : 1)});
                 imageMap.swap();
             }
             draw(display, null, {u_map: imageMap.read.texture, u_artwork: artwork});
