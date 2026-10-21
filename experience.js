@@ -49,6 +49,7 @@
     let analyser = null;
     let gain = null;
     let frequencies = null;
+    let spectrum = null;
     let waveform = null;
     const quietSignal = {active: false, bass: 0, mid: 0, treble: 0, beat: 0, level: 0};
     let signal = quietSignal;
@@ -95,6 +96,7 @@
             analyser = candidateAnalyser;
             gain = candidateGain;
             frequencies = new Uint8Array(analyser.frequencyBinCount);
+            spectrum = new Float32Array(analyser.frequencyBinCount);
             waveform = new Float32Array(analyser.fftSize);
             // A gain node also supplies working volume controls on iOS.
             audio.volume = 1;
@@ -135,8 +137,13 @@
         }
     }
 
+    function soundAudible() {
+        return !!audio && !audio.paused && !audio.ended && !audio.muted && volume > 0 &&
+            !audio.error && audio.readyState >= audio.HAVE_FUTURE_DATA && (!context || context.state === 'running');
+    }
+
     function sampleAudio() {
-        if (!audio || !analyser || audio.paused || audio.muted || volume === 0 || context.state !== 'running') {
+        if (!soundAudible() || !analyser) {
             signal = quietSignal;
             analysisTime = -1;
             bassAverage = previousBass = 0;
@@ -148,6 +155,7 @@
         const dt = analysisTime < 0 ? 1 / 60 : Math.min(.1, now - analysisTime);
         analysisTime = now;
         analyser.getByteFrequencyData(frequencies);
+        analyser.getFloatFrequencyData(spectrum);
         analyser.getFloatTimeDomainData(waveform);
         const binWidth = context.sampleRate / analyser.fftSize;
         const band = (low, high) => {
@@ -159,11 +167,21 @@
         };
         const smooth = (value, previous, release) => previous + (value - previous) * (1 - Math.exp(-dt / (value > previous ? .025 : release)));
         const rawBass = band(35, 220);
-        bassAverage += (rawBass - bassAverage) * (1 - Math.exp(-dt / 1.2));
-        const onset = Math.max(0, rawBass - bassAverage * 1.08 - .015);
-        const hit = onset > .025 && rawBass - previousBass > .012 && now - lastBeat > .18;
+        // Byte spectra clip loud bins at maxDecibels. Detect hits from unclipped
+        // linear bass energy so a loud master can still have distinct attacks.
+        let bassPower = 0, bassBins = 0;
+        for (let i = Math.max(1, Math.ceil(35 / binWidth)); i <= Math.min(spectrum.length - 1, Math.floor(220 / binWidth)); i++) {
+            bassPower += Math.pow(10, spectrum[i] / 10);
+            bassBins++;
+        }
+        const bassEnergy = Math.sqrt(bassPower / Math.max(1, bassBins)) * volume / .35;
+        bassAverage += (bassEnergy - bassAverage) * (1 - Math.exp(-dt / 1.2));
+        const reference = Math.max(.005, bassAverage);
+        const onset = Math.max(0, (bassEnergy - bassAverage) / reference);
+        const rise = (bassEnergy - previousBass) / reference;
+        const hit = bassEnergy > .002 && onset > .18 && rise > .035 && now - lastBeat > .18;
         if (hit) lastBeat = now;
-        previousBass = rawBass;
+        previousBass = bassEnergy;
         let power = 0;
         for (const value of waveform) power += value * value;
         signal = {
@@ -171,7 +189,7 @@
             bass: smooth(rawBass, signal.bass, .22),
             mid: smooth(band(220, 2500), signal.mid, .3),
             treble: smooth(band(2500, 10000), signal.treble, .18),
-            beat: hit ? Math.min(1, .25 + onset * 6) : signal.beat * Math.exp(-dt / .18),
+            beat: hit ? Math.min(1, .3 + onset * .85) : signal.beat * Math.exp(-dt / .18),
             level: smooth(Math.min(1, Math.sqrt(power / waveform.length) * 3 * volume / .35), signal.level, .25)
         };
         return signal;
@@ -302,7 +320,7 @@
         window.dispatchEvent(new Event('experience:visualchange'));
         window.dispatchEvent(new Event('resize'));
         if (announce) status.textContent = mode === 'visualizer'
-            ? 'Visualizer selected. Automatic flow is on; play the track for music response.'
+            ? 'Visualizer selected. Play the track to start automatic flow.'
             : `${mode === 'fluid' ? 'Fluid' : 'Whirl'} selected.`;
     }
     for (const button of modeButtons) button.addEventListener('click', () => {
@@ -428,6 +446,7 @@
         get visualMode() { return visualMode; },
         get visualizerEnabled() { return visualMode === 'visualizer' && motionEnabled; },
         get soundPlaying() { return !!audio && !audio.paused; },
+        get soundAudible() { return soundAudible(); },
         isVisualActive,
         useStaticArtwork(mode = visualMode) {
             unavailableModes.add(rendererKey(mode));

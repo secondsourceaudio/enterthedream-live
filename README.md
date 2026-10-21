@@ -35,8 +35,9 @@ from GitHub. Rebuild it after homepage changes with `python3 scripts/build_previ
 
 The homepage starts in **WHIRL**. Select **FLUID** to use the fluid study with the
 same DRIP artwork. **VISUALIZER** uses the fluid renderer with automatic,
-random currents. Select Play to let the music shape their strength and speed;
-selecting a visual mode never starts sound. Switching stays on the page and keeps the audio, playback
+random currents while the track plays audibly. Select Play to start the flow.
+The music shapes its strength and speed, and pause or mute freezes the image.
+Selecting a visual mode never starts sound. Switching stays on the page and keeps the audio, playback
 position, volume, fullscreen and motion choice. Only the selected renderer runs;
 switching clears held gestures and returns the newly selected image to its
 starting composition. A mode that cannot render shows the static artwork while
@@ -68,19 +69,25 @@ VISUALIZER uses a 2048-point FFT and RMS loudness from the track already playing
 Bass (35–220 Hz) drives most of the force. Low-frequency onsets add short pulses;
 midrange (220–2500 Hz) and treble (2500–10000 Hz) add smaller changes in the curls.
 Fast attack and slower release smooth the response, with a short beat cooldown
-and an adaptive bass average. This is signal analysis in the browser, with no
-model or external service. Three independent currents smoothly approach random
-positions, directions and spin targets, chosen again every 4–11 seconds. Softer
-forces, slower steering and a gentle pull toward the original image keep the
-motion restrained, including on bass hits. The currents run
-independently of audio; pausing or muting the track returns to their quieter
-baseline. Mouse hover and drag never stir VISUALIZER. FLOWER remains silent.
+and an adaptive bass average. Onsets use linear energy from the floating-point
+spectrum, avoiding the clipped byte bins that flatten loud masters. This signal
+analysis runs in the browser, with no model or external service. Three independent currents smoothly approach random
+positions, directions and spin targets, chosen again every 4–11 seconds. VISUALIZER
+blends this liquid flow with two soft, opposing whirls and a small breathing pulse.
+The accents follow bass hits and changes relative to recent loudness; they are
+reversible texture-sampling offsets, never accumulated in the liquid field.
+Faster recovery, velocity damping and a bounded displacement map keep prolonged
+playback from stretching the artwork into a lasting, oversized shape. Manual
+FLUID keeps its original feel and range. Selecting VISUALIZER before Play
+shows a still image. Pausing, muting, setting volume to zero or buffering freezes
+the current image and simulation; audible playback resumes from that state. Mouse hover and drag never stir VISUALIZER. FLOWER remains silent.
 
 In fullscreen VISUALIZER, controls fade after 3.2 seconds of inactivity. Move the
 pointer, touch the screen or use the keyboard to reveal them. Controls stay
 visible while hovered or focused with the keyboard, and while INFO is open.
 Use Exit fullscreen or Escape to return. VISUALIZER runs when explicitly selected
-and Motion is on, including with reduced-motion preferences. Motion off pauses it.
+with audible playback and Motion on, including with reduced-motion preferences.
+Motion off pauses it.
 RETURN suppresses automatic forces and settles the image, and RESET gives a
 1.5-second rest before the flow resumes. Rendering still pauses in hidden tabs.
 **Info** opens notes about the study and sound. Dialogs restore keyboard focus

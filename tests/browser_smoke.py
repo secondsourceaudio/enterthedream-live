@@ -1443,10 +1443,13 @@ class WebsiteTests(unittest.TestCase):
         })""", {'frames': frames, 'baseline': baseline, 'live': live})
 
     def test_visualizer_reacts_to_audio_and_return_still_settles(self):
+        serve_seekable_audio(self.page)
         self.start_controlled_fluid()
         self.page.locator('[data-visual-mode="visualizer"]').click()
         self.fluid_frame_difference(baseline=True)
-        self.assertGreater(self.fluid_frame_difference(120), .5, 'VISUALIZER must run automatically before Play')
+        self.assertLess(self.fluid_frame_difference(120), .01, 'VISUALIZER must wait for audible playback')
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
         self.page.locator('[data-fluid-reset]').click()
         self.page.evaluate("window.SecondSourceExperience.sampleAudio = () => ({active: true, bass: .8, mid: .15, treble: .1, beat: .6, level: .4})")
         self.page.locator('[data-fullscreen]').click()
@@ -1481,7 +1484,7 @@ class WebsiteTests(unittest.TestCase):
         self.page.locator('[data-visual-mode="fluid"]').click()
         self.fluid_frame_difference(baseline=True)
         self.assertLess(self.fluid_frame_difference(120), .01, 'Manual FLUID must stay manual even when the track has energy')
-        self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
+        self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
 
     def test_visualizer_controls_hide_and_reappear_without_starting_audio(self):
         self.start_controlled_fluid()
@@ -1489,7 +1492,7 @@ class WebsiteTests(unittest.TestCase):
         self.page.locator('[data-fullscreen]').click()
         expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'true')
         self.fluid_frame_difference(baseline=True)
-        self.assertGreater(self.fluid_frame_difference(120), .5)
+        self.assertLess(self.fluid_frame_difference(120), .01)
         self.page.mouse.move(10, 10)
         self.page.wait_for_function("document.querySelector('[data-experience]').classList.contains('visualizer-idle')")
         self.assertEqual(self.page.locator('[data-visualizer-dock]').evaluate('node => getComputedStyle(node).pointerEvents'), 'none')
@@ -1518,10 +1521,13 @@ class WebsiteTests(unittest.TestCase):
         self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
 
     def test_visualizer_is_automatic_with_reduced_motion_and_ignores_mouse_stirring(self):
+        serve_seekable_audio(self.page)
         self.page.emulate_media(reduced_motion='reduce')
         self.start_controlled_fluid()
         self.page.locator('[data-visual-mode="visualizer"]').click()
         self.assertTrue(self.page.evaluate('window.SecondSourceExperience.visualizerEnabled'))
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
         self.page.locator('[data-fluid-reset]').click()
         self.fluid_frame_difference(baseline=True)
         box = self.page.locator('#fluid-container').bounding_box()
@@ -1533,19 +1539,41 @@ class WebsiteTests(unittest.TestCase):
         self.assertGreater(self.fluid_frame_difference(180), .5, 'Random currents must resume by themselves even while the mouse is held')
         self.page.mouse.up()
 
-    def test_visualizer_animates_in_the_real_render_loop_without_sound_or_input(self):
+    def test_visualizer_real_playback_moves_without_input_and_freezes_when_inaudible(self):
+        serve_seekable_audio(self.page)
         self.page.emulate_media(reduced_motion='reduce')
+        self.page.set_viewport_size({'width': 900, 'height': 700})
         self.page.add_init_script("""(() => {
             let seed = 42;
             Math.random = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
         })();""")
         self.visit()
         self.page.locator('[data-visual-mode="visualizer"]').click()
-        self.fluid_frame_difference(baseline=True, live=True)
-        frames = self.page.evaluate("window.__drawsByCanvas['fluid-visual']")
-        self.page.wait_for_function("before => window.__drawsByCanvas['fluid-visual'] > before + 90", arg=frames)
-        self.assertGreater(self.fluid_frame_difference(live=True), .5)
-        self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
+
+        def difference_over_frames(count):
+            self.fluid_frame_difference(baseline=True, live=True)
+            self.wait_for_frames(count)
+            return self.fluid_frame_difference(live=True)
+
+        self.assertLess(difference_over_frames(30), .01, 'No movement before Play')
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
+        self.page.locator('audio').evaluate('audio => { audio.currentTime = 30; }')
+        self.page.wait_for_function('document.querySelector("audio").currentTime >= 30 && window.SecondSourceExperience.soundAudible')
+        self.assertGreater(difference_over_frames(90), .5, 'Real music must animate without mouse input')
+        self.page.locator('[data-sound]').click()
+        self.assertLess(difference_over_frames(30), .01, 'Pause must freeze the entire effect, including beat accents')
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
+        self.assertGreater(difference_over_frames(60), .1, 'Playback must resume the animation')
+        self.page.locator('[data-mute]').click()
+        self.assertLess(difference_over_frames(30), .01, 'Mute must freeze the image')
+        self.page.locator('[data-mute]').click()
+        self.assertGreater(difference_over_frames(60), .1, 'Unmute must resume the animation')
+        self.page.locator('[data-volume]').fill('0')
+        self.assertLess(difference_over_frames(30), .01, 'Zero volume must freeze the image')
+        self.page.locator('[data-volume]').fill('0.35')
+        self.assertGreater(difference_over_frames(60), .1, 'Restoring volume must resume the animation')
 
     def test_visualizer_analyser_distinguishes_bass_mid_treble_and_bass_hits(self):
         serve_seekable_audio(self.page)
@@ -1581,6 +1609,66 @@ class WebsiteTests(unittest.TestCase):
         self.page.locator('[data-mute]').click()
         self.assertFalse(self.page.evaluate('window.SecondSourceExperience.sampleAudio().active'))
         self.assertEqual(self.page.evaluate('window.SecondSourceExperience.sampleBass()'), 0)
+
+    def test_visualizer_bass_accents_relax_between_hits(self):
+        serve_seekable_audio(self.page)
+        self.start_controlled_fluid()
+
+        def pixels_after(frames):
+            self.fluid_frame_difference(frames, baseline=True)
+            return self.page.evaluate("""() => {
+                const pixels = window.__visualizerBaseline, sampled = [];
+                for (let i = 0; i < pixels.length; i += 64) sampled.push(pixels[i], pixels[i + 1], pixels[i + 2]);
+                return sampled;
+            }""")
+
+        frames = []
+        for accented in [False, True]:
+            if accented:
+                self.page.reload(wait_until='networkidle')
+                self.page.wait_for_function("typeof window.__stepFluid === 'function'")
+            self.page.locator('[data-visual-mode="visualizer"]').click()
+            self.page.locator('[data-sound]').click()
+            self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
+            self.page.evaluate("""() => {
+                window.__music = {active: true, bass: .5, mid: .1, treble: .1, beat: 0, level: .3};
+                window.SecondSourceExperience.sampleAudio = () => window.__music;
+            }""")
+            pixels_after(120)
+            if accented:
+                self.page.evaluate('window.__music.beat = 1')
+            peak = pixels_after(12)
+            self.page.evaluate('window.__music.beat = 0')
+            relaxed = pixels_after(90)
+            frames.append((peak, relaxed))
+
+        def difference(first, second):
+            return sum(abs(a - b) for a, b in zip(first, second)) / len(first)
+
+        peak_difference = difference(frames[0][0], frames[1][0])
+        relaxed_difference = difference(frames[0][1], frames[1][1])
+        self.assertGreater(peak_difference, .5, 'A bass hit must visibly change the image beyond its ongoing liquid flow')
+        self.assertLess(relaxed_difference, peak_difference * .6, 'The accent must unwind rather than remain as accumulated stretching')
+
+    def test_visualizer_detects_repeated_bass_hits_in_the_actual_loud_master(self):
+        serve_seekable_audio(self.page)
+        self.page.set_viewport_size({'width': 900, 'height': 700})
+        self.visit()
+        self.page.locator('[data-visual-mode="visualizer"]').click()
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
+        self.page.locator('audio').evaluate('audio => { audio.currentTime = 45; }')
+        self.page.wait_for_function('document.querySelector("audio").currentTime >= 46.5')
+        hits = self.page.evaluate("""() => new Promise(resolve => {
+            let previous = 0, hits = 0;
+            const timer = setInterval(() => {
+                const beat = window.SecondSourceExperience.sampleAudio().beat;
+                if (beat > previous + .15) hits++;
+                previous = beat;
+            }, 30);
+            setTimeout(() => { clearInterval(timer); resolve(hits); }, 3500);
+        })""")
+        self.assertGreaterEqual(hits, 2, 'Bass detection must keep finding attacks after startup, even in this loud master')
 
     def test_fullscreen_fallback_escape_and_focus(self):
         self.visit()
