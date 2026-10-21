@@ -44,6 +44,7 @@ SOFTWARE.
 
     let running = true;
     const fluidMotionEnabled = () => running && experience.motionEnabled && experience.isVisualActive('fluid');
+    const manualInputEnabled = () => fluidMotionEnabled() && experience.visualMode !== 'visualizer';
     function fallback() {
         running = false;
         canvas.classList.remove('is-ready');
@@ -96,9 +97,16 @@ SOFTWARE.
         let hover = null;
         let hoverForce = null;
         let previousTime = null;
-        let autoTime = 0;
         let autoAmount = 0;
         let autoRest = 0;
+        function randomCurrent() {
+            const angle = Math.random() * Math.PI * 2;
+            return {x: .18 + Math.random() * .64, y: .18 + Math.random() * .64,
+                fx: Math.cos(angle), fy: Math.sin(angle),
+                spin: (Math.random() < .5 ? -1 : 1) * (.4 + Math.random() * .6)};
+        }
+        const currents = Array.from({length: 3}, () => ({...randomCurrent(),
+            target: randomCurrent(), remaining: 3 + Math.random() * 6}));
         const returning = () => rightHeld || returnKey || returnPointers.size > 0;
         const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
@@ -402,7 +410,7 @@ SOFTWARE.
             }
         }
         function resize() {
-            // Fullscreen covers the viewport with a square image, without stretching it.
+            // Render the complete artwork at a bounded resolution in every viewing mode.
             const size = media.clientWidth;
             const ratio = Math.min(devicePixelRatio || 1, 1.75, 1600 / Math.max(size, 1));
             const width = Math.max(1, Math.floor(size * ratio));
@@ -439,7 +447,7 @@ SOFTWARE.
         }
 
         container.addEventListener('pointerdown', event => {
-            if (!fluidMotionEnabled() || (event.pointerType === 'mouse' && event.button !== 0)) return;
+            if (!manualInputEnabled() || (event.pointerType === 'mouse' && event.button !== 0)) return;
             event.preventDefault();
             if (pointers.size >= 3) return;
             const location = point(event);
@@ -448,7 +456,7 @@ SOFTWARE.
             inject(location, 0, 0, material.impulse);
         });
         window.addEventListener('pointermove', event => {
-            if (!fluidMotionEnabled()) return;
+            if (!manualInputEnabled()) return;
             const tracked = pointers.get(event.pointerId);
             if (tracked) {
                 if (tracked.type === 'mouse' && !(event.buttons & 1)) { pointers.delete(event.pointerId); return; }
@@ -469,7 +477,7 @@ SOFTWARE.
         window.addEventListener('pointercancel', releasePointer);
         container.addEventListener('lostpointercapture', releasePointer);
         container.addEventListener('mousedown', event => {
-            if (event.button === 2 && fluidMotionEnabled()) { event.preventDefault(); rightHeld = true; updateReturn(); }
+            if (event.button === 2 && manualInputEnabled()) { event.preventDefault(); rightHeld = true; updateReturn(); }
         });
         for (const type of ['mouseup', 'mousemove']) window.addEventListener(type, event => {
             if (!(event.buttons & 2)) rightHeld = false;
@@ -481,7 +489,7 @@ SOFTWARE.
         container.addEventListener('contextmenu', event => event.preventDefault());
         container.addEventListener('dragstart', event => event.preventDefault());
         container.addEventListener('keydown', event => {
-            if (event.target !== container || event.repeat || !fluidMotionEnabled()) return;
+            if (event.target !== container || event.repeat || !manualInputEnabled()) return;
             if (event.key === ' ' || event.key === 'Enter') {
                 event.preventDefault(); inject({x: .5, y: .5}, 0, 0, material.impulse * 1.5);
             }
@@ -538,20 +546,22 @@ SOFTWARE.
                 const signal = experience.sampleAudio();
                 const bass = signal.bass;
                 autoRest = Math.max(0, autoRest - dt);
-                const automatic = experience.visualizerEnabled && signal.active && !returningNow && !pointers.size && !autoRest;
-                autoAmount += ((automatic ? 1 : 0) - autoAmount) * (1 - Math.exp(-dt * 2));
-                if (experience.visualizerEnabled && signal.active) autoTime += dt * (.2 + bass * .8 + signal.beat * .6);
+                const automatic = experience.visualizerEnabled && !returningNow && !autoRest;
+                autoAmount += ((automatic ? 1 : 0) - autoAmount) * (1 - Math.exp(-dt * 3));
                 if (automatic) {
-                    // Moving, opposing currents keep the image alive without a fixed vortex.
-                    const strength = autoAmount * (bass * 650 + signal.beat * 1500 + signal.level * 80 + signal.mid * 70);
-                    for (let i = 0; i < 3; i++) {
-                        const phase = i * Math.PI * 2 / 3;
-                        const location = {x: .5 + .26 * Math.sin(autoTime * .23 + phase),
-                            y: .5 + .25 * Math.sin(autoTime * .31 + phase * 1.7)};
-                        inject(location, Math.cos(autoTime * .41 + phase) * strength * dt,
-                            Math.sin(autoTime * .37 - phase) * strength * dt,
-                            Math.sin(autoTime * .16 + phase) * autoAmount * dt *
-                                (bass * 1900 + signal.beat * 2600 + signal.mid * 250 + signal.treble * 100));
+                    // Independent currents wander between random targets, even without audio.
+                    const strength = autoAmount * (700 + bass * 650 + signal.beat * 1500 + signal.level * 80 + signal.mid * 70);
+                    const response = 1 - Math.exp(-dt * (.45 + bass * .35 + signal.beat * .4));
+                    for (const current of currents) {
+                        current.remaining -= dt;
+                        if (current.remaining <= 0) {
+                            current.target = randomCurrent();
+                            current.remaining = 3 + Math.random() * 6;
+                        }
+                        for (const key of ['x', 'y', 'fx', 'fy', 'spin']) current[key] += (current.target[key] - current[key]) * response;
+                        inject(current, current.fx * strength * dt, current.fy * strength * dt,
+                            current.spin * autoAmount * dt *
+                                (1600 + bass * 1900 + signal.beat * 2600 + signal.mid * 250 + signal.treble * 100));
                     }
                 }
                 if (hoverForce && !returningNow) inject(hoverForce,

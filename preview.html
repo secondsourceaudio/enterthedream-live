@@ -826,6 +826,7 @@ html[data-motion="off"] .visual-container { touch-action: pan-y pinch-zoom; }
 .visual-mode-switch { display: flex; gap: 0; }
 .visual-mode-switch .experience-button { min-width: 58px; color: #777; }
 .visual-mode-switch .experience-button[aria-pressed="true"] { color: #fff; box-shadow: inset 0 -1px #aaa; }
+.listening-space[data-active-visual="visualizer"] .visual-container { touch-action: pan-y pinch-zoom; }
 .experience-button[data-sound]:disabled { cursor: progress; }
 .experience-button:focus-visible,
 .experience-volume input:focus-visible {
@@ -925,37 +926,16 @@ body.listening-mode { overflow: hidden; }
     width: min(calc(100dvh - 180px), calc(100vw - 48px));
 }
 
-.landing-study .listening-space.is-visualizer { padding: 0; overflow: hidden; }
 .landing-study .listening-space.is-visualizer .visual-container {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    aspect-ratio: auto;
-}
-.landing-study .listening-space.is-visualizer .visual-media {
-    inset: auto;
-    top: 50%;
-    left: 50%;
-    width: max(100vw, 100dvh);
-    height: max(100vw, 100dvh);
-    transform: translate(-50%, -50%);
+    width: min(max(80px, calc(100dvh - var(--visualizer-space, 230px))), calc(100vw - 48px));
 }
 .listening-space.is-visualizer .visualizer-dock {
-    position: absolute;
-    bottom: max(12px, env(safe-area-inset-bottom));
-    z-index: 5;
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    width: min(760px, calc(100% - 24px));
-    padding: 8px 12px;
-    border: 1px solid rgb(255 255 255 / .12);
-    background: rgb(5 5 5 / .72);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    width: min(760px, 100%);
     transition: opacity .5s ease;
 }
 .landing-study .listening-space.is-visualizer .experience-controls { margin: 0; max-width: 100%; }
@@ -1029,6 +1009,9 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
     .listening-space.is-immersive .visual-container,
     .listening-space:fullscreen .visual-container {
         width: min(calc(100dvh - 200px), calc(100vw - 24px));
+    }
+    .landing-study .listening-space.is-visualizer .visual-container {
+        width: min(max(80px, calc(100dvh - var(--visualizer-space, 230px))), calc(100vw - 24px));
     }
     .field-study .listening-space.is-immersive .visual-container,
     .field-study .listening-space:fullscreen .visual-container {
@@ -1114,7 +1097,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
                 <dl>
                     <dt>SOUND</dt><dd>SAGE COUNSEL</dd>
                     <dt>PROJECT</dt><dd>SECOND SOURCE AUDIO<span class="info-project-description">Music, images and audiovisual experiments.</span><a class="info-project-link" href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP ↗</a></dd>
-                    <dt>CONTROLS</dt><dd><span data-mode-controls="whirl">Click or tap for ripples · Hold to build a whirlpool<br>Drag to stir · Pinch to zoom<br>Hold right-click or RETURN for a faster return</span><span data-mode-controls="fluid" hidden>Drag to move the image · Hold to stir<br>Hold right-click or RETURN to settle<br>Reset to restore the original image<br>VISUALIZER follows the music · Fullscreen to expand</span><br>Escape to leave fullscreen</dd>
+                    <dt>CONTROLS</dt><dd><span data-mode-controls="whirl">Click or tap for ripples · Hold to build a whirlpool<br>Drag to stir · Pinch to zoom<br>Hold right-click or RETURN for a faster return</span><span data-mode-controls="fluid" hidden>Drag to move the image · Hold to stir<br>Hold right-click or RETURN to settle<br>Reset to restore the original image<br>VISUALIZER: automatic random flow, shaped by the music</span><br>Escape to leave fullscreen</dd>
                 </dl>
                 <button class="experience-button info-modifier" type="button" data-glitch-toggle data-mode-controls="whirl" aria-pressed="false" aria-label="SRC_GLITCH: off">SRC_GLITCH / OFF</button>
             </dialog>
@@ -1492,7 +1475,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
         window.dispatchEvent(new Event('experience:visualchange'));
         window.dispatchEvent(new Event('resize'));
         if (announce) status.textContent = mode === 'visualizer'
-            ? 'Visualizer selected. Play the track to animate with the music.'
+            ? 'Visualizer selected. Automatic flow is on; play the track for music response.'
             : `${mode === 'fluid' ? 'Fluid' : 'Whirl'} selected.`;
     }
     for (const button of modeButtons) button.addEventListener('click', () => {
@@ -1520,8 +1503,18 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
             space.classList.add('visualizer-idle');
         }, 3200);
     }
+    function fitVisualizer() {
+        if (!immersive || visualMode !== 'visualizer' || !visualizerDock) return;
+        const style = getComputedStyle(space);
+        const reserved = visualizerDock.getBoundingClientRect().height +
+            parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) + parseFloat(style.rowGap);
+        space.style.setProperty('--visualizer-space', `${Math.ceil(reserved)}px`);
+    }
+    window.addEventListener('resize', fitVisualizer);
+    if (visualizerDock) new ResizeObserver(fitVisualizer).observe(visualizerDock);
     function updateVisualizer() {
         space.classList.toggle('is-visualizer', immersive && visualMode === 'visualizer');
+        fitVisualizer();
         revealVisualizerControls();
     }
     for (const event of ['pointermove', 'pointerdown', 'keydown']) {
@@ -1606,7 +1599,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
         get motionEnabled() { return motionEnabled; },
         get glitchEnabled() { return glitchEnabled; },
         get visualMode() { return visualMode; },
-        get visualizerEnabled() { return visualMode === 'visualizer' && motionEnabled && !reducedMotion.matches; },
+        get visualizerEnabled() { return visualMode === 'visualizer' && motionEnabled; },
         get soundPlaying() { return !!audio && !audio.paused; },
         isVisualActive,
         useStaticArtwork(mode = visualMode) {
@@ -3404,6 +3397,7 @@ SOFTWARE.
 
     let running = true;
     const fluidMotionEnabled = () => running && experience.motionEnabled && experience.isVisualActive('fluid');
+    const manualInputEnabled = () => fluidMotionEnabled() && experience.visualMode !== 'visualizer';
     function fallback() {
         running = false;
         canvas.classList.remove('is-ready');
@@ -3456,9 +3450,16 @@ SOFTWARE.
         let hover = null;
         let hoverForce = null;
         let previousTime = null;
-        let autoTime = 0;
         let autoAmount = 0;
         let autoRest = 0;
+        function randomCurrent() {
+            const angle = Math.random() * Math.PI * 2;
+            return {x: .18 + Math.random() * .64, y: .18 + Math.random() * .64,
+                fx: Math.cos(angle), fy: Math.sin(angle),
+                spin: (Math.random() < .5 ? -1 : 1) * (.4 + Math.random() * .6)};
+        }
+        const currents = Array.from({length: 3}, () => ({...randomCurrent(),
+            target: randomCurrent(), remaining: 3 + Math.random() * 6}));
         const returning = () => rightHeld || returnKey || returnPointers.size > 0;
         const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
@@ -3762,7 +3763,7 @@ SOFTWARE.
             }
         }
         function resize() {
-            // Fullscreen covers the viewport with a square image, without stretching it.
+            // Render the complete artwork at a bounded resolution in every viewing mode.
             const size = media.clientWidth;
             const ratio = Math.min(devicePixelRatio || 1, 1.75, 1600 / Math.max(size, 1));
             const width = Math.max(1, Math.floor(size * ratio));
@@ -3799,7 +3800,7 @@ SOFTWARE.
         }
 
         container.addEventListener('pointerdown', event => {
-            if (!fluidMotionEnabled() || (event.pointerType === 'mouse' && event.button !== 0)) return;
+            if (!manualInputEnabled() || (event.pointerType === 'mouse' && event.button !== 0)) return;
             event.preventDefault();
             if (pointers.size >= 3) return;
             const location = point(event);
@@ -3808,7 +3809,7 @@ SOFTWARE.
             inject(location, 0, 0, material.impulse);
         });
         window.addEventListener('pointermove', event => {
-            if (!fluidMotionEnabled()) return;
+            if (!manualInputEnabled()) return;
             const tracked = pointers.get(event.pointerId);
             if (tracked) {
                 if (tracked.type === 'mouse' && !(event.buttons & 1)) { pointers.delete(event.pointerId); return; }
@@ -3829,7 +3830,7 @@ SOFTWARE.
         window.addEventListener('pointercancel', releasePointer);
         container.addEventListener('lostpointercapture', releasePointer);
         container.addEventListener('mousedown', event => {
-            if (event.button === 2 && fluidMotionEnabled()) { event.preventDefault(); rightHeld = true; updateReturn(); }
+            if (event.button === 2 && manualInputEnabled()) { event.preventDefault(); rightHeld = true; updateReturn(); }
         });
         for (const type of ['mouseup', 'mousemove']) window.addEventListener(type, event => {
             if (!(event.buttons & 2)) rightHeld = false;
@@ -3841,7 +3842,7 @@ SOFTWARE.
         container.addEventListener('contextmenu', event => event.preventDefault());
         container.addEventListener('dragstart', event => event.preventDefault());
         container.addEventListener('keydown', event => {
-            if (event.target !== container || event.repeat || !fluidMotionEnabled()) return;
+            if (event.target !== container || event.repeat || !manualInputEnabled()) return;
             if (event.key === ' ' || event.key === 'Enter') {
                 event.preventDefault(); inject({x: .5, y: .5}, 0, 0, material.impulse * 1.5);
             }
@@ -3898,20 +3899,22 @@ SOFTWARE.
                 const signal = experience.sampleAudio();
                 const bass = signal.bass;
                 autoRest = Math.max(0, autoRest - dt);
-                const automatic = experience.visualizerEnabled && signal.active && !returningNow && !pointers.size && !autoRest;
-                autoAmount += ((automatic ? 1 : 0) - autoAmount) * (1 - Math.exp(-dt * 2));
-                if (experience.visualizerEnabled && signal.active) autoTime += dt * (.2 + bass * .8 + signal.beat * .6);
+                const automatic = experience.visualizerEnabled && !returningNow && !autoRest;
+                autoAmount += ((automatic ? 1 : 0) - autoAmount) * (1 - Math.exp(-dt * 3));
                 if (automatic) {
-                    // Moving, opposing currents keep the image alive without a fixed vortex.
-                    const strength = autoAmount * (bass * 650 + signal.beat * 1500 + signal.level * 80 + signal.mid * 70);
-                    for (let i = 0; i < 3; i++) {
-                        const phase = i * Math.PI * 2 / 3;
-                        const location = {x: .5 + .26 * Math.sin(autoTime * .23 + phase),
-                            y: .5 + .25 * Math.sin(autoTime * .31 + phase * 1.7)};
-                        inject(location, Math.cos(autoTime * .41 + phase) * strength * dt,
-                            Math.sin(autoTime * .37 - phase) * strength * dt,
-                            Math.sin(autoTime * .16 + phase) * autoAmount * dt *
-                                (bass * 1900 + signal.beat * 2600 + signal.mid * 250 + signal.treble * 100));
+                    // Independent currents wander between random targets, even without audio.
+                    const strength = autoAmount * (700 + bass * 650 + signal.beat * 1500 + signal.level * 80 + signal.mid * 70);
+                    const response = 1 - Math.exp(-dt * (.45 + bass * .35 + signal.beat * .4));
+                    for (const current of currents) {
+                        current.remaining -= dt;
+                        if (current.remaining <= 0) {
+                            current.target = randomCurrent();
+                            current.remaining = 3 + Math.random() * 6;
+                        }
+                        for (const key of ['x', 'y', 'fx', 'fy', 'spin']) current[key] += (current.target[key] - current[key]) * response;
+                        inject(current, current.fx * strength * dt, current.fy * strength * dt,
+                            current.spin * autoAmount * dt *
+                                (1600 + bass * 1900 + signal.beat * 2600 + signal.mid * 250 + signal.treble * 100));
                     }
                 }
                 if (hoverForce && !returningNow) inject(hoverForce,

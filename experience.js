@@ -302,7 +302,7 @@
         window.dispatchEvent(new Event('experience:visualchange'));
         window.dispatchEvent(new Event('resize'));
         if (announce) status.textContent = mode === 'visualizer'
-            ? 'Visualizer selected. Play the track to animate with the music.'
+            ? 'Visualizer selected. Automatic flow is on; play the track for music response.'
             : `${mode === 'fluid' ? 'Fluid' : 'Whirl'} selected.`;
     }
     for (const button of modeButtons) button.addEventListener('click', () => {
@@ -330,8 +330,18 @@
             space.classList.add('visualizer-idle');
         }, 3200);
     }
+    function fitVisualizer() {
+        if (!immersive || visualMode !== 'visualizer' || !visualizerDock) return;
+        const style = getComputedStyle(space);
+        const reserved = visualizerDock.getBoundingClientRect().height +
+            parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) + parseFloat(style.rowGap);
+        space.style.setProperty('--visualizer-space', `${Math.ceil(reserved)}px`);
+    }
+    window.addEventListener('resize', fitVisualizer);
+    if (visualizerDock) new ResizeObserver(fitVisualizer).observe(visualizerDock);
     function updateVisualizer() {
         space.classList.toggle('is-visualizer', immersive && visualMode === 'visualizer');
+        fitVisualizer();
         revealVisualizerControls();
     }
     for (const event of ['pointermove', 'pointerdown', 'keydown']) {
@@ -416,7 +426,7 @@
         get motionEnabled() { return motionEnabled; },
         get glitchEnabled() { return glitchEnabled; },
         get visualMode() { return visualMode; },
-        get visualizerEnabled() { return visualMode === 'visualizer' && motionEnabled && !reducedMotion.matches; },
+        get visualizerEnabled() { return visualMode === 'visualizer' && motionEnabled; },
         get soundPlaying() { return !!audio && !audio.paused; },
         isVisualActive,
         useStaticArtwork(mode = visualMode) {

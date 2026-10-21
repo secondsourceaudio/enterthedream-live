@@ -1388,6 +1388,11 @@ class WebsiteTests(unittest.TestCase):
     def start_controlled_fluid(self, path='index.html'):
         self.page.set_viewport_size({'width': 900, 'height': 700})
         self.page.add_init_script("""(() => {
+            let seed = 42;
+            Math.random = () => {
+                seed = (seed * 1664525 + 1013904223) >>> 0;
+                return seed / 4294967296;
+            };
             let experience;
             Object.defineProperty(window, 'SecondSourceExperience', {
                 get: () => experience,
@@ -1406,29 +1411,43 @@ class WebsiteTests(unittest.TestCase):
         self.visit(path)
         self.page.wait_for_function("typeof window.__stepFluid === 'function'")
 
-    def fluid_frame_difference(self, frames=1, baseline=False):
-        return self.page.evaluate("""({frames, baseline}) => {
-            window.__stepFluid(frames);
+    def fluid_frame_difference(self, frames=1, baseline=False, live=False):
+        return self.page.evaluate("""({frames, baseline, live}) => new Promise(resolve => {
             const canvas = document.querySelector('#fluid-visual') || document.querySelector('#visual');
             const gl = canvas.getContext('webgl');
-            const pixels = new Uint8Array(canvas.width * canvas.height * 4);
-            gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-            if (baseline) window.__visualizerBaseline = pixels;
-            let difference = 0, count = 0;
-            for (let i = 0; i < pixels.length; i += 64) {
-                for (let channel = 0; channel < 3; channel++) {
-                    difference += Math.abs(pixels[i + channel] - window.__visualizerBaseline[i + channel]);
-                    count++;
+            const read = () => {
+                const pixels = new Uint8Array(canvas.width * canvas.height * 4);
+                gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+                if (baseline) window.__visualizerBaseline = pixels;
+                let difference = 0, count = 0;
+                for (let i = 0; i < pixels.length; i += 64) {
+                    for (let channel = 0; channel < 3; channel++) {
+                        difference += Math.abs(pixels[i + channel] - window.__visualizerBaseline[i + channel]);
+                        count++;
+                    }
                 }
+                resolve(difference / count);
+            };
+            if (live) {
+                const draw = gl.drawArrays;
+                gl.drawArrays = function (...args) {
+                    draw.apply(this, args);
+                    if (gl.getParameter(gl.FRAMEBUFFER_BINDING)) return;
+                    gl.drawArrays = draw;
+                    read();
+                };
+            } else {
+                window.__stepFluid(frames);
+                read();
             }
-            return difference / count;
-        }""", {'frames': frames, 'baseline': baseline})
+        })""", {'frames': frames, 'baseline': baseline, 'live': live})
 
     def test_visualizer_reacts_to_audio_and_return_still_settles(self):
         self.start_controlled_fluid()
         self.page.locator('[data-visual-mode="visualizer"]').click()
         self.fluid_frame_difference(baseline=True)
-        self.assertLess(self.fluid_frame_difference(120), .01, 'Selecting VISUALIZER must stay still before Play')
+        self.assertGreater(self.fluid_frame_difference(120), .5, 'VISUALIZER must run automatically before Play')
+        self.page.locator('[data-fluid-reset]').click()
         self.page.evaluate("window.SecondSourceExperience.sampleAudio = () => ({active: true, bass: .8, mid: .15, treble: .1, beat: .6, level: .4})")
         self.page.locator('[data-fullscreen]').click()
         expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'true')
@@ -1437,8 +1456,12 @@ class WebsiteTests(unittest.TestCase):
         self.assertTrue(self.page.evaluate("""() => {
             const frame = document.querySelector('#fluid-container').getBoundingClientRect();
             const media = document.querySelector('#fluid-container .visual-media').getBoundingClientRect();
-            return frame.width === innerWidth && frame.height === innerHeight &&
-                media.width === media.height && media.width >= innerWidth && media.height >= innerHeight;
+            const dock = document.querySelector('[data-visualizer-dock]').getBoundingClientRect();
+            return Math.abs(frame.width - frame.height) < 1 &&
+                frame.left >= 0 && frame.top >= 0 && frame.right <= innerWidth && frame.bottom <= innerHeight &&
+                Math.abs(media.width - frame.width) < 1 && Math.abs(media.height - frame.height) < 1 &&
+                Math.abs(frame.left + frame.width / 2 - innerWidth / 2) < 1 &&
+                dock.top >= frame.bottom && dock.bottom <= innerHeight;
         }"""))
         self.fluid_frame_difference(baseline=True)
         disturbed = self.fluid_frame_difference(120)
@@ -1466,7 +1489,7 @@ class WebsiteTests(unittest.TestCase):
         self.page.locator('[data-fullscreen]').click()
         expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'true')
         self.fluid_frame_difference(baseline=True)
-        self.assertLess(self.fluid_frame_difference(120), .01)
+        self.assertGreater(self.fluid_frame_difference(120), .5)
         self.page.mouse.move(10, 10)
         self.page.wait_for_function("document.querySelector('[data-experience]').classList.contains('visualizer-idle')")
         self.assertEqual(self.page.locator('[data-visualizer-dock]').evaluate('node => getComputedStyle(node).pointerEvents'), 'none')
@@ -1475,7 +1498,7 @@ class WebsiteTests(unittest.TestCase):
         self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
         self.page.locator('[data-fullscreen]').click()
 
-    def test_visualizer_preserves_playback_and_respects_reduced_motion(self):
+    def test_visualizer_preserves_playback_and_respects_explicit_motion_toggle(self):
         serve_seekable_audio(self.page)
         self.visit()
         self.page.locator('[data-sound]').click()
@@ -1486,11 +1509,43 @@ class WebsiteTests(unittest.TestCase):
         self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
         self.assertTrue(self.page.evaluate('window.SecondSourceExperience.visualizerEnabled'))
         self.page.emulate_media(reduced_motion='reduce')
+        self.assertTrue(self.page.evaluate('window.SecondSourceExperience.visualizerEnabled'))
+        self.page.locator('[data-motion-toggle]').click()
         self.assertFalse(self.page.evaluate('window.SecondSourceExperience.visualizerEnabled'))
         self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
         self.page.locator('[data-fullscreen]').click()
         expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'false')
         self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
+
+    def test_visualizer_is_automatic_with_reduced_motion_and_ignores_mouse_stirring(self):
+        self.page.emulate_media(reduced_motion='reduce')
+        self.start_controlled_fluid()
+        self.page.locator('[data-visual-mode="visualizer"]').click()
+        self.assertTrue(self.page.evaluate('window.SecondSourceExperience.visualizerEnabled'))
+        self.page.locator('[data-fluid-reset]').click()
+        self.fluid_frame_difference(baseline=True)
+        box = self.page.locator('#fluid-container').bounding_box()
+        self.page.mouse.move(box['x'] + box['width'] * .3, box['y'] + box['height'] * .4)
+        self.page.mouse.move(box['x'] + box['width'] * .7, box['y'] + box['height'] * .6, steps=12)
+        self.page.mouse.down()
+        self.page.mouse.move(box['x'] + box['width'] * .4, box['y'] + box['height'] * .3, steps=12)
+        self.assertLess(self.fluid_frame_difference(30), .01, 'Mouse hover and drag must not stir VISUALIZER during its reset rest')
+        self.assertGreater(self.fluid_frame_difference(180), .5, 'Random currents must resume by themselves even while the mouse is held')
+        self.page.mouse.up()
+
+    def test_visualizer_animates_in_the_real_render_loop_without_sound_or_input(self):
+        self.page.emulate_media(reduced_motion='reduce')
+        self.page.add_init_script("""(() => {
+            let seed = 42;
+            Math.random = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
+        })();""")
+        self.visit()
+        self.page.locator('[data-visual-mode="visualizer"]').click()
+        self.fluid_frame_difference(baseline=True, live=True)
+        frames = self.page.evaluate("window.__drawsByCanvas['fluid-visual']")
+        self.page.wait_for_function("before => window.__drawsByCanvas['fluid-visual'] > before + 90", arg=frames)
+        self.assertGreater(self.fluid_frame_difference(live=True), .5)
+        self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
 
     def test_visualizer_analyser_distinguishes_bass_mid_treble_and_bass_hits(self):
         serve_seekable_audio(self.page)
