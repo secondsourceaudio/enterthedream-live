@@ -14,7 +14,7 @@
     <script src="./site.js?v=1" defer></script>
     <link rel="preload" as="image" href="./images/drip_cover_front_2.webp">
     <script src="./experience.js?v=7" defer></script>
-    <script src="./drip-fluid.js?v=3" defer></script>
+    <script src="./drip-fluid.js?v=4" defer></script>
 </head>
 <body class="landing-study">
     <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
@@ -29,7 +29,7 @@
     <main tabindex="-1" id="main-content" class="landing-experiment">
         <section id="listening-space" class="listening-space" data-experience data-motion-default-on aria-label="DRIP fluid study">
             <h1 class="visually-hidden">DRIP</h1>
-            <div id="visual-container" class="visual-container" tabindex="0" role="group" aria-label="Interactive DRIP fluid study. Drag to move the artwork, hold to stir, or press Space for a vortex.">
+            <div id="visual-container" class="visual-container" data-fluid-material="oil" tabindex="0" role="group" aria-label="Interactive DRIP fluid study. Drag to move the artwork, hold to stir, or press Space for a vortex.">
                 <div id="visual-media" class="visual-media">
                     <img id="fallback-image" class="fallback-image" src="./images/drip_cover_front_2.webp" alt="Blue liquid forms in reflective light" width="3200" height="3200" fetchpriority="high" decoding="async" draggable="false">
                     <canvas id="visual" class="visual-canvas" aria-hidden="true"></canvas>

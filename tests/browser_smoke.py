@@ -731,7 +731,14 @@ class WebsiteTests(unittest.TestCase):
         self.page.mouse.move(box['x'] + box['width'] * .7, box['y'] + box['height'] * .6, steps=12)
         self.wait_for_frames(12)
         self.page.mouse.up()
-        self.assertGreater(pixels(), 1, 'Fluid motion must visibly transport the original artwork')
+        disturbed = pixels()
+        self.assertGreater(disturbed, 1, 'Fluid motion must visibly transport the original artwork')
+        control = self.page.locator('[data-fluid-return]').bounding_box()
+        self.page.mouse.move(control['x'] + control['width'] / 2, control['y'] + control['height'] / 2)
+        self.page.mouse.down()
+        self.wait_for_frames(30)
+        self.assertLess(pixels(), disturbed * .6, 'RETURN must visibly settle the material toward the original image')
+        self.page.mouse.up()
         self.page.locator('[data-fluid-reset]').click()
         self.assertLess(pixels(), .01, 'Reset must recover the exact starting image')
         if keyboard:
@@ -748,6 +755,44 @@ class WebsiteTests(unittest.TestCase):
 
     def test_front_fluid_moves_artwork_and_resets_exactly(self):
         self.check_fluid_study('index.html', 3200, keyboard=True, front=True)
+
+    def test_ink_blends_source_colours_and_reset_restores_the_image(self):
+        # A two-colour source makes real colour mixing distinguishable from UV warping.
+        fixture = '<svg xmlns="http://www.w3.org/2000/svg" width="3000" height="3000"><path fill="blue" d="M0 0h1500v3000H0z"/><path fill="yellow" d="M1500 0h1500v3000H1500z"/></svg>'
+        self.page.route('**/images/gallery/flower_3.webp', lambda route: route.fulfill(content_type='image/svg+xml', body=fixture))
+        self.visit('experiment.html')
+        expect(self.page.locator('#visual')).to_have_attribute('data-fluid', 'ready')
+
+        def mixed_pixels():
+            return self.page.evaluate("""() => new Promise(resolve => {
+                const canvas = document.querySelector('#visual');
+                const gl = canvas.getContext('webgl');
+                const draw = gl.drawArrays;
+                gl.drawArrays = function (...args) {
+                    draw.apply(this, args);
+                    if (gl.getParameter(gl.FRAMEBUFFER_BINDING)) return;
+                    gl.drawArrays = draw;
+                    const pixels = new Uint8Array(canvas.width * canvas.height * 4);
+                    gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+                    let mixed = 0;
+                    for (let i = 0; i < pixels.length; i += 4) {
+                        if (pixels[i] > 20 && pixels[i + 2] > 20) mixed++;
+                    }
+                    resolve(mixed);
+                };
+            })""")
+
+        original = mixed_pixels()
+        box = self.page.locator('#visual-container').bounding_box()
+        self.page.mouse.move(box['x'] + box['width'] * .5, box['y'] + box['height'] * .5)
+        self.page.mouse.down()
+        self.page.mouse.move(box['x'] + box['width'] * .7, box['y'] + box['height'] * .6, steps=12)
+        self.wait_for_frames(30)
+        self.page.mouse.up()
+        self.assertGreater(mixed_pixels(), original + 200, 'Ink must transport and blend colour into a broad trail')
+        self.page.locator('[data-fluid-reset]').click()
+        self.assertEqual(mixed_pixels(), original)
+        self.assertFalse(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
 
     def test_front_modes_keep_audio_playing_and_pause_the_hidden_renderer(self):
         serve_seekable_audio(self.page)

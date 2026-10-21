@@ -105,20 +105,25 @@ It starts off on each visit, responds to drag and optional audio, and pauses
 with the motion toggle. Turning it off eases back to the original artwork.
 Project information stays inside INFO: one short description and a Bandcamp
 link, without a personal creator credit.
-FLOWER uses the same fluid renderer as the DRIP fluid prototype, with the
-gallery's `flower_3.webp` image and its original pink palette.
+FLOWER uses the shared fluid renderer with the gallery's `flower_3.webp` image
+and an ink material that transports and diffuses its original colours.
 `site.js` handles internal-link fades, browser Back navigation, and artwork
 viewer focus. Reduced-motion preferences disable the page and gallery fades.
 
 ## Fluid studies
 
-The homepage's FLUID mode and `drip-fluid.html` use a fluid velocity field to
-transport coordinates in the original DRIP
-image, preserving its blue palette. Drag to push the image, hold to stir, or
+The homepage's FLUID mode and `drip-fluid.html` use an oil material: momentum
+diffusion, a broad drag footprint, slower force response and low vorticity make
+the original DRIP image stretch and coast together. Image coordinates move
+through the velocity field, preserving the artwork's detail and blue palette.
+Drag to push the image, hold to stir, or
 press Space or Enter on the artwork for a central vortex. Holding right-click
 or **RETURN** settles the image faster; **RESET** restores it immediately.
-`experiment.html` uses the same fluid interactions with the FLOWER image and a
-live X/Y tone. Audio remains optional. Motion off, hidden tabs, static
+`experiment.html` uses an ink material: the photograph's colours are advected and
+diffused into soft trails and clouds, with finer, more turbulent stirring.
+An activity mask keeps untouched areas sharp and fades back to the original
+photograph. Reset reseeds the colour field and restores the exact original image.
+The live X/Y tone follows the same pointer. Audio remains optional. Motion off, hidden tabs, static
 artwork fallback and the shared player work as on the homepage.
 
 The fluid kernels in `drip-fluid.js` are adapted from
@@ -126,6 +131,11 @@ The fluid kernels in `drip-fluid.js` are adapted from
 under the MIT license, retained at the top of that file. Both studies run
 locally in the browser and load no third-party scripts. WHIRL keeps its existing
 renderer.
+
+Set `data-fluid-material="oil"` or `"ink"` on the fluid container to choose its
+behaviour. Both materials use elapsed time and scale input to the simulation
+resolution. Oil uses an implicit velocity-diffusion solve; ink carries RGB colour
+and an activity mask instead of the oil material's coordinate displacement map.
 
 ## FLOWER X/Y sound
 

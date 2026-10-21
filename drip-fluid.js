@@ -23,8 +23,8 @@ SOFTWARE.
 */
 
 // Fluid kernels adapted from PavelDoGreat/WebGL-Fluid-Simulation.
-// Shared by DRIP and FLOWER. Transport image coordinates to keep the source
-// artwork and palette instead of adding coloured dye. No external services.
+// DRIP transports image coordinates through a viscous oil field. FLOWER
+// transports and diffuses the photograph's colours like ink. No external services.
 (() => {
     'use strict';
     const canvas = document.querySelector('#fluid-visual') || document.querySelector('#visual');
@@ -34,6 +34,12 @@ SOFTWARE.
     const resetButton = document.querySelector('[data-fluid-reset]');
     const returnButton = document.querySelector('[data-fluid-return]');
     if (!canvas || !container || !image || !experience) return;
+    const ink = container.dataset.fluidMaterial === 'ink';
+    const material = ink
+        ? {radius: .0019, drag: 1650, response: 20, hover: 180, impulse: 650,
+            stir: 4200, growth: .45, curl: 26, bass: 6, decay: .85, restore: .15}
+        : {radius: .006, drag: 1050, response: 7, hover: 110, impulse: 280,
+            stir: 1600, growth: .2, curl: 3, bass: 2, decay: .65, restore: .12};
 
     let running = true;
     const fluidMotionEnabled = () => running && experience.motionEnabled && experience.isVisualActive('fluid');
@@ -81,6 +87,7 @@ SOFTWARE.
         const mobile = matchMedia('(any-pointer: coarse), (max-width: 750px)').matches;
         const simulationSize = mobile ? 96 : 128;
         const mapSize = mobile ? 384 : 512;
+        const forceScale = simulationSize / 128;
         const pointers = new Map();
         const returnPointers = new Set();
         let returnKey = false;
@@ -154,9 +161,10 @@ SOFTWARE.
             uniform vec2 u_point;
             uniform vec2 u_force;
             uniform float u_swirl;
+            uniform float u_radius;
             void main() {
                 vec2 p = vUv - u_point;
-                float influence = exp(-dot(p, p) / 0.0024);
+                float influence = exp(-dot(p, p) / u_radius);
                 vec2 force = (u_force + vec2(-p.y, p.x) * u_swirl) * influence;
                 vec2 velocity = texture2D(u_velocity, vUv).xy + force;
                 gl_FragColor = vec4(clamp(velocity, -350.0, 350.0), 0.0, 1.0);
@@ -240,6 +248,20 @@ SOFTWARE.
                 gl_FragColor = vec4(velocity, 0.0, 1.0);
             }
         `);
+        // Implicit momentum diffusion: oil carries neighbouring pixels together.
+        const viscosity = ink ? null : program(`
+            uniform sampler2D u_velocity;
+            uniform sampler2D u_origin;
+            uniform float u_factor;
+            void main() {
+                vec2 L = texture2D(u_velocity, vUv - vec2(u_texel.x, 0.0)).xy;
+                vec2 R = texture2D(u_velocity, vUv + vec2(u_texel.x, 0.0)).xy;
+                vec2 T = texture2D(u_velocity, vUv + vec2(0.0, u_texel.y)).xy;
+                vec2 B = texture2D(u_velocity, vUv - vec2(0.0, u_texel.y)).xy;
+                vec2 original = texture2D(u_origin, vUv).xy;
+                gl_FragColor = vec4((original + u_factor * (L + R + T + B)) / (1.0 + 4.0 * u_factor), 0.0, 1.0);
+            }
+        `);
         const advectImage = program(`
             uniform sampler2D u_velocity;
             uniform sampler2D u_map;
@@ -254,13 +276,54 @@ SOFTWARE.
                 gl_FragColor = vec4(clamp(offset, -0.4, 0.4), 0.0, 1.0);
             }
         `);
-        const display = program(`
+        const seedInk = ink ? program(`
+            uniform sampler2D u_artwork;
+            void main() { gl_FragColor = vec4(texture2D(u_artwork, vUv).rgb, 0.0); }
+        `) : null;
+        const advectInk = ink ? program(`
+            uniform sampler2D u_velocity;
+            uniform sampler2D u_map;
+            uniform sampler2D u_artwork;
+            uniform vec2 u_mapTexel;
+            uniform float u_dt;
+            uniform float u_restore;
+            void main() {
+                vec2 flow = fieldSample(u_velocity, vUv, u_texel).xy * u_texel;
+                vec2 coord = vUv - flow * u_dt;
+                vec4 dye = fieldSample(u_map, coord, u_mapTexel);
+                vec4 neighbours = (
+                    fieldSample(u_map, coord - vec2(u_mapTexel.x, 0.0), u_mapTexel) +
+                    fieldSample(u_map, coord + vec2(u_mapTexel.x, 0.0), u_mapTexel) +
+                    fieldSample(u_map, coord - vec2(0.0, u_mapTexel.y), u_mapTexel) +
+                    fieldSample(u_map, coord + vec2(0.0, u_mapTexel.y), u_mapTexel)) * 0.25;
+                dye = mix(dye, neighbours, 1.0 - exp(-8.0 * u_dt));
+                float recovery = 1.0 - exp(-u_restore * u_dt);
+                dye.rgb = mix(dye.rgb, texture2D(u_artwork, vUv).rgb, recovery);
+                dye.a = (1.0 - (1.0 - dye.a) * exp(-length(flow) * u_dt * 25.0)) * (1.0 - recovery);
+                float edge = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
+                dye.a *= smoothstep(0.0, 0.025, edge);
+                gl_FragColor = clamp(dye, 0.0, 1.0);
+            }
+        `) : null;
+        const display = program(ink ? `
+            uniform sampler2D u_map;
+            uniform sampler2D u_artwork;
+            uniform vec2 u_mapTexel;
+            void main() {
+                vec4 dye = fieldSample(u_map, vUv, u_mapTexel);
+                vec3 original = texture2D(u_artwork, vUv).rgb;
+                gl_FragColor = vec4(mix(original, dye.rgb, dye.a), 1.0);
+            }
+        ` : `
             uniform sampler2D u_map;
             uniform sampler2D u_artwork;
             uniform vec2 u_mapTexel;
             void main() {
                 vec2 offset = fieldSample(u_map, vUv, u_mapTexel).xy;
-                vec2 uv = clamp(vUv + offset, 0.001, 0.999);
+                // Ease toward the image edge so a long pull stays inside the photograph.
+                vec2 reach = max(mix(vUv - 0.001, 0.999 - vUv, step(vec2(0.0), offset)), 0.0005);
+                vec2 bounded = sign(offset) * reach * (1.0 - exp(-abs(offset) / reach));
+                vec2 uv = clamp(vUv + bounded, 0.001, 0.999);
                 gl_FragColor = vec4(texture2D(u_artwork, uv).rgb, 1.0);
             }
         `);
@@ -297,9 +360,11 @@ SOFTWARE.
         const velocity = pair(simulationSize);
         const pressure = pair(simulationSize);
         const imageMap = pair(mapSize);
+        const viscosityOrigin = ink ? null : target(simulationSize);
         const curlField = target(simulationSize);
         const divergenceField = target(simulationSize);
         const artwork = gl.createTexture();
+        let artworkReady = false;
 
         function draw(effect, destination, textures = {}, values = {}) {
             gl.useProgram(effect.handle);
@@ -327,6 +392,10 @@ SOFTWARE.
                 gl.bindFramebuffer(gl.FRAMEBUFFER, value.framebuffer);
                 gl.clear(gl.COLOR_BUFFER_BIT);
             }
+            if (ink && artworkReady) {
+                draw(seedInk, imageMap.read, {u_artwork: artwork});
+                draw(seedInk, imageMap.write, {u_artwork: artwork});
+            }
         }
         function resize() {
             const ratio = Math.min(devicePixelRatio || 1, 1.75);
@@ -338,7 +407,8 @@ SOFTWARE.
         }
         function inject(pointer, forceX, forceY, swirl) {
             draw(splat, velocity.write, {u_velocity: velocity.read.texture},
-                {u_point: [pointer.x, pointer.y], u_force: [forceX, forceY], u_swirl: swirl});
+                {u_point: [pointer.x, pointer.y], u_force: [forceX * forceScale, forceY * forceScale],
+                    u_swirl: swirl * forceScale, u_radius: material.radius});
             velocity.swap();
         }
         function point(event) {
@@ -367,9 +437,9 @@ SOFTWARE.
             event.preventDefault();
             if (pointers.size >= 3) return;
             const location = point(event);
-            pointers.set(event.pointerId, {...location, dx: 0, dy: 0, age: 0, type: event.pointerType});
+            pointers.set(event.pointerId, {...location, dx: 0, dy: 0, fx: 0, fy: 0, age: 0, type: event.pointerType});
             try { container.setPointerCapture(event.pointerId); } catch (error) {}
-            inject(location, 0, 0, 700);
+            inject(location, 0, 0, material.impulse);
         });
         window.addEventListener('pointermove', event => {
             if (!fluidMotionEnabled()) return;
@@ -407,7 +477,7 @@ SOFTWARE.
         container.addEventListener('keydown', event => {
             if (event.target !== container || event.repeat || !fluidMotionEnabled()) return;
             if (event.key === ' ' || event.key === 'Enter') {
-                event.preventDefault(); inject({x: .5, y: .5}, 0, 0, 900);
+                event.preventDefault(); inject({x: .5, y: .5}, 0, 0, material.impulse * 1.5);
             }
         });
         returnButton.addEventListener('pointerdown', event => {
@@ -452,19 +522,37 @@ SOFTWARE.
             if (dt > 0) {
                 const bass = experience.sampleBass();
                 if (hoverForce && !returningNow) inject(hoverForce,
-                    clamp(hoverForce.dx * 450, -90, 90), clamp(hoverForce.dy * 450, -90, 90), 0);
+                    clamp(hoverForce.dx * material.hover, -40, 40), clamp(hoverForce.dy * material.hover, -40, 40), 0);
                 hoverForce = null;
                 for (const pointer of pointers.values()) {
                     if (!returningNow) {
                         pointer.age += dt;
-                        inject(pointer, clamp(pointer.dx * 1800, -180, 180), clamp(pointer.dy * 1800, -180, 180),
-                            dt * 4500 * (1 + Math.min(pointer.age, 4) * .6));
+                        const response = 1 - Math.exp(-material.response * dt);
+                        pointer.fx += (pointer.dx / dt - pointer.fx) * response;
+                        pointer.fy += (pointer.dy / dt - pointer.fy) * response;
+                        inject(pointer, clamp(pointer.fx * material.drag * dt, -150, 150),
+                            clamp(pointer.fy * material.drag * dt, -150, 150),
+                            dt * material.stir * (1 + Math.min(pointer.age, 4) * material.growth));
+                    } else {
+                        pointer.fx = pointer.fy = 0;
                     }
                     pointer.dx = pointer.dy = 0;
                 }
+                draw(advectVelocity, velocity.write, {u_velocity: velocity.read.texture},
+                    {u_dt: dt, u_decay: returningNow ? 14 : material.decay});
+                velocity.swap();
+                if (viscosity) {
+                    draw(scale, viscosityOrigin, {u_source: velocity.read.texture}, {u_scale: 1});
+                    const factor = .006 * dt * simulationSize * simulationSize;
+                    for (let i = 0; i < 8; i++) {
+                        draw(viscosity, velocity.write,
+                            {u_velocity: velocity.read.texture, u_origin: viscosityOrigin.texture}, {u_factor: factor});
+                        velocity.swap();
+                    }
+                }
                 draw(curl, curlField, {u_velocity: velocity.read.texture});
                 draw(vorticity, velocity.write, {u_velocity: velocity.read.texture, u_curl: curlField.texture},
-                    {u_dt: dt, u_curlStrength: returningNow ? 0 : 18 + bass * 8});
+                    {u_dt: dt, u_curlStrength: returningNow ? 0 : material.curl + bass * material.bass});
                 velocity.swap();
                 draw(divergence, divergenceField, {u_velocity: velocity.read.texture});
                 draw(scale, pressure.write, {u_source: pressure.read.texture}, {u_scale: .8});
@@ -475,11 +563,10 @@ SOFTWARE.
                 }
                 draw(gradientSubtract, velocity.write, {u_velocity: velocity.read.texture, u_pressure: pressure.read.texture});
                 velocity.swap();
-                draw(advectVelocity, velocity.write, {u_velocity: velocity.read.texture},
-                    {u_dt: dt, u_decay: returningNow ? 14 : 1.2});
-                velocity.swap();
-                draw(advectImage, imageMap.write, {u_velocity: velocity.read.texture, u_map: imageMap.read.texture},
-                    {u_dt: dt, u_restore: returningNow ? 5 : pointers.size ? .025 : .22});
+                const textures = {u_velocity: velocity.read.texture, u_map: imageMap.read.texture};
+                if (ink) textures.u_artwork = artwork;
+                draw(ink ? advectInk : advectImage, imageMap.write, textures,
+                    {u_dt: dt, u_restore: returningNow ? 5 : pointers.size ? .02 : material.restore});
                 imageMap.swap();
             }
             draw(display, null, {u_map: imageMap.read.texture, u_artwork: artwork});
@@ -496,6 +583,7 @@ SOFTWARE.
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
             gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+            artworkReady = true;
             clearFields();
             render(0);
             canvas.classList.add('is-ready');

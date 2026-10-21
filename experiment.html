@@ -14,7 +14,7 @@
     <link rel="preload" as="image" href="./images/gallery/flower_3.webp">
     <script src="./flower-tone.js?v=1" defer></script>
     <script src="./experience.js?v=7" defer></script>
-    <script src="./drip-fluid.js?v=3" defer></script>
+    <script src="./drip-fluid.js?v=4" defer></script>
 </head>
 <body class="landing-study">
     <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
@@ -29,7 +29,7 @@
     <main tabindex="-1" id="main-content" class="landing-experiment">
         <section id="listening-space" class="listening-space" data-experience data-xy-tone aria-label="FLOWER fluid and sound study">
             <h1 class="visually-hidden">FLOWER</h1>
-            <div id="visual-container" class="visual-container" tabindex="0" role="group" aria-label="Interactive FLOWER fluid study. After selecting Play, hold and drag: X changes pitch, Y changes timbre. Arrow keys also adjust the tone. Press Space for a vortex.">
+            <div id="visual-container" class="visual-container" data-fluid-material="ink" tabindex="0" role="group" aria-label="Interactive FLOWER fluid study. After selecting Play, hold and drag: X changes pitch, Y changes timbre. Arrow keys also adjust the tone. Press Space for a vortex.">
                 <div id="visual-media" class="visual-media">
                     <img id="fallback-image" class="fallback-image" src="./images/gallery/flower_3.webp" alt="Soft pink flower forms with dark violet edges" width="3000" height="3000" fetchpriority="high" decoding="async" draggable="false">
                     <canvas id="visual" class="visual-canvas" aria-hidden="true"></canvas>
@@ -53,7 +53,7 @@
             </div>
             <p class="visually-hidden" role="status" data-status></p>
             <dialog id="experience-info" class="experience-info" aria-labelledby="info-title">
-                <p class="info-number">SOURCE 01 / FLUID</p>
+                <p class="info-number">SOURCE 01 / INK</p>
                 <div class="info-heading">
                     <h2 id="info-title">FLOWER</h2>
                     <button class="experience-button" type="button" data-close-info aria-label="Close information">CLOSE</button>
