@@ -99,7 +99,11 @@ SOFTWARE.
         let previousTime = null;
         let autoAmount = 0;
         let autoRest = 0;
-        const dance = {pulse: 0, twist: 0, bass: 0, level: 0};
+        const dance = {twist: 0};
+        const drips = Array.from({length: 8}, () => ({x: .5, y: .5, age: -1, strength: 0}));
+        const dripData = new Float32Array(drips.length * 4);
+        let nextDrip = 0;
+        let consumedBeat = 0;
         function randomCurrent() {
             const angle = Math.random() * Math.PI * 2;
             return {x: .18 + Math.random() * .64, y: .18 + Math.random() * .64,
@@ -332,10 +336,10 @@ SOFTWARE.
             uniform sampler2D u_map;
             uniform sampler2D u_artwork;
             uniform vec2 u_mapTexel;
-            uniform float u_pulse;
             uniform float u_whirl;
             uniform vec2 u_whirlPoint;
             uniform vec2 u_counterPoint;
+            uniform vec4 u_drips[8];
             vec2 whirl(vec2 point, float angle) {
                 vec2 p = vUv - point;
                 float a = angle * exp(-dot(p, p) / 0.12);
@@ -344,10 +348,27 @@ SOFTWARE.
             }
             void main() {
                 vec2 offset = fieldSample(u_map, vUv, u_mapTexel).xy;
-                // Musical accents are reversible sampling offsets, never fed back into the liquid.
+                // Reuse the homepage click-drip wave packet. Each kick gets its own
+                // expanding ring; none of these offsets are fed back into the liquid.
+                vec2 rippleOffset = vec2(0.0);
+                for (int i = 0; i < 8; i++) {
+                    vec4 drip = u_drips[i];
+                    float age = drip.z;
+                    if (age >= 0.0 && age < 3.8) {
+                        vec2 delta = vUv - drip.xy;
+                        float distance = length(delta);
+                        vec2 direction = delta / max(distance, 0.0001);
+                        float wavefront = distance - age * 0.29;
+                        float packet = exp(-pow(wavefront / 0.055, 2.0));
+                        float life = exp(-age * 0.65) * (1.0 - smoothstep(2.4, 3.8, age));
+                        float wave = sin(wavefront * 115.0) * packet * life;
+                        float impact = exp(-distance * distance * 1500.0) * exp(-age * 9.0);
+                        rippleOffset += (direction * wave * 0.020 - delta * impact * 0.12) * drip.w;
+                    }
+                }
                 float edge = min(min(vUv.x, 1.0 - vUv.x), min(vUv.y, 1.0 - vUv.y));
                 offset += (whirl(u_whirlPoint, u_whirl) + whirl(u_counterPoint, -u_whirl * 0.6)
-                    - (vUv - 0.5) * u_pulse * 0.045) * smoothstep(0.0, 0.12, edge);
+                    + clamp(rippleOffset, vec2(-0.045), vec2(0.045))) * smoothstep(0.0, 0.12, edge);
                 // Ease toward the image edge so a long pull stays inside the photograph.
                 vec2 reach = max(mix(vUv - 0.001, 0.999 - vUv, step(vec2(0.0), offset)), 0.0005);
                 vec2 bounded = sign(offset) * reach * (1.0 - exp(-abs(offset) / reach));
@@ -406,7 +427,8 @@ SOFTWARE.
             }
             for (const name in values) {
                 const value = values[name];
-                if (Array.isArray(value)) gl.uniform2f(effect.uniform(name), value[0], value[1]);
+                if (value instanceof Float32Array) gl.uniform4fv(effect.uniform(name), value);
+                else if (Array.isArray(value)) gl.uniform2f(effect.uniform(name), value[0], value[1]);
                 else gl.uniform1f(effect.uniform(name), value);
             }
             gl.bindFramebuffer(gl.FRAMEBUFFER, destination ? destination.framebuffer : null);
@@ -415,7 +437,10 @@ SOFTWARE.
             gl.drawArrays(gl.TRIANGLES, 0, 6);
         }
         function clearFields() {
-            dance.pulse = dance.twist = dance.bass = dance.level = 0;
+            dance.twist = 0;
+            for (const drip of drips) { drip.age = -1; drip.strength = 0; }
+            nextDrip = 0;
+            consumedBeat = experience.sampleAudio().beatId || 0;
             gl.clearColor(0, 0, 0, 0);
             for (const value of targets) {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, value.framebuffer);
@@ -569,19 +594,24 @@ SOFTWARE.
                 const bass = signal.bass;
                 const automatic = experience.visualizerEnabled && audible && !returningNow && !autoRest;
                 autoAmount += ((automatic ? 1 : 0) - autoAmount) * (1 - Math.exp(-dt * 3));
-                // Follow attacks relative to the recent mix, rather than sustaining a constant
-                // distortion on a loud master. These envelopes also freeze when audio stops.
-                dance.bass += (bass - dance.bass) * (1 - Math.exp(-dt / .65));
-                dance.level += (signal.level - dance.level) * (1 - Math.exp(-dt / .45));
-                const accent = automatic ? autoAmount * clamp(signal.beat * .8 +
-                    Math.max(0, bass - dance.bass) * 1.5 + Math.max(0, signal.level - dance.level) * .6, 0, 1) : 0;
-                dance.pulse += (accent - dance.pulse) * (1 - Math.exp(-dt / (accent > dance.pulse ? .018 : .1)));
-                const twist = dance.pulse * currents[0].spin * .34;
-                dance.twist += (twist - dance.twist) * (1 - Math.exp(-dt / .065));
+                for (const drip of drips) {
+                    if (drip.age >= 0) drip.age += dt;
+                    if (returningNow) drip.strength *= Math.exp(-dt * 10);
+                }
+                // Consume each onset once, rather than emitting drops on every frame
+                // of its decaying beat envelope. RESET/RETURN discard suppressed hits.
+                if (automatic && signal.beatId > consumedBeat) {
+                    drips[nextDrip] = {x: .16 + Math.random() * .68, y: .16 + Math.random() * .68,
+                        age: 0, strength: .35 + signal.beat * .35};
+                    nextDrip = (nextDrip + 1) % drips.length;
+                }
+                consumedBeat = signal.beatId || 0;
+                const twist = automatic ? autoAmount * currents[0].spin * (.06 + signal.mid * .1) : 0;
+                dance.twist += (twist - dance.twist) * (1 - Math.exp(-dt / .18));
                 if (automatic) {
                     // Random currents run with audible playback; pause and mute freeze the field.
-                    const strength = autoAmount * (190 + bass * 210 + signal.beat * 320 + signal.level * 40 + signal.mid * 35);
-                    const response = 1 - Math.exp(-dt * (.34 + bass * .26 + signal.beat * .28));
+                    const strength = autoAmount * (190 + bass * 210 + signal.level * 40 + signal.mid * 35);
+                    const response = 1 - Math.exp(-dt * (.34 + bass * .26));
                     for (const current of currents) {
                         current.remaining -= dt;
                         if (current.remaining <= 0) {
@@ -591,7 +621,7 @@ SOFTWARE.
                         for (const key of ['x', 'y', 'fx', 'fy', 'spin']) current[key] += (current.target[key] - current[key]) * response;
                         inject(current, current.fx * strength * dt, current.fy * strength * dt,
                             current.spin * autoAmount * dt *
-                                (650 + bass * 750 + signal.beat * 900 + signal.mid * 150 + signal.treble * 60));
+                                (650 + bass * 750 + signal.mid * 150 + signal.treble * 60));
                     }
                 }
                 if (hoverForce && !returningNow) inject(hoverForce,
@@ -644,8 +674,15 @@ SOFTWARE.
                         u_limit: visualizing ? .1 : .4});
                 imageMap.swap();
             }
+            for (let i = 0; i < drips.length; i++) {
+                const drip = drips[i], offset = i * 4;
+                dripData[offset] = drip.x;
+                dripData[offset + 1] = drip.y;
+                dripData[offset + 2] = visualizing ? drip.age : -1;
+                dripData[offset + 3] = drip.strength;
+            }
             draw(display, null, {u_map: imageMap.read.texture, u_artwork: artwork},
-                {u_pulse: visualizing ? dance.pulse : 0, u_whirl: visualizing ? dance.twist : 0,
+                {'u_drips[0]': dripData, u_whirl: visualizing ? dance.twist : 0,
                     u_whirlPoint: [currents[0].x, currents[0].y], u_counterPoint: [currents[1].x, currents[1].y]});
         }
 

@@ -51,12 +51,13 @@
     let frequencies = null;
     let spectrum = null;
     let waveform = null;
-    const quietSignal = {active: false, bass: 0, mid: 0, treble: 0, beat: 0, level: 0};
+    const quietSignal = {active: false, bass: 0, mid: 0, treble: 0, beat: 0, beatId: 0, level: 0};
     let signal = quietSignal;
     let analysisTime = -1;
     let bassAverage = 0;
     let previousBass = 0;
     let lastBeat = -1;
+    let beatId = 0;
     let loading = false;
     let hasStarted = false;
     let immersive = false;
@@ -180,7 +181,7 @@
         const onset = Math.max(0, (bassEnergy - bassAverage) / reference);
         const rise = (bassEnergy - previousBass) / reference;
         const hit = bassEnergy > .002 && onset > .18 && rise > .035 && now - lastBeat > .18;
-        if (hit) lastBeat = now;
+        if (hit) { lastBeat = now; beatId++; }
         previousBass = bassEnergy;
         let power = 0;
         for (const value of waveform) power += value * value;
@@ -190,6 +191,7 @@
             mid: smooth(band(220, 2500), signal.mid, .3),
             treble: smooth(band(2500, 10000), signal.treble, .18),
             beat: hit ? Math.min(1, .3 + onset * .85) : signal.beat * Math.exp(-dt / .18),
+            beatId,
             level: smooth(Math.min(1, Math.sqrt(power / waveform.length) * 3 * volume / .35), signal.level, .25)
         };
         return signal;

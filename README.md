@@ -66,16 +66,19 @@ keeps the selected mode and playback position. WHIRL, manual FLUID and silent FL
 framed fullscreen view.
 
 VISUALIZER uses a 2048-point FFT and RMS loudness from the track already playing.
-Bass (35–220 Hz) drives most of the force. Low-frequency onsets add short pulses;
+Bass (35–220 Hz) drives the gentle underlying flow. Each detected low-frequency
+onset emits one drop at a random position, using the same expanding wave packet
+as a click in WHIRL. Up to eight drops overlap independently and fade over 3.8 seconds;
 midrange (220–2500 Hz) and treble (2500–10000 Hz) add smaller changes in the curls.
 Fast attack and slower release smooth the response, with a short beat cooldown
 and an adaptive bass average. Onsets use linear energy from the floating-point
 spectrum, avoiding the clipped byte bins that flatten loud masters. This signal
 analysis runs in the browser, with no model or external service. Three independent currents smoothly approach random
 positions, directions and spin targets, chosen again every 4–11 seconds. VISUALIZER
-blends this liquid flow with two soft, opposing whirls and a small breathing pulse.
-The accents follow bass hits and changes relative to recent loudness; they are
-reversible texture-sampling offsets, never accumulated in the liquid field.
+blends this liquid flow with two soft, opposing whirls shaped by the midrange.
+Kick accents create rings instead of stretching or pulsing the whole image.
+An onset counter emits each drop once, independently of the decaying beat envelope.
+Rings are reversible texture-sampling offsets, never accumulated in the liquid field.
 Faster recovery, velocity damping and a bounded displacement map keep prolonged
 playback from stretching the artwork into a lasting, oversized shape. Manual
 FLUID keeps its original feel and range. Selecting VISUALIZER before Play

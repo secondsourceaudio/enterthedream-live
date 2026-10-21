@@ -1610,45 +1610,92 @@ class WebsiteTests(unittest.TestCase):
         self.assertFalse(self.page.evaluate('window.SecondSourceExperience.sampleAudio().active'))
         self.assertEqual(self.page.evaluate('window.SecondSourceExperience.sampleBass()'), 0)
 
-    def test_visualizer_bass_accents_relax_between_hits(self):
+    def test_visualizer_kick_drips_expand_and_fade_without_distorting_the_fluid_map(self):
         serve_seekable_audio(self.page)
         self.start_controlled_fluid()
+        self.page.locator('[data-visual-mode="visualizer"]').click()
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
+        self.page.evaluate("""() => {
+            window.__music = {active: true, bass: .5, mid: .1, treble: .1, beat: 0, beatId: 0, level: .3};
+            window.SecondSourceExperience.sampleAudio = () => window.__music;
+            window.__stepFluid(60);
+            window.__music.beatId = 1;
+            window.__music.beat = 1;
+            window.__stepFluid(1);
+        }""")
 
-        def pixels_after(frames):
-            self.fluid_frame_difference(frames, baseline=True)
-            return self.page.evaluate("""() => {
-                const pixels = window.__visualizerBaseline, sampled = [];
-                for (let i = 0; i < pixels.length; i += 64) sampled.push(pixels[i], pixels[i + 1], pixels[i + 2]);
-                return sampled;
-            }""")
+        def ripple_impact(frames):
+            # Compare two draws of the same fluid field, with/without its transient
+            # drip overlay. This isolates the expanding ring from background flow.
+            return self.page.evaluate("""frames => {
+                window.__stepFluid(frames);
+                const canvas = document.querySelector('#fluid-visual');
+                const gl = canvas.getContext('webgl'), program = gl.getParameter(gl.CURRENT_PROGRAM);
+                const drips = new Float32Array(32);
+                for (let i = 0; i < 8; i++) drips.set(gl.getUniform(program, gl.getUniformLocation(program, `u_drips[${i}]`)), i * 4);
+                const active = new Uint8Array(canvas.width * canvas.height * 4), quiet = new Uint8Array(active.length);
+                gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, active);
+                const hidden = drips.slice();
+                for (let i = 2; i < hidden.length; i += 4) hidden[i] = -1;
+                const uniform = gl.getUniformLocation(program, 'u_drips[0]');
+                gl.uniform4fv(uniform, hidden);
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+                gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, quiet);
+                gl.uniform4fv(uniform, drips);
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+                let sum = 0, radial = 0, samples = 0;
+                for (let i = 0; i < active.length; i += 16) {
+                    const delta = Math.abs(active[i] - quiet[i]) + Math.abs(active[i + 1] - quiet[i + 1]) + Math.abs(active[i + 2] - quiet[i + 2]);
+                    const pixel = i / 4, x = (pixel % canvas.width + .5) / canvas.width, y = (Math.floor(pixel / canvas.width) + .5) / canvas.height;
+                    sum += delta;
+                    radial += delta * Math.hypot(x - drips[0], y - drips[1]);
+                    samples += 3;
+                }
+                return {difference: sum / samples, radius: radial / Math.max(1, sum)};
+            }""", frames)
 
-        frames = []
-        for accented in [False, True]:
-            if accented:
-                self.page.reload(wait_until='networkidle')
-                self.page.wait_for_function("typeof window.__stepFluid === 'function'")
-            self.page.locator('[data-visual-mode="visualizer"]').click()
-            self.page.locator('[data-sound]').click()
-            self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
-            self.page.evaluate("""() => {
-                window.__music = {active: true, bass: .5, mid: .1, treble: .1, beat: 0, level: .3};
-                window.SecondSourceExperience.sampleAudio = () => window.__music;
-            }""")
-            pixels_after(120)
-            if accented:
-                self.page.evaluate('window.__music.beat = 1')
-            peak = pixels_after(12)
-            self.page.evaluate('window.__music.beat = 0')
-            relaxed = pixels_after(90)
-            frames.append((peak, relaxed))
+        early = ripple_impact(15)
+        later = ripple_impact(30)
+        self.assertGreater(early['difference'], .03, 'A kick must create a visible drip')
+        self.assertGreater(later['radius'], early['radius'] + .08, 'The ring must expand outward like a homepage click')
+        self.assertLess(ripple_impact(200)['difference'], .01, 'Expired rings must leave no lasting displacement')
 
-        def difference(first, second):
-            return sum(abs(a - b) for a, b in zip(first, second)) / len(first)
+    def test_visualizer_emits_one_drip_per_kick_preserves_older_rings_and_freezes_on_pause(self):
+        serve_seekable_audio(self.page)
+        self.start_controlled_fluid()
+        self.page.locator('[data-visual-mode="visualizer"]').click()
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
+        self.page.evaluate("""() => {
+            window.__music = {active: true, bass: .5, mid: .1, treble: .1, beat: 0, beatId: 0, level: .3};
+            window.SecondSourceExperience.sampleAudio = () => window.__music;
+        }""")
 
-        peak_difference = difference(frames[0][0], frames[1][0])
-        relaxed_difference = difference(frames[0][1], frames[1][1])
-        self.assertGreater(peak_difference, .5, 'A bass hit must visibly change the image beyond its ongoing liquid flow')
-        self.assertLess(relaxed_difference, peak_difference * .6, 'The accent must unwind rather than remain as accumulated stretching')
+        def drips_after(frames):
+            return self.page.evaluate("""frames => {
+                window.__stepFluid(frames);
+                const gl = document.querySelector('#fluid-visual').getContext('webgl'), program = gl.getParameter(gl.CURRENT_PROGRAM);
+                return Array.from({length: 8}, (_, i) => Array.from(gl.getUniform(program, gl.getUniformLocation(program, `u_drips[${i}]`))))
+                    .filter(drip => drip[2] >= 0 && drip[2] < 3.8 && drip[3] > 0);
+            }""", frames)
+
+        self.assertEqual(drips_after(60), [])
+        self.page.evaluate('window.__music.beatId = 1; window.__music.beat = .8')
+        first = drips_after(15)
+        self.assertEqual(len(first), 1, 'A held beat envelope must emit only one drop')
+        self.page.evaluate('window.__music.beatId = 2; window.__music.beat = .7')
+        overlapping = drips_after(1)
+        self.assertEqual(len(overlapping), 2)
+        self.assertEqual(overlapping[0][:2], first[0][:2], 'The next kick must not relocate an existing ring')
+        self.assertGreater(overlapping[0][2], first[0][2])
+        self.assertEqual(overlapping[1][2], 0)
+        self.page.locator('[data-sound]').click()
+        self.fluid_frame_difference(baseline=True)
+        self.assertLess(self.fluid_frame_difference(30), .01)
+        self.assertEqual(drips_after(30), overlapping, 'Pausing must freeze all ring ages')
+        self.page.locator('[data-fluid-reset]').click()
+        self.assertEqual(drips_after(1), [])
 
     def test_visualizer_detects_repeated_bass_hits_in_the_actual_loud_master(self):
         serve_seekable_audio(self.page)
@@ -1659,16 +1706,24 @@ class WebsiteTests(unittest.TestCase):
         self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
         self.page.locator('audio').evaluate('audio => { audio.currentTime = 45; }')
         self.page.wait_for_function('document.querySelector("audio").currentTime >= 46.5')
-        hits = self.page.evaluate("""() => new Promise(resolve => {
-            let previous = 0, hits = 0;
+        result = self.page.evaluate("""() => new Promise(resolve => {
+            let previous = 0, hits = 0, overlapping = 0;
             const timer = setInterval(() => {
                 const beat = window.SecondSourceExperience.sampleAudio().beat;
                 if (beat > previous + .15) hits++;
                 previous = beat;
+                const gl = document.querySelector('#fluid-visual').getContext('webgl'), program = gl.getParameter(gl.CURRENT_PROGRAM);
+                let active = 0;
+                for (let i = 0; i < 8; i++) {
+                    const drip = gl.getUniform(program, gl.getUniformLocation(program, `u_drips[${i}]`));
+                    if (drip && drip[2] >= 0 && drip[2] < 3.8 && drip[3] > 0) active++;
+                }
+                overlapping = Math.max(overlapping, active);
             }, 30);
-            setTimeout(() => { clearInterval(timer); resolve(hits); }, 3500);
+            setTimeout(() => { clearInterval(timer); resolve({hits, overlapping}); }, 3500);
         })""")
-        self.assertGreaterEqual(hits, 2, 'Bass detection must keep finding attacks after startup, even in this loud master')
+        self.assertGreaterEqual(result['hits'], 2, 'Bass detection must keep finding attacks after startup, even in this loud master')
+        self.assertGreaterEqual(result['overlapping'], 2, 'Real music must create overlapping drips in the actual renderer')
 
     def test_fullscreen_fallback_escape_and_focus(self):
         self.visit()
