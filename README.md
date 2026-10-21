@@ -12,13 +12,14 @@ python3 -m http.server 8000
 ```
 
 Open the local server in your browser. The homepage is DRIP;
-`experiment.html` is INTERFERENCE, a generative wave field;
-`experiments.html` collects both. The experiments index and INTERFERENCE page
+`experiment.html` is FLOWER, a fluid study using the pink gallery photograph;
+`experiments.html` collects both. The experiments index and FLOWER page
 are unlisted workshop drafts: no site navigation links to them, and both request
 that search engines do not index them. Open their filenames directly to work on
 them locally.
 `gallery.html` is the image archive. `src001.html` remains a work-in-progress
-release page and is not linked from the public navigation. The unlisted
+release page and is not linked from the public navigation. Its cover is a static
+image without a link or artwork viewer. The unlisted
 `drip-fluid.html` prototype explores fluid motion using DRIP's artwork. It also
 requests that search engines do not index it.
 
@@ -31,8 +32,8 @@ from GitHub. Rebuild it after homepage changes with `python3 scripts/build_previ
 
 ## Listening and viewing
 
-Both studies load silently. Select **Enter with sound** to play the bundled
-Sage Counsel track on DRIP or the original Tone Field loop on INTERFERENCE.
+The studies load silently. Select **Play** to play the bundled
+Sage Counsel track on DRIP or the original Tone Field loop on FLOWER.
 Audio is analyzed in the browser; low-frequency energy gently influences the
 artwork. Volume is applied through a gain node
 when Web Audio is available, including on iOS. The sound button pauses and
@@ -99,25 +100,26 @@ It starts off on each visit, responds to drag and optional audio, and pauses
 with the motion toggle. Turning it off eases back to the original artwork.
 Project information stays inside INFO: one short description and a Bandcamp
 link, without a personal creator credit.
-INTERFERENCE uses a separate procedural shader with draggable sources, pulse
-interaction, arrow-key controls, and reset. It uses no photographic texture.
+FLOWER uses the same fluid renderer as the DRIP fluid prototype, with the
+gallery's `flower_3.webp` image and its original pink palette.
 `site.js` handles internal-link fades, browser Back navigation, and artwork
 viewer focus. Reduced-motion preferences disable the page and gallery fades.
 
-## Fluid study
+## Fluid studies
 
 `drip-fluid.html` is a separate prototype, with no link in the public navigation.
 It uses a fluid velocity field to transport coordinates in the original DRIP
 image, preserving its blue palette. Drag to push the image, hold to stir, or
 press Space or Enter on the artwork for a central vortex. Holding right-click
 or **RETURN** settles the image faster; **RESET** restores it immediately.
-Audio remains optional. Motion off, hidden tabs, static artwork fallback and
-the shared player work as on the homepage.
+`experiment.html` uses the same interactions with the FLOWER image and the
+optional Tone Field loop. Audio remains optional. Motion off, hidden tabs, static
+artwork fallback and the shared player work as on the homepage.
 
 The fluid kernels in `drip-fluid.js` are adapted from
 [Pavel Dobryakov's WebGL Fluid Simulation](https://github.com/PavelDoGreat/WebGL-Fluid-Simulation)
-under the MIT license, retained at the top of that file. This prototype runs
-locally in the browser and loads no third-party scripts. The homepage keeps its
+under the MIT license, retained at the top of that file. Both studies run
+locally in the browser and load no third-party scripts. The homepage keeps its
 existing renderer.
 
 ## Validation
@@ -147,13 +149,13 @@ preview changes before converting any additional PNG or JPEG artwork.
 
 ## Local studio revision
 
-The experiments index presents two distinct pieces: DRIP with its artwork and
-Sage Counsel, and INTERFERENCE with monochrome wave contours and an original
-synthesized tone loop. The field preview animates only on hover or keyboard
-focus, stays silent, and pauses offscreen. Reduced motion uses the vector
-fallback. The homepage artwork has no visible title or instruction overlay.
+The experiments index presents DRIP with its artwork and Sage Counsel, and
+FLOWER with the pink photograph and an optional synthesized tone loop. The index
+uses static, silent image previews. Reduced motion shows the original photograph
+on FLOWER until motion is enabled. The homepage artwork has no visible title or
+instruction overlay.
 
-The new vector fallback and 32-second stereo tone loop are generated locally
-with `scripts/generate_field_assets.py`. Regeneration requires FFmpeg; viewing
-the site needs no additional dependencies. That script replaces only those two
-generated assets. These study pages remain unlisted workshop drafts.
+The 32-second stereo tone loop was generated locally with
+`scripts/generate_field_assets.py`. Regeneration requires FFmpeg; viewing the
+site needs no additional dependencies. The script also retains the earlier
+wave-field SVG generator. These study pages remain unlisted workshop drafts.

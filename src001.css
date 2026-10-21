@@ -14,12 +14,6 @@ body {
 }
 
 
-body.viewer-open {
-    overflow:
-        hidden;
-}
-
-
 
 /* =========================================
    MAIN
@@ -150,70 +144,15 @@ body.viewer-open {
 }
 
 
-.artwork-button {
-    width:
-        min(
-            76vw,
-            960px
-        );
-
-    margin:
-        0;
-
-    padding:
-        0;
-
-    border:
-        0;
-
-    background:
-        transparent;
-
-    cursor:
-        zoom-in;
-
-    appearance:
-        none;
-
-    -webkit-appearance:
-        none;
+.release-artwork {
+    display: block;
+    width: min(76vw, 960px);
+    height: auto;
+    margin: 0 auto;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 }
-
-
-.artwork-button img {
-    display:
-        block;
-
-    width:
-        100%;
-
-    height:
-        auto;
-
-    margin:
-        0 auto;
-
-    user-select:
-        none;
-
-    -webkit-user-select:
-        none;
-
-    -webkit-touch-callout:
-        none;
-
-    transition:
-        opacity
-        0.25s
-        ease;
-}
-
-
-.artwork-button:hover img {
-    opacity:
-        0.82;
-}
-
 
 
 /* =========================================
@@ -298,175 +237,6 @@ body.viewer-open {
 
 
 /* =========================================
-   VIEWER
-========================================= */
-
-.artwork-viewer {
-    position:
-        fixed;
-
-    inset:
-        0;
-
-    z-index:
-        5000;
-
-    width:
-        100vw;
-
-    height:
-        100dvh;
-
-    display:
-        none;
-
-    grid-template-rows:
-        62px
-        minmax(
-            0,
-            1fr
-        );
-
-    background:
-        rgba(
-            0,
-            0,
-            0,
-            0.99
-        );
-}
-
-
-.artwork-viewer.is-open {
-    display:
-        grid;
-}
-
-
-.viewer-top {
-    width:
-        100%;
-
-    padding:
-        0
-        26px;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        space-between;
-
-    border-bottom:
-        1px solid
-        rgba(
-            255,
-            255,
-            255,
-            0.15
-        );
-
-    font-size:
-        9px;
-
-    letter-spacing:
-        0.22em;
-}
-
-
-.viewer-top button {
-    margin:
-        0;
-
-    padding:
-        8px
-        0;
-
-    border:
-        0;
-
-    color:
-        #ffffff;
-
-    background:
-        transparent;
-
-    font-family:
-        "Microgramma",
-        Arial,
-        Helvetica,
-        sans-serif;
-
-    font-size:
-        9px;
-
-    letter-spacing:
-        0.22em;
-
-    cursor:
-        pointer;
-}
-
-
-.viewer-stage {
-    width:
-        100%;
-
-    min-width:
-        0;
-
-    min-height:
-        0;
-
-    padding:
-        22px;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        center;
-
-    overflow:
-        hidden;
-}
-
-
-.viewer-stage img {
-    display:
-        block;
-
-    max-width:
-        100%;
-
-    max-height:
-        100%;
-
-    width:
-        auto;
-
-    height:
-        auto;
-
-    object-fit:
-        contain;
-
-    user-select:
-        none;
-
-    -webkit-user-select:
-        none;
-}
-
-
-
-/* =========================================
    MOBILE
 ========================================= */
 
@@ -519,7 +289,7 @@ body.viewer-open {
     }
 
 
-    .artwork-button {
+    .release-artwork {
         width:
             min(
                 92vw,
@@ -551,19 +321,6 @@ body.viewer-open {
 
         font-size:
             9px;
-    }
-
-
-    .viewer-top {
-        padding:
-            0
-            16px;
-    }
-
-
-    .viewer-stage {
-        padding:
-            8px;
     }
 
 }

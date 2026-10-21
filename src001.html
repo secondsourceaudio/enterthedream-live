@@ -35,7 +35,7 @@
 
     <link
         rel="stylesheet"
-        href="./src001.css?v=1"
+        href="./src001.css?v=2"
     >
 
     <script src="./site.js?v=1" defer></script>
@@ -93,20 +93,14 @@
 
         <section class="artwork-section">
 
-            <button
-                id="artwork-open"
-                class="artwork-button"
-                type="button"
-                aria-label="Open artwork"
+            <img
+                class="release-artwork"
+                src="./images/drip_cover_front_2.webp"
+                alt="DRIP artwork"
+                width="3200"
+                height="3200"
+                draggable="false"
             >
-
-                <img
-                    src="./images/drip_cover_front_2.webp"
-                    alt="DRIP artwork"
-                    draggable="false"
-                >
-
-            </button>
 
         </section>
 
@@ -198,143 +192,5 @@
 
     </footer>
 
-
-
-    <!-- =========================================
-         ARTWORK VIEWER
-    ========================================== -->
-
-    <div
-        id="artwork-viewer"
-        class="artwork-viewer" data-artwork-dialog role="dialog" aria-modal="true" aria-label="DRIP artwork viewer"
-        aria-hidden="true"
-    >
-
-        <div class="viewer-top">
-
-            <span>
-                SRC001
-            </span>
-
-
-            <button
-                id="viewer-close"
-                type="button"
-            >
-                CLOSE
-            </button>
-
-        </div>
-
-
-        <div
-            id="viewer-stage"
-            class="viewer-stage"
-        >
-
-            <img
-                id="viewer-image"
-                src="./images/drip_cover_front_2.webp"
-                alt="DRIP artwork"
-                draggable="false"
-            >
-
-        </div>
-
-    </div>
-
-
-
-    <script>
-
-        const artworkOpen =
-            document.getElementById(
-                "artwork-open"
-            );
-
-
-        const viewer =
-            document.getElementById(
-                "artwork-viewer"
-            );
-
-
-        const viewerClose =
-            document.getElementById(
-                "viewer-close"
-            );
-
-
-        function openViewer() {
-
-            viewer.classList.add(
-                "is-open"
-            );
-
-
-            viewer.setAttribute(
-                "aria-hidden",
-                "false"
-            );
-
-
-            document.body.classList.add(
-                "viewer-open"
-            );
-
-        }
-
-
-        function closeViewer() {
-
-            viewer.classList.remove(
-                "is-open"
-            );
-
-
-            viewer.setAttribute(
-                "aria-hidden",
-                "true"
-            );
-
-
-            document.body.classList.remove(
-                "viewer-open"
-            );
-
-        }
-
-
-        artworkOpen.addEventListener(
-            "click",
-            openViewer
-        );
-
-
-        viewerClose.addEventListener(
-            "click",
-            closeViewer
-        );
-
-
-        document.addEventListener(
-            "keydown",
-            function (event) {
-
-                if (
-                    event.key === "Escape"
-                ) {
-
-                    closeViewer();
-
-                }
-
-            }
-        );
-
-    </script>
-
-
 </body>
-
 </html>

@@ -4,19 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#050505">
-    <meta name="description" content="Interactive artwork and optional sound from SECOND SOURCE AUDIO.">
-    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="An interactive fluid study from SECOND SOURCE AUDIO.">
     <link rel="icon" href="data:,">
-    <title>SECOND SOURCE — INTERFERENCE</title>
+    <meta name="robots" content="noindex, nofollow">
+    <title>SECOND SOURCE — FLOWER</title>
     <link rel="stylesheet" href="./site.css?v=4">
-    <link rel="stylesheet" href="./experiment.css?v=16">
-    <link rel="stylesheet" href="./experience.css?v=5">
+    <link rel="stylesheet" href="./new.css?v=32">
+    <link rel="stylesheet" href="./experience.css?v=6">
     <script src="./site.js?v=1" defer></script>
-    <link rel="preload" as="image" href="./images/experiments/interference.svg">
+    <link rel="preload" as="image" href="./images/gallery/flower_3.webp">
     <script src="./experience.js?v=5" defer></script>
-    <script src="./experiment.js?v=20" defer></script>
+    <script src="./drip-fluid.js?v=2" defer></script>
 </head>
-<body class="field-study">
+<body class="landing-study">
     <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
     <header class="site-header">
         <a class="site-logo" href="./index.html">SECOND SOURCE</a>
@@ -25,44 +25,51 @@
             <a href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP <svg class="external-arrow" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 10 10 2M2 2h8v8" fill="none" stroke="currentColor" stroke-width="1"/></svg></a>
         </nav>
     </header>
-    <main tabindex="-1" id="main-content" class="experiment-main">
-        <section id="listening-space" class="listening-space" data-experience aria-label="Interference audiovisual experience">
-            <h1 class="study-caption">02 / INTERFERENCE</h1>
-            <div id="visual-container" class="visual-container field-surface" data-field-surface tabindex="0" role="group" aria-label="Interactive interference field. Use arrow keys to shift the source and Space to send a pulse.">
+    <main tabindex="-1" id="main-content" class="landing-experiment">
+        <section id="listening-space" class="listening-space" data-experience aria-label="FLOWER fluid study">
+            <h1 class="visually-hidden">FLOWER</h1>
+            <div id="visual-container" class="visual-container" tabindex="0" role="group" aria-label="Interactive FLOWER fluid study. Drag to move the artwork, hold to stir, or press Space for a vortex.">
                 <div id="visual-media" class="visual-media">
-                    <img id="fallback-image" class="fallback-image" src="./images/experiments/interference.svg" alt="Interwoven contours from two overlapping wave sources" width="960" height="600" fetchpriority="high" decoding="async" draggable="false">
+                    <img id="fallback-image" class="fallback-image" src="./images/gallery/flower_3.webp" alt="Soft pink flower forms with dark violet edges" width="3000" height="3000" fetchpriority="high" decoding="async" draggable="false">
                     <canvas id="visual" class="visual-canvas" aria-hidden="true"></canvas>
                 </div>
-                <p id="interaction-message" class="interaction-cue">DRAG TO SHIFT / TAP TO PULSE</p>
             </div>
-            <div class="experience-controls" aria-label="Sound and viewing controls">
-                <button class="experience-button" type="button" data-sound aria-pressed="false" aria-label="Enter with sound">ENTER WITH SOUND</button>
-                <label class="experience-volume">
-                    <span>VOLUME</span>
-                    <input type="range" min="0" max="1" step="0.01" value="0.35" aria-label="Volume" data-volume>
-                    <output data-volume-output aria-hidden="true">35%</output>
-                </label>
+            <div class="compact-player" role="group" aria-label="Tone Field player">
+                <div class="player-timeline">
+                    <output class="player-time" data-current-time aria-hidden="true">0:00</output>
+                    <input class="seek-slider" type="range" min="0" max="1" step="0.1" value="0" aria-label="Playback position" aria-valuetext="Playback not started" data-seek disabled>
+                    <output class="player-time" data-duration aria-hidden="true">--:--</output>
+                </div>
+                <div class="player-controls">
+                    <button class="experience-button player-button" type="button" data-sound data-compact-sound aria-pressed="false" aria-label="Play Tone Field" title="Play Tone Field"><span data-play-symbol aria-hidden="true">▶︎</span></button>
+                    <button class="experience-button sound-button" type="button" data-mute aria-pressed="false" aria-label="Mute" title="Mute"><span data-mute-symbol aria-hidden="true">◖))</span></button>
+                    <input class="volume-slider" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="Volume" data-volume>
+                    <output class="volume-percent" data-volume-output aria-hidden="true">35%</output>
+                </div>
+            </div>
+            <div class="experience-controls" aria-label="Viewing controls">
                 <button class="experience-button" type="button" data-motion-toggle aria-pressed="true" aria-label="Use static artwork">MOTION ON</button>
                 <button class="experience-button" type="button" data-fullscreen aria-pressed="false" aria-label="Enter fullscreen listening mode">FULLSCREEN</button>
-                <button class="experience-button" type="button" data-reset-field>RESET FIELD</button>
                 <button class="experience-button" type="button" data-info aria-haspopup="dialog" aria-controls="experience-info">INFO</button>
+                <button class="experience-button vortex-return" type="button" data-fluid-return aria-pressed="false" aria-label="Hold to return to the original artwork">RETURN</button>
+                <button class="experience-button" type="button" data-fluid-reset>RESET</button>
             </div>
             <p class="visually-hidden" role="status" data-status></p>
             <audio id="experience-audio" data-track-title="Tone Field" loop preload="none">
                 <source src="./audio/tone-field.mp3" type="audio/mpeg">
             </audio>
             <dialog id="experience-info" class="experience-info" aria-labelledby="info-title">
-                <p class="info-number">STUDY 02</p>
+                <p class="info-number">STUDY 02 / FLUID</p>
                 <div class="info-heading">
-                    <h2 id="info-title">INTERFERENCE</h2>
+                    <h2 id="info-title">FLOWER</h2>
                     <button class="experience-button" type="button" data-close-info aria-label="Close information">CLOSE</button>
                 </div>
-                <p data-copy-slot="interference-description">[DESCRIPTION]</p>
-                <p data-copy-slot="interference-notes">[NOTES]</p>
+                <p data-copy-slot="flower-description">A fluid study made from a flower photograph.</p>
+                <p data-copy-slot="flower-notes">Click around.</p>
                 <dl>
                     <dt>SOUND</dt><dd>TONE FIELD — ORIGINAL SYNTHESIZED LOOP</dd>
-                    <dt>PROJECT</dt><dd>SECOND SOURCE AUDIO</dd>
-                    <dt>CONTROLS</dt><dd>Drag to shift · Tap to pulse<br>Arrow keys to shift · Space to pulse<br>Reset field to return to the starting composition<br>Escape to leave fullscreen</dd>
+                    <dt>PROJECT</dt><dd>SECOND SOURCE AUDIO<span class="info-project-description">Music, images and audiovisual experiments.</span><a class="info-project-link" href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP ↗</a></dd>
+                    <dt>CONTROLS</dt><dd>Drag to move the image · Hold to stir<br>Hold right-click or RETURN to settle<br>Reset to restore the original image<br>Escape to leave fullscreen</dd>
                 </dl>
             </dialog>
         </section>

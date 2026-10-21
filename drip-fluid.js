@@ -23,8 +23,8 @@ SOFTWARE.
 */
 
 // Fluid kernels adapted from PavelDoGreat/WebGL-Fluid-Simulation.
-// This study transports image coordinates, keeping DRIP's original artwork
-// and palette instead of adding coloured dye. No external scripts or services.
+// Shared by DRIP and FLOWER. Transport image coordinates to keep the source
+// artwork and palette instead of adding coloured dye. No external services.
 (() => {
     'use strict';
     const canvas = document.querySelector('#visual');
@@ -427,6 +427,7 @@ SOFTWARE.
             if (!experience.motionEnabled) { clearInput(); if (running) clearFields(); }
             resetButton.disabled = returnButton.disabled = !experience.motionEnabled;
         });
+        resetButton.disabled = returnButton.disabled = !experience.motionEnabled;
         resetButton.addEventListener('click', () => { clearInput(); clearFields(); });
         canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); clearInput(); fallback(); });
 
@@ -492,7 +493,7 @@ SOFTWARE.
         if (image.complete) loadArtwork();
         else { image.addEventListener('load', loadArtwork, {once: true}); image.addEventListener('error', fallback, {once: true}); }
     } catch (error) {
-        console.warn('DRIP fluid study unavailable:', error.message);
+        console.warn('Fluid study unavailable:', error.message);
         fallback();
     }
 })();
