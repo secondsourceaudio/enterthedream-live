@@ -20,14 +20,16 @@
     const fullscreenButton = space.querySelector("[data-fullscreen]");
     const infoButton = space.querySelector("[data-info]");
     const dialog = space.querySelector("dialog");
+    const visualizerDock = space.querySelector('[data-visualizer-dock]');
     const status = space.querySelector("[data-status]");
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const modeButtons = [...space.querySelectorAll('[data-visual-mode]')];
     const modePanels = [...space.querySelectorAll('[data-visual-panel]')];
     const unavailableModes = new Set();
     let visualMode = modeButtons.length ? 'whirl' : null;
-    const rendererKey = mode => modeButtons.length ? mode : 'default';
-    const isVisualActive = mode => !modeButtons.length || mode === visualMode;
+    const rendererMode = mode => mode === 'visualizer' ? 'fluid' : mode;
+    const rendererKey = mode => modeButtons.length ? rendererMode(mode) : 'default';
+    const isVisualActive = mode => !modeButtons.length || rendererMode(mode) === rendererMode(visualMode);
 
     const readPreference = (key) => {
         try { return localStorage.getItem(key); } catch { return null; }
@@ -47,9 +49,17 @@
     let analyser = null;
     let gain = null;
     let frequencies = null;
+    let waveform = null;
+    const quietSignal = {active: false, bass: 0, mid: 0, treble: 0, beat: 0, level: 0};
+    let signal = quietSignal;
+    let analysisTime = -1;
+    let bassAverage = 0;
+    let previousBass = 0;
+    let lastBeat = -1;
     let loading = false;
     let hasStarted = false;
     let immersive = false;
+    let controlsTimer = 0;
     let previousFocus = null;
     let rejectPlayback = null;
     const inertElements = new Map();
@@ -74,8 +84,8 @@
         let source = null;
         try {
             const candidateAnalyser = candidate.createAnalyser();
-            candidateAnalyser.fftSize = 512;
-            candidateAnalyser.smoothingTimeConstant = 0.8;
+            candidateAnalyser.fftSize = 2048;
+            candidateAnalyser.smoothingTimeConstant = 0.45;
             const candidateGain = candidate.createGain();
             source = candidate.createMediaElementSource(audio);
             source.connect(candidateAnalyser);
@@ -85,6 +95,7 @@
             analyser = candidateAnalyser;
             gain = candidateGain;
             frequencies = new Uint8Array(analyser.frequencyBinCount);
+            waveform = new Float32Array(analyser.fftSize);
             // A gain node also supplies working volume controls on iOS.
             audio.volume = 1;
             gain.gain.value = volume;
@@ -122,6 +133,48 @@
             muteButton.title = audio.muted ? "Unmute" : "Mute";
             muteButton.querySelector("[data-mute-symbol]").textContent = silent ? "×" : "◖))";
         }
+    }
+
+    function sampleAudio() {
+        if (!audio || !analyser || audio.paused || audio.muted || volume === 0 || context.state !== 'running') {
+            signal = quietSignal;
+            analysisTime = -1;
+            bassAverage = previousBass = 0;
+            lastBeat = -1;
+            return signal;
+        }
+        const now = context.currentTime;
+        if (now === analysisTime) return signal;
+        const dt = analysisTime < 0 ? 1 / 60 : Math.min(.1, now - analysisTime);
+        analysisTime = now;
+        analyser.getByteFrequencyData(frequencies);
+        analyser.getFloatTimeDomainData(waveform);
+        const binWidth = context.sampleRate / analyser.fftSize;
+        const band = (low, high) => {
+            const first = Math.max(1, Math.ceil(low / binWidth));
+            const last = Math.min(frequencies.length - 1, Math.floor(high / binWidth));
+            let power = 0;
+            for (let i = first; i <= last; i++) power += Math.pow(frequencies[i] / 255, 2);
+            return Math.min(1, Math.sqrt(power / Math.max(1, last - first + 1)) * volume / .35);
+        };
+        const smooth = (value, previous, release) => previous + (value - previous) * (1 - Math.exp(-dt / (value > previous ? .025 : release)));
+        const rawBass = band(35, 220);
+        bassAverage += (rawBass - bassAverage) * (1 - Math.exp(-dt / 1.2));
+        const onset = Math.max(0, rawBass - bassAverage * 1.08 - .015);
+        const hit = onset > .025 && rawBass - previousBass > .012 && now - lastBeat > .18;
+        if (hit) lastBeat = now;
+        previousBass = rawBass;
+        let power = 0;
+        for (const value of waveform) power += value * value;
+        signal = {
+            active: true,
+            bass: smooth(rawBass, signal.bass, .22),
+            mid: smooth(band(220, 2500), signal.mid, .3),
+            treble: smooth(band(2500, 10000), signal.treble, .18),
+            beat: hit ? Math.min(1, .25 + onset * 6) : signal.beat * Math.exp(-dt / .18),
+            level: smooth(Math.min(1, Math.sqrt(power / waveform.length) * 3 * volume / .35), signal.level, .25)
+        };
+        return signal;
     }
     if (muteButton) muteButton.addEventListener("click", () => {
         audio.muted = !audio.muted;
@@ -240,14 +293,17 @@
         visualMode = mode;
         space.dataset.activeVisual = mode;
         for (const button of modeButtons) button.setAttribute('aria-pressed', String(button.dataset.visualMode === mode));
-        for (const panel of modePanels) panel.hidden = panel.dataset.visualPanel !== mode;
+        for (const panel of modePanels) panel.hidden = panel.dataset.visualPanel !== rendererMode(mode);
         for (const control of space.querySelectorAll('[data-mode-controls]')) {
-            control.hidden = control.dataset.modeControls !== mode;
+            control.hidden = control.dataset.modeControls !== rendererMode(mode);
         }
         updateMotion();
+        updateVisualizer();
         window.dispatchEvent(new Event('experience:visualchange'));
         window.dispatchEvent(new Event('resize'));
-        if (announce) status.textContent = `${mode === 'fluid' ? 'Fluid' : 'Whirl'} selected.`;
+        if (announce) status.textContent = mode === 'visualizer'
+            ? 'Visualizer selected. Play the track to animate with the music.'
+            : `${mode === 'fluid' ? 'Fluid' : 'Whirl'} selected.`;
     }
     for (const button of modeButtons) button.addEventListener('click', () => {
         if (button.dataset.visualMode !== visualMode) selectVisualMode(button.dataset.visualMode);
@@ -261,7 +317,30 @@
         status.textContent = glitchEnabled ? "SRC_GLITCH enabled." : "SRC_GLITCH disabled.";
     });
 
+    function revealVisualizerControls() {
+        window.clearTimeout(controlsTimer);
+        space.classList.remove('visualizer-idle');
+        if (!space.classList.contains('is-visualizer') || !visualizerDock) return;
+        controlsTimer = window.setTimeout(() => {
+            const focused = visualizerDock.contains(document.activeElement) && document.activeElement.matches(':focus-visible');
+            if (dialog.open || visualizerDock.matches(':hover') || focused) {
+                revealVisualizerControls();
+                return;
+            }
+            space.classList.add('visualizer-idle');
+        }, 3200);
+    }
+    function updateVisualizer() {
+        space.classList.toggle('is-visualizer', immersive && visualMode === 'visualizer');
+        revealVisualizerControls();
+    }
+    for (const event of ['pointermove', 'pointerdown', 'keydown']) {
+        space.addEventListener(event, revealVisualizerControls);
+    }
+    document.addEventListener('visibilitychange', revealVisualizerControls);
+
     function setImmersive(enabled) {
+        if (enabled === immersive) return;
         immersive = enabled;
         space.classList.toggle("is-immersive", enabled);
         document.body.classList.toggle("listening-mode", enabled);
@@ -281,6 +360,8 @@
             inertElements.clear();
             if (previousFocus && previousFocus.isConnected) previousFocus.focus({ preventScroll: true });
         }
+        updateVisualizer();
+        window.dispatchEvent(new Event('experience:immersivechange'));
         window.dispatchEvent(new Event("resize"));
     }
     async function exitImmersive() {
@@ -335,20 +416,15 @@
         get motionEnabled() { return motionEnabled; },
         get glitchEnabled() { return glitchEnabled; },
         get visualMode() { return visualMode; },
+        get visualizerEnabled() { return visualMode === 'visualizer' && motionEnabled && !reducedMotion.matches; },
         get soundPlaying() { return !!audio && !audio.paused; },
         isVisualActive,
         useStaticArtwork(mode = visualMode) {
             unavailableModes.add(rendererKey(mode));
             updateMotion();
         },
-        sampleBass() {
-            if (!audio || !analyser || audio.paused || audio.muted || volume === 0) return 0;
-            analyser.getByteFrequencyData(frequencies);
-            const lastBassBin = Math.max(2, Math.floor(250 / (context.sampleRate / analyser.fftSize)));
-            let total = 0;
-            for (let index = 1; index <= lastBassBin; index++) total += frequencies[index];
-            return Math.min(1, total / (lastBassBin * 255) * (volume / 0.35));
-        },
+        sampleAudio,
+        sampleBass() { return sampleAudio().bass; },
         createRenderLoop(draw, element) {
             let frame = 0;
             let visible = true;

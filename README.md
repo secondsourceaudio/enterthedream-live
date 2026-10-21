@@ -11,7 +11,7 @@ From the repository root:
 python3 -m http.server 8000
 ```
 
-Open the local server in your browser. The homepage is DRIP, with a WHIRL / FLUID
+Open the local server in your browser. The homepage is DRIP, with a WHIRL / FLUID / VISUALIZER
 switch. **SOURCES** in the top navigation opens `experiments.html`, which lists
 only FLOWER. `experiment.html` is the public, silent FLOWER fluid source,
 using the pink gallery photograph.
@@ -34,7 +34,9 @@ from GitHub. Rebuild it after homepage changes with `python3 scripts/build_previ
 ## Listening and viewing
 
 The homepage starts in **WHIRL**. Select **FLUID** to use the fluid study with the
-same DRIP artwork. Switching stays on the page and keeps the audio, playback
+same DRIP artwork. **VISUALIZER** uses the fluid renderer with automatic,
+music-driven currents. Select Play to start the track; selecting a visual mode
+never starts sound. Switching stays on the page and keeps the audio, playback
 position, volume, fullscreen and motion choice. Only the selected renderer runs;
 switching clears held gestures and returns the newly selected image to its
 starting composition. A mode that cannot render shows the static artwork while
@@ -55,11 +57,29 @@ for the current visit. Volume is remembered; the motion toggle is not. Rendering
 also pauses while the artwork is offscreen or the tab is
 hidden. If WebGL is unavailable, the original artwork remains available.
 
-**Fullscreen** enters browser fullscreen where supported and falls back to a
-fullscreen view within the page otherwise. Viewing and sound controls stay
-available; use Exit fullscreen or Escape to return. **Info** opens notes about
-the study and sound. Information and artwork viewers support keyboard focus
-and restore it when closed.
+**Fullscreen** expands the selected mode, using browser fullscreen where
+supported and an in-page fallback otherwise. In VISUALIZER the square artwork
+covers the viewport without stretching. Leaving fullscreen keeps the selected
+mode and playback position. WHIRL, manual FLUID and silent FLOWER keep their
+framed fullscreen view.
+
+VISUALIZER uses a 2048-point FFT and RMS loudness from the track already playing.
+Bass (35–220 Hz) drives most of the force. Low-frequency onsets add short pulses;
+midrange (220–2500 Hz) and treble (2500–10000 Hz) add smaller changes in the curls.
+Fast attack and slower release smooth the response, with a short beat cooldown
+and an adaptive bass average. This is signal analysis in the browser, with no
+model or external service. Pausing, muting or setting volume to zero stops new
+automatic forces and lets the fluid settle. FLOWER remains silent.
+
+In fullscreen VISUALIZER, controls fade after 3.2 seconds of inactivity. Move the
+pointer, touch the screen or use the keyboard to reveal them. Controls stay
+visible while hovered or focused with the keyboard, and while INFO is open.
+Use Exit fullscreen or Escape to return. Motion off and reduced-motion
+preferences disable the automatic currents. Manual stirring takes precedence;
+RETURN suppresses automatic forces and settles the image, and RESET gives a
+1.5-second rest before the flow resumes. Rendering still pauses in hidden tabs.
+**Info** opens notes about the study and sound. Dialogs restore keyboard focus
+when closed.
 
 `experience.js` and `experience.css` provide the shared controls. The DRIP
 renderer retains its reflective artwork and pointer effects.

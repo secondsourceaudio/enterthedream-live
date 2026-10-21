@@ -9,11 +9,11 @@
     <title>SECOND SOURCE — FLOWER</title>
     <link rel="stylesheet" href="./site.css?v=4">
     <link rel="stylesheet" href="./new.css?v=32">
-    <link rel="stylesheet" href="./experience.css?v=9">
+    <link rel="stylesheet" href="./experience.css?v=10">
     <script src="./site.js?v=1" defer></script>
     <link rel="preload" as="image" href="./images/gallery/flower_3.webp">
-    <script src="./experience.js?v=8" defer></script>
-    <script src="./drip-fluid.js?v=4" defer></script>
+    <script src="./experience.js?v=9" defer></script>
+    <script src="./drip-fluid.js?v=5" defer></script>
 </head>
 <body class="landing-study">
     <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
@@ -34,12 +34,14 @@
                     <canvas id="visual" class="visual-canvas" aria-hidden="true"></canvas>
                 </div>
             </div>
-            <div class="experience-controls" aria-label="Viewing controls">
-                <button class="experience-button" type="button" data-motion-toggle aria-pressed="true" aria-label="Use static artwork">MOTION ON</button>
-                <button class="experience-button" type="button" data-fullscreen aria-pressed="false" aria-label="Enter fullscreen viewing mode">FULLSCREEN</button>
-                <button class="experience-button" type="button" data-info aria-haspopup="dialog" aria-controls="experience-info">INFO</button>
-                <button class="experience-button vortex-return" type="button" data-fluid-return aria-pressed="false" aria-label="Hold to return to the original artwork">RETURN</button>
-                <button class="experience-button" type="button" data-fluid-reset>RESET</button>
+            <div class="visualizer-dock" data-visualizer-dock>
+                <div class="experience-controls" aria-label="Viewing controls">
+                    <button class="experience-button" type="button" data-motion-toggle aria-pressed="true" aria-label="Use static artwork">MOTION ON</button>
+                    <button class="experience-button" type="button" data-fullscreen aria-pressed="false" aria-label="Enter fullscreen viewing mode">FULLSCREEN</button>
+                    <button class="experience-button" type="button" data-info aria-haspopup="dialog" aria-controls="experience-info">INFO</button>
+                    <button class="experience-button vortex-return" type="button" data-fluid-return aria-pressed="false" aria-label="Hold to return to the original artwork">RETURN</button>
+                    <button class="experience-button" type="button" data-fluid-reset>RESET</button>
+                </div>
             </div>
             <p class="visually-hidden" role="status" data-status></p>
             <dialog id="experience-info" class="experience-info" aria-labelledby="info-title">

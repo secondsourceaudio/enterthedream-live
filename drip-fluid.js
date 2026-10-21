@@ -30,6 +30,7 @@ SOFTWARE.
     const canvas = document.querySelector('#fluid-visual') || document.querySelector('#visual');
     const container = document.querySelector('#fluid-container') || document.querySelector('#visual-container');
     const image = container?.querySelector('.fallback-image');
+    const media = container?.querySelector('.visual-media');
     const experience = window.SecondSourceExperience;
     const resetButton = document.querySelector('[data-fluid-reset]');
     const returnButton = document.querySelector('[data-fluid-return]');
@@ -95,6 +96,9 @@ SOFTWARE.
         let hover = null;
         let hoverForce = null;
         let previousTime = null;
+        let autoTime = 0;
+        let autoAmount = 0;
+        let autoRest = 0;
         const returning = () => rightHeld || returnKey || returnPointers.size > 0;
         const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 
@@ -398,9 +402,11 @@ SOFTWARE.
             }
         }
         function resize() {
-            const ratio = Math.min(devicePixelRatio || 1, 1.75);
-            const width = Math.max(1, Math.floor(container.clientWidth * ratio));
-            const height = Math.max(1, Math.floor(container.clientHeight * ratio));
+            // Fullscreen covers the viewport with a square image, without stretching it.
+            const size = media.clientWidth;
+            const ratio = Math.min(devicePixelRatio || 1, 1.75, 1600 / Math.max(size, 1));
+            const width = Math.max(1, Math.floor(size * ratio));
+            const height = Math.max(1, Math.floor(media.clientHeight * ratio));
             if (canvas.width !== width || canvas.height !== height) {
                 canvas.width = width; canvas.height = height;
             }
@@ -412,7 +418,7 @@ SOFTWARE.
             velocity.swap();
         }
         function point(event) {
-            const rect = container.getBoundingClientRect();
+            const rect = media.getBoundingClientRect();
             return {x: clamp((event.clientX - rect.left) / rect.width, 0, 1),
                 y: clamp(1 - (event.clientY - rect.top) / rect.height, 0, 1)};
         }
@@ -510,7 +516,16 @@ SOFTWARE.
             resetButton.disabled = returnButton.disabled = !fluidMotionEnabled();
         });
         resetButton.disabled = returnButton.disabled = !fluidMotionEnabled();
-        resetButton.addEventListener('click', () => { clearInput(); clearFields(); });
+        resetButton.addEventListener('click', () => {
+            clearInput(); clearFields();
+            autoAmount = 0;
+            autoRest = 1.5;
+        });
+        window.addEventListener('experience:immersivechange', () => {
+            clearInput();
+            autoAmount = 0;
+            autoRest = 0;
+        });
         canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); clearInput(); fallback(); });
 
         function render(elapsed) {
@@ -520,7 +535,25 @@ SOFTWARE.
             previousTime = elapsed;
             const returningNow = returning();
             if (dt > 0) {
-                const bass = experience.sampleBass();
+                const signal = experience.sampleAudio();
+                const bass = signal.bass;
+                autoRest = Math.max(0, autoRest - dt);
+                const automatic = experience.visualizerEnabled && signal.active && !returningNow && !pointers.size && !autoRest;
+                autoAmount += ((automatic ? 1 : 0) - autoAmount) * (1 - Math.exp(-dt * 2));
+                if (experience.visualizerEnabled && signal.active) autoTime += dt * (.2 + bass * .8 + signal.beat * .6);
+                if (automatic) {
+                    // Moving, opposing currents keep the image alive without a fixed vortex.
+                    const strength = autoAmount * (bass * 650 + signal.beat * 1500 + signal.level * 80 + signal.mid * 70);
+                    for (let i = 0; i < 3; i++) {
+                        const phase = i * Math.PI * 2 / 3;
+                        const location = {x: .5 + .26 * Math.sin(autoTime * .23 + phase),
+                            y: .5 + .25 * Math.sin(autoTime * .31 + phase * 1.7)};
+                        inject(location, Math.cos(autoTime * .41 + phase) * strength * dt,
+                            Math.sin(autoTime * .37 - phase) * strength * dt,
+                            Math.sin(autoTime * .16 + phase) * autoAmount * dt *
+                                (bass * 1900 + signal.beat * 2600 + signal.mid * 250 + signal.treble * 100));
+                    }
+                }
                 if (hoverForce && !returningNow) inject(hoverForce,
                     clamp(hoverForce.dx * material.hover, -40, 40), clamp(hoverForce.dy * material.hover, -40, 40), 0);
                 hoverForce = null;
@@ -552,7 +585,8 @@ SOFTWARE.
                 }
                 draw(curl, curlField, {u_velocity: velocity.read.texture});
                 draw(vorticity, velocity.write, {u_velocity: velocity.read.texture, u_curl: curlField.texture},
-                    {u_dt: dt, u_curlStrength: returningNow ? 0 : material.curl + bass * material.bass});
+                    {u_dt: dt, u_curlStrength: returningNow ? 0 : material.curl + bass * material.bass +
+                        (experience.visualizerEnabled ? signal.mid * 2 + signal.treble * 2 : 0)});
                 velocity.swap();
                 draw(divergence, divergenceField, {u_velocity: velocity.read.texture});
                 draw(scale, pressure.write, {u_source: pressure.read.texture}, {u_scale: .8});
@@ -566,7 +600,7 @@ SOFTWARE.
                 const textures = {u_velocity: velocity.read.texture, u_map: imageMap.read.texture};
                 if (ink) textures.u_artwork = artwork;
                 draw(ink ? advectInk : advectImage, imageMap.write, textures,
-                    {u_dt: dt, u_restore: returningNow ? 5 : pointers.size ? .02 : material.restore});
+                    {u_dt: dt, u_restore: returningNow ? 5 : pointers.size ? .02 : material.restore * (experience.visualizerEnabled ? 1.8 : 1)});
                 imageMap.swap();
             }
             draw(display, null, {u_map: imageMap.read.texture, u_artwork: artwork});

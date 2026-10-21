@@ -1385,12 +1385,154 @@ class WebsiteTests(unittest.TestCase):
         expect(button).to_have_attribute("aria-pressed", "false")
         self.assertFalse(self.page.locator("header").evaluate("e => e.inert"))
 
+    def start_controlled_fluid(self, path='index.html'):
+        self.page.set_viewport_size({'width': 900, 'height': 700})
+        self.page.add_init_script("""(() => {
+            let experience;
+            Object.defineProperty(window, 'SecondSourceExperience', {
+                get: () => experience,
+                set(value) {
+                    experience = value;
+                    value.createRenderLoop = (draw, element) => {
+                        if (element.id !== 'fluid-container' && document.querySelector('#fluid-container')) return;
+                        let elapsed = 0;
+                        window.__stepFluid = frames => {
+                            for (let i = 0; i < frames; i++) draw(elapsed += 1000 / 60);
+                        };
+                    };
+                }
+            });
+        })();""")
+        self.visit(path)
+        self.page.wait_for_function("typeof window.__stepFluid === 'function'")
+
+    def fluid_frame_difference(self, frames=1, baseline=False):
+        return self.page.evaluate("""({frames, baseline}) => {
+            window.__stepFluid(frames);
+            const canvas = document.querySelector('#fluid-visual') || document.querySelector('#visual');
+            const gl = canvas.getContext('webgl');
+            const pixels = new Uint8Array(canvas.width * canvas.height * 4);
+            gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+            if (baseline) window.__visualizerBaseline = pixels;
+            let difference = 0, count = 0;
+            for (let i = 0; i < pixels.length; i += 64) {
+                for (let channel = 0; channel < 3; channel++) {
+                    difference += Math.abs(pixels[i + channel] - window.__visualizerBaseline[i + channel]);
+                    count++;
+                }
+            }
+            return difference / count;
+        }""", {'frames': frames, 'baseline': baseline})
+
+    def test_visualizer_reacts_to_audio_and_return_still_settles(self):
+        self.start_controlled_fluid()
+        self.page.locator('[data-visual-mode="visualizer"]').click()
+        self.fluid_frame_difference(baseline=True)
+        self.assertLess(self.fluid_frame_difference(120), .01, 'Selecting VISUALIZER must stay still before Play')
+        self.page.evaluate("window.SecondSourceExperience.sampleAudio = () => ({active: true, bass: .8, mid: .15, treble: .1, beat: .6, level: .4})")
+        self.page.locator('[data-fullscreen]').click()
+        expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'true')
+        expect(self.page.locator('[data-visual-mode="visualizer"]')).to_have_attribute('aria-pressed', 'true')
+        self.assertTrue(self.page.evaluate('window.SecondSourceExperience.visualizerEnabled'))
+        self.assertTrue(self.page.evaluate("""() => {
+            const frame = document.querySelector('#fluid-container').getBoundingClientRect();
+            const media = document.querySelector('#fluid-container .visual-media').getBoundingClientRect();
+            return frame.width === innerWidth && frame.height === innerHeight &&
+                media.width === media.height && media.width >= innerWidth && media.height >= innerHeight;
+        }"""))
+        self.fluid_frame_difference(baseline=True)
+        disturbed = self.fluid_frame_difference(120)
+        self.assertGreater(disturbed, .5, 'Fullscreen must stir the artwork without any pointer input')
+        control = self.page.locator('[data-fluid-return]')
+        control.focus()
+        self.page.keyboard.down('Space')
+        self.assertLess(self.fluid_frame_difference(90), disturbed * .3, 'RETURN must suppress automatic currents and settle the image')
+        self.page.keyboard.up('Space')
+        self.page.locator('[data-motion-toggle]').click()
+        self.assertFalse(self.page.evaluate('window.SecondSourceExperience.visualizerEnabled'))
+        self.fluid_frame_difference(baseline=True)
+        self.assertLess(self.fluid_frame_difference(120), .01)
+        self.page.locator('[data-fullscreen]').click()
+        expect(self.page.locator('[data-visual-mode="visualizer"]')).to_have_attribute('aria-pressed', 'true')
+        self.page.locator('[data-motion-toggle]').click()
+        self.page.locator('[data-visual-mode="fluid"]').click()
+        self.fluid_frame_difference(baseline=True)
+        self.assertLess(self.fluid_frame_difference(120), .01, 'Manual FLUID must stay manual even when the track has energy')
+        self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
+
+    def test_visualizer_controls_hide_and_reappear_without_starting_audio(self):
+        self.start_controlled_fluid()
+        self.page.locator('[data-visual-mode="visualizer"]').click()
+        self.page.locator('[data-fullscreen]').click()
+        expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'true')
+        self.fluid_frame_difference(baseline=True)
+        self.assertLess(self.fluid_frame_difference(120), .01)
+        self.page.mouse.move(10, 10)
+        self.page.wait_for_function("document.querySelector('[data-experience]').classList.contains('visualizer-idle')")
+        self.assertEqual(self.page.locator('[data-visualizer-dock]').evaluate('node => getComputedStyle(node).pointerEvents'), 'none')
+        self.page.keyboard.press('Tab')
+        self.assertFalse(self.page.locator('[data-experience]').evaluate("node => node.classList.contains('visualizer-idle')"))
+        self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
+        self.page.locator('[data-fullscreen]').click()
+
+    def test_visualizer_preserves_playback_and_respects_reduced_motion(self):
+        serve_seekable_audio(self.page)
+        self.visit()
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function("document.querySelector('audio').currentTime > .1")
+        self.page.locator('[data-visual-mode="visualizer"]').click()
+        self.page.locator('[data-fullscreen]').click()
+        expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'true')
+        self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
+        self.assertTrue(self.page.evaluate('window.SecondSourceExperience.visualizerEnabled'))
+        self.page.emulate_media(reduced_motion='reduce')
+        self.assertFalse(self.page.evaluate('window.SecondSourceExperience.visualizerEnabled'))
+        self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
+        self.page.locator('[data-fullscreen]').click()
+        expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'false')
+        self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
+
+    def test_visualizer_analyser_distinguishes_bass_mid_treble_and_bass_hits(self):
+        serve_seekable_audio(self.page)
+        self.page.add_init_script("""(() => {
+            const Native = window.AudioContext;
+            window.AudioContext = class extends Native {
+                createMediaElementSource() {
+                    const oscillator = this.createOscillator();
+                    const level = this.createGain();
+                    oscillator.frequency.value = 80;
+                    level.gain.value = .15;
+                    oscillator.connect(level);
+                    oscillator.start();
+                    window.__analysisTone = oscillator;
+                    window.__analysisLevel = level;
+                    return level;
+                }
+            };
+        })();""")
+        self.visit()
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function('window.SecondSourceExperience.sampleAudio().bass > .15')
+        low = self.page.evaluate('window.SecondSourceExperience.sampleAudio()')
+        self.assertGreater(low['bass'], low['mid'] + .1)
+        self.page.evaluate('window.__analysisTone.frequency.value = 1000')
+        self.page.wait_for_function('window.SecondSourceExperience.sampleAudio().mid > window.SecondSourceExperience.sampleAudio().bass + .05')
+        self.page.evaluate('window.__analysisTone.frequency.value = 6000')
+        self.page.wait_for_function('window.SecondSourceExperience.sampleAudio().treble > window.SecondSourceExperience.sampleAudio().mid + .03')
+        self.page.evaluate('window.__analysisLevel.gain.value = 0')
+        self.page.wait_for_function('window.SecondSourceExperience.sampleAudio().level < .01')
+        self.page.evaluate('window.__analysisTone.frequency.value = 80; window.__analysisLevel.gain.value = .35')
+        self.page.wait_for_function('window.SecondSourceExperience.sampleAudio().beat > .2')
+        self.page.locator('[data-mute]').click()
+        self.assertFalse(self.page.evaluate('window.SecondSourceExperience.sampleAudio().active'))
+        self.assertEqual(self.page.evaluate('window.SecondSourceExperience.sampleBass()'), 0)
+
     def test_fullscreen_fallback_escape_and_focus(self):
         self.visit()
         self.page.locator("[data-experience]").evaluate("e => { e.requestFullscreen = () => Promise.reject(new Error('Unavailable')); }")
         button = self.page.locator("[data-fullscreen]")
         button.click()
-        expect(self.page.locator("[data-experience]")).to_have_class("listening-space is-immersive")
+        self.page.wait_for_function("document.querySelector('[data-experience]').classList.contains('is-immersive')")
         self.assertIsNone(self.page.evaluate("document.fullscreenElement"))
         self.page.keyboard.press("Escape")
         expect(button).to_have_attribute("aria-pressed", "false")
