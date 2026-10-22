@@ -14,7 +14,7 @@ python3 -m http.server 8000
 Open the local server in your browser. The homepage is DRIP, with a WHIRL / FLUID / VISUALIZER
 switch. **SOURCES** in the top navigation opens `experiments.html`, which lists
 only FLOWER. `experiment.html` is the public, silent FLOWER fluid source,
-using the pink gallery photograph.
+using the yellow and black gallery photograph.
 **RELEASES** opens `releases.html`, which shows SRC001 / DRIP with its static
 cover, artist, title, release description and LP/label information. Distribution
 is credited to One Eye Witness. The description currently uses the supplied
@@ -75,8 +75,13 @@ framed fullscreen view.
 VISUALIZER uses a 2048-point FFT and RMS loudness from the track already playing.
 Bass (35–220 Hz) drives the gentle underlying flow. Detected low-frequency
 onsets emit drops at random positions, using the same expanding wave packet
-as a click in WHIRL. A 1.5-second gap between drops lets the rings spread;
-closely spaced hits are skipped without being queued. Drops overlap independently and fade over 3.8 seconds;
+as a click in WHIRL. Drops are separated by at least one bar, computed as
+`60 × beats-per-bar / BPM` from the audio element's track metadata. Sage Counsel
+is 114 BPM in 4/4, giving a minimum gap of 2.105263 seconds. Timing follows the
+audio playback position, independently of fluid frame rate. This is an onset
+limit, not a grid sequencer: a new drop still needs a fresh bass hit. Closely
+spaced hits are skipped without being queued; seeking backwards or looping
+starts a new passage. Drops overlap independently and fade over 3.8 seconds;
 midrange (220–2500 Hz) and treble (2500–10000 Hz) add smaller changes in the curls.
 Fast attack and slower release smooth the response, with a short beat cooldown
 and an adaptive bass average. Onsets use linear energy from the floating-point
@@ -140,8 +145,13 @@ off clears the held gesture.
 The motion settles using elapsed time,
 and ripples pause with the motion toggle. Space or Enter on the focused artwork
 also creates a ripple. Pinch gestures zoom instead of creating a second impact.
-The compact player identifies the track as MARTIN SOLLI / SAGE COUNSEL above
-its timeline, including in fullscreen. Its play/pause, mute and volume controls sit beneath DRIP;
+The compact player has a dark metal skin, an inset blue display and drawn
+transport icons. It identifies MARTIN SOLLI / SAGE COUNSEL above its timeline,
+including in fullscreen. Twenty logarithmic spectrum bands (40–14000 Hz) with
+short peak holds follow the real audio at up to 30 updates per second. They use
+the existing analyser and stay empty before playback, on pause, mute, zero volume
+or Motion off; rendering also stops offscreen and in hidden tabs. Player status
+and the digital clock reflect actual playback. Its play/pause, mute and volume controls sit beneath DRIP;
 it includes a seekable timeline with elapsed time and duration. Metadata and
 audio still load only when Play is selected. Seeking with touch, mouse or the
 keyboard preserves the current playing or paused state.
@@ -152,7 +162,7 @@ It starts off on each visit, responds to drag and optional audio, and pauses
 with the motion toggle. Turning it off eases back to the original artwork.
 Project information stays inside INFO: one short description and a Bandcamp
 link, without a personal creator credit.
-FLOWER uses the shared fluid renderer with the gallery's `flower_3.webp` image
+FLOWER uses the shared fluid renderer with the gallery's `flower_4.webp` image
 and an ink material that transports and diffuses its original colours.
 `site.js` handles internal-link fades, browser Back navigation, and artwork
 viewer focus. Reduced-motion preferences disable page fades.
@@ -216,7 +226,7 @@ preview changes before converting any additional PNG or JPEG artwork.
 
 ## Local studio revision
 
-SOURCES presents only FLOWER with the pink photograph and its ink simulation.
+SOURCES presents only FLOWER with the yellow and black photograph and its ink simulation.
 The index uses a static, silent image preview.
 Reduced motion shows the original photograph
 on FLOWER until motion is enabled. The homepage artwork has no visible title or

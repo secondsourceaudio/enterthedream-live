@@ -746,7 +746,7 @@ html.experience-page { overflow-x: hidden; overflow-y: auto; }
     align-items: center;
     gap: 24px;
 }
-.visualizer-dock { display: contents; }
+.visualizer-dock { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
 .landing-study .landing-experiment { padding-top: 40px; padding-bottom: 48px; }
 .landing-study .visual-container { width: min(64vmin, 760px); }
 .landing-study .visual-container:focus-visible { outline: 1px solid #899aa5; outline-offset: 4px; }
@@ -856,42 +856,78 @@ html[data-motion="off"] .visual-container { touch-action: pan-y pinch-zoom; }
 }
 .experience-volume output { min-width: 30px; }
 
-/* The original compact player, with larger touch targets. */
-.compact-player { display: flex; flex-direction: column; align-items: center; width: min(100%, 340px); max-width: 100%; }
-.player-track { margin: 0 0 4px; color: #bcbcbc; font-size: 9px; line-height: 1.6; letter-spacing: .1em; text-align: center; }
-.player-controls { display: flex; align-items: center; justify-content: center; gap: 9px; }
-.player-timeline { display: flex; align-items: center; gap: 10px; width: 100%; }
-.player-time { min-width: 34px; color: #bcbcbc; font: 11px Arial, Helvetica, sans-serif; font-variant-numeric: tabular-nums; }
-.player-time:last-child { text-align: right; }
+/* A compact desktop-player skin, retaining 44 px touch targets. */
+.compact-player {
+    display: flex; flex-direction: column; align-items: center;
+    width: min(100%, 380px); max-width: 100%; padding: 8px 12px 6px;
+    border: 1px solid #66707e; border-right-color: #1b202a; border-bottom-color: #151a23;
+    border-radius: 3px;
+    background: linear-gradient(135deg, #343b47 0%, #202630 32%, #11161f 70%, #242b36 100%);
+    box-shadow: inset 1px 1px 0 rgb(255 255 255 / .09), inset -1px -1px 0 #080c13, 0 8px 28px rgb(0 0 0 / .3);
+}
+.player-titlebar { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0 1px 7px; color: #b5becb; font-size: 7px; line-height: 1.5; letter-spacing: .18em; }
+.player-state { display: flex; align-items: center; gap: 6px; color: #818b9c; font-size: 6px; letter-spacing: .1em; }
+.player-state::before { content: ""; width: 3px; height: 3px; background: #4a5260; }
+.sound-is-on .player-state::before { background: #a5caff; box-shadow: 0 0 6px #7aa6f2; }
+.player-display {
+    display: grid; grid-template-columns: 106px minmax(0, 1fr); align-items: center; gap: 14px;
+    width: 100%; padding: 9px 10px; border: 1px solid #080b12; border-bottom-color: #5b6470;
+    background: linear-gradient(#080e19, #0c1525); box-shadow: inset 0 1px 5px #000;
+}
+.player-track { margin: 0; color: #d4e3ff; font-size: 8px; line-height: 1.7; letter-spacing: .08em; text-shadow: 0 0 9px rgb(108 156 244 / .18); }
+.player-artist { display: block; color: #8394b0; font-size: 6px; letter-spacing: .12em; }
+.player-track-name { display: block; }
+.player-clock { display: flex; align-items: baseline; gap: 7px; margin-top: 4px; color: #58718e; font: 11px ui-monospace, SFMono-Regular, Consolas, monospace; }
+.player-time { color: #b7d3fa; font: 11px ui-monospace, SFMono-Regular, Consolas, monospace; font-variant-numeric: tabular-nums; text-shadow: 0 0 6px rgb(108 156 244 / .25); }
+.player-time:last-child { color: #7f97b8; }
+.player-spectrum { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 2px; height: 42px; align-self: end; }
+.spectrum-band { position: relative; height: 100%; background: rgb(117 158 221 / .035); }
+.spectrum-level { position: absolute; bottom: 0; left: 0; right: 0; height: calc(var(--level, 0) * 100%); background: linear-gradient(to top, #416bb1, #c1dcff); mask-image: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 5px); -webkit-mask-image: repeating-linear-gradient(to top, #000 0 3px, transparent 3px 5px); }
+.spectrum-peak { position: absolute; left: 0; right: 0; bottom: calc(var(--peak, 0) * 100%); height: 1px; background: #d0e3ff; opacity: var(--peak-visible, 0); }
+.player-controls { display: flex; align-items: center; justify-content: flex-start; gap: 9px; width: 100%; }
+.player-timeline { display: flex; align-items: center; width: 100%; }
 .seek-slider { flex: 1; min-width: 0; height: 44px; margin: 0; appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer; }
 .seek-slider:disabled { cursor: default; opacity: .4; }
-.seek-slider::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(to right, #fff var(--progress, 0%), #555 var(--progress, 0%)); }
-.seek-slider::-webkit-slider-thumb { width: 8px; height: 8px; margin-top: -3px; appearance: none; -webkit-appearance: none; border-radius: 50%; background: #fff; }
-.seek-slider::-moz-range-track { height: 2px; background: #555; }
-.seek-slider::-moz-range-progress { height: 2px; background: #fff; }
-.seek-slider::-moz-range-thumb { width: 8px; height: 8px; border: 0; border-radius: 50%; background: #fff; }
+.seek-slider::-webkit-slider-runnable-track { height: 3px; background: linear-gradient(to right, #a7c7fc var(--progress, 0%), #080d15 var(--progress, 0%)); box-shadow: 0 1px 0 #566171; }
+.seek-slider::-webkit-slider-thumb { width: 9px; height: 11px; margin-top: -4px; appearance: none; -webkit-appearance: none; border: 1px solid #91a5c4; border-radius: 1px; background: linear-gradient(#d6e5fd, #6d85a8); }
+.seek-slider::-moz-range-track { height: 3px; background: #080d15; box-shadow: 0 1px 0 #566171; }
+.seek-slider::-moz-range-progress { height: 3px; background: #a7c7fc; }
+.seek-slider::-moz-range-thumb { width: 9px; height: 11px; border: 1px solid #91a5c4; border-radius: 1px; background: linear-gradient(#d6e5fd, #6d85a8); }
 .seek-slider:focus-visible { outline: 1px solid #eee; outline-offset: 2px; }
 .compact-player .player-button,
 .compact-player .sound-button {
     width: 44px; min-width: 44px; height: 44px; padding: 0;
     display: flex; align-items: center; justify-content: center;
-    color: #fff; font-family: Arial, Helvetica, sans-serif; font-size: 12px; letter-spacing: 0;
+    color: #cad6e7; border: 1px solid #596474; border-right-color: #080d16; border-bottom-color: #080d16;
+    border-radius: 2px; background: linear-gradient(#3c4655, #1a222f);
+    box-shadow: inset 1px 1px 0 rgb(255 255 255 / .06);
+    font-family: Arial, Helvetica, sans-serif; font-size: 12px; letter-spacing: 0;
     -webkit-tap-highlight-color: transparent;
 }
+.compact-player .player-button:hover, .compact-player .sound-button:hover { color: #fff; background: linear-gradient(#49566c, #252f40); }
+.compact-player .player-button:active, .compact-player .sound-button:active { box-shadow: inset 1px 1px 3px #080c14; }
+.compact-player [data-play-symbol], .compact-player [data-mute-symbol] { display: block; width: 16px; height: 16px; }
+.compact-player svg { display: block; width: 16px; height: 16px; fill: currentColor; }
+.compact-player .transport-pause, .compact-player .transport-loading, .compact-player .speaker-muted { display: none; }
+[data-play-symbol][data-state="pause"] .transport-play, [data-play-symbol][data-state="loading"] .transport-play { display: none; }
+.compact-player [data-state="pause"] .transport-pause, .compact-player [data-state="loading"] .transport-loading { display: block; }
+[data-mute-symbol][data-state="muted"] .speaker-waves { display: none; }
+.compact-player [data-state="muted"] .speaker-muted { display: block; }
 .compact-player .volume-slider {
     width: 90px; height: 44px; margin: 0;
     appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer;
 }
-.compact-player .volume-slider::-webkit-slider-runnable-track { height: 1px; background: rgb(255 255 255 / .35); }
+.compact-player .volume-slider::-webkit-slider-runnable-track { height: 2px; background: #080d15; box-shadow: 0 1px 0 #566171; }
 .compact-player .volume-slider::-webkit-slider-thumb {
-    width: 9px; height: 9px; margin-top: -4px; border-radius: 50%;
-    appearance: none; -webkit-appearance: none; background: #fff;
+    width: 8px; height: 11px; margin-top: -5px; border: 1px solid #91a5c4; border-radius: 1px;
+    appearance: none; -webkit-appearance: none; background: linear-gradient(#d6e5fd, #6d85a8);
 }
-.compact-player .volume-slider::-moz-range-track { height: 1px; background: rgb(255 255 255 / .35); }
-.compact-player .volume-slider::-moz-range-thumb { width: 9px; height: 9px; border: 0; border-radius: 50%; background: #fff; }
-.compact-player .volume-percent { min-width: 36px; color: #fff; font-family: Arial, Helvetica, sans-serif; font-size: 11px; text-align: right; }
+.compact-player .volume-slider::-moz-range-track { height: 2px; background: #080d15; box-shadow: 0 1px 0 #566171; }
+.compact-player .volume-slider::-moz-range-thumb { width: 8px; height: 11px; border: 1px solid #91a5c4; border-radius: 1px; background: linear-gradient(#d6e5fd, #6d85a8); }
+.compact-player .volume-percent { min-width: 36px; margin-left: auto; color: #b9c6da; font: 11px ui-monospace, SFMono-Regular, Consolas, monospace; text-align: right; }
 .compact-player .volume-slider:focus-visible { outline: 1px solid #eee; outline-offset: 4px; }
 .landing-study .experience-controls { margin-top: -12px; }
+.landing-study .visualizer-dock .experience-controls { margin: 0; }
 
 .visually-hidden {
     position: absolute;
@@ -927,11 +963,11 @@ body.listening-mode { overflow: hidden; }
 }
 .landing-study .listening-space.is-immersive .visual-container,
 .landing-study .listening-space:fullscreen .visual-container {
-    width: min(calc(100dvh - 180px), calc(100vw - 48px));
+    width: min(max(80px, calc(100dvh - var(--player-space, 180px))), calc(100vw - 48px));
 }
 
 .landing-study .listening-space.is-visualizer .visual-container {
-    width: min(max(80px, calc(100dvh - var(--visualizer-space, 230px))), calc(100vw - 48px));
+    width: min(max(80px, calc(100dvh - var(--player-space, 300px))), calc(100vw - 48px));
 }
 .listening-space.is-visualizer .visualizer-dock {
     flex: 0 0 auto;
@@ -1015,12 +1051,25 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
         width: min(calc(100dvh - 200px), calc(100vw - 24px));
     }
     .landing-study .listening-space.is-visualizer .visual-container {
-        width: min(max(80px, calc(100dvh - var(--visualizer-space, 230px))), calc(100vw - 24px));
+        width: min(max(80px, calc(100dvh - var(--player-space, 300px))), calc(100vw - 24px));
     }
     .field-study .listening-space.is-immersive .visual-container,
     .field-study .listening-space:fullscreen .visual-container {
         width: min(calc(100dvh - 230px), calc(100vw - 24px));
     }
+}
+
+@media (min-width: 751px) and (max-height: 500px) {
+    .listening-space.is-immersive .compact-player {
+        display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px;
+        width: min(560px, 100%); padding: 6px 10px;
+    }
+    .listening-space.is-immersive .player-titlebar { grid-column: 1 / -1; padding-bottom: 5px; }
+    .listening-space.is-immersive .player-display { grid-column: 1; grid-row: 2; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; padding: 6px 8px; }
+    .listening-space.is-immersive .player-spectrum { height: 34px; }
+    .listening-space.is-immersive .player-controls { grid-column: 2; grid-row: 2; width: auto; gap: 6px; }
+    .listening-space.is-immersive .player-timeline { grid-column: 1 / -1; grid-row: 3; }
+    .listening-space.is-immersive .volume-slider { width: 72px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1060,15 +1109,20 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
             </div>
             <div class="visualizer-dock" data-visualizer-dock>
                 <div class="compact-player" role="group" aria-labelledby="player-track-title">
-                    <p class="player-track" id="player-track-title">MARTIN SOLLI / SAGE COUNSEL</p>
+                    <div class="player-titlebar" aria-hidden="true"><span>SRC PLAYER</span><span class="player-state" data-player-state>STOPPED</span></div>
+                    <div class="player-display">
+                        <div class="player-spectrum" data-spectrum aria-hidden="true"></div>
+                        <div class="player-readout">
+                            <p class="player-track" id="player-track-title"><span class="player-artist">MARTIN SOLLI</span> <span class="player-track-name">SAGE COUNSEL</span></p>
+                            <div class="player-clock" aria-hidden="true"><output class="player-time" data-current-time>0:00</output><span>/</span><output class="player-time" data-duration>--:--</output></div>
+                        </div>
+                    </div>
                     <div class="player-timeline">
-                        <output class="player-time" data-current-time aria-hidden="true">0:00</output>
                         <input class="seek-slider" type="range" min="0" max="1" step="0.1" value="0" aria-label="Playback position" aria-valuetext="Playback not started" data-seek disabled>
-                        <output class="player-time" data-duration aria-hidden="true">--:--</output>
                     </div>
                     <div class="player-controls">
-                        <button class="experience-button player-button" type="button" data-sound data-compact-sound aria-pressed="false" aria-label="Play Sage Counsel" title="Play Sage Counsel"><span data-play-symbol aria-hidden="true">▶︎</span></button>
-                        <button class="experience-button sound-button" type="button" data-mute aria-pressed="false" aria-label="Mute" title="Mute"><span data-mute-symbol aria-hidden="true">◖))</span></button>
+                        <button class="experience-button player-button" type="button" data-sound data-compact-sound aria-pressed="false" aria-label="Play Sage Counsel" title="Play Sage Counsel"><span data-play-symbol data-state="play" aria-hidden="true"><svg class="transport-play" viewBox="0 0 16 16"><path d="M5 3 13 8 5 13Z"/></svg><svg class="transport-pause" viewBox="0 0 16 16"><path d="M4 3h3v10H4zm5 0h3v10H9z"/></svg><svg class="transport-loading" viewBox="0 0 16 16"><circle cx="3" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="13" cy="8" r="1.5"/></svg></span></button>
+                        <button class="experience-button sound-button" type="button" data-mute aria-pressed="false" aria-label="Mute" title="Mute"><span data-mute-symbol data-state="sound" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2 6h3l4-3v10l-4-3H2Z"/><path class="speaker-waves" d="M11 5q3 3 0 6m2-8q5 5 0 10" fill="none" stroke="currentColor" stroke-width="1.2"/><path class="speaker-muted" d="m11 6 4 4m0-4-4 4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></span></button>
                         <input class="volume-slider" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="Volume" data-volume>
                         <output class="volume-percent" data-volume-output aria-hidden="true">35%</output>
                     </div>
@@ -1088,7 +1142,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
                 </div>
             </div>
             <p class="visually-hidden" role="status" data-status></p>
-            <audio crossorigin="anonymous" id="experience-audio" loop preload="none">
+            <audio crossorigin="anonymous" id="experience-audio" data-track-title="Sage Counsel" data-bpm="114" data-beats-per-bar="4" loop preload="none">
                 <source src="https://raw.githubusercontent.com/secondsourceaudio/enterthedream-live/main/audio/sage-counsel.mp3" type="audio/mpeg">
             </audio>
             <dialog id="experience-info" class="experience-info" aria-labelledby="info-title">
@@ -1199,6 +1253,8 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
     const infoButton = space.querySelector("[data-info]");
     const dialog = space.querySelector("dialog");
     const visualizerDock = space.querySelector('[data-visualizer-dock]');
+    const spectrumElement = space.querySelector('[data-spectrum]');
+    const playerState = space.querySelector('[data-player-state]');
     const status = space.querySelector("[data-status]");
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const modeButtons = [...space.querySelectorAll('[data-visual-mode]')];
@@ -1243,6 +1299,10 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
     let previousFocus = null;
     let rejectPlayback = null;
     const inertElements = new Map();
+    const spectrumBands = [];
+    let spectrumFrame = 0;
+    let spectrumPaintTime = null;
+    let spectrumVisible = true;
 
     function applyVolume() {
         if (!audio) return;
@@ -1301,7 +1361,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
             const label = loading ? "Loading sound" : `${playing ? "Pause" : "Play"} ${trackTitle}`;
             soundButton.setAttribute("aria-label", label);
             soundButton.title = label;
-            soundButton.querySelector("[data-play-symbol]").textContent = loading ? "…" : playing ? "Ⅱ" : "▶\uFE0E";
+            soundButton.querySelector("[data-play-symbol]").dataset.state = loading ? "loading" : playing ? "pause" : "play";
         } else {
             soundButton.setAttribute("aria-label", loading ? "Loading sound" : playing ? "Sound on: pause sound" : hasStarted ? "Sound off: resume sound" : "Enter with sound");
             soundButton.textContent = loading ? "LOADING SOUND" : playing ? "SOUND ON" : hasStarted ? "SOUND OFF" : "ENTER WITH SOUND";
@@ -1312,8 +1372,11 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
             muteButton.setAttribute("aria-pressed", String(audio.muted));
             muteButton.setAttribute("aria-label", audio.muted ? "Unmute" : "Mute");
             muteButton.title = audio.muted ? "Unmute" : "Mute";
-            muteButton.querySelector("[data-mute-symbol]").textContent = silent ? "×" : "◖))";
+            muteButton.querySelector("[data-mute-symbol]").dataset.state = silent ? "muted" : "sound";
         }
+        if (playerState) playerState.textContent = loading ? 'LOADING' : !playing
+            ? hasStarted ? 'PAUSED' : 'STOPPED' : silent ? 'MUTED' : soundAudible() ? 'PLAYING' : 'BUFFERING';
+        reconcileSpectrum();
     }
 
     function soundAudible() {
@@ -1373,6 +1436,72 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
             level: smooth(Math.min(1, Math.sqrt(power / waveform.length) * 3 * volume / .35), signal.level, .25)
         };
         return signal;
+    }
+
+    function clearSpectrum() {
+        for (const band of spectrumBands) {
+            band.level = band.peak = band.hold = 0;
+            band.element.style.setProperty('--level', '0');
+            band.element.style.setProperty('--peak', '0');
+            band.element.style.setProperty('--peak-visible', '0');
+        }
+    }
+    function spectrumAllowed() {
+        return !!spectrumElement && motionEnabled && spectrumVisible && !document.hidden && soundAudible();
+    }
+    function paintSpectrum(now) {
+        spectrumFrame = 0;
+        if (!spectrumAllowed()) { clearSpectrum(); return; }
+        const dt = spectrumPaintTime === null ? 1 / 30 : Math.min(.1, (now - spectrumPaintTime) / 1000);
+        if (dt >= 1 / 30) {
+            spectrumPaintTime = now;
+            const analysis = sampleAudio();
+            const binWidth = analyser ? context.sampleRate / analyser.fftSize : 1;
+            for (let index = 0; index < spectrumBands.length; index++) {
+                const band = spectrumBands[index];
+                let power = 0, count = 0;
+                if (analysis.active && spectrum) {
+                    const low = 40 * Math.pow(350, index / spectrumBands.length);
+                    const high = 40 * Math.pow(350, (index + 1) / spectrumBands.length);
+                    const first = Math.max(1, Math.floor(low / binWidth));
+                    const last = Math.min(spectrum.length - 1, Math.max(first, Math.ceil(high / binWidth) - 1));
+                    for (let bin = first; bin <= last; bin++) { power += Math.pow(10, spectrum[bin] / 10); count++; }
+                }
+                const db = power > 0 ? 10 * Math.log10(power / Math.max(1, count)) + 20 * Math.log10(volume / .35) : -100;
+                const target = Math.max(0, Math.min(.98, (db + 70) / 60));
+                band.level += (target - band.level) * (1 - Math.exp(-dt / (target > band.level ? .025 : .12)));
+                if (band.level >= band.peak) { band.peak = band.level; band.hold = .18; }
+                else { band.hold -= dt; if (band.hold <= 0) band.peak = Math.max(band.level, band.peak - dt * .65); }
+                band.element.style.setProperty('--level', band.level.toFixed(3));
+                band.element.style.setProperty('--peak', band.peak.toFixed(3));
+                band.element.style.setProperty('--peak-visible', band.peak > .01 ? '1' : '0');
+            }
+        }
+        spectrumFrame = requestAnimationFrame(paintSpectrum);
+    }
+    function reconcileSpectrum() {
+        if (!spectrumAllowed()) {
+            cancelAnimationFrame(spectrumFrame);
+            spectrumFrame = 0;
+            spectrumPaintTime = null;
+            clearSpectrum();
+        } else if (!spectrumFrame) {
+            spectrumPaintTime = null;
+            spectrumFrame = requestAnimationFrame(paintSpectrum);
+        }
+    }
+    if (spectrumElement) {
+        for (let index = 0; index < 20; index++) {
+            const element = document.createElement('span');
+            element.className = 'spectrum-band';
+            element.innerHTML = '<span class="spectrum-level"></span><span class="spectrum-peak"></span>';
+            spectrumElement.append(element);
+            spectrumBands.push({element, level: 0, peak: 0, hold: 0});
+        }
+        new IntersectionObserver(entries => { spectrumVisible = entries[0].isIntersecting; reconcileSpectrum(); }).observe(spectrumElement);
+        document.addEventListener('visibilitychange', reconcileSpectrum);
+        window.addEventListener('experience:motionchange', reconcileSpectrum);
+        for (const event of ['playing', 'waiting', 'canplay', 'ended']) audio.addEventListener(event, updateSound);
     }
     if (muteButton) muteButton.addEventListener("click", () => {
         audio.muted = !audio.muted;
@@ -1529,11 +1658,11 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
         }, 3200);
     }
     function fitVisualizer() {
-        if (!immersive || visualMode !== 'visualizer' || !visualizerDock) return;
+        if (!immersive || !audio || !visualizerDock) return;
         const style = getComputedStyle(space);
         const reserved = visualizerDock.getBoundingClientRect().height +
             parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) + parseFloat(style.rowGap);
-        space.style.setProperty('--visualizer-space', `${Math.ceil(reserved)}px`);
+        space.style.setProperty('--player-space', `${Math.ceil(reserved)}px`);
     }
     window.addEventListener('resize', fitVisualizer);
     if (visualizerDock) new ResizeObserver(fitVisualizer).observe(visualizerDock);
@@ -1627,6 +1756,12 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
         get visualizerEnabled() { return visualMode === 'visualizer' && motionEnabled; },
         get soundPlaying() { return !!audio && !audio.paused; },
         get soundAudible() { return soundAudible(); },
+        get playbackTime() { return audio?.currentTime || 0; },
+        get secondsPerBar() {
+            const bpm = Number(audio?.dataset.bpm);
+            const beats = Number(audio?.dataset.beatsPerBar || 4);
+            return Number.isFinite(bpm) && bpm > 0 && Number.isFinite(beats) && beats > 0 ? 60 * beats / bpm : Infinity;
+        },
         isVisualActive,
         useStaticArtwork(mode = visualMode) {
             unavailableModes.add(rendererKey(mode));
@@ -3483,7 +3618,8 @@ SOFTWARE.
         const dripData = new Float32Array(drips.length * 4);
         let nextDrip = 0;
         let consumedBeat = 0;
-        let dripCooldown = 0;
+        let lastDripTime = -Infinity;
+        let previousPlaybackTime = null;
         function randomCurrent() {
             const angle = Math.random() * Math.PI * 2;
             return {x: .18 + Math.random() * .64, y: .18 + Math.random() * .64,
@@ -3821,7 +3957,8 @@ SOFTWARE.
             for (const drip of drips) { drip.age = -1; drip.strength = 0; }
             nextDrip = 0;
             consumedBeat = experience.sampleAudio().beatId || 0;
-            dripCooldown = 0;
+            lastDripTime = -Infinity;
+            previousPlaybackTime = null;
             gl.clearColor(0, 0, 0, 0);
             for (const value of targets) {
                 gl.bindFramebuffer(gl.FRAMEBUFFER, value.framebuffer);
@@ -3973,20 +4110,24 @@ SOFTWARE.
             if (dt > 0 && advance) {
                 const signal = experience.sampleAudio();
                 const bass = signal.bass;
+                const playbackTime = experience.playbackTime;
+                // A backward seek or loop begins a new passage. Continuous playback
+                // is limited by musical time, independently of the fluid frame rate.
+                if (previousPlaybackTime !== null && playbackTime < previousPlaybackTime - .1) lastDripTime = -Infinity;
+                previousPlaybackTime = playbackTime;
                 const automatic = experience.visualizerEnabled && audible && !returningNow && !autoRest;
                 autoAmount += ((automatic ? 1 : 0) - autoAmount) * (1 - Math.exp(-dt * 3));
                 for (const drip of drips) {
                     if (drip.age >= 0) drip.age += dt;
                     if (returningNow) drip.strength *= Math.exp(-dt * 10);
                 }
-                dripCooldown = Math.max(0, dripCooldown - dt);
                 // Consume each onset once, rather than emitting drops on every frame
                 // of its decaying beat envelope. Skip closely spaced hits without queuing them.
-                if (automatic && signal.beatId > consumedBeat && !dripCooldown) {
+                if (automatic && signal.beatId > consumedBeat && playbackTime - lastDripTime >= experience.secondsPerBar) {
                     drips[nextDrip] = {x: .16 + Math.random() * .68, y: .16 + Math.random() * .68,
                         age: 0, strength: .35 + signal.beat * .35};
                     nextDrip = (nextDrip + 1) % drips.length;
-                    dripCooldown = 1.5;
+                    lastDripTime = playbackTime;
                 }
                 consumedBeat = signal.beatId || 0;
                 const twist = automatic ? autoAmount * currents[0].spin * (.06 + signal.mid * .1) : 0;

@@ -668,7 +668,7 @@ class WebsiteTests(unittest.TestCase):
     def test_ink_blends_source_colours_and_reset_restores_the_image(self):
         # A two-colour source makes real colour mixing distinguishable from UV warping.
         fixture = '<svg xmlns="http://www.w3.org/2000/svg" width="3000" height="3000"><path fill="blue" d="M0 0h1500v3000H0z"/><path fill="yellow" d="M1500 0h1500v3000H1500z"/></svg>'
-        self.page.route('**/images/gallery/flower_3.webp', lambda route: route.fulfill(content_type='image/svg+xml', body=fixture))
+        self.page.route('**/images/gallery/flower_4.webp', lambda route: route.fulfill(content_type='image/svg+xml', body=fixture))
         self.visit('experiment.html')
         expect(self.page.locator('#visual')).to_have_attribute('data-fluid', 'ready')
 
@@ -1251,7 +1251,7 @@ class WebsiteTests(unittest.TestCase):
         self.visit("experiments.html")
         expect(self.page.locator('.study-card')).to_have_count(1)
         expect(self.page.locator('.study-card h2')).to_contain_text('FLOWER')
-        expect(self.page.locator('.study-card img')).to_have_attribute('src', './images/gallery/thumbs/flower_3.webp')
+        expect(self.page.locator('.study-card img')).to_have_attribute('src', './images/gallery/thumbs/flower_4.webp')
         self.page.locator('.study-card').hover()
         self.wait_for_frames()
         self.assertEqual(self.page.evaluate('window.__drawCalls'), 0)
@@ -1598,10 +1598,16 @@ class WebsiteTests(unittest.TestCase):
         self.page.wait_for_function('window.SecondSourceExperience.sampleAudio().bass > .15')
         low = self.page.evaluate('window.SecondSourceExperience.sampleAudio()')
         self.assertGreater(low['bass'], low['mid'] + .1)
+        dominant = """(() => {
+            const levels = Array.from(document.querySelectorAll('.spectrum-band'), band => Number(band.style.getPropertyValue('--level')));
+            return levels.indexOf(Math.max(...levels));
+        })()"""
+        self.page.wait_for_function(f'{dominant} >= 0 && {dominant} < 7')
         self.page.evaluate('window.__analysisTone.frequency.value = 1000')
         self.page.wait_for_function('window.SecondSourceExperience.sampleAudio().mid > window.SecondSourceExperience.sampleAudio().bass + .05')
         self.page.evaluate('window.__analysisTone.frequency.value = 6000')
         self.page.wait_for_function('window.SecondSourceExperience.sampleAudio().treble > window.SecondSourceExperience.sampleAudio().mid + .03')
+        self.page.wait_for_function(f'{dominant} > 13')
         self.page.evaluate('window.__analysisLevel.gain.value = 0')
         self.page.wait_for_function('window.SecondSourceExperience.sampleAudio().level < .01')
         self.page.evaluate('window.__analysisTone.frequency.value = 80; window.__analysisLevel.gain.value = .35')
@@ -1661,7 +1667,7 @@ class WebsiteTests(unittest.TestCase):
         self.assertGreater(later['radius'], early['radius'] + .08, 'The ring must expand outward like a homepage click')
         self.assertLess(ripple_impact(200)['difference'], .01, 'Expired rings must leave no lasting displacement')
 
-    def test_visualizer_spaces_drips_preserves_older_rings_and_freezes_on_pause(self):
+    def test_visualizer_limits_drips_to_one_bar_and_freezes_on_pause(self):
         serve_seekable_audio(self.page)
         self.start_controlled_fluid()
         self.page.locator('[data-visual-mode="visualizer"]').click()
@@ -1669,6 +1675,8 @@ class WebsiteTests(unittest.TestCase):
         self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
         self.page.evaluate("""() => {
             window.__music = {active: true, bass: .5, mid: .1, treble: .1, beat: 0, beatId: 0, level: .3};
+            window.__musicPosition = 30;
+            Object.defineProperty(window.SecondSourceExperience, 'playbackTime', {get: () => window.__musicPosition});
             window.SecondSourceExperience.sampleAudio = () => window.__music;
         }""")
 
@@ -1684,13 +1692,14 @@ class WebsiteTests(unittest.TestCase):
         self.page.evaluate('window.__music.beatId = 1; window.__music.beat = .8')
         first = drips_after(15)
         self.assertEqual(len(first), 1, 'A held beat envelope must emit only one drop')
-        self.page.evaluate('window.__music.beatId = 2; window.__music.beat = .7')
+        self.page.evaluate('window.__musicPosition = 30.5; window.__music.beatId = 2; window.__music.beat = .7')
         self.assertEqual(len(drips_after(1)), 1, 'Closely spaced kicks must leave the existing ring alone')
-        self.assertEqual(len(drips_after(45)), 1, 'A skipped kick must not become a delayed drop')
-        self.page.evaluate('window.__music.beatId = 3; window.__music.beat = .7')
-        self.assertEqual(len(drips_after(1)), 1, 'A kick at the previous drip rate must now be skipped')
-        self.assertEqual(len(drips_after(45)), 1, 'Skipped kicks must not accumulate')
-        self.page.evaluate('window.__music.beatId = 4; window.__music.beat = .7')
+        self.assertEqual(len(drips_after(90)), 1, 'Advancing fluid frames must not advance the musical clock or queue a hit')
+        self.page.evaluate('window.__musicPosition = 32; window.__music.beatId = 3')
+        self.assertEqual(len(drips_after(1)), 1, 'Two seconds is still shorter than a 4/4 bar at 114 BPM')
+        self.page.evaluate('window.__musicPosition = 32.104; window.__music.beatId = 4')
+        self.assertEqual(len(drips_after(1)), 1, 'A kick just before the end of the bar must be skipped')
+        self.page.evaluate('window.__musicPosition = 32.106; window.__music.beatId = 5')
         overlapping = drips_after(1)
         self.assertEqual(len(overlapping), 2)
         self.assertEqual(overlapping[0][:2], first[0][:2], 'The next kick must not relocate an existing ring')
@@ -1702,6 +1711,36 @@ class WebsiteTests(unittest.TestCase):
         self.assertEqual(drips_after(30), overlapping, 'Pausing must freeze all ring ages')
         self.page.locator('[data-fluid-reset]').click()
         self.assertEqual(drips_after(1), [])
+
+    def test_player_spectrum_follows_real_audio_and_stops_when_silent(self):
+        serve_seekable_audio(self.page)
+        self.visit()
+        expect(self.page.locator('.spectrum-band')).to_have_count(20)
+        expect(self.page.locator('[data-player-state]')).to_have_text('STOPPED')
+        levels = "Array.from(document.querySelectorAll('.spectrum-band'), band => Number(band.style.getPropertyValue('--level')))"
+        self.assertTrue(self.page.evaluate(f'({levels}).every(value => value === 0)'))
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function(f'({levels}).some(value => value > .05)')
+        expect(self.page.locator('[data-player-state]')).to_have_text('PLAYING')
+        expect(self.page.locator('[data-play-symbol]')).to_have_attribute('data-state', 'pause')
+        self.page.locator('[data-mute]').click()
+        expect(self.page.locator('[data-player-state]')).to_have_text('MUTED')
+        self.assertTrue(self.page.evaluate(f'({levels}).every(value => value === 0)'))
+        self.page.locator('[data-mute]').click()
+        self.page.wait_for_function(f'({levels}).some(value => value > .05)')
+        self.page.locator('[data-motion-toggle]').click()
+        self.assertTrue(self.page.evaluate(f'({levels}).every(value => value === 0)'))
+        self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
+        self.page.locator('[data-motion-toggle]').click()
+        self.page.wait_for_function(f'({levels}).some(value => value > .05)')
+        self.page.locator('[data-volume]').fill('0')
+        self.assertTrue(self.page.evaluate(f'({levels}).every(value => value === 0)'))
+        self.page.locator('[data-volume]').fill('0.35')
+        self.page.wait_for_function(f'({levels}).some(value => value > .05)')
+        self.page.locator('[data-sound]').click()
+        expect(self.page.locator('[data-player-state]')).to_have_text('PAUSED')
+        expect(self.page.locator('[data-play-symbol]')).to_have_attribute('data-state', 'play')
+        self.assertTrue(self.page.evaluate(f'({levels}).every(value => value === 0)'))
 
     def test_visualizer_detects_repeated_bass_hits_in_the_actual_loud_master(self):
         serve_seekable_audio(self.page)

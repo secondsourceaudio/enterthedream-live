@@ -21,6 +21,8 @@
     const infoButton = space.querySelector("[data-info]");
     const dialog = space.querySelector("dialog");
     const visualizerDock = space.querySelector('[data-visualizer-dock]');
+    const spectrumElement = space.querySelector('[data-spectrum]');
+    const playerState = space.querySelector('[data-player-state]');
     const status = space.querySelector("[data-status]");
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const modeButtons = [...space.querySelectorAll('[data-visual-mode]')];
@@ -65,6 +67,10 @@
     let previousFocus = null;
     let rejectPlayback = null;
     const inertElements = new Map();
+    const spectrumBands = [];
+    let spectrumFrame = 0;
+    let spectrumPaintTime = null;
+    let spectrumVisible = true;
 
     function applyVolume() {
         if (!audio) return;
@@ -123,7 +129,7 @@
             const label = loading ? "Loading sound" : `${playing ? "Pause" : "Play"} ${trackTitle}`;
             soundButton.setAttribute("aria-label", label);
             soundButton.title = label;
-            soundButton.querySelector("[data-play-symbol]").textContent = loading ? "…" : playing ? "Ⅱ" : "▶\uFE0E";
+            soundButton.querySelector("[data-play-symbol]").dataset.state = loading ? "loading" : playing ? "pause" : "play";
         } else {
             soundButton.setAttribute("aria-label", loading ? "Loading sound" : playing ? "Sound on: pause sound" : hasStarted ? "Sound off: resume sound" : "Enter with sound");
             soundButton.textContent = loading ? "LOADING SOUND" : playing ? "SOUND ON" : hasStarted ? "SOUND OFF" : "ENTER WITH SOUND";
@@ -134,8 +140,11 @@
             muteButton.setAttribute("aria-pressed", String(audio.muted));
             muteButton.setAttribute("aria-label", audio.muted ? "Unmute" : "Mute");
             muteButton.title = audio.muted ? "Unmute" : "Mute";
-            muteButton.querySelector("[data-mute-symbol]").textContent = silent ? "×" : "◖))";
+            muteButton.querySelector("[data-mute-symbol]").dataset.state = silent ? "muted" : "sound";
         }
+        if (playerState) playerState.textContent = loading ? 'LOADING' : !playing
+            ? hasStarted ? 'PAUSED' : 'STOPPED' : silent ? 'MUTED' : soundAudible() ? 'PLAYING' : 'BUFFERING';
+        reconcileSpectrum();
     }
 
     function soundAudible() {
@@ -195,6 +204,72 @@
             level: smooth(Math.min(1, Math.sqrt(power / waveform.length) * 3 * volume / .35), signal.level, .25)
         };
         return signal;
+    }
+
+    function clearSpectrum() {
+        for (const band of spectrumBands) {
+            band.level = band.peak = band.hold = 0;
+            band.element.style.setProperty('--level', '0');
+            band.element.style.setProperty('--peak', '0');
+            band.element.style.setProperty('--peak-visible', '0');
+        }
+    }
+    function spectrumAllowed() {
+        return !!spectrumElement && motionEnabled && spectrumVisible && !document.hidden && soundAudible();
+    }
+    function paintSpectrum(now) {
+        spectrumFrame = 0;
+        if (!spectrumAllowed()) { clearSpectrum(); return; }
+        const dt = spectrumPaintTime === null ? 1 / 30 : Math.min(.1, (now - spectrumPaintTime) / 1000);
+        if (dt >= 1 / 30) {
+            spectrumPaintTime = now;
+            const analysis = sampleAudio();
+            const binWidth = analyser ? context.sampleRate / analyser.fftSize : 1;
+            for (let index = 0; index < spectrumBands.length; index++) {
+                const band = spectrumBands[index];
+                let power = 0, count = 0;
+                if (analysis.active && spectrum) {
+                    const low = 40 * Math.pow(350, index / spectrumBands.length);
+                    const high = 40 * Math.pow(350, (index + 1) / spectrumBands.length);
+                    const first = Math.max(1, Math.floor(low / binWidth));
+                    const last = Math.min(spectrum.length - 1, Math.max(first, Math.ceil(high / binWidth) - 1));
+                    for (let bin = first; bin <= last; bin++) { power += Math.pow(10, spectrum[bin] / 10); count++; }
+                }
+                const db = power > 0 ? 10 * Math.log10(power / Math.max(1, count)) + 20 * Math.log10(volume / .35) : -100;
+                const target = Math.max(0, Math.min(.98, (db + 70) / 60));
+                band.level += (target - band.level) * (1 - Math.exp(-dt / (target > band.level ? .025 : .12)));
+                if (band.level >= band.peak) { band.peak = band.level; band.hold = .18; }
+                else { band.hold -= dt; if (band.hold <= 0) band.peak = Math.max(band.level, band.peak - dt * .65); }
+                band.element.style.setProperty('--level', band.level.toFixed(3));
+                band.element.style.setProperty('--peak', band.peak.toFixed(3));
+                band.element.style.setProperty('--peak-visible', band.peak > .01 ? '1' : '0');
+            }
+        }
+        spectrumFrame = requestAnimationFrame(paintSpectrum);
+    }
+    function reconcileSpectrum() {
+        if (!spectrumAllowed()) {
+            cancelAnimationFrame(spectrumFrame);
+            spectrumFrame = 0;
+            spectrumPaintTime = null;
+            clearSpectrum();
+        } else if (!spectrumFrame) {
+            spectrumPaintTime = null;
+            spectrumFrame = requestAnimationFrame(paintSpectrum);
+        }
+    }
+    if (spectrumElement) {
+        for (let index = 0; index < 20; index++) {
+            const element = document.createElement('span');
+            element.className = 'spectrum-band';
+            element.innerHTML = '<span class="spectrum-level"></span><span class="spectrum-peak"></span>';
+            spectrumElement.append(element);
+            spectrumBands.push({element, level: 0, peak: 0, hold: 0});
+        }
+        new IntersectionObserver(entries => { spectrumVisible = entries[0].isIntersecting; reconcileSpectrum(); }).observe(spectrumElement);
+        document.addEventListener('visibilitychange', reconcileSpectrum);
+        window.addEventListener('experience:motionchange', reconcileSpectrum);
+        for (const event of ['playing', 'waiting', 'canplay', 'ended']) audio.addEventListener(event, updateSound);
     }
     if (muteButton) muteButton.addEventListener("click", () => {
         audio.muted = !audio.muted;
@@ -351,11 +426,11 @@
         }, 3200);
     }
     function fitVisualizer() {
-        if (!immersive || visualMode !== 'visualizer' || !visualizerDock) return;
+        if (!immersive || !audio || !visualizerDock) return;
         const style = getComputedStyle(space);
         const reserved = visualizerDock.getBoundingClientRect().height +
             parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) + parseFloat(style.rowGap);
-        space.style.setProperty('--visualizer-space', `${Math.ceil(reserved)}px`);
+        space.style.setProperty('--player-space', `${Math.ceil(reserved)}px`);
     }
     window.addEventListener('resize', fitVisualizer);
     if (visualizerDock) new ResizeObserver(fitVisualizer).observe(visualizerDock);
@@ -449,6 +524,12 @@
         get visualizerEnabled() { return visualMode === 'visualizer' && motionEnabled; },
         get soundPlaying() { return !!audio && !audio.paused; },
         get soundAudible() { return soundAudible(); },
+        get playbackTime() { return audio?.currentTime || 0; },
+        get secondsPerBar() {
+            const bpm = Number(audio?.dataset.bpm);
+            const beats = Number(audio?.dataset.beatsPerBar || 4);
+            return Number.isFinite(bpm) && bpm > 0 && Number.isFinite(beats) && beats > 0 ? 60 * beats / bpm : Infinity;
+        },
         isVisualActive,
         useStaticArtwork(mode = visualMode) {
             unavailableModes.add(rendererKey(mode));
