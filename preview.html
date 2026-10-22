@@ -4206,8 +4206,9 @@ SOFTWARE.
                     if (returningNow) drip.strength *= Math.exp(-dt * 10);
                 }
                 // Consume each onset once, rather than emitting drops on every frame
-                // of its decaying beat envelope. Skip closely spaced hits without queuing them.
-                if (automatic && signal.beatId > consumedBeat && playbackTime - lastDripTime >= experience.secondsPerBar) {
+                // of its decaying beat envelope. Leave at least two bars between drops;
+                // skip closely spaced hits without queuing them.
+                if (automatic && signal.beatId > consumedBeat && playbackTime - lastDripTime >= experience.secondsPerBar * 2) {
                     drips[nextDrip] = {x: .16 + Math.random() * .68, y: .16 + Math.random() * .68,
                         age: 0, strength: .35 + signal.beat * .35};
                     nextDrip = (nextDrip + 1) % drips.length;

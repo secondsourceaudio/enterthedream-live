@@ -1759,7 +1759,7 @@ class WebsiteTests(unittest.TestCase):
         self.assertGreater(later['radius'], early['radius'] + .08, 'The ring must expand outward like a homepage click')
         self.assertLess(ripple_impact(200)['difference'], .01, 'Expired rings must leave no lasting displacement')
 
-    def test_visualizer_limits_drips_to_one_bar_and_freezes_on_pause(self):
+    def test_visualizer_limits_drips_to_two_bars_and_freezes_on_pause(self):
         serve_seekable_audio(self.page)
         self.start_controlled_fluid()
         self.page.locator('[data-visual-mode="visualizer"]').click()
@@ -1789,9 +1789,11 @@ class WebsiteTests(unittest.TestCase):
         self.assertEqual(len(drips_after(90)), 1, 'Advancing fluid frames must not advance the musical clock or queue a hit')
         self.page.evaluate('window.__musicPosition = 32; window.__music.beatId = 3')
         self.assertEqual(len(drips_after(1)), 1, 'Two seconds is still shorter than a 4/4 bar at 114 BPM')
-        self.page.evaluate('window.__musicPosition = 32.104; window.__music.beatId = 4')
-        self.assertEqual(len(drips_after(1)), 1, 'A kick just before the end of the bar must be skipped')
-        self.page.evaluate('window.__musicPosition = 32.106; window.__music.beatId = 5')
+        self.page.evaluate('window.__musicPosition = 32.106; window.__music.beatId = 4')
+        self.assertEqual(len(drips_after(1)), 1, 'A full bar must still be too soon for another drop')
+        self.page.evaluate('window.__musicPosition = 34.210; window.__music.beatId = 5')
+        self.assertEqual(len(drips_after(1)), 1, 'A kick just before the end of two bars must be skipped')
+        self.page.evaluate('window.__musicPosition = 34.212; window.__music.beatId = 6')
         overlapping = drips_after(1)
         self.assertEqual(len(overlapping), 2)
         self.assertEqual(overlapping[0][:2], first[0][:2], 'The next kick must not relocate an existing ring')

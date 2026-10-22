@@ -110,9 +110,9 @@ framed fullscreen view.
 VISUALIZER uses a 2048-point FFT and RMS loudness from the track already playing.
 Bass (35–220 Hz) drives the gentle underlying flow. Detected low-frequency
 onsets emit drops at random positions, using the same expanding wave packet
-as a click in WHIRL. Drops are separated by at least one bar, computed as
-`60 × beats-per-bar / BPM` from the audio element's track metadata. Sage Counsel
-is 114 BPM in 4/4, giving a minimum gap of 2.105263 seconds. Timing follows the
+as a click in WHIRL. Drops are separated by at least two bars, computed as
+`2 × 60 × beats-per-bar / BPM` from the audio element's track metadata. Sage Counsel
+is 114 BPM in 4/4, giving a minimum gap of 4.210526 seconds. Timing follows the
 audio playback position, independently of fluid frame rate. This is an onset
 limit, not a grid sequencer: a new drop still needs a fresh bass hit. Closely
 spaced hits are skipped without being queued; seeking backwards or looping
