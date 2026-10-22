@@ -11,6 +11,15 @@ import unittest
 from playwright.sync_api import expect, sync_playwright
 
 BASE_URL = os.environ.get("SITE_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+PAGE_ROUTES = {
+    'index.html': '',
+    'releases.html': 'releases/',
+    'merch.html': 'merch/',
+    'experiments.html': 'sources/',
+    'experiment.html': 'sources/flower/',
+    'src001.html': 'src001/',
+    'drip-fluid.html': 'drip-fluid/',
+}
 DRAW_COUNTER = """
 window.__drawCalls = 0;
 window.__drawsByCanvas = {};
@@ -77,7 +86,7 @@ class WebsiteTests(unittest.TestCase):
         self.assertEqual(self.errors, [], "Browser or HTTP errors")
 
     def visit(self, path="index.html"):
-        response = self.page.goto(f"{BASE_URL}/{path}", wait_until="networkidle")
+        response = self.page.goto(f"{BASE_URL}/{PAGE_ROUTES.get(path, path)}", wait_until="networkidle")
         self.assertEqual(response.status, 200)
         self.page.evaluate("document.fonts.ready")
 
@@ -642,6 +651,7 @@ class WebsiteTests(unittest.TestCase):
         self.page.mouse.up()
         disturbed = pixels()
         self.assertGreater(disturbed, 1, 'Fluid motion must visibly transport the original artwork')
+        self.page.locator('[data-fluid-return]').scroll_into_view_if_needed()
         control = self.page.locator('[data-fluid-return]').bounding_box()
         self.page.mouse.move(control['x'] + control['width'] / 2, control['y'] + control['height'] / 2)
         self.page.mouse.down()
@@ -1251,7 +1261,7 @@ class WebsiteTests(unittest.TestCase):
         self.visit("experiments.html")
         expect(self.page.locator('.study-card')).to_have_count(1)
         expect(self.page.locator('.study-card h2')).to_contain_text('FLOWER')
-        expect(self.page.locator('.study-card img')).to_have_attribute('src', './images/gallery/thumbs/flower_4.webp')
+        expect(self.page.locator('.study-card img')).to_have_attribute('src', '/images/gallery/thumbs/flower_4.webp')
         self.page.locator('.study-card').hover()
         self.wait_for_frames()
         self.assertEqual(self.page.evaluate('window.__drawCalls'), 0)
@@ -1278,11 +1288,11 @@ class WebsiteTests(unittest.TestCase):
         context = self.browser.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
         try:
             page = context.new_page()
-            page.goto(BASE_URL + '/experiments.html', wait_until='networkidle')
+            page.goto(BASE_URL + '/sources/', wait_until='networkidle')
             card = page.locator('.study-card')
             expect(card.locator('.study-card-detail')).to_contain_text('DRAG TO STIR')
             card.tap()
-            page.wait_for_url('**/experiment.html')
+            page.wait_for_url('**/sources/flower/')
             expect(page.locator('#visual')).to_have_attribute('data-fluid', 'ready')
             page.locator('#visual-container').tap()
             expect(page.locator('[data-fluid-reset]')).to_be_visible()
@@ -1435,7 +1445,7 @@ class WebsiteTests(unittest.TestCase):
         self.page.keyboard.press('p')
         self.page.wait_for_function('!document.querySelector("audio").paused')
         self.page.locator('.site-nav').get_by_role('link', name='MERCH', exact=True).click()
-        self.page.wait_for_url('**/merch.html')
+        self.page.wait_for_url('**/merch/')
         expect(self.page.locator('audio')).to_have_count(0)
         self.page.go_back(wait_until='networkidle')
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
@@ -1874,11 +1884,59 @@ class WebsiteTests(unittest.TestCase):
         self.page.keyboard.press("Escape")
         expect(button).to_be_focused()
 
+    def test_clean_merch_route_shows_original_mockups_and_full_size_images(self):
+        self.visit()
+        self.page.locator('.site-nav').get_by_role('link', name='MERCH', exact=True).click()
+        self.page.wait_for_url('**/merch/')
+        expect(self.page.locator('.merch-product-status')).to_have_text(['MOCKUP', 'MOCKUP'])
+        expect(self.page.locator('.merch-mockup-notice')).to_contain_text('Design mockups only.')
+        for image, height in zip(self.page.locator('.merch-product-image').all(), [569, 450]):
+            image.scroll_into_view_if_needed()
+            image.evaluate('image => image.decode()')
+            self.assertEqual(image.evaluate('image => [image.naturalWidth, image.naturalHeight]'), [1536, height])
+            box = image.bounding_box()
+            self.assertAlmostEqual(box['width'] / box['height'], 1536 / height, delta=.01)
+        with self.page.expect_popup() as opened:
+            self.page.locator('.merch-product-preview').first.click()
+        full_size = opened.value
+        full_size.wait_for_load_state()
+        self.assertTrue(full_size.url.endswith('/images/merch/second-source-tshirt.webp'))
+        expect(full_size.locator('img')).to_be_visible()
+        full_size.close()
+
+    def test_legacy_page_urls_redirect_without_losing_query_or_fragment(self):
+        for legacy, route, title in [
+            ('merch.html', '/merch/', 'MERCH'),
+            ('releases.html', '/releases/', 'RELEASES'),
+            ('experiments.html', '/sources/', 'SOURCES'),
+            ('experiment.html', '/sources/flower/', 'FLOWER'),
+            ('gallery.html', '/releases/', 'RELEASES'),
+        ]:
+            with self.subTest(legacy=legacy):
+                self.page.goto(f'{BASE_URL}/{legacy}?from=bookmark#main-content', wait_until='networkidle')
+                expect(self.page).to_have_url(f'{BASE_URL}{route}?from=bookmark#main-content')
+                expect(self.page.locator('h1')).to_have_text(title)
+                self.assertTrue(self.page.locator('.site-nav a').evaluate_all(
+                    "links => links.every(link => !link.getAttribute('href').includes('.html'))"))
+        self.page.goto(BASE_URL + '/index.html?from=bookmark#main-content', wait_until='networkidle')
+        expect(self.page).to_have_url(BASE_URL + '/?from=bookmark#main-content')
+
+    def test_legacy_merch_redirect_also_works_without_javascript(self):
+        context = self.browser.new_context(java_script_enabled=False)
+        try:
+            page = context.new_page()
+            page.goto(BASE_URL + '/merch.html', wait_until='networkidle')
+            page.wait_for_url('**/merch/')
+            expect(page.locator('h1')).to_have_text('MERCH')
+            expect(page.locator('.merch-product-image')).to_have_count(2)
+        finally:
+            context.close()
+
     def test_releases_navigation_shows_release_information(self):
         self.visit()
         expect(self.page.locator('.site-nav a')).to_have_text(['RELEASES', 'MERCH', 'SOURCES', 'BANDCAMP'])
         self.page.locator('.site-nav').get_by_role('link', name='RELEASES').click()
-        self.page.wait_for_url('**/releases.html')
+        self.page.wait_for_url('**/releases/')
         expect(self.page.locator('h1')).to_have_text('RELEASES')
         expect(self.page.locator('.site-nav [aria-current="page"]')).to_have_text('RELEASES')
         expect(self.page.locator('.release-entry')).to_have_count(1)
@@ -1893,19 +1951,19 @@ class WebsiteTests(unittest.TestCase):
 
     def test_retired_images_page_redirects_to_releases(self):
         self.visit('gallery.html')
-        self.page.wait_for_url('**/releases.html')
+        self.page.wait_for_url('**/releases/')
         expect(self.page.locator('h1')).to_have_text('RELEASES')
         expect(self.page.locator('.archive, #gallery-viewer, a[href*="gallery.html"]')).to_have_count(0)
 
     def test_sources_navigation_transitions_and_back(self):
         self.visit()
         self.page.locator('.site-nav').get_by_role('link', name='SOURCES').click()
-        self.page.wait_for_url('**/experiments.html')
+        self.page.wait_for_url('**/sources/')
         expect(self.page.locator('h1')).to_have_text('SOURCES')
         expect(self.page.locator('meta[name="robots"]')).to_have_count(0)
         expect(self.page.locator(".study-card")).to_have_count(1)
         self.page.locator(".study-card").click()
-        self.page.wait_for_url("**/experiment.html")
+        self.page.wait_for_url("**/sources/flower/")
         expect(self.page.locator('meta[name="robots"]')).to_have_count(0)
         self.page.go_back(wait_until="networkidle")
         self.assertNotIn("page-is-leaving", self.page.locator("body").get_attribute("class") or "")

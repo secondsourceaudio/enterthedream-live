@@ -5,28 +5,29 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#050505">
     <meta name="description" content="Interactive artwork and optional sound from SECOND SOURCE AUDIO.">
-    <link rel="icon" type="image/x-icon" href="./favicon.ico?v=1" sizes="16x16 32x32 48x48">
-    <link rel="icon" type="image/png" href="./favicon-32x32.png?v=1" sizes="32x32">
-    <link rel="icon" type="image/png" href="./favicon-192x192.png?v=1" sizes="192x192">
-    <link rel="apple-touch-icon" href="./apple-touch-icon.png?v=1" sizes="180x180">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico?v=1" sizes="16x16 32x32 48x48">
+    <link rel="icon" type="image/png" href="/favicon-32x32.png?v=1" sizes="32x32">
+    <link rel="icon" type="image/png" href="/favicon-192x192.png?v=1" sizes="192x192">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=1" sizes="180x180">
     <title>SECOND SOURCE</title>
-    <link rel="stylesheet" href="./site.css?v=7">
-    <link rel="stylesheet" href="./new.css?v=32">
-    <link rel="stylesheet" href="./experience.css?v=15">
-    <script src="./site.js?v=2" defer></script>
-    <link rel="preload" as="image" href="./images/drip_cover_front_2.webp">
-    <script src="./experience.js?v=14" defer></script>
-    <script src="./landing-experiment.js?v=24" defer></script>
-    <script src="./drip-fluid.js?v=12" defer></script>
+    <link rel="stylesheet" href="/site.css?v=7">
+    <link rel="stylesheet" href="/new.css?v=32">
+    <link rel="stylesheet" href="/experience.css?v=15">
+    <script src="/site.js?v=3" defer></script>
+    <link rel="preload" as="image" href="/images/drip_cover_front_2.webp">
+    <script src="/experience.js?v=14" defer></script>
+    <script src="/landing-experiment.js?v=24" defer></script>
+    <script src="/drip-fluid.js?v=12" defer></script>
+    <link rel="canonical" href="https://www.enterthedream.org/">
 </head>
 <body class="landing-study">
     <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
     <header class="site-header">
-        <a class="site-logo" href="./index.html">SECOND SOURCE</a>
+        <a class="site-logo" href="/">SECOND SOURCE</a>
         <nav class="site-nav" aria-label="Main navigation">
-            <a href="./releases.html">RELEASES</a>
-            <a href="./merch.html">MERCH</a>
-            <a href="./experiments.html">SOURCES</a>
+            <a href="/releases/">RELEASES</a>
+            <a href="/merch/">MERCH</a>
+            <a href="/sources/">SOURCES</a>
             <a href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP <svg class="external-arrow" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 10 10 2M2 2h8v8" fill="none" stroke="currentColor" stroke-width="1"/></svg></a>
         </nav>
     </header>
@@ -35,19 +36,19 @@
             <h1 class="visually-hidden">DRIP</h1>
             <div id="visual-container" class="visual-container" data-visual-panel="whirl" tabindex="0" role="group" aria-label="Interactive DRIP artwork. Click or tap for ripples, hold for a growing whirlpool, drag to stir, or press Space or Enter for a ripple.">
                 <div id="visual-media" class="visual-media">
-                    <img id="fallback-image" class="fallback-image" src="./images/drip_cover_front_2.webp" alt="Blue liquid forms in reflective light" width="3200" height="3200" fetchpriority="high" decoding="async" draggable="false">
+                    <img id="fallback-image" class="fallback-image" src="/images/drip_cover_front_2.webp" alt="Blue liquid forms in reflective light" width="3200" height="3200" fetchpriority="high" decoding="async" draggable="false">
                     <canvas id="visual" class="visual-canvas" aria-hidden="true"></canvas>
                 </div>
             </div>
             <div id="fluid-container" class="visual-container" data-visual-panel="fluid" data-fluid-material="oil" tabindex="0" role="group" aria-label="Interactive DRIP fluid artwork. Drag to move the image, hold to stir, or press Space or Enter for a vortex." hidden>
                 <div class="visual-media">
-                    <img id="fluid-fallback-image" class="fallback-image" src="./images/drip_cover_front_2.webp" alt="Blue liquid forms in reflective light" width="3200" height="3200" decoding="async" draggable="false">
+                    <img id="fluid-fallback-image" class="fallback-image" src="/images/drip_cover_front_2.webp" alt="Blue liquid forms in reflective light" width="3200" height="3200" decoding="async" draggable="false">
                     <canvas id="fluid-visual" class="visual-canvas" aria-hidden="true"></canvas>
                 </div>
             </div>
             <div class="visualizer-dock" data-visualizer-dock>
                 <div class="compact-player" role="group" aria-labelledby="player-track-title">
-                    <div class="player-titlebar" aria-hidden="true"><img class="player-brand-mark" src="./images/brand/src-icon-512.png" width="512" height="512" alt=""><span class="player-catalogue">SRC001 / DRIP</span><span class="player-state" data-player-state>STOPPED</span></div>
+                    <div class="player-titlebar" aria-hidden="true"><img class="player-brand-mark" src="/images/brand/src-icon-512.png" width="512" height="512" alt=""><span class="player-catalogue">SRC001 / DRIP</span><span class="player-state" data-player-state>STOPPED</span></div>
                     <div class="player-display">
                         <div class="player-spectrum" data-spectrum aria-hidden="true"></div>
                         <div class="player-readout">
@@ -81,7 +82,7 @@
             </div>
             <p class="visually-hidden" role="status" data-status></p>
             <audio id="experience-audio" data-track-title="Sage Counsel" data-bpm="114" data-beats-per-bar="4" loop preload="none">
-                <source src="./audio/sage-counsel.mp3" type="audio/mpeg">
+                <source src="/audio/sage-counsel.mp3" type="audio/mpeg">
             </audio>
             <dialog id="experience-info" class="experience-info" aria-labelledby="info-title">
                 <p class="info-number">STUDY 01</p>

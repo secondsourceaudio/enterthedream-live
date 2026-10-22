@@ -1,6 +1,9 @@
 /* Page transitions and keyboard-safe artwork viewers. */
 (() => {
     "use strict";
+    if (/^https?:$/.test(location.protocol) && location.pathname === '/index.html') {
+        history.replaceState(history.state, '', '/' + location.search + location.hash);
+    }
     // Set the hosted sign-up URL when the mailing list is ready.
     const newsletterUrl = "";
     if (newsletterUrl) {

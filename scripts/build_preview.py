@@ -18,8 +18,12 @@ def embed(path):
     return f'data:{kind};base64,' + base64.b64encode(path.read_bytes()).decode('ascii')
 
 
+def asset(path):
+    return ROOT / path.split('?')[0].lstrip('/')
+
+
 def stylesheet(match):
-    path = ROOT / match.group(1).split('?')[0]
+    path = asset(match.group(1))
     css = path.read_text(encoding='utf-8')
     css = re.sub(r'url\(["\']?([^"\')]+)["\']?\)',
         lambda m: 'url("' + embed(path.parent / m.group(1)) + '")', css)
@@ -33,20 +37,18 @@ def main():
     html = re.sub(r'<link rel="preload"[^>]+>', '', html)
     html = re.sub(r'<link rel="stylesheet" href="([^"]+)">', stylesheet, html)
     html = re.sub(r'(<link rel="(?:icon|apple-touch-icon)"[^>]*href=")([^"]+)(")',
-        lambda m: m.group(1) + embed(ROOT / m.group(2).split('?')[0]) + m.group(3), html)
+        lambda m: m.group(1) + embed(asset(m.group(2))) + m.group(3), html)
     html = re.sub(r'(<img[^>]*?)src="([^"]+)"',
-        lambda m: m.group(1) + 'src="' + embed(ROOT / m.group(2)) + '"', html)
-    html = html.replace('./audio/sage-counsel.mp3', AUDIO)
+        lambda m: m.group(1) + 'src="' + embed(asset(m.group(2))) + '"', html)
+    html = html.replace('/audio/sage-counsel.mp3', AUDIO)
     html = html.replace('<audio ', '<audio crossorigin="anonymous" ')
-    html = html.replace('href="./index.html"', f'href="{LIVE}"')
-    html = html.replace('href="./releases.html"', f'href="{LIVE}releases.html"')
-    html = html.replace('href="./merch.html"', f'href="{LIVE}merch.html"')
-    html = html.replace('href="./experiments.html"', f'href="{LIVE}experiments.html"')
+    for route in ['', 'releases/', 'merch/', 'sources/']:
+        html = html.replace(f'href="/{route}"', f'href="{LIVE}{route}"')
     html = html.replace('<title>SECOND SOURCE</title>',
         '<title>SECOND SOURCE — DRIP PREVIEW</title>\n<meta name="robots" content="noindex, nofollow">')
     inline = ''
     for script in scripts:
-        source = (ROOT / script.split('?')[0]).read_text(encoding='utf-8')
+        source = asset(script).read_text(encoding='utf-8')
         inline += '<script>' + source.replace('</script', '<\\/script') + '</script>'
     html = html.replace('</body>', inline + '</body>')
     html = '\n'.join(line.rstrip() for line in html.splitlines()) + '\n'

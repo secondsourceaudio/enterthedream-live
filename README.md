@@ -12,14 +12,14 @@ python3 -m http.server 8000
 ```
 
 Open the local server in your browser. The homepage is DRIP, with a WHIRL / FLUID / VISUALIZER
-switch. **SOURCES** in the top navigation opens `experiments.html`, which lists
-only FLOWER. `experiment.html` is the public, silent FLOWER fluid source,
+switch. **SOURCES** in the top navigation opens `/sources/`, which lists
+only FLOWER. `/sources/flower/` is the public, silent FLOWER fluid source,
 using the yellow and black gallery photograph.
-**RELEASES** opens `releases.html`, which shows SRC001 / DRIP with its static
+**RELEASES** opens `/releases/`, which shows SRC001 / DRIP with its static
 cover, artist, title, release description and LP/label information. Distribution
 is credited to One Eye Witness. The description currently uses the supplied
 onesheet text as a placeholder. There is no public tracklist, release date or pressing information.
-**MERCH** opens `merch.html`, with upcoming T-SHIRTS and CAPS credited to
+**MERCH** opens `/merch/`, with upcoming T-SHIRTS and CAPS credited to
 TROMSØ PURIST SHOP, linked to `https://www.instagram.com/tromso_purist_shop/`.
 The original supplied T-shirt and cap mockups are stored in `images/merch/`.
 They are shown uncropped in wide product sections and can be opened at full
@@ -30,11 +30,21 @@ worn; those assets and longsleeves are deferred. Products are marked MOCKUP,
 with a notice that final products and specifications may change;
 the page has no prices, purchase links or checkout.
 The former `gallery.html` URL redirects to RELEASES; its image assets remain
-available for FLOWER and future sources. `src001.html` remains a work-in-progress
+available for FLOWER and future sources. `/src001/` remains a work-in-progress
 release page and is not linked from the public navigation. Its cover is a static
 image without a link or artwork viewer. The unlisted
-`drip-fluid.html` page provides the same DRIP fluid mode on a separate URL. It also
+`/drip-fluid/` page provides the same DRIP fluid mode on a separate URL. It also
 requests that search engines do not index it.
+
+Pages use directory indexes, so direct links, refresh and bookmarks work without
+`.html` or server rewrite configuration. Edit the canonical pages at
+`releases/index.html`, `merch/index.html`, `sources/index.html`,
+`sources/flower/index.html`, `src001/index.html` and `drip-fluid/index.html`.
+Their former root `.html` files are redirect pages that preserve query strings
+and fragments in JavaScript, with a no-JavaScript refresh fallback.
+`/experiments/`, `/experiment/` and `/gallery/` also redirect to their current
+destinations. The homepage uses `/`; opening `/index.html` normalizes that URL.
+Page assets use root-relative URLs, and the file-preview builder embeds them.
 
 Audio seeking requires a server with HTTP byte-range support, as provided by
 GitHub Pages. Python's basic local server supports playback but not seeking.
