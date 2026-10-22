@@ -280,6 +280,16 @@ h2 {
     letter-spacing: .14em;
 }
 .site-updates-signup { color: #aaa; }
+.site-about { max-width: 540px; margin: 0 auto 20px; }
+.site-about summary { display: inline-flex; align-items: center; min-height: 44px; gap: 12px; cursor: pointer; list-style: none; color: #ccc; font-size: var(--font-small); line-height: 1.8; letter-spacing: .14em; }
+.site-about summary::-webkit-details-marker { display: none; }
+.site-about summary::after { content: '+'; color: #aaa; font: 16px/1 Arial, Helvetica, sans-serif; }
+.site-about[open] summary::after { content: '−'; }
+.site-about summary:hover, .site-about a:hover { color: #fff; }
+.site-about summary:focus-visible, .site-about a:focus-visible { outline: 1px solid #eee; outline-offset: 5px; }
+.site-about .site-about-copy { margin: 8px 0 12px; color: #b7b7b7; font: 14px/1.8 Arial, Helvetica, sans-serif; }
+.site-about .site-contact { margin: 8px 0 16px; font: 14px/1.8 Arial, Helvetica, sans-serif; overflow-wrap: anywhere; }
+.site-about a { display: inline-flex; align-items: center; min-height: 44px; color: #ddd; text-underline-offset: 5px; }
 a.site-updates-signup { display: inline-flex; align-items: center; min-height: 44px; color: #ddd; text-underline-offset: 5px; }
 a.site-updates-signup:hover { color: #fff; }
 a.site-updates-signup:focus-visible { outline: 1px solid #eee; outline-offset: 5px; }
@@ -825,6 +835,16 @@ html[data-motion="off"] .visual-container { touch-action: pan-y pinch-zoom; }
     max-width: 100%;
 }
 
+.experience-tools { display: flex; flex-direction: column; align-items: center; gap: 0; max-width: 100%; }
+.experience-tools-buttons { display: flex; justify-content: center; gap: 18px; }
+.experience-tools .experience-button { color: #aaa; font-size: var(--font-micro); }
+.experience-tools .experience-button:hover { color: #fff; }
+.experience-tools-status { min-height: 1.6em; max-width: min(460px, 100%); margin: 0; padding: 0 8px; color: #b7b7b7; text-align: center; font: 12px/1.6 Arial, Helvetica, sans-serif; }
+.experience-tools-status:empty { display: none; }
+.share-label { display: block; margin: 20px 0 10px; color: #ccc; font: 14px/1.6 Arial, Helvetica, sans-serif; }
+.share-url { width: 100%; min-height: 44px; padding: 10px; border: 1px solid #666; border-radius: 0; background: #0c0c0c; color: #fff; font: 14px/1.6 Arial, Helvetica, sans-serif; }
+.share-url:focus-visible { outline: 1px solid #eee; outline-offset: 4px; }
+
 .experience-button {
     min-height: 44px;
     padding: 10px 6px;
@@ -1085,6 +1105,10 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
 }
 
 @media (min-width: 751px) and (max-height: 500px) {
+    .listening-space.is-immersive { padding: 12px; gap: 12px; }
+    .listening-space.is-immersive .visualizer-dock { gap: 0; }
+    .listening-space.is-immersive .experience-controls { gap: 0 8px; }
+    .listening-space.is-immersive .experience-controls .experience-button { padding-inline: 4px; }
     .listening-space.is-immersive .compact-player {
         display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px;
         width: min(560px, 100%); padding: 6px 10px;
@@ -1106,7 +1130,23 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
 
 
 
+
     <link rel="canonical" href="https://www.enterthedream.org/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SECOND SOURCE">
+    <meta property="og:title" content="SECOND SOURCE">
+    <meta property="og:description" content="Second Source is an independent record label based in Oslo, Norway. Music, images and audiovisual experiments.">
+    <meta property="og:url" content="https://www.enterthedream.org/">
+    <meta property="og:image" content="https://www.enterthedream.org/images/share/second-source.png?v=1">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="SRC mark and Second Source. An independent record label based in Oslo, Norway.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="SECOND SOURCE">
+    <meta name="twitter:description" content="Second Source is an independent record label based in Oslo, Norway. Music, images and audiovisual experiments.">
+    <meta name="twitter:image" content="https://www.enterthedream.org/images/share/second-source.png?v=1">
+    <meta name="twitter:image:alt" content="SRC mark and Second Source. An independent record label based in Oslo, Norway.">
 </head>
 <body class="landing-study">
     <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
@@ -1167,6 +1207,13 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
                     <button class="experience-button vortex-return" type="button" data-fluid-return data-mode-controls="fluid" aria-pressed="false" aria-label="Hold to return to the original artwork" hidden>RETURN</button>
                     <button class="experience-button" type="button" data-fluid-reset data-mode-controls="fluid" hidden>RESET</button>
                 </div>
+                <div class="experience-tools">
+                    <div class="experience-tools-buttons">
+                        <button class="experience-button" type="button" data-save-frame>SAVE FRAME</button>
+                        <button class="experience-button" type="button" data-copy-link>COPY LINK</button>
+                    </div>
+                    <p class="experience-tools-status" role="status" data-tools-status></p>
+                </div>
             </div>
             <p class="visually-hidden" role="status" data-status></p>
             <audio crossorigin="anonymous" id="experience-audio" data-track-title="Sage Counsel" data-bpm="114" data-beats-per-bar="4" loop preload="none">
@@ -1192,6 +1239,12 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
         </section>
     </main>
     <footer class="legal-footer">
+        <details class="site-about" id="about-contact">
+            <summary>ABOUT / CONTACT</summary>
+            <p class="site-about-copy">Second Source is an independent record label based in Oslo, Norway.</p>
+            <p class="site-about-copy">The music is available in all the usual places. This is another place to find it, alongside visual experiments and other things to explore.</p>
+            <p class="site-contact"><a href="mailto:secondsourceaudio@gmail.com">secondsourceaudio@gmail.com</a></p>
+        </details>
         <p class="site-updates"><span>RELEASE / MERCH UPDATES</span><span class="site-updates-signup" data-newsletter-signup>MAILING LIST / SOON</span></p>
 
         <p class="copyright-line">
@@ -1312,6 +1365,11 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
     const modeButtons = [...space.querySelectorAll('[data-visual-mode]')];
     const modePanels = [...space.querySelectorAll('[data-visual-panel]')];
     const unavailableModes = new Set();
+    const frameCaptures = new Map();
+    const sharedParameters = new URLSearchParams(location.search);
+    const sharedTime = sharedParameters.get('t');
+    let pendingStartTime = audio && sharedTime !== null && /^\d+(?:\.\d{1,3})?$/.test(sharedTime) && Number.isFinite(Number(sharedTime))
+        ? Number(sharedTime) : null;
     let visualMode = modeButtons.length ? 'whirl' : null;
     const rendererMode = mode => mode === 'visualizer' ? 'fluid' : mode;
     const rendererKey = mode => modeButtons.length ? rendererMode(mode) : 'default';
@@ -1629,11 +1687,17 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
         seekInput.style.setProperty("--progress", `${ready ? current / duration * 100 : 0}%`);
         seekInput.setAttribute("aria-valuetext", ready
             ? `${formatTime(current)} of ${formatTime(duration)}` : "Playback not started");
-        currentTimeOutput.textContent = formatTime(current);
+        currentTimeOutput.textContent = formatTime(pendingStartTime ?? current);
         durationOutput.textContent = ready ? formatTime(duration) : "--:--";
     }
 
     if (seekInput) {
+        audio.addEventListener('loadedmetadata', () => {
+            if (pendingStartTime === null || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+            audio.currentTime = Math.min(pendingStartTime, Math.max(0, audio.duration - .1));
+            pendingStartTime = null;
+            updateTimeline();
+        });
         // Metadata loads only after Play; seeking never starts or resumes sound.
         for (const event of ["loadedmetadata", "durationchange", "timeupdate", "seeking", "seeked", "emptied", "error"]) {
             audio.addEventListener(event, updateTimeline);
@@ -1703,7 +1767,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
         if (!space.classList.contains('is-visualizer') || !visualizerDock) return;
         controlsTimer = window.setTimeout(() => {
             const focused = visualizerDock.contains(document.activeElement) && document.activeElement.matches(':focus-visible');
-            if (dialog.open || visualizerDock.matches(':hover') || focused) {
+            if (space.querySelector('dialog[open]') || visualizerDock.matches(':hover') || focused) {
                 revealVisualizerControls();
                 return;
             }
@@ -1804,7 +1868,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
     updateShortcuts();
     document.addEventListener('keydown', event => {
         if (!shortcutsEnabled || event.defaultPrevented || event.repeat || event.isComposing ||
-            event.ctrlKey || event.metaKey || event.altKey || dialog.open || document.hidden) return;
+            event.ctrlKey || event.metaKey || event.altKey || space.querySelector('dialog[open]') || document.hidden) return;
         if (event.target instanceof Element && event.target.closest(
             'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"], [role="spinbutton"], [role="slider"]')) return;
         const focused = document.activeElement;
@@ -1816,7 +1880,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
         button.click();
     });
     document.addEventListener("keydown", (event) => {
-        if (dialog.open || !immersive) return;
+        if (space.querySelector('dialog[open]') || !immersive) return;
         if (event.key === "Escape") { event.preventDefault(); exitImmersive(); }
         // Contain keyboard focus in the in-page fullscreen fallback.
         if (event.key === "Tab") {
@@ -1841,6 +1905,40 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
         get soundPlaying() { return !!audio && !audio.paused; },
         get soundAudible() { return soundAudible(); },
         get playbackTime() { return audio?.currentTime || 0; },
+        get shareTime() { return pendingStartTime ?? audio?.currentTime ?? 0; },
+        registerFrameCapture(element, capture) { frameCaptures.set(element, capture); },
+        captureFrame() {
+            const panel = space.querySelector('.visual-container:not([hidden])');
+            const image = panel.querySelector('.fallback-image');
+            const canvas = panel.querySelector('canvas');
+            const animated = motionEnabled && canvas?.classList.contains('is-ready');
+            // Redraw the current state before copying: WebGL buffers need not survive compositing.
+            const source = animated ? frameCaptures.get(panel)?.() : image;
+            if (!source || (!animated && !image.naturalWidth)) throw new Error('Artwork is not ready');
+            const output = document.createElement('canvas');
+            output.width = output.height = Math.min(2048, animated ? canvas.width : image.naturalWidth);
+            const ctx = output.getContext('2d');
+            const bounds = panel.getBoundingClientRect();
+            const media = panel.querySelector('.visual-media').getBoundingClientRect();
+            const scale = output.width / bounds.width;
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, output.width, output.height);
+            ctx.drawImage(source, (media.x - bounds.x) * scale, (media.y - bounds.y) * scale,
+                media.width * scale, media.height * scale);
+            const feather = parseFloat(getComputedStyle(panel, '::after').backgroundSize) * scale;
+            if (Number.isFinite(feather) && feather > 0) {
+                for (const [x0, y0, x1, y1] of [[0, 0, feather, 0], [output.width, 0, output.width - feather, 0],
+                    [0, 0, 0, feather], [0, output.height, 0, output.height - feather]]) {
+                    const edge = ctx.createLinearGradient(x0, y0, x1, y1);
+                    for (const [stop, alpha] of [[0, 1], [.25, .84], [.5, .5], [.75, .16], [1, 0]]) {
+                        edge.addColorStop(stop, `rgba(5,5,5,${alpha})`);
+                    }
+                    ctx.fillStyle = edge;
+                    ctx.fillRect(0, 0, output.width, output.height);
+                }
+            }
+            return output;
+        },
         get secondsPerBar() {
             const bpm = Number(audio?.dataset.bpm);
             const beats = Number(audio?.dataset.beatsPerBar || 4);
@@ -1898,7 +1996,8 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
     applyVolume();
     updateSound();
     updateMotion();
-    if (modeButtons.length) selectVisualMode(visualMode, false);
+    if (modeButtons.length) selectVisualMode(modeButtons.some(button => button.dataset.visualMode === sharedParameters.get('mode'))
+        ? sharedParameters.get('mode') : visualMode, false);
 })();
 </script><script>/* =========================================
    SECOND SOURCE
@@ -3591,6 +3690,11 @@ if (gl) {
 
 
     if (setupGL()) {
+        window.SecondSourceExperience.registerFrameCapture(container, () => {
+            if (!glActive || !imageReady) throw new Error('Artwork is not ready');
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+            return canvas;
+        });
         window.SecondSourceExperience.createRenderLoop(render, container);
     } else {
         window.SecondSourceExperience.useStaticArtwork('whirl');
@@ -4290,6 +4394,11 @@ SOFTWARE.
                 dripData[offset + 2] = visualizing ? drip.age : -1;
                 dripData[offset + 3] = drip.strength;
             }
+            paintArtwork();
+        }
+
+        function paintArtwork() {
+            const visualizing = experience.visualMode === 'visualizer';
             draw(display, null, {u_map: imageMap.read.texture, u_artwork: artwork},
                 {'u_drips[0]': dripData, u_whirl: visualizing ? dance.twist : 0,
                     u_whirlPoint: [currents[0].x, currents[0].y], u_counterPoint: [currents[1].x, currents[1].y]});
@@ -4311,6 +4420,11 @@ SOFTWARE.
             render(0);
             canvas.classList.add('is-ready');
             canvas.dataset.fluid = 'ready';
+            experience.registerFrameCapture(container, () => {
+                if (!running || !artworkReady) throw new Error('Artwork is not ready');
+                paintArtwork();
+                return canvas;
+            });
             experience.createRenderLoop(render, container);
         }
         if (image.complete) loadArtwork();
@@ -4318,6 +4432,84 @@ SOFTWARE.
     } catch (error) {
         console.warn('Fluid study unavailable:', error.message);
         fallback();
+    }
+})();
+</script><script>/* Local frame exports and links to a visual mode and playback position. */
+(() => {
+    'use strict';
+    const experience = window.SecondSourceExperience;
+    const space = document.querySelector('[data-experience]');
+    if (!experience || !space) return;
+    const save = space.querySelector('[data-save-frame]');
+    const share = space.querySelector('[data-copy-link]');
+    const notice = space.querySelector('[data-tools-status]');
+    const title = space.querySelector('h1').textContent.trim();
+    const filename = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-$/, '');
+    const announce = message => { notice.textContent = message; };
+
+    function shareURL() {
+        const url = new URL(document.querySelector('link[rel="canonical"]').href);
+        if (experience.visualMode) url.searchParams.set('mode', experience.visualMode);
+        const time = Math.floor(experience.shareTime * 100) / 100;
+        if (time > 0) url.searchParams.set('t', String(time));
+        return url.href;
+    }
+
+    const dialog = document.createElement('dialog');
+    dialog.className = 'experience-info share-dialog';
+    dialog.setAttribute('aria-labelledby', 'share-title');
+    dialog.innerHTML = '<div class="info-heading"><h2 id="share-title">SHARE</h2>' +
+        '<button class="experience-button" type="button" data-close-share aria-label="Close sharing">CLOSE</button></div>' +
+        '<label class="share-label" for="share-url">Copy this link</label>' +
+        '<input id="share-url" class="share-url" type="url" readonly spellcheck="false">' +
+        (space.querySelector('audio') ? '<p>Mode and track position are included. Playback starts after pressing play.</p>'
+            : '<p>Share this source.</p>');
+    const linkInput = dialog.querySelector('input');
+    dialog.querySelector('[data-close-share]').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', () => share.focus({preventScroll: true}));
+    linkInput.addEventListener('focus', () => linkInput.select());
+
+    share.addEventListener('click', async () => {
+        const url = shareURL();
+        try {
+            if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+            await navigator.clipboard.writeText(url);
+            announce('Link copied.');
+        } catch {
+            linkInput.value = url;
+            if (!dialog.isConnected) space.append(dialog);
+            dialog.showModal();
+            linkInput.focus();
+            linkInput.select();
+        }
+    });
+
+    save.addEventListener('click', async () => {
+        save.disabled = true;
+        announce('Saving frame…');
+        try {
+            const canvas = experience.captureFrame();
+            const blob = await new Promise((resolve, reject) => canvas.toBlob(
+                value => value ? resolve(value) : reject(new Error('PNG export failed')), 'image/png'));
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            const mode = experience.visualMode || 'fluid';
+            link.href = url;
+            link.download = `second-source-${filename}-${mode}-${Date.now()}.png`;
+            document.body.append(link);
+            link.click();
+            link.remove();
+            window.setTimeout(() => URL.revokeObjectURL(url), 60000);
+            announce('Frame saved.');
+        } catch {
+            announce('Frame could not be saved. Please try again once the artwork is ready.');
+        } finally {
+            save.disabled = false;
+        }
+    });
+    if (space.querySelector('audio') && experience.shareTime > 0) {
+        const seconds = Math.floor(experience.shareTime);
+        announce(`Ready at ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}. Press play to start.`);
     }
 })();
 </script></body>

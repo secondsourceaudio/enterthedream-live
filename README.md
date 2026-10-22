@@ -54,6 +54,15 @@ When a hosted mailing-list form is available, set `newsletterUrl` in `site.js`
 to its HTTPS URL. This replaces the notice with JOIN THE LIST links; until then
 there is no email field or signup submission. Rebuild the file preview after changing it.
 
+Every page also has a collapsed **ABOUT / CONTACT** section in the footer. It
+contains the supplied label description and `mailto:secondsourceaudio@gmail.com`.
+It works with native HTML, including without JavaScript.
+
+Social previews use static Open Graph and Twitter metadata in each page's head.
+The 1200 × 630 PNG cards are in `images/share/`, using the original artwork and
+SRC mark. To regenerate them, run `python3 scripts/build_share_images.py` with
+Python Playwright and Chromium installed. No remote assets are fetched.
+
 `preview.html` embeds the homepage artwork, font, styles and scripts for file
 viewers that cannot load relative assets. Play streams the existing public track
 from GitHub. Rebuild it after homepage changes with `python3 scripts/build_preview.py`.
@@ -106,6 +115,21 @@ artwork stays centred, with the player and controls beneath it. Its size fits th
 space left by those controls, including after mobile rotation. Leaving fullscreen
 keeps the selected mode and playback position. WHIRL, manual FLUID and silent FLOWER keep their
 framed fullscreen view.
+
+**SAVE FRAME** downloads a square PNG of the current artwork, including the
+current distortion, zoom and edge feather, without player controls. It redraws
+only the existing state before copying the WebGL canvas; capturing does not
+advance the simulation or require a persistent drawing buffer. Exports use the
+renderer's resolution, capped at 2048 px. Motion off and WebGL fallback export
+the original image. Frames are generated locally without uploading anything.
+
+**COPY LINK** copies the canonical page URL with `mode` and `t` (seconds) for
+audio pages. For example, `/?mode=visualizer&t=61.25` selects VISUALIZER and seeks
+to 1:01.25 after the visitor presses Play. Opening the link does not fetch or
+start audio. Invalid modes and times are ignored; times beyond the track end
+are clamped. The random fluid state is not serialized. FLOWER links to its
+canonical page. If clipboard access is unavailable, a dialog shows a selected
+link for manual copying. The file preview shares the public site's URL.
 
 VISUALIZER uses a 2048-point FFT and RMS loudness from the track already playing.
 Bass (35–220 Hz) drives the gentle underlying flow. Detected low-frequency

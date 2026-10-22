@@ -29,6 +29,11 @@
     const modeButtons = [...space.querySelectorAll('[data-visual-mode]')];
     const modePanels = [...space.querySelectorAll('[data-visual-panel]')];
     const unavailableModes = new Set();
+    const frameCaptures = new Map();
+    const sharedParameters = new URLSearchParams(location.search);
+    const sharedTime = sharedParameters.get('t');
+    let pendingStartTime = audio && sharedTime !== null && /^\d+(?:\.\d{1,3})?$/.test(sharedTime) && Number.isFinite(Number(sharedTime))
+        ? Number(sharedTime) : null;
     let visualMode = modeButtons.length ? 'whirl' : null;
     const rendererMode = mode => mode === 'visualizer' ? 'fluid' : mode;
     const rendererKey = mode => modeButtons.length ? rendererMode(mode) : 'default';
@@ -346,11 +351,17 @@
         seekInput.style.setProperty("--progress", `${ready ? current / duration * 100 : 0}%`);
         seekInput.setAttribute("aria-valuetext", ready
             ? `${formatTime(current)} of ${formatTime(duration)}` : "Playback not started");
-        currentTimeOutput.textContent = formatTime(current);
+        currentTimeOutput.textContent = formatTime(pendingStartTime ?? current);
         durationOutput.textContent = ready ? formatTime(duration) : "--:--";
     }
 
     if (seekInput) {
+        audio.addEventListener('loadedmetadata', () => {
+            if (pendingStartTime === null || !Number.isFinite(audio.duration) || audio.duration <= 0) return;
+            audio.currentTime = Math.min(pendingStartTime, Math.max(0, audio.duration - .1));
+            pendingStartTime = null;
+            updateTimeline();
+        });
         // Metadata loads only after Play; seeking never starts or resumes sound.
         for (const event of ["loadedmetadata", "durationchange", "timeupdate", "seeking", "seeked", "emptied", "error"]) {
             audio.addEventListener(event, updateTimeline);
@@ -420,7 +431,7 @@
         if (!space.classList.contains('is-visualizer') || !visualizerDock) return;
         controlsTimer = window.setTimeout(() => {
             const focused = visualizerDock.contains(document.activeElement) && document.activeElement.matches(':focus-visible');
-            if (dialog.open || visualizerDock.matches(':hover') || focused) {
+            if (space.querySelector('dialog[open]') || visualizerDock.matches(':hover') || focused) {
                 revealVisualizerControls();
                 return;
             }
@@ -521,7 +532,7 @@
     updateShortcuts();
     document.addEventListener('keydown', event => {
         if (!shortcutsEnabled || event.defaultPrevented || event.repeat || event.isComposing ||
-            event.ctrlKey || event.metaKey || event.altKey || dialog.open || document.hidden) return;
+            event.ctrlKey || event.metaKey || event.altKey || space.querySelector('dialog[open]') || document.hidden) return;
         if (event.target instanceof Element && event.target.closest(
             'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"], [role="spinbutton"], [role="slider"]')) return;
         const focused = document.activeElement;
@@ -533,7 +544,7 @@
         button.click();
     });
     document.addEventListener("keydown", (event) => {
-        if (dialog.open || !immersive) return;
+        if (space.querySelector('dialog[open]') || !immersive) return;
         if (event.key === "Escape") { event.preventDefault(); exitImmersive(); }
         // Contain keyboard focus in the in-page fullscreen fallback.
         if (event.key === "Tab") {
@@ -558,6 +569,40 @@
         get soundPlaying() { return !!audio && !audio.paused; },
         get soundAudible() { return soundAudible(); },
         get playbackTime() { return audio?.currentTime || 0; },
+        get shareTime() { return pendingStartTime ?? audio?.currentTime ?? 0; },
+        registerFrameCapture(element, capture) { frameCaptures.set(element, capture); },
+        captureFrame() {
+            const panel = space.querySelector('.visual-container:not([hidden])');
+            const image = panel.querySelector('.fallback-image');
+            const canvas = panel.querySelector('canvas');
+            const animated = motionEnabled && canvas?.classList.contains('is-ready');
+            // Redraw the current state before copying: WebGL buffers need not survive compositing.
+            const source = animated ? frameCaptures.get(panel)?.() : image;
+            if (!source || (!animated && !image.naturalWidth)) throw new Error('Artwork is not ready');
+            const output = document.createElement('canvas');
+            output.width = output.height = Math.min(2048, animated ? canvas.width : image.naturalWidth);
+            const ctx = output.getContext('2d');
+            const bounds = panel.getBoundingClientRect();
+            const media = panel.querySelector('.visual-media').getBoundingClientRect();
+            const scale = output.width / bounds.width;
+            ctx.fillStyle = '#050505';
+            ctx.fillRect(0, 0, output.width, output.height);
+            ctx.drawImage(source, (media.x - bounds.x) * scale, (media.y - bounds.y) * scale,
+                media.width * scale, media.height * scale);
+            const feather = parseFloat(getComputedStyle(panel, '::after').backgroundSize) * scale;
+            if (Number.isFinite(feather) && feather > 0) {
+                for (const [x0, y0, x1, y1] of [[0, 0, feather, 0], [output.width, 0, output.width - feather, 0],
+                    [0, 0, 0, feather], [0, output.height, 0, output.height - feather]]) {
+                    const edge = ctx.createLinearGradient(x0, y0, x1, y1);
+                    for (const [stop, alpha] of [[0, 1], [.25, .84], [.5, .5], [.75, .16], [1, 0]]) {
+                        edge.addColorStop(stop, `rgba(5,5,5,${alpha})`);
+                    }
+                    ctx.fillStyle = edge;
+                    ctx.fillRect(0, 0, output.width, output.height);
+                }
+            }
+            return output;
+        },
         get secondsPerBar() {
             const bpm = Number(audio?.dataset.bpm);
             const beats = Number(audio?.dataset.beatsPerBar || 4);
@@ -615,5 +660,6 @@
     applyVolume();
     updateSound();
     updateMotion();
-    if (modeButtons.length) selectVisualMode(visualMode, false);
+    if (modeButtons.length) selectVisualMode(modeButtons.some(button => button.dataset.visualMode === sharedParameters.get('mode'))
+        ? sharedParameters.get('mode') : visualMode, false);
 })();

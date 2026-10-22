@@ -4,9 +4,11 @@ Run: python3 tests/browser_smoke.py
 Requires Python Playwright and Chromium. SITE_BASE_URL and CHROMIUM_PATH
 override the local server URL and browser executable.
 """
+import base64
 import os
 from pathlib import Path
 import unittest
+from urllib.parse import urlsplit
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -1885,6 +1887,145 @@ class WebsiteTests(unittest.TestCase):
         self.assertTrue(self.page.evaluate("document.querySelector('dialog').contains(document.activeElement) || document.activeElement === document.body"))
         self.page.keyboard.press("Escape")
         expect(button).to_be_focused()
+
+    def test_about_contact_and_social_previews_are_available_without_javascript(self):
+        context = self.browser.new_context(java_script_enabled=False, viewport={'width': 390, 'height': 844})
+        try:
+            page = context.new_page()
+            for route in ['', 'releases/', 'merch/', 'sources/', 'sources/flower/']:
+                with self.subTest(route=route):
+                    page.goto(BASE_URL + '/' + route, wait_until='networkidle')
+                    about = page.locator('.site-about')
+                    self.assertFalse(about.evaluate('element => element.open'))
+                    about.locator('summary').focus()
+                    page.keyboard.press('Enter')
+                    expect(about.locator('.site-about-copy').first).to_have_text(
+                        'Second Source is an independent record label based in Oslo, Norway.')
+                    expect(about).to_contain_text('alongside visual experiments and other things to explore.')
+                    expect(about.get_by_role('link')).to_have_attribute('href', 'mailto:secondsourceaudio@gmail.com')
+                    expect(about.get_by_role('link')).to_be_visible()
+                    canonical = page.locator('link[rel="canonical"]').get_attribute('href')
+                    expect(page.locator('meta[property="og:url"]')).to_have_attribute('content', canonical)
+                    image = page.locator('meta[property="og:image"]').get_attribute('content')
+                    self.assertTrue(image.startswith('https://www.enterthedream.org/images/share/'))
+                    response = page.request.get(BASE_URL + urlsplit(image).path)
+                    self.assertEqual(response.status, 200)
+                    self.assertTrue(response.body().startswith(b'\x89PNG\r\n\x1a\n'))
+                    expect(page.locator('meta[name="twitter:card"]')).to_have_attribute('content', 'summary_large_image')
+                    self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 390)
+        finally:
+            context.close()
+
+    def test_shared_visualizer_link_restores_mode_and_position_only_after_play(self):
+        serve_seekable_audio(self.page)
+        self.context.grant_permissions(['clipboard-read', 'clipboard-write'])
+        audio_requests = []
+        self.page.on('request', lambda request: audio_requests.append(request.url) if '/audio/' in request.url else None)
+        self.page.goto(BASE_URL + '/?mode=visualizer&t=61.25', wait_until='networkidle')
+        expect(self.page.locator('[data-visual-mode="visualizer"]')).to_have_attribute('aria-pressed', 'true')
+        expect(self.page.locator('[data-current-time]')).to_have_text('1:01')
+        expect(self.page.locator('[data-tools-status]')).to_contain_text('Press play to start.')
+        self.assertEqual(audio_requests, [])
+        self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
+        self.page.locator('[data-copy-link]').click()
+        expect(self.page.locator('[data-tools-status]')).to_have_text('Link copied.')
+        copied = self.page.evaluate('navigator.clipboard.readText()')
+        self.assertEqual(copied, 'https://www.enterthedream.org/?mode=visualizer&t=61.25')
+        self.page.goto(BASE_URL + '/?' + urlsplit(copied).query, wait_until='networkidle')
+        self.assertEqual(audio_requests, [], 'Opening a shared link must not fetch audio before Play')
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function('document.querySelector("audio").currentTime >= 61.25 && window.SecondSourceExperience.soundAudible')
+        self.assertLess(self.page.locator('audio').evaluate('audio => audio.currentTime'), 65)
+        self.page.locator('[data-sound]').click()
+        self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
+        self.page.goto(BASE_URL + '/?mode=invalid&t=NaN', wait_until='networkidle')
+        expect(self.page.locator('[data-visual-mode="whirl"]')).to_have_attribute('aria-pressed', 'true')
+        expect(self.page.locator('[data-current-time]')).to_have_text('0:00')
+
+    def test_copy_link_has_a_keyboard_safe_fallback_when_clipboard_is_blocked(self):
+        self.context.add_init_script("Object.defineProperty(navigator, 'clipboard', {value: {writeText: () => Promise.reject(new Error('Blocked'))}})")
+        self.page.goto(BASE_URL + '/?mode=fluid&t=30', wait_until='networkidle')
+        self.page.locator('[data-experience]').evaluate("space => { space.requestFullscreen = () => Promise.reject(new Error('Unavailable')); }")
+        self.page.locator('[data-fullscreen]').click()
+        expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'true')
+        self.page.locator('[data-copy-link]').click()
+        dialog = self.page.locator('.share-dialog')
+        expect(dialog).to_be_visible()
+        field = dialog.locator('input')
+        expect(field).to_have_value('https://www.enterthedream.org/?mode=fluid&t=30')
+        expect(field).to_be_focused()
+        self.assertEqual(field.evaluate('input => input.selectionEnd - input.selectionStart'), len(field.input_value()))
+        dialog.get_by_role('button', name='Close sharing').focus()
+        self.page.keyboard.press('p')
+        self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
+        self.page.keyboard.press('Escape')
+        expect(dialog).not_to_be_visible()
+        expect(self.page.locator('[data-copy-link]')).to_be_focused()
+        expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'true')
+        self.page.keyboard.press('Escape')
+        expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'false')
+
+    def download_artwork_frame(self):
+        with self.page.expect_download() as downloaded:
+            self.page.locator('[data-save-frame]').click()
+        download = downloaded.value
+        self.assertTrue(download.suggested_filename.startswith('second-source-'))
+        self.assertTrue(download.suggested_filename.endswith('.png'))
+        payload = Path(download.path()).read_bytes()
+        self.assertTrue(payload.startswith(b'\x89PNG\r\n\x1a\n'))
+        metrics = self.page.evaluate("""async data => {
+            const image = new Image();
+            image.src = 'data:image/png;base64,' + data;
+            await image.decode();
+            const canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(image, 0, 0, 64, 64);
+            const pixels = ctx.getImageData(0, 0, 64, 64).data;
+            let color = 0, opaque = 0;
+            for (let i = 0; i < pixels.length; i += 4) {
+                color += Math.max(pixels[i], pixels[i + 1], pixels[i + 2]);
+                opaque += pixels[i + 3] === 255;
+            }
+            return {width: image.naturalWidth, height: image.naturalHeight, color: color / 4096, opaque};
+        }""", base64.b64encode(payload).decode('ascii'))
+        self.assertEqual(metrics['width'], metrics['height'])
+        self.assertGreater(metrics['width'], 256)
+        self.assertLessEqual(metrics['width'], 2048)
+        self.assertGreater(metrics['color'], 15, 'A frame export must contain artwork rather than a cleared WebGL buffer')
+        self.assertEqual(metrics['opaque'], 4096)
+        expect(self.page.locator('[data-tools-status]')).to_have_text('Frame saved.')
+        return payload
+
+    def test_save_frame_captures_current_fluid_and_frozen_visualizer_without_starting_audio(self):
+        self.start_controlled_fluid()
+        self.page.locator('[data-visual-mode="fluid"]').click()
+        self.page.evaluate('window.__stepFluid(1)')
+        original = self.download_artwork_frame()
+        panel = self.page.locator('#fluid-container')
+        panel.scroll_into_view_if_needed()
+        box = panel.bounding_box()
+        self.page.mouse.move(box['x'] + box['width'] * .4, box['y'] + box['height'] * .5)
+        self.page.mouse.down()
+        self.page.evaluate('window.__stepFluid(60)')
+        self.page.mouse.up()
+        changed = self.download_artwork_frame()
+        self.assertNotEqual(changed, original, 'Saving must include the current fluid distortion')
+        self.page.locator('[data-visual-mode="visualizer"]').click()
+        frozen = self.download_artwork_frame()
+        self.assertEqual(self.download_artwork_frame(), frozen, 'Capturing must not advance a paused visualizer')
+        self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
+        self.page.locator('[data-motion-toggle]').click()
+        self.download_artwork_frame()
+
+    def test_save_frame_exports_whirl_and_silent_flower(self):
+        self.visit()
+        self.page.wait_for_function('document.querySelector("#visual").classList.contains("is-ready")')
+        self.download_artwork_frame()
+        self.visit('experiment.html')
+        self.page.wait_for_function('document.querySelector("#visual").dataset.fluid === "ready"')
+        self.download_artwork_frame()
+        expect(self.page.locator('audio')).to_have_count(0)
 
     def test_clean_merch_route_shows_original_mockups_and_full_size_images(self):
         self.visit()

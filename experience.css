@@ -68,6 +68,16 @@ html[data-motion="off"] .visual-container { touch-action: pan-y pinch-zoom; }
     max-width: 100%;
 }
 
+.experience-tools { display: flex; flex-direction: column; align-items: center; gap: 0; max-width: 100%; }
+.experience-tools-buttons { display: flex; justify-content: center; gap: 18px; }
+.experience-tools .experience-button { color: #aaa; font-size: var(--font-micro); }
+.experience-tools .experience-button:hover { color: #fff; }
+.experience-tools-status { min-height: 1.6em; max-width: min(460px, 100%); margin: 0; padding: 0 8px; color: #b7b7b7; text-align: center; font: 12px/1.6 Arial, Helvetica, sans-serif; }
+.experience-tools-status:empty { display: none; }
+.share-label { display: block; margin: 20px 0 10px; color: #ccc; font: 14px/1.6 Arial, Helvetica, sans-serif; }
+.share-url { width: 100%; min-height: 44px; padding: 10px; border: 1px solid #666; border-radius: 0; background: #0c0c0c; color: #fff; font: 14px/1.6 Arial, Helvetica, sans-serif; }
+.share-url:focus-visible { outline: 1px solid #eee; outline-offset: 4px; }
+
 .experience-button {
     min-height: 44px;
     padding: 10px 6px;
@@ -328,6 +338,10 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
 }
 
 @media (min-width: 751px) and (max-height: 500px) {
+    .listening-space.is-immersive { padding: 12px; gap: 12px; }
+    .listening-space.is-immersive .visualizer-dock { gap: 0; }
+    .listening-space.is-immersive .experience-controls { gap: 0 8px; }
+    .listening-space.is-immersive .experience-controls .experience-button { padding-inline: 4px; }
     .listening-space.is-immersive .compact-player {
         display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px;
         width: min(560px, 100%); padding: 6px 10px;

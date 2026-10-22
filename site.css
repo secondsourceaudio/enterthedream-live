@@ -267,6 +267,16 @@ h2 {
     letter-spacing: .14em;
 }
 .site-updates-signup { color: #aaa; }
+.site-about { max-width: 540px; margin: 0 auto 20px; }
+.site-about summary { display: inline-flex; align-items: center; min-height: 44px; gap: 12px; cursor: pointer; list-style: none; color: #ccc; font-size: var(--font-small); line-height: 1.8; letter-spacing: .14em; }
+.site-about summary::-webkit-details-marker { display: none; }
+.site-about summary::after { content: '+'; color: #aaa; font: 16px/1 Arial, Helvetica, sans-serif; }
+.site-about[open] summary::after { content: '−'; }
+.site-about summary:hover, .site-about a:hover { color: #fff; }
+.site-about summary:focus-visible, .site-about a:focus-visible { outline: 1px solid #eee; outline-offset: 5px; }
+.site-about .site-about-copy { margin: 8px 0 12px; color: #b7b7b7; font: 14px/1.8 Arial, Helvetica, sans-serif; }
+.site-about .site-contact { margin: 8px 0 16px; font: 14px/1.8 Arial, Helvetica, sans-serif; overflow-wrap: anywhere; }
+.site-about a { display: inline-flex; align-items: center; min-height: 44px; color: #ddd; text-underline-offset: 5px; }
 a.site-updates-signup { display: inline-flex; align-items: center; min-height: 44px; color: #ddd; text-underline-offset: 5px; }
 a.site-updates-signup:hover { color: #fff; }
 a.site-updates-signup:focus-visible { outline: 1px solid #eee; outline-offset: 5px; }

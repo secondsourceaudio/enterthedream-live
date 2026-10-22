@@ -692,6 +692,11 @@ SOFTWARE.
                 dripData[offset + 2] = visualizing ? drip.age : -1;
                 dripData[offset + 3] = drip.strength;
             }
+            paintArtwork();
+        }
+
+        function paintArtwork() {
+            const visualizing = experience.visualMode === 'visualizer';
             draw(display, null, {u_map: imageMap.read.texture, u_artwork: artwork},
                 {'u_drips[0]': dripData, u_whirl: visualizing ? dance.twist : 0,
                     u_whirlPoint: [currents[0].x, currents[0].y], u_counterPoint: [currents[1].x, currents[1].y]});
@@ -713,6 +718,11 @@ SOFTWARE.
             render(0);
             canvas.classList.add('is-ready');
             canvas.dataset.fluid = 'ready';
+            experience.registerFrameCapture(container, () => {
+                if (!running || !artworkReady) throw new Error('Artwork is not ready');
+                paintArtwork();
+                return canvas;
+            });
             experience.createRenderLoop(render, container);
         }
         if (image.complete) loadArtwork();

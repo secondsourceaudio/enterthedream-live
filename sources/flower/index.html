@@ -10,14 +10,30 @@
     <link rel="icon" type="image/png" href="/favicon-192x192.png?v=1" sizes="192x192">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=1" sizes="180x180">
     <title>SECOND SOURCE — FLOWER</title>
-    <link rel="stylesheet" href="/site.css?v=7">
+    <link rel="stylesheet" href="/site.css?v=8">
     <link rel="stylesheet" href="/new.css?v=32">
-    <link rel="stylesheet" href="/experience.css?v=15">
+    <link rel="stylesheet" href="/experience.css?v=16">
     <script src="/site.js?v=3" defer></script>
     <link rel="preload" as="image" href="/images/gallery/flower_4.webp">
-    <script src="/experience.js?v=14" defer></script>
-    <script src="/drip-fluid.js?v=13" defer></script>
+    <script src="/experience.js?v=15" defer></script>
+    <script src="/drip-fluid.js?v=14" defer></script>
+    <script src="/experience-tools.js?v=1" defer></script>
     <link rel="canonical" href="https://www.enterthedream.org/sources/flower/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="SECOND SOURCE">
+    <meta property="og:title" content="FLOWER — SECOND SOURCE">
+    <meta property="og:description" content="A flower photograph in fluid motion. A silent, interactive source from Second Source.">
+    <meta property="og:url" content="https://www.enterthedream.org/sources/flower/">
+    <meta property="og:image" content="https://www.enterthedream.org/images/share/flower.png?v=1">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Yellow flower artwork for FLOWER, a fluid study from Second Source.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FLOWER — SECOND SOURCE">
+    <meta name="twitter:description" content="A flower photograph in fluid motion. A silent, interactive source from Second Source.">
+    <meta name="twitter:image" content="https://www.enterthedream.org/images/share/flower.png?v=1">
+    <meta name="twitter:image:alt" content="Yellow flower artwork for FLOWER, a fluid study from Second Source.">
 </head>
 <body class="landing-study">
     <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
@@ -47,6 +63,13 @@
                     <button class="experience-button vortex-return" type="button" data-fluid-return aria-pressed="false" aria-label="Hold to return to the original artwork">RETURN</button>
                     <button class="experience-button" type="button" data-fluid-reset>RESET</button>
                 </div>
+                <div class="experience-tools">
+                    <div class="experience-tools-buttons">
+                        <button class="experience-button" type="button" data-save-frame>SAVE FRAME</button>
+                        <button class="experience-button" type="button" data-copy-link>COPY LINK</button>
+                    </div>
+                    <p class="experience-tools-status" role="status" data-tools-status></p>
+                </div>
             </div>
             <p class="visually-hidden" role="status" data-status></p>
             <dialog id="experience-info" class="experience-info" aria-labelledby="info-title">
@@ -67,6 +90,12 @@
         </section>
     </main>
     <footer class="legal-footer">
+        <details class="site-about" id="about-contact">
+            <summary>ABOUT / CONTACT</summary>
+            <p class="site-about-copy">Second Source is an independent record label based in Oslo, Norway.</p>
+            <p class="site-about-copy">The music is available in all the usual places. This is another place to find it, alongside visual experiments and other things to explore.</p>
+            <p class="site-contact"><a href="mailto:secondsourceaudio@gmail.com">secondsourceaudio@gmail.com</a></p>
+        </details>
         <p class="site-updates"><span>RELEASE / MERCH UPDATES</span><span class="site-updates-signup" data-newsletter-signup>MAILING LIST / SOON</span></p>
 
         <p class="copyright-line">
