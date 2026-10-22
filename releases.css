@@ -26,7 +26,7 @@
     gap: clamp(36px, 7vw, 100px);
 }
 .release-cover { display: block; width: 100%; height: auto; }
-.release-catalogue { margin: 0 0 28px; color: #929292; font-size: 9px; letter-spacing: .2em; }
+.release-catalogue { margin: 0 0 28px; color: #aaa; font-size: var(--font-small); letter-spacing: .2em; }
 .release-title { margin: 0 0 16px; font-size: clamp(30px, 4vw, 52px); line-height: 1.1; letter-spacing: .06em; }
 .release-artist { margin: 0; color: #c9c9c9; font-size: 12px; line-height: 1.8; letter-spacing: .12em; }
 
@@ -47,7 +47,7 @@
     padding-top: 24px;
     border-top: 1px solid #292929;
 }
-.release-facts dt { color: #929292; font-size: 8px; line-height: 1.6; letter-spacing: .16em; }
+.release-facts dt { color: #aaa; font-size: var(--font-small); line-height: 1.6; letter-spacing: .16em; }
 .release-facts dd {
     margin: 8px 0 0;
     color: #d2d2d2;

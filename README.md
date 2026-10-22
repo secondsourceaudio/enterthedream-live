@@ -51,6 +51,11 @@ contains 16, 32 and 48 px versions, with separate 32 and 192 px PNG icons and a
 180 px Apple touch icon. The 512 px master is `images/brand/src-icon-512.png`.
 Every page includes the icons; the file preview embeds them as data URLs.
 
+Shared small-text sizes live in `site.css`: 10 px for compact metadata and
+11 px for small labels, including mobile. Body copy in product specifications
+uses 14 px Arial. Small secondary labels use lighter greys to stay readable
+against the dark background. Page headings keep their existing scale.
+
 ## Listening and viewing
 
 The homepage starts in **WHIRL**. Select **FLUID** to use the fluid study with the
