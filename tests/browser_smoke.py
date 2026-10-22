@@ -1888,22 +1888,13 @@ class WebsiteTests(unittest.TestCase):
         self.page.keyboard.press("Escape")
         expect(button).to_be_focused()
 
-    def test_about_contact_and_social_previews_are_available_without_javascript(self):
+    def test_about_contact_navigation_and_social_previews_work_without_javascript(self):
         context = self.browser.new_context(java_script_enabled=False, viewport={'width': 390, 'height': 844})
         try:
             page = context.new_page()
-            for route in ['', 'releases/', 'merch/', 'sources/', 'sources/flower/']:
+            for route in ['', 'releases/', 'merch/', 'sources/', 'sources/flower/', 'about/']:
                 with self.subTest(route=route):
                     page.goto(BASE_URL + '/' + route, wait_until='networkidle')
-                    about = page.locator('.site-about')
-                    self.assertFalse(about.evaluate('element => element.open'))
-                    about.locator('summary').focus()
-                    page.keyboard.press('Enter')
-                    expect(about.locator('.site-about-copy').first).to_have_text(
-                        'Second Source is an independent record label based in Oslo, Norway.')
-                    expect(about).to_contain_text('alongside visual experiments and other things to explore.')
-                    expect(about.get_by_role('link')).to_have_attribute('href', 'mailto:secondsourceaudio@gmail.com')
-                    expect(about.get_by_role('link')).to_be_visible()
                     canonical = page.locator('link[rel="canonical"]').get_attribute('href')
                     expect(page.locator('meta[property="og:url"]')).to_have_attribute('content', canonical)
                     image = page.locator('meta[property="og:image"]').get_attribute('content')
@@ -1913,8 +1904,34 @@ class WebsiteTests(unittest.TestCase):
                     self.assertTrue(response.body().startswith(b'\x89PNG\r\n\x1a\n'))
                     expect(page.locator('meta[name="twitter:card"]')).to_have_attribute('content', 'summary_large_image')
                     self.assertLessEqual(page.evaluate('document.documentElement.scrollWidth'), 390)
+                    link = page.locator('.site-nav').get_by_role('link', name='ABOUT / CONTACT', exact=True)
+                    expect(link).to_have_attribute('href', '/about/')
+                    expect(page.locator('.legal-footer details')).to_have_count(0)
+                    link.click()
+                    page.wait_for_url('**/about/')
+                    expect(page.locator('h1')).to_have_text('ABOUT / CONTACT')
+                    expect(page.locator('.site-nav [aria-current="page"]')).to_have_text('ABOUT / CONTACT')
+                    about = page.locator('.about-page')
+                    expect(about.locator('.about-copy p').first).to_have_text(
+                        'Second Source is an independent record label based in Oslo, Norway.')
+                    expect(about).to_contain_text('alongside visual experiments and other things to explore.')
+                    expect(about.get_by_role('link')).to_have_attribute('href', 'mailto:secondsourceaudio@gmail.com')
+                    expect(about.get_by_role('link')).to_be_visible()
+                    expect(about.get_by_role('img', name='Second Source', exact=True)).to_be_visible()
+                    self.assertTrue(about.locator('img').evaluate('image => image.complete && image.naturalWidth > 0'))
         finally:
             context.close()
+
+    def test_about_navigation_and_back_keep_the_homepage_usable(self):
+        self.visit()
+        self.page.locator('.site-nav').get_by_role('link', name='ABOUT / CONTACT', exact=True).click()
+        self.page.wait_for_url('**/about/')
+        expect(self.page.locator('.about-logo')).to_be_visible()
+        expect(self.page.locator('audio')).to_have_count(0)
+        self.page.go_back(wait_until='networkidle')
+        self.assertNotIn('page-is-leaving', self.page.locator('body').get_attribute('class') or '')
+        expect(self.page.locator('[data-sound]')).to_be_enabled()
+        self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
 
     def test_shared_visualizer_link_restores_mode_and_position_only_after_play(self):
         serve_seekable_audio(self.page)
@@ -2077,7 +2094,7 @@ class WebsiteTests(unittest.TestCase):
 
     def test_releases_navigation_shows_release_information(self):
         self.visit()
-        expect(self.page.locator('.site-nav a')).to_have_text(['RELEASES', 'MERCH', 'SOURCES', 'BANDCAMP'])
+        expect(self.page.locator('.site-nav a')).to_have_text(['RELEASES', 'MERCH', 'SOURCES', 'ABOUT / CONTACT', 'BANDCAMP'])
         self.page.locator('.site-nav').get_by_role('link', name='RELEASES').click()
         self.page.wait_for_url('**/releases/')
         expect(self.page.locator('h1')).to_have_text('RELEASES')
@@ -2114,7 +2131,7 @@ class WebsiteTests(unittest.TestCase):
     def test_mobile_layout_and_player_controls(self):
         for width in [320, 390, 768]:
             self.page.set_viewport_size({"width": width, "height": 844})
-            for path in ["index.html", "drip-fluid.html", "experiment.html", "experiments.html", "releases.html", "merch.html", "src001.html"]:
+            for path in ["index.html", "drip-fluid.html", "experiment.html", "experiments.html", "releases.html", "merch.html", "src001.html", "about/"]:
                 with self.subTest(width=width, path=path):
                     self.visit(path)
                     self.assertLessEqual(self.page.evaluate("document.body.scrollWidth"), width)

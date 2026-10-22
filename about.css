@@ -1,0 +1,23 @@
+/* Label information and contact, alongside the supplied Second Source logo. */
+.about-page { flex: 1; width: 100%; max-width: 1160px; margin: 0 auto; padding: 56px 36px 88px; }
+.about-heading { margin: 0 0 40px; padding-bottom: 24px; border-bottom: 1px solid #292929; }
+.about-heading h1 { margin: 0; font-size: 24px; line-height: 1.5; letter-spacing: .16em; }
+.about-content { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: center; gap: clamp(36px, 6vw, 80px); }
+.about-logo { display: block; width: 100%; max-width: 480px; height: auto; mix-blend-mode: screen; }
+.about-copy { color: #c9c9c9; font: 16px/1.9 Arial, Helvetica, sans-serif; }
+.about-copy p { margin: 0 0 20px; }
+.about-copy p:last-child { margin-bottom: 0; }
+.about-contact { margin-top: 32px; padding-top: 24px; border-top: 1px solid #292929; }
+.about-contact h2 { margin: 0 0 12px; color: #aaa; font-size: var(--font-small); line-height: 1.8; letter-spacing: .16em; }
+.about-contact a { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; color: #eee; font: 16px/1.8 Arial, Helvetica, sans-serif; overflow-wrap: anywhere; text-underline-offset: 5px; }
+.about-contact a:hover { color: #fff; }
+.about-contact a:focus-visible { outline: 1px solid #eee; outline-offset: 5px; }
+
+@media (max-width: 750px) {
+    .about-page { padding: 40px 20px 64px; }
+    .about-heading { margin-bottom: 20px; padding-bottom: 20px; }
+    .about-heading h1 { font-size: 22px; }
+    .about-content { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+    .about-logo { max-width: 420px; justify-self: center; }
+    .about-contact { margin-top: 24px; }
+}

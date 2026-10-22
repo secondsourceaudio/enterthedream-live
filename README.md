@@ -54,9 +54,10 @@ When a hosted mailing-list form is available, set `newsletterUrl` in `site.js`
 to its HTTPS URL. This replaces the notice with JOIN THE LIST links; until then
 there is no email field or signup submission. Rebuild the file preview after changing it.
 
-Every page also has a collapsed **ABOUT / CONTACT** section in the footer. It
-contains the supplied label description and `mailto:secondsourceaudio@gmail.com`.
-It works with native HTML, including without JavaScript.
+**ABOUT / CONTACT** in the top navigation opens `/about/`, with the Second Source logo,
+the supplied label description and `mailto:secondsourceaudio@gmail.com`.
+This static page works without JavaScript. Edit `about/index.html` and `about.css`.
+The original 3000 × 1500 PNG is preserved at `images/brand/second-source-logo.png`.
 
 Social previews use static Open Graph and Twitter metadata in each page's head.
 The 1200 × 630 PNG cards are in `images/share/`, using the original artwork and
