@@ -34,6 +34,11 @@
 .merch-product-info { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 20px; padding-top: 18px; }
 .merch-product-title { margin: 0; font-size: 12px; line-height: 1.7; letter-spacing: .12em; }
 .merch-product-status { margin: 0; color: #929292; font-size: 8px; line-height: 1.8; letter-spacing: .14em; }
+.merch-specifications { margin-top: 24px; }
+.merch-specifications h3 { margin: 0; color: #b7b7b7; font-size: 9px; font-weight: normal; line-height: 1.8; letter-spacing: .12em; }
+.merch-specifications dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 16px; margin: 12px 0 0; padding-top: 18px; border-top: 1px solid #292929; }
+.merch-specifications dt { color: #929292; font-size: 8px; line-height: 1.8; letter-spacing: .1em; }
+.merch-specifications dd { margin: 6px 0 0; color: #b7b7b7; font: 13px/1.6 Arial, Helvetica, sans-serif; }
 
 @media (max-width: 750px) {
     .merch-page { padding: 40px 20px 64px; }

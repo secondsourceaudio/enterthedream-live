@@ -20,8 +20,12 @@ cover, artist, title, release description and LP/label information. Distribution
 is credited to One Eye Witness. The description currently uses the supplied
 onesheet text as a placeholder. There is no public tracklist, release date or pressing information.
 **MERCH** opens `merch.html`, with upcoming T-SHIRTS and CAPS credited to
-TROMSØ PURIST SHOP. The neutral silhouettes are placeholders while product
-photographs and final details are pending. Products are marked IN DEVELOPMENT;
+TROMSØ PURIST SHOP, linked to `https://www.instagram.com/tromso_purist_shop/`.
+The neutral silhouettes are placeholders while product photographs and final
+details are pending. Each product has technical specification fields marked
+To be confirmed until production details are available. The planned T-shirt
+images are one plain front view and one or two photographs of the shirt being
+worn; those assets and longsleeves are deferred. Products are marked IN DEVELOPMENT;
 the page has no prices, purchase links or checkout.
 The former `gallery.html` URL redirects to RELEASES; its image assets remain
 available for FLOWER and future sources. `src001.html` remains a work-in-progress
