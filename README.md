@@ -21,8 +21,9 @@ is credited to One Eye Witness. The description currently uses the supplied
 onesheet text as a placeholder. There is no public tracklist, release date or pressing information.
 **MERCH** opens `merch.html`, with upcoming T-SHIRTS and CAPS credited to
 TROMSØ PURIST SHOP, linked to `https://www.instagram.com/tromso_purist_shop/`.
-The neutral silhouettes are placeholders while product photographs and final
-details are pending. Each product has technical specification fields marked
+The original supplied T-shirt and cap mockups are stored in `images/merch/`.
+They are shown uncropped in wide product sections and can be opened at full
+resolution. Each product has technical specification fields marked
 To be confirmed until production details are available. The planned T-shirt
 images are one plain front view and one or two photographs of the shirt being
 worn; those assets and longsleeves are deferred. Products are marked MOCKUP,
