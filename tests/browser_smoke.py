@@ -1794,7 +1794,7 @@ class WebsiteTests(unittest.TestCase):
 
     def test_releases_navigation_shows_release_information(self):
         self.visit()
-        expect(self.page.locator('.site-nav a')).to_have_text(['RELEASES', 'SOURCES', 'BANDCAMP'])
+        expect(self.page.locator('.site-nav a')).to_have_text(['RELEASES', 'MERCH', 'SOURCES', 'BANDCAMP'])
         self.page.locator('.site-nav').get_by_role('link', name='RELEASES').click()
         self.page.wait_for_url('**/releases.html')
         expect(self.page.locator('h1')).to_have_text('RELEASES')
@@ -1831,7 +1831,7 @@ class WebsiteTests(unittest.TestCase):
     def test_mobile_layout_and_player_controls(self):
         for width in [320, 390, 768]:
             self.page.set_viewport_size({"width": width, "height": 844})
-            for path in ["index.html", "drip-fluid.html", "experiment.html", "experiments.html", "releases.html", "src001.html"]:
+            for path in ["index.html", "drip-fluid.html", "experiment.html", "experiments.html", "releases.html", "merch.html", "src001.html"]:
                 with self.subTest(width=width, path=path):
                     self.visit(path)
                     self.assertLessEqual(self.page.evaluate("document.body.scrollWidth"), width)

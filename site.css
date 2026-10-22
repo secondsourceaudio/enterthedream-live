@@ -134,6 +134,8 @@ h2 {
 
     align-items: center;
 
+    column-gap: 28px;
+
     border-bottom:
         1px solid
         rgba(255, 255, 255, 0.18);
@@ -402,6 +404,10 @@ main { animation: scene-arrive .6s ease both; }
     .site-logo { margin-bottom: 8px; }
     .site-nav { gap: 4px 18px; }
     .site-nav a { font-size: 10px; letter-spacing: .1em; }
+}
+@media (min-width: 751px) and (max-width: 1000px) {
+    .site-nav { gap: 20px; }
+    .site-nav a { font-size: 11px; letter-spacing: .14em; }
 }
 @media (prefers-reduced-motion: reduce) {
     body { transition: none; }

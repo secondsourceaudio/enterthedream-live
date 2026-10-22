@@ -40,6 +40,7 @@ def main():
     html = html.replace('<audio ', '<audio crossorigin="anonymous" ')
     html = html.replace('href="./index.html"', f'href="{LIVE}"')
     html = html.replace('href="./releases.html"', f'href="{LIVE}releases.html"')
+    html = html.replace('href="./merch.html"', f'href="{LIVE}merch.html"')
     html = html.replace('href="./experiments.html"', f'href="{LIVE}experiments.html"')
     html = html.replace('<title>SECOND SOURCE</title>',
         '<title>SECOND SOURCE — DRIP PREVIEW</title>\n<meta name="robots" content="noindex, nofollow">')
