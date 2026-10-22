@@ -25,7 +25,8 @@ The neutral silhouettes are placeholders while product photographs and final
 details are pending. Each product has technical specification fields marked
 To be confirmed until production details are available. The planned T-shirt
 images are one plain front view and one or two photographs of the shirt being
-worn; those assets and longsleeves are deferred. Products are marked IN DEVELOPMENT;
+worn; those assets and longsleeves are deferred. Products are marked MOCKUP,
+with a notice that final products and specifications may change;
 the page has no prices, purchase links or checkout.
 The former `gallery.html` URL redirects to RELEASES; its image assets remain
 available for FLOWER and future sources. `src001.html` remains a work-in-progress
