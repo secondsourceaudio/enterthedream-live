@@ -858,6 +858,7 @@ html[data-motion="off"] .visual-container { touch-action: pan-y pinch-zoom; }
 
 /* The original compact player, with larger touch targets. */
 .compact-player { display: flex; flex-direction: column; align-items: center; width: min(100%, 340px); max-width: 100%; }
+.player-track { margin: 0 0 4px; color: #bcbcbc; font-size: 9px; line-height: 1.6; letter-spacing: .1em; text-align: center; }
 .player-controls { display: flex; align-items: center; justify-content: center; gap: 9px; }
 .player-timeline { display: flex; align-items: center; gap: 10px; width: 100%; }
 .player-time { min-width: 34px; color: #bcbcbc; font: 11px Arial, Helvetica, sans-serif; font-variant-numeric: tabular-nums; }
@@ -1058,7 +1059,8 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
                 </div>
             </div>
             <div class="visualizer-dock" data-visualizer-dock>
-                <div class="compact-player" role="group" aria-label="Sage Counsel player">
+                <div class="compact-player" role="group" aria-labelledby="player-track-title">
+                    <p class="player-track" id="player-track-title">MARTIN SOLLI / SAGE COUNSEL</p>
                     <div class="player-timeline">
                         <output class="player-time" data-current-time aria-hidden="true">0:00</output>
                         <input class="seek-slider" type="range" min="0" max="1" step="0.1" value="0" aria-label="Playback position" aria-valuetext="Playback not started" data-seek disabled>

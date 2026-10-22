@@ -140,7 +140,8 @@ off clears the held gesture.
 The motion settles using elapsed time,
 and ripples pause with the motion toggle. Space or Enter on the focused artwork
 also creates a ripple. Pinch gestures zoom instead of creating a second impact.
-The original compact play/pause, mute and volume player sits beneath DRIP;
+The compact player identifies the track as MARTIN SOLLI / SAGE COUNSEL above
+its timeline, including in fullscreen. Its play/pause, mute and volume controls sit beneath DRIP;
 it includes a seekable timeline with elapsed time and duration. Metadata and
 audio still load only when Play is selected. Seeking with touch, mouse or the
 keyboard preserves the current playing or paused state.
