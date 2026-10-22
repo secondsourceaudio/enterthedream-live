@@ -20,6 +20,9 @@
 .merch-credit { margin: 0; color: #d2d2d2; font-size: 13px; line-height: 1.8; letter-spacing: .16em; }
 .merch-credit-label { margin-right: 8px; color: #aaa; }
 .merch-credit-glyph { font-family: Arial, Helvetica, sans-serif; }
+.merch-credit a { color: inherit; text-decoration: underline; text-decoration-color: #555; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+.merch-credit a:hover { color: #fff; text-decoration-color: currentColor; }
+.merch-credit a:focus-visible { outline: 1px solid #eee; outline-offset: 5px; }
 
 .merch-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 48px 32px; }
 .merch-product { min-width: 0; }
