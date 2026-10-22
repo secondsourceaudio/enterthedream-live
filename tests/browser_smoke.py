@@ -1369,6 +1369,88 @@ class WebsiteTests(unittest.TestCase):
         self.assertFalse(self.page.evaluate('window.SecondSourceExperience.glitchEnabled'))
         expect(toggle).to_have_attribute('aria-pressed', 'false')
 
+    def test_player_shortcuts_respect_focus_modifiers_and_the_off_switch(self):
+        self.visit()
+        audio = self.page.locator('audio')
+        fullscreen = self.page.locator('[data-fullscreen]')
+        self.assertTrue(audio.evaluate('a => a.paused'))
+        self.page.keyboard.press('f')
+        expect(fullscreen).to_have_attribute('aria-pressed', 'true')
+        self.assertTrue(audio.evaluate('a => a.paused'))
+        self.page.keyboard.press('f')
+        expect(fullscreen).to_have_attribute('aria-pressed', 'false')
+        self.page.keyboard.press('p')
+        self.page.wait_for_function('!document.querySelector("audio").paused && document.querySelector("audio").currentTime > .1')
+        self.page.keyboard.press('m')
+        self.assertTrue(audio.evaluate('a => a.muted && !a.paused'))
+        self.page.keyboard.press('m')
+        self.assertFalse(audio.evaluate('a => a.muted'))
+        self.page.evaluate('''() => {
+            document.dispatchEvent(new KeyboardEvent('keydown', {key: 'p', repeat: true, bubbles: true}));
+            for (const modifier of ['ctrlKey', 'metaKey', 'altKey']) {
+                document.dispatchEvent(new KeyboardEvent('keydown', {key: 'p', [modifier]: true, bubbles: true}));
+            }
+        }''')
+        self.assertFalse(audio.evaluate('a => a.paused'))
+        self.page.locator('.site-logo').focus()
+        self.page.keyboard.press('p')
+        self.assertFalse(audio.evaluate('a => a.paused'))
+        self.page.evaluate('''() => {
+            const input = document.createElement('input');
+            input.id = 'typing-check';
+            document.querySelector('[data-experience]').append(input);
+            input.focus();
+        }''')
+        self.page.keyboard.type('pmf')
+        expect(self.page.locator('#typing-check')).to_have_value('pmf')
+        self.assertFalse(audio.evaluate('a => a.paused || a.muted'))
+        expect(fullscreen).to_have_attribute('aria-pressed', 'false')
+        self.page.locator('#typing-check').evaluate('e => e.remove()')
+        self.page.locator('[data-volume]').focus()
+        self.page.keyboard.press('f')
+        expect(fullscreen).to_have_attribute('aria-pressed', 'false')
+        self.page.locator('[data-info]').click()
+        self.page.keyboard.press('p')
+        self.page.keyboard.press('m')
+        self.page.keyboard.press('f')
+        self.assertFalse(audio.evaluate('a => a.paused || a.muted'))
+        expect(fullscreen).to_have_attribute('aria-pressed', 'false')
+        self.page.locator('[data-shortcuts-toggle]').click()
+        self.page.keyboard.press('Escape')
+        self.page.keyboard.press('p')
+        self.assertFalse(audio.evaluate('a => a.paused'))
+        self.page.reload(wait_until='networkidle')
+        self.page.keyboard.press('p')
+        self.assertTrue(audio.evaluate('a => a.paused'))
+        expect(self.page.locator('[data-sound]')).not_to_have_attribute('aria-keyshortcuts', 'P')
+        self.page.locator('[data-info]').click()
+        expect(self.page.locator('[data-shortcuts-toggle]')).to_have_attribute('aria-pressed', 'false')
+        self.page.locator('[data-shortcuts-toggle]').click()
+        self.page.keyboard.press('Escape')
+        self.page.keyboard.press('p')
+        self.page.wait_for_function('!document.querySelector("audio").paused')
+        expect(self.page.locator('[data-sound]')).to_be_enabled()
+        self.page.keyboard.press('p')
+        self.assertTrue(audio.evaluate('a => a.paused'))
+        self.page.keyboard.press('p')
+        self.page.wait_for_function('!document.querySelector("audio").paused')
+        self.page.locator('.site-nav').get_by_role('link', name='MERCH', exact=True).click()
+        self.page.wait_for_url('**/merch.html')
+        expect(self.page.locator('audio')).to_have_count(0)
+        self.page.go_back(wait_until='networkidle')
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
+
+    def test_flower_shortcuts_keep_it_silent(self):
+        self.visit('experiment.html')
+        self.page.keyboard.press('p')
+        self.page.keyboard.press('m')
+        expect(self.page.locator('audio, [data-sound], [data-mute]')).to_have_count(0)
+        self.page.keyboard.press('f')
+        expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'true')
+        self.page.keyboard.press('f')
+        expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'false')
+        self.assertFalse(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
+
     def test_fullscreen_and_information_keep_controls_accessible(self):
         self.visit()
         button = self.page.locator("[data-fullscreen]")

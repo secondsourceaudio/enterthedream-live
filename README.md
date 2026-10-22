@@ -37,6 +37,11 @@ requests that search engines do not index it.
 Audio seeking requires a server with HTTP byte-range support, as provided by
 GitHub Pages. Python's basic local server supports playback but not seeking.
 
+The footer prepares release and merch updates with a MAILING LIST / SOON notice.
+When a hosted mailing-list form is available, set `newsletterUrl` in `site.js`
+to its HTTPS URL. This replaces the notice with JOIN THE LIST links; until then
+there is no email field or signup submission. Rebuild the file preview after changing it.
+
 `preview.html` embeds the homepage artwork, font, styles and scripts for file
 viewers that cannot load relative assets. Play streams the existing public track
 from GitHub. Rebuild it after homepage changes with `python3 scripts/build_preview.py`.
@@ -60,6 +65,11 @@ the other mode remains available. The mode is not remembered between visits.
 
 The studies load silently. Select **Play** to play the bundled Sage Counsel
 track on DRIP. FLOWER remains silent.
+P toggles play/pause, M toggles mute and F toggles fullscreen. FLOWER supports
+F only. The shortcuts are listed in INFO, where they can also be disabled;
+that choice is remembered locally. They ignore text fields, open dialogs,
+held-key repeats and browser modifier combinations. Focus on navigation or
+footer links leaves those controls alone. Playback stops when leaving a page.
 Audio is analyzed in the browser; low-frequency energy gently influences the
 artwork. Volume is applied through a gain node
 when Web Audio is available, including on iOS. The sound button pauses and

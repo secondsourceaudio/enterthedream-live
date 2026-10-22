@@ -19,6 +19,7 @@
     const glitchButton = space.querySelector("[data-glitch-toggle]");
     const fullscreenButton = space.querySelector("[data-fullscreen]");
     const infoButton = space.querySelector("[data-info]");
+    const shortcutsButton = space.querySelector("[data-shortcuts-toggle]");
     const dialog = space.querySelector("dialog");
     const visualizerDock = space.querySelector('[data-visualizer-dock]');
     const spectrumElement = space.querySelector('[data-spectrum]');
@@ -41,6 +42,7 @@
     };
 
     const savedVolume = readPreference("second-source-volume");
+    let shortcutsEnabled = readPreference("second-source-shortcuts") !== "off";
     let volume = savedVolume === null ? 0.35 : Number(savedVolume);
     if (!Number.isFinite(volume) || volume < 0 || volume > 1) volume = 0.35;
     const motionDefaultOn = space.hasAttribute("data-motion-default-on");
@@ -498,6 +500,37 @@
         if (event.target !== dialog) return;
         const bounds = dialog.getBoundingClientRect();
         if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close();
+    });
+    function updateShortcuts() {
+        if (shortcutsButton) {
+            shortcutsButton.textContent = `KEYBOARD SHORTCUTS / ${shortcutsEnabled ? 'ON' : 'OFF'}`;
+            shortcutsButton.setAttribute('aria-pressed', String(shortcutsEnabled));
+        }
+        for (const [key, button] of [['P', soundButton], ['M', muteButton], ['F', fullscreenButton]]) {
+            if (!button) continue;
+            if (shortcutsEnabled) button.setAttribute('aria-keyshortcuts', key);
+            else button.removeAttribute('aria-keyshortcuts');
+        }
+    }
+    shortcutsButton?.addEventListener('click', () => {
+        shortcutsEnabled = !shortcutsEnabled;
+        savePreference('second-source-shortcuts', shortcutsEnabled ? 'on' : 'off');
+        updateShortcuts();
+        status.textContent = `Keyboard shortcuts ${shortcutsEnabled ? 'enabled' : 'disabled'}.`;
+    });
+    updateShortcuts();
+    document.addEventListener('keydown', event => {
+        if (!shortcutsEnabled || event.defaultPrevented || event.repeat || event.isComposing ||
+            event.ctrlKey || event.metaKey || event.altKey || dialog.open || document.hidden) return;
+        if (event.target instanceof Element && event.target.closest(
+            'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"], [role="spinbutton"], [role="slider"]')) return;
+        const focused = document.activeElement;
+        if (focused && focused !== document.body && focused !== document.documentElement && !space.contains(focused)) return;
+        const button = {p: soundButton, m: muteButton, f: fullscreenButton}[event.key.toLowerCase()];
+        if (!button || button.disabled || button.closest('[hidden]')) return;
+        event.preventDefault();
+        revealVisualizerControls();
+        button.click();
     });
     document.addEventListener("keydown", (event) => {
         if (dialog.open || !immersive) return;

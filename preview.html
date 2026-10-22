@@ -266,6 +266,23 @@ h2 {
     margin: 0;
 }
 
+.legal-footer .site-updates {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin: 0 0 24px;
+    color: #aaa;
+    font-size: 8px;
+    line-height: 1.8;
+    letter-spacing: .14em;
+}
+.site-updates-signup { color: #777; }
+a.site-updates-signup { display: inline-flex; align-items: center; min-height: 44px; color: #ddd; text-underline-offset: 5px; }
+a.site-updates-signup:hover { color: #fff; }
+a.site-updates-signup:focus-visible { outline: 1px solid #eee; outline-offset: 5px; }
+
 
 .copyright-line {
     color: #ffffff;
@@ -1166,12 +1183,15 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
                     <dt>SOUND</dt><dd>SAGE COUNSEL</dd>
                     <dt>PROJECT</dt><dd>SECOND SOURCE AUDIO<span class="info-project-description">Music, images and audiovisual experiments.</span><a class="info-project-link" href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP ↗</a></dd>
                     <dt>CONTROLS</dt><dd><span data-mode-controls="whirl">Click or tap for ripples · Hold to build a whirlpool<br>Drag to stir · Pinch to zoom<br>Hold right-click or RETURN for a faster return</span><span data-mode-controls="fluid" hidden>Drag to move the image · Hold to stir<br>Hold right-click or RETURN to settle<br>Reset to restore the original image<br>VISUALIZER: automatic random flow, shaped by the music</span><br>Escape to leave fullscreen</dd>
+                    <dt>KEYBOARD</dt><dd>P — Play / pause<br>M — Mute<br>F — Fullscreen</dd>
                 </dl>
+                <button class="experience-button info-modifier" type="button" data-shortcuts-toggle aria-pressed="true">KEYBOARD SHORTCUTS / ON</button>
                 <button class="experience-button info-modifier" type="button" data-glitch-toggle data-mode-controls="whirl" aria-pressed="false" aria-label="SRC_GLITCH: off">SRC_GLITCH / OFF</button>
             </dialog>
         </section>
     </main>
     <footer class="legal-footer">
+        <p class="site-updates"><span>RELEASE / MERCH UPDATES</span><span class="site-updates-signup" data-newsletter-signup>MAILING LIST / SOON</span></p>
 
         <p class="copyright-line">
             <span class="copyright-symbol">©</span> 2026 SECOND SOURCE AUDIO. ALL RIGHTS RESERVED.
@@ -1188,6 +1208,24 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
 <script>/* Page transitions and keyboard-safe artwork viewers. */
 (() => {
     "use strict";
+    // Set the hosted sign-up URL when the mailing list is ready.
+    const newsletterUrl = "";
+    if (newsletterUrl) {
+        try {
+            const destination = new URL(newsletterUrl);
+            if (destination.protocol === 'https:') {
+                for (const placeholder of document.querySelectorAll('[data-newsletter-signup]')) {
+                    const link = document.createElement('a');
+                    link.className = placeholder.className;
+                    link.href = destination.href;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.textContent = 'JOIN THE LIST';
+                    placeholder.replaceWith(link);
+                }
+            }
+        } catch { /* Keep the coming-soon notice until a valid URL is configured. */ }
+    }
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let navigating = false;
     document.addEventListener("click", event => {
@@ -1260,6 +1298,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
     const glitchButton = space.querySelector("[data-glitch-toggle]");
     const fullscreenButton = space.querySelector("[data-fullscreen]");
     const infoButton = space.querySelector("[data-info]");
+    const shortcutsButton = space.querySelector("[data-shortcuts-toggle]");
     const dialog = space.querySelector("dialog");
     const visualizerDock = space.querySelector('[data-visualizer-dock]');
     const spectrumElement = space.querySelector('[data-spectrum]');
@@ -1282,6 +1321,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
     };
 
     const savedVolume = readPreference("second-source-volume");
+    let shortcutsEnabled = readPreference("second-source-shortcuts") !== "off";
     let volume = savedVolume === null ? 0.35 : Number(savedVolume);
     if (!Number.isFinite(volume) || volume < 0 || volume > 1) volume = 0.35;
     const motionDefaultOn = space.hasAttribute("data-motion-default-on");
@@ -1739,6 +1779,37 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
         if (event.target !== dialog) return;
         const bounds = dialog.getBoundingClientRect();
         if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) dialog.close();
+    });
+    function updateShortcuts() {
+        if (shortcutsButton) {
+            shortcutsButton.textContent = `KEYBOARD SHORTCUTS / ${shortcutsEnabled ? 'ON' : 'OFF'}`;
+            shortcutsButton.setAttribute('aria-pressed', String(shortcutsEnabled));
+        }
+        for (const [key, button] of [['P', soundButton], ['M', muteButton], ['F', fullscreenButton]]) {
+            if (!button) continue;
+            if (shortcutsEnabled) button.setAttribute('aria-keyshortcuts', key);
+            else button.removeAttribute('aria-keyshortcuts');
+        }
+    }
+    shortcutsButton?.addEventListener('click', () => {
+        shortcutsEnabled = !shortcutsEnabled;
+        savePreference('second-source-shortcuts', shortcutsEnabled ? 'on' : 'off');
+        updateShortcuts();
+        status.textContent = `Keyboard shortcuts ${shortcutsEnabled ? 'enabled' : 'disabled'}.`;
+    });
+    updateShortcuts();
+    document.addEventListener('keydown', event => {
+        if (!shortcutsEnabled || event.defaultPrevented || event.repeat || event.isComposing ||
+            event.ctrlKey || event.metaKey || event.altKey || dialog.open || document.hidden) return;
+        if (event.target instanceof Element && event.target.closest(
+            'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="combobox"], [role="spinbutton"], [role="slider"]')) return;
+        const focused = document.activeElement;
+        if (focused && focused !== document.body && focused !== document.documentElement && !space.contains(focused)) return;
+        const button = {p: soundButton, m: muteButton, f: fullscreenButton}[event.key.toLowerCase()];
+        if (!button || button.disabled || button.closest('[hidden]')) return;
+        event.preventDefault();
+        revealVisualizerControls();
+        button.click();
     });
     document.addEventListener("keydown", (event) => {
         if (dialog.open || !immersive) return;
