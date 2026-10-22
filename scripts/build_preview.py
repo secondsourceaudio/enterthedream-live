@@ -32,6 +32,8 @@ def main():
     html = re.sub(r'<script[^>]+src="[^"]+"[^>]*></script>', '', html)
     html = re.sub(r'<link rel="preload"[^>]+>', '', html)
     html = re.sub(r'<link rel="stylesheet" href="([^"]+)">', stylesheet, html)
+    html = re.sub(r'(<link rel="(?:icon|apple-touch-icon)"[^>]*href=")([^"]+)(")',
+        lambda m: m.group(1) + embed(ROOT / m.group(2).split('?')[0]) + m.group(3), html)
     html = re.sub(r'(<img[^>]*?)src="([^"]+)"',
         lambda m: m.group(1) + 'src="' + embed(ROOT / m.group(2)) + '"', html)
     html = html.replace('./audio/sage-counsel.mp3', AUDIO)

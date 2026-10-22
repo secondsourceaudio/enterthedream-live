@@ -33,6 +33,11 @@ GitHub Pages. Python's basic local server supports playback but not seeking.
 viewers that cannot load relative assets. Play streams the existing public track
 from GitHub. Rebuild it after homepage changes with `python3 scripts/build_preview.py`.
 
+Tabs and bookmarks use the white SRC mark on a dark background. `favicon.ico`
+contains 16, 32 and 48 px versions, with separate 32 and 192 px PNG icons and a
+180 px Apple touch icon. The 512 px master is `images/brand/src-icon-512.png`.
+Every page includes the icons; the file preview embeds them as data URLs.
+
 ## Listening and viewing
 
 The homepage starts in **WHIRL**. Select **FLUID** to use the fluid study with the
