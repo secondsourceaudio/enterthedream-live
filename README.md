@@ -145,8 +145,10 @@ off clears the held gesture.
 The motion settles using elapsed time,
 and ripples pause with the motion toggle. Space or Enter on the focused artwork
 also creates a ripple. Pinch gestures zoom instead of creating a second impact.
-The compact player has a dark metal skin, an inset blue display and drawn
-transport icons. It identifies MARTIN SOLLI / SAGE COUNSEL above its timeline,
+The compact player uses the SRC mark and SRC001 / DRIP catalogue label, with
+square black panels, fine silver rules and the site's Microgramma typography.
+Muted blue spectrum meters and drawn transport icons keep the desktop-player feel.
+It identifies MARTIN SOLLI / SAGE COUNSEL above its timeline,
 including in fullscreen. Twenty logarithmic spectrum bands (40–14000 Hz) with
 short peak holds follow the real audio at up to 30 updates per second. They use
 the existing analyser and stay empty before playback, on pause, mute, zero volume
