@@ -116,8 +116,9 @@ layout so dragging does not interfere with scrolling or artwork gestures.
 DRIP image. Its four labelled hotspots lead to RELEASES, MERCH, ABOUT / CONTACT
 and the otherwise unlisted FLOWER page. The ASCII SRC in INDEX toggles the
 artwork's colour polarity for the current visit. Another ASCII mark is in the
-homepage source. Mouse users get a small custom crosshair over manual WHIRL /
-FLUID artwork; VISUALIZER keeps its automatic behaviour. Skin and polarity
+homepage source. Mouse users get a small drop-shaped cursor across the site and
+over manual WHIRL / FLUID artwork, with the normal hand on links and buttons;
+VISUALIZER keeps its automatic behaviour. Skin and polarity
 changes announce their state without starting sound. Without JavaScript the
 extra buttons stay hidden and the existing navigation remains available.
 
@@ -137,12 +138,36 @@ P toggles play/pause, M toggles mute and F toggles fullscreen. FLOWER supports
 F only. The shortcuts are listed in INFO, where they can also be disabled;
 that choice is remembered locally. They ignore text fields, open dialogs,
 held-key repeats and browser modifier combinations. Focus on navigation or
-footer links leaves those controls alone. Playback stops when leaving a page.
+footer links leaves those controls alone. After the visitor presses Play,
+playback can continue between the homepage, RELEASES, MERCH and ABOUT / CONTACT.
 Audio is analyzed in the browser; low-frequency energy gently influences the
 artwork. Volume is applied through a gain node
 when Web Audio is available, including on iOS. The sound button pauses and
 resumes playback. No audio context or audio download starts before that button
-is selected. Playback does not start automatically when following a page link.
+is selected. A fresh visit, reload or new tab never starts playback automatically.
+
+### Continuing a listening session
+
+`continuous-player.js` keeps the original audio element and audio context while
+navigating the three public text pages. A small player appears in the bottom
+right corner after music was started on the homepage. Its title returns to the
+artwork; pause pauses, the chevron reveals volume/seek/skin controls, and close
+pauses audio and dismisses the corner player until Play is selected again.
+The main player, selected visual mode, playback position and volume return when
+going back to the homepage. The hidden artwork stops rendering on other pages.
+
+This is progressive navigation within that listening session, with real URLs,
+updated titles/canonical/social metadata, browser back/forward and normal static
+pages for direct visits. It is limited to `/`, `/releases/`, `/merch/` and
+`/about/`. Other destinations, modified clicks, downloads, shared links with
+query parameters and failed page fetches use normal navigation. A real page exit
+stops playback. Starting directly on a text page does not load an audio player
+or music. Nothing stores permission to autoplay on a later visit. The file
+preview remains a standalone preview and uses normal links to the public site.
+
+The current track metadata supplies the corner player's title and artist, so a
+future mixtape player can use the same presentation. No additional mixes or
+placeholder playlist entries have been added.
 
 **Motion off** shows the static artwork and stops the rendering loop. Motion
 starts enabled on each DRIP visit, including with reduced-motion preferences.

@@ -8,7 +8,7 @@
 
     const skins = ['graphite', 'chrome', 'cobalt', 'amber'];
     const skinButton = player.querySelector('[data-skin-cycle]');
-    const notice = space.querySelector('[data-tools-status]');
+    const notice = space.querySelector('[data-status]');
     const announce = text => { notice.textContent = text; };
     let savedSkin;
     try { savedSkin = localStorage.getItem('second-source-player-skin'); } catch { /* Optional preference. */ }
@@ -38,7 +38,8 @@
     function movable(element, handle, name, isPlayer = false) {
         let drag = null;
         const clamp = (value, min, max) => Math.max(min, Math.min(value, max));
-        const movableHere = () => finePointer.matches && (!element.matches('dialog') || element.open);
+        const canDrag = () => finePointer.matches && !(isPlayer && element.closest('[data-corner-player]'));
+        const movableHere = () => canDrag() && (!element.matches('dialog') || element.open);
         function place(x, y) {
             const box = element.getBoundingClientRect();
             if (!element.classList.contains('src-floating')) {
@@ -74,8 +75,8 @@
             }
         }
         function configure() {
-            handle.classList.toggle('src-draggable', finePointer.matches);
-            if (finePointer.matches) {
+            handle.classList.toggle('src-draggable', canDrag());
+            if (canDrag()) {
                 handle.tabIndex = 0;
                 handle.setAttribute('role', 'group');
                 handle.setAttribute('aria-label', `${name} position. Drag or use arrow keys to move; Home returns it.`);
@@ -137,7 +138,7 @@
         if (element.matches('dialog')) element.addEventListener('close', reset);
         configure();
         finePointer.addEventListener('change', configure);
-        windows.push({reset, fit, cancel: end});
+        windows.push({reset, fit, cancel: end, configure});
         return reset;
     }
     const dockPlayer = movable(player, player.querySelector('[data-player-handle]'), 'Player', true);
@@ -150,6 +151,8 @@
     movable(index, index.querySelector('[data-index-handle]'), 'Index');
     window.addEventListener('resize', () => windows.forEach(window => window.fit()));
     window.addEventListener('experience:immersivechange', () => windows.forEach(window => window.reset()));
+    window.addEventListener('src:beforepagechange', () => windows.forEach(window => window.reset()));
+    window.addEventListener('src:playerdockchange', () => windows.forEach(window => window.configure()));
     window.addEventListener('blur', () => windows.forEach(window => window.cancel()));
     document.addEventListener('visibilitychange', () => { if (document.hidden) windows.forEach(window => window.cancel()); });
 

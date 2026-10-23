@@ -6,7 +6,8 @@
     }
     // Set the hosted sign-up URL when the mailing list is ready.
     const newsletterUrl = "";
-    if (newsletterUrl) {
+    function updateNewsletter() {
+        if (!newsletterUrl) return;
         try {
             const destination = new URL(newsletterUrl);
             if (destination.protocol === 'https:') {
@@ -22,6 +23,8 @@
             }
         } catch { /* Keep the coming-soon notice until a valid URL is configured. */ }
     }
+    updateNewsletter();
+    window.addEventListener('site:pagechange', updateNewsletter);
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let navigating = false;
     document.addEventListener("click", event => {

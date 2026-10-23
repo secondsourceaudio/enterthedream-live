@@ -1,0 +1,37 @@
+/* A quiet continuation of a listening session, after the visitor presses Play. */
+.src-home-storage { display: none !important; }
+.src-corner-player {
+    position: fixed; z-index: 4200;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
+    width: 320px; max-width: calc(100vw - 24px); max-height: calc(100dvh - 24px);
+    overflow: auto; border: 1px solid #36383c; background: #101113;
+    box-shadow: 0 6px 24px #0005; color: #ddd;
+}
+.src-corner-player[hidden], .src-corner-detail[hidden] { display: none; }
+.src-corner-summary { display: flex; align-items: center; gap: 2px; min-height: 54px; padding: 4px 6px; }
+.src-corner-button {
+    display: inline-flex; flex: 0 0 44px; width: 44px; height: 44px;
+    align-items: center; justify-content: center;
+    border: 0; background: transparent; color: #bbb; cursor: pointer;
+}
+.src-corner-button:hover { color: #fff; background: #ffffff08; }
+.src-corner-button:focus-visible, .src-corner-track:focus-visible { outline: 1px solid #ddd; outline-offset: -2px; }
+.src-corner-button:disabled { opacity: .5; cursor: progress; }
+.src-corner-button svg { width: 14px; height: 14px; fill: currentColor; }
+.src-corner-track { display: flex; flex: 1; flex-direction: column; justify-content: center; min-width: 0; min-height: 44px; padding: 0 6px; color: #ddd; text-decoration: none; }
+.src-corner-track span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.src-corner-artist { color: #aaa; font-size: 10px; line-height: 1.7; letter-spacing: .06em; }
+.src-corner-title { font-size: 11px; line-height: 1.7; letter-spacing: .04em; }
+.src-corner-detail { border-top: 1px solid #303236; }
+.src-corner-player .compact-player { width: 100%; max-width: 100%; padding: 12px; border: 0; box-shadow: none; }
+.src-corner-player .player-titlebar, .src-corner-player .player-track { display: none; }
+.src-corner-player .player-display { padding-block: 8px; }
+.src-corner-player .player-spectrum { height: 26px; }
+.src-corner-player .player-clock { margin: 0; }
+.has-continuous-player .legal-footer { padding-bottom: 100px; }
+main[data-session-page] { animation: none; }
+.src-route-loading > main { opacity: .65; }
+@media (max-width: 750px) {
+    .src-corner-player { right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); }
+}
