@@ -4,7 +4,6 @@ Run: python3 tests/browser_smoke.py
 Requires Python Playwright and Chromium. SITE_BASE_URL and CHROMIUM_PATH
 override the local server URL and browser executable.
 """
-import base64
 import os
 from pathlib import Path
 import unittest
@@ -1182,6 +1181,7 @@ class WebsiteTests(unittest.TestCase):
         requests = []
         self.page.on('request', lambda request: requests.append(request.url))
         self.visit('preview.html')
+        expect(self.page.locator('meta[name="robots"]')).to_have_attribute('content', 'noindex, nofollow')
         self.page.wait_for_function('window.__drawCalls > 0')
         self.assertTrue(self.page.locator('#fallback-image').evaluate('e => e.complete && e.naturalWidth > 0'))
         self.assertEqual(self.page.locator('.compact-player').evaluate('e => getComputedStyle(e).display'), 'flex')
@@ -1253,7 +1253,7 @@ class WebsiteTests(unittest.TestCase):
     def test_drip_has_no_visible_label_and_ignores_previous_motion_off(self):
         self.context.add_init_script("localStorage.setItem('second-source-motion', 'off');")
         self.visit()
-        expect(self.page.locator("h1")).to_have_text("DRIP")
+        expect(self.page.locator("h1")).to_have_text("Second Source")
         self.assertEqual(self.page.locator("h1").evaluate("e => getComputedStyle(e).position"), "absolute")
         expect(self.page.locator(".study-caption, .interaction-cue")).to_have_count(0)
         expect(self.page.locator("html")).to_have_attribute("data-motion", "on")
@@ -1945,6 +1945,7 @@ class WebsiteTests(unittest.TestCase):
         audio_requests = []
         self.page.on('request', lambda request: audio_requests.append(request.url) if '/audio/' in request.url else None)
         self.page.goto(BASE_URL + '/?mode=visualizer&t=61.25', wait_until='networkidle')
+        expect(self.page.locator('[data-save-frame]')).to_have_count(0)
         expect(self.page.locator('[data-visual-mode="visualizer"]')).to_have_attribute('aria-pressed', 'true')
         expect(self.page.locator('[data-current-time]')).to_have_text('1:01')
         expect(self.page.locator('[data-tools-status]')).to_contain_text('Press play to start.')
@@ -1987,68 +1988,6 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'true')
         self.page.keyboard.press('Escape')
         expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'false')
-
-    def download_artwork_frame(self):
-        with self.page.expect_download() as downloaded:
-            self.page.locator('[data-save-frame]').click()
-        download = downloaded.value
-        self.assertTrue(download.suggested_filename.startswith('second-source-'))
-        self.assertTrue(download.suggested_filename.endswith('.png'))
-        payload = Path(download.path()).read_bytes()
-        self.assertTrue(payload.startswith(b'\x89PNG\r\n\x1a\n'))
-        metrics = self.page.evaluate("""async data => {
-            const image = new Image();
-            image.src = 'data:image/png;base64,' + data;
-            await image.decode();
-            const canvas = document.createElement('canvas');
-            canvas.width = canvas.height = 64;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(image, 0, 0, 64, 64);
-            const pixels = ctx.getImageData(0, 0, 64, 64).data;
-            let color = 0, opaque = 0;
-            for (let i = 0; i < pixels.length; i += 4) {
-                color += Math.max(pixels[i], pixels[i + 1], pixels[i + 2]);
-                opaque += pixels[i + 3] === 255;
-            }
-            return {width: image.naturalWidth, height: image.naturalHeight, color: color / 4096, opaque};
-        }""", base64.b64encode(payload).decode('ascii'))
-        self.assertEqual(metrics['width'], metrics['height'])
-        self.assertGreater(metrics['width'], 256)
-        self.assertLessEqual(metrics['width'], 2048)
-        self.assertGreater(metrics['color'], 15, 'A frame export must contain artwork rather than a cleared WebGL buffer')
-        self.assertEqual(metrics['opaque'], 4096)
-        expect(self.page.locator('[data-tools-status]')).to_have_text('Frame saved.')
-        return payload
-
-    def test_save_frame_captures_current_fluid_and_frozen_visualizer_without_starting_audio(self):
-        self.start_controlled_fluid()
-        self.page.locator('[data-visual-mode="fluid"]').click()
-        self.page.evaluate('window.__stepFluid(1)')
-        original = self.download_artwork_frame()
-        panel = self.page.locator('#fluid-container')
-        panel.scroll_into_view_if_needed()
-        box = panel.bounding_box()
-        self.page.mouse.move(box['x'] + box['width'] * .4, box['y'] + box['height'] * .5)
-        self.page.mouse.down()
-        self.page.evaluate('window.__stepFluid(60)')
-        self.page.mouse.up()
-        changed = self.download_artwork_frame()
-        self.assertNotEqual(changed, original, 'Saving must include the current fluid distortion')
-        self.page.locator('[data-visual-mode="visualizer"]').click()
-        frozen = self.download_artwork_frame()
-        self.assertEqual(self.download_artwork_frame(), frozen, 'Capturing must not advance a paused visualizer')
-        self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
-        self.page.locator('[data-motion-toggle]').click()
-        self.download_artwork_frame()
-
-    def test_save_frame_exports_whirl_and_silent_flower(self):
-        self.visit()
-        self.page.wait_for_function('document.querySelector("#visual").classList.contains("is-ready")')
-        self.download_artwork_frame()
-        self.visit('experiment.html')
-        self.page.wait_for_function('document.querySelector("#visual").dataset.fluid === "ready"')
-        self.download_artwork_frame()
-        expect(self.page.locator('audio')).to_have_count(0)
 
     def test_clean_merch_route_shows_original_mockups_and_full_size_images(self):
         self.visit()

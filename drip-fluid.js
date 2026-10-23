@@ -718,11 +718,6 @@ SOFTWARE.
             render(0);
             canvas.classList.add('is-ready');
             canvas.dataset.fluid = 'ready';
-            experience.registerFrameCapture(container, () => {
-                if (!running || !artworkReady) throw new Error('Artwork is not ready');
-                paintArtwork();
-                return canvas;
-            });
             experience.createRenderLoop(render, container);
         }
         if (image.complete) loadArtwork();

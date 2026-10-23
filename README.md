@@ -56,6 +56,13 @@ the homepage, RELEASES, MERCH and ABOUT / CONTACT. Add future public routes ther
 when they are ready. The temporarily unlisted sources and release drafts are
 omitted from the sitemap.
 
+Public pages have descriptive search titles and descriptions. The homepage's
+JSON-LD identifies Second Source as both the website and its publisher, an
+independent record label in Oslo. It references the supplied logo, public email
+and Bandcamp page. Search appearance is managed by Google; changing this markup
+does not immediately replace previously indexed hosting content. See
+`docs/google-search.md` for the owner verification and recrawl steps.
+
 Audio seeking requires a server with HTTP byte-range support, as provided by
 GitHub Pages. Python's basic local server supports playback but not seeking.
 
@@ -126,13 +133,6 @@ artwork stays centred, with the player and controls beneath it. Its size fits th
 space left by those controls, including after mobile rotation. Leaving fullscreen
 keeps the selected mode and playback position. WHIRL, manual FLUID and silent FLOWER keep their
 framed fullscreen view.
-
-**SAVE FRAME** downloads a square PNG of the current artwork, including the
-current distortion, zoom and edge feather, without player controls. It redraws
-only the existing state before copying the WebGL canvas; capturing does not
-advance the simulation or require a persistent drawing buffer. Exports use the
-renderer's resolution, capped at 2048 px. Motion off and WebGL fallback export
-the original image. Frames are generated locally without uploading anything.
 
 **COPY LINK** copies the canonical page URL with `mode` and `t` (seconds) for
 audio pages. For example, `/?mode=visualizer&t=61.25` selects VISUALIZER and seeks

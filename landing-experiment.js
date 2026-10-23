@@ -1689,11 +1689,6 @@ if (gl) {
 
 
     if (setupGL()) {
-        window.SecondSourceExperience.registerFrameCapture(container, () => {
-            if (!glActive || !imageReady) throw new Error('Artwork is not ready');
-            gl.drawArrays(gl.TRIANGLES, 0, 6);
-            return canvas;
-        });
         window.SecondSourceExperience.createRenderLoop(render, container);
     } else {
         window.SecondSourceExperience.useStaticArtwork('whirl');

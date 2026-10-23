@@ -29,7 +29,6 @@
     const modeButtons = [...space.querySelectorAll('[data-visual-mode]')];
     const modePanels = [...space.querySelectorAll('[data-visual-panel]')];
     const unavailableModes = new Set();
-    const frameCaptures = new Map();
     const sharedParameters = new URLSearchParams(location.search);
     const sharedTime = sharedParameters.get('t');
     let pendingStartTime = audio && sharedTime !== null && /^\d+(?:\.\d{1,3})?$/.test(sharedTime) && Number.isFinite(Number(sharedTime))
@@ -570,39 +569,6 @@
         get soundAudible() { return soundAudible(); },
         get playbackTime() { return audio?.currentTime || 0; },
         get shareTime() { return pendingStartTime ?? audio?.currentTime ?? 0; },
-        registerFrameCapture(element, capture) { frameCaptures.set(element, capture); },
-        captureFrame() {
-            const panel = space.querySelector('.visual-container:not([hidden])');
-            const image = panel.querySelector('.fallback-image');
-            const canvas = panel.querySelector('canvas');
-            const animated = motionEnabled && canvas?.classList.contains('is-ready');
-            // Redraw the current state before copying: WebGL buffers need not survive compositing.
-            const source = animated ? frameCaptures.get(panel)?.() : image;
-            if (!source || (!animated && !image.naturalWidth)) throw new Error('Artwork is not ready');
-            const output = document.createElement('canvas');
-            output.width = output.height = Math.min(2048, animated ? canvas.width : image.naturalWidth);
-            const ctx = output.getContext('2d');
-            const bounds = panel.getBoundingClientRect();
-            const media = panel.querySelector('.visual-media').getBoundingClientRect();
-            const scale = output.width / bounds.width;
-            ctx.fillStyle = '#050505';
-            ctx.fillRect(0, 0, output.width, output.height);
-            ctx.drawImage(source, (media.x - bounds.x) * scale, (media.y - bounds.y) * scale,
-                media.width * scale, media.height * scale);
-            const feather = parseFloat(getComputedStyle(panel, '::after').backgroundSize) * scale;
-            if (Number.isFinite(feather) && feather > 0) {
-                for (const [x0, y0, x1, y1] of [[0, 0, feather, 0], [output.width, 0, output.width - feather, 0],
-                    [0, 0, 0, feather], [0, output.height, 0, output.height - feather]]) {
-                    const edge = ctx.createLinearGradient(x0, y0, x1, y1);
-                    for (const [stop, alpha] of [[0, 1], [.25, .84], [.5, .5], [.75, .16], [1, 0]]) {
-                        edge.addColorStop(stop, `rgba(5,5,5,${alpha})`);
-                    }
-                    ctx.fillStyle = edge;
-                    ctx.fillRect(0, 0, output.width, output.height);
-                }
-            }
-            return output;
-        },
         get secondsPerBar() {
             const bpm = Number(audio?.dataset.bpm);
             const beats = Number(audio?.dataset.beatsPerBar || 4);

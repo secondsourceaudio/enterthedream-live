@@ -44,8 +44,8 @@ def main():
     html = html.replace('<audio ', '<audio crossorigin="anonymous" ')
     for route in ['', 'releases/', 'merch/', 'sources/', 'about/']:
         html = html.replace(f'href="/{route}"', f'href="{LIVE}{route}"')
-    html = html.replace('<title>SECOND SOURCE</title>',
-        '<title>SECOND SOURCE — DRIP PREVIEW</title>\n<meta name="robots" content="noindex, nofollow">')
+    html = re.sub(r'<title>.*?</title>',
+        '<title>SECOND SOURCE — DRIP PREVIEW</title>\n<meta name="robots" content="noindex, nofollow">', html, count=1)
     inline = ''
     for script in scripts:
         source = asset(script).read_text(encoding='utf-8')

@@ -1,14 +1,11 @@
-/* Local frame exports and links to a visual mode and playback position. */
+/* Share links to a visual mode and playback position. */
 (() => {
     'use strict';
     const experience = window.SecondSourceExperience;
     const space = document.querySelector('[data-experience]');
     if (!experience || !space) return;
-    const save = space.querySelector('[data-save-frame]');
     const share = space.querySelector('[data-copy-link]');
     const notice = space.querySelector('[data-tools-status]');
-    const title = space.querySelector('h1').textContent.trim();
-    const filename = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-$/, '');
     const announce = message => { notice.textContent = message; };
 
     function shareURL() {
@@ -48,29 +45,6 @@
         }
     });
 
-    save.addEventListener('click', async () => {
-        save.disabled = true;
-        announce('Saving frame…');
-        try {
-            const canvas = experience.captureFrame();
-            const blob = await new Promise((resolve, reject) => canvas.toBlob(
-                value => value ? resolve(value) : reject(new Error('PNG export failed')), 'image/png'));
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            const mode = experience.visualMode || 'fluid';
-            link.href = url;
-            link.download = `second-source-${filename}-${mode}-${Date.now()}.png`;
-            document.body.append(link);
-            link.click();
-            link.remove();
-            window.setTimeout(() => URL.revokeObjectURL(url), 60000);
-            announce('Frame saved.');
-        } catch {
-            announce('Frame could not be saved. Please try again once the artwork is ready.');
-        } finally {
-            save.disabled = false;
-        }
-    });
     if (space.querySelector('audio') && experience.shareTime > 0) {
         const seconds = Math.floor(experience.shareTime);
         announce(`Ready at ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}. Press play to start.`);
