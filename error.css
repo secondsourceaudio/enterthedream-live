@@ -1,0 +1,12 @@
+/* A quiet way back from an unavailable address. */
+.error-page { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 72px 20px 88px; text-align: center; }
+.error-code { margin: 0 0 28px; color: #ddd; font-size: clamp(76px, 12vw, 140px); line-height: 1; letter-spacing: .06em; }
+.error-page h1 { margin: 0; font-size: 16px; line-height: 1.8; letter-spacing: .18em; }
+.error-message { margin: 16px 0 28px; color: #aaa; font: 16px/1.8 Arial, Helvetica, sans-serif; }
+.error-return { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 6px; color: #eee; font-size: var(--font-label); letter-spacing: .16em; text-decoration: none; border-bottom: 1px solid #888; }
+.error-return:hover { color: #fff; border-color: #fff; }
+.error-return:focus-visible { outline: 1px solid #eee; outline-offset: 5px; }
+@media (max-width: 750px) {
+    .error-page { padding: 56px 20px 64px; }
+    .error-page h1 { font-size: 14px; }
+}

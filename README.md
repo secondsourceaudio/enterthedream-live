@@ -46,6 +46,16 @@ and fragments in JavaScript, with a no-JavaScript refresh fallback.
 destinations. The homepage uses `/`; opening `/index.html` normalizes that URL.
 Page assets use root-relative URLs, and the file-preview builder embeds them.
 
+GitHub Pages serves `404.html` for unavailable addresses, with a RETURN link to
+the homepage. Its assets use root-relative paths so nested missing URLs also
+work. Python's basic server can preview it at `/404.html` but does not use it
+automatically for missing addresses.
+
+`robots.txt` advertises `sitemap.xml`, which lists the four public destinations:
+the homepage, RELEASES, MERCH and ABOUT / CONTACT. Add future public routes there
+when they are ready. The temporarily unlisted sources and release drafts are
+omitted from the sitemap.
+
 Audio seeking requires a server with HTTP byte-range support, as provided by
 GitHub Pages. Python's basic local server supports playback but not seeking.
 
