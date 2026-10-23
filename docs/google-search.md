@@ -7,6 +7,15 @@ canonical HTTPS URLs and social metadata. The homepage includes `WebSite` and
 `robots.txt` advertises the sitemap of public pages. Google does not use a
 `keywords` meta tag for indexing or ranking.
 
+The homepage description is: “Second Source is an independent record label based
+in Oslo, Norway. Music, releases, visual experiments and merch.” The same wording
+is used in its social descriptions and `WebSite` structured data. Its player
+dock, information dialog contents and legal footer contents use `data-nosnippet`
+on `div` elements so controls, instructions and copyright notices are excluded
+from Google's text snippets. This leaves the page indexable and its interface
+unchanged. Google still chooses the final snippet and must recrawl the page to
+pick up these settings.
+
 ## Replace the old LiteSpeed listing
 
 1. Open [Google Search Console](https://search.google.com/search-console/welcome)
@@ -36,5 +45,7 @@ days to weeks.
 
 - [Site names](https://developers.google.com/search/docs/appearance/site-names)
 - [Titles in search results](https://developers.google.com/search/docs/appearance/title-link)
+- [Search snippets and descriptions](https://developers.google.com/search/docs/appearance/snippet)
+- [Exclude specific text with data-nosnippet](https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag#data-nosnippet-attr)
 - [Supported meta tags](https://developers.google.com/search/docs/crawling-indexing/special-tags)
 - [Request a recrawl](https://developers.google.com/search/docs/crawling-indexing/ask-google-to-recrawl)

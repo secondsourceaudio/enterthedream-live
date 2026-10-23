@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#050505">
-    <meta name="description" content="Second Source is an independent record label based in Oslo, Norway. Explore music, releases, visual experiments and merch at enterthedream.org.">
+    <meta name="description" content="Second Source is an independent record label based in Oslo, Norway. Music, releases, visual experiments and merch.">
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=1" sizes="16x16 32x32 48x48">
     <link rel="icon" type="image/png" href="/favicon-32x32.png?v=1" sizes="32x32">
     <link rel="icon" type="image/png" href="/favicon-192x192.png?v=1" sizes="192x192">
@@ -23,7 +23,7 @@
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Second Source">
     <meta property="og:title" content="Second Source — Independent Record Label, Oslo">
-    <meta property="og:description" content="Second Source is an independent record label based in Oslo, Norway. Explore music, releases, visual experiments and merch at enterthedream.org.">
+    <meta property="og:description" content="Second Source is an independent record label based in Oslo, Norway. Music, releases, visual experiments and merch.">
     <meta property="og:url" content="https://www.enterthedream.org/">
     <meta property="og:image" content="https://www.enterthedream.org/images/share/second-source.png?v=1">
     <meta property="og:image:type" content="image/png">
@@ -32,7 +32,7 @@
     <meta property="og:image:alt" content="SRC mark and Second Source. An independent record label based in Oslo, Norway.">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Second Source — Independent Record Label, Oslo">
-    <meta name="twitter:description" content="Second Source is an independent record label based in Oslo, Norway. Explore music, releases, visual experiments and merch at enterthedream.org.">
+    <meta name="twitter:description" content="Second Source is an independent record label based in Oslo, Norway. Music, releases, visual experiments and merch.">
     <meta name="twitter:image" content="https://www.enterthedream.org/images/share/second-source.png?v=1">
     <meta name="twitter:image:alt" content="SRC mark and Second Source. An independent record label based in Oslo, Norway.">
     <script type="application/ld+json">
@@ -71,7 +71,7 @@
                 "enterthedream.org"
             ],
             "url": "https://www.enterthedream.org/",
-            "description": "Second Source is an independent record label based in Oslo, Norway. Explore music, releases, visual experiments and merch at enterthedream.org.",
+            "description": "Second Source is an independent record label based in Oslo, Norway. Music, releases, visual experiments and merch.",
             "inLanguage": "en",
             "publisher": {
                 "@id": "https://www.enterthedream.org/#organization"
@@ -107,7 +107,7 @@
                     <canvas id="fluid-visual" class="visual-canvas" aria-hidden="true"></canvas>
                 </div>
             </div>
-            <div class="visualizer-dock" data-visualizer-dock>
+            <div class="visualizer-dock" data-visualizer-dock data-nosnippet>
                 <div class="compact-player" role="group" aria-labelledby="player-track-title">
                     <div class="player-titlebar" aria-hidden="true"><img class="player-brand-mark" src="/images/brand/src-icon-512.png" width="512" height="512" alt=""><span class="player-catalogue">SRC001 / DRIP</span><span class="player-state" data-player-state>STOPPED</span></div>
                     <div class="player-display">
@@ -152,38 +152,42 @@
                 <source src="/audio/sage-counsel.mp3" type="audio/mpeg">
             </audio>
             <dialog id="experience-info" class="experience-info" aria-labelledby="info-title">
-                <p class="info-number">STUDY 01</p>
-                <div class="info-heading">
-                    <h2 id="info-title">DRIP</h2>
-                    <button class="experience-button" type="button" data-close-info aria-label="Close information">CLOSE</button>
+                <div data-nosnippet>
+                    <p class="info-number">STUDY 01</p>
+                    <div class="info-heading">
+                        <h2 id="info-title">DRIP</h2>
+                        <button class="experience-button" type="button" data-close-info aria-label="Close information">CLOSE</button>
+                    </div>
+                    <p data-copy-slot="drip-description">An interactive visual experiment made for Drip.</p>
+                    <p data-copy-slot="drip-notes">Click around.</p>
+                    <dl>
+                        <dt>SOUND</dt><dd>SAGE COUNSEL</dd>
+                        <dt>PROJECT</dt><dd>SECOND SOURCE AUDIO<span class="info-project-description">Music, images and audiovisual experiments.</span><a class="info-project-link" href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP ↗</a></dd>
+                        <dt>CONTROLS</dt><dd><span data-mode-controls="whirl">Click or tap for ripples · Hold to build a whirlpool<br>Drag to stir · Pinch to zoom<br>Hold right-click or RETURN for a faster return</span><span data-mode-controls="fluid" hidden>Drag to move the image · Hold to stir<br>Hold right-click or RETURN to settle<br>Reset to restore the original image<br>VISUALIZER: automatic random flow, shaped by the music</span><br>Escape to leave fullscreen</dd>
+                        <dt>KEYBOARD</dt><dd>P — Play / pause<br>M — Mute<br>F — Fullscreen</dd>
+                    </dl>
+                    <button class="experience-button info-modifier" type="button" data-shortcuts-toggle aria-pressed="true">KEYBOARD SHORTCUTS / ON</button>
+                    <button class="experience-button info-modifier" type="button" data-glitch-toggle data-mode-controls="whirl" aria-pressed="false" aria-label="SRC_GLITCH: off">SRC_GLITCH / OFF</button>
                 </div>
-                <p data-copy-slot="drip-description">An interactive visual experiment made for Drip.</p>
-                <p data-copy-slot="drip-notes">Click around.</p>
-                <dl>
-                    <dt>SOUND</dt><dd>SAGE COUNSEL</dd>
-                    <dt>PROJECT</dt><dd>SECOND SOURCE AUDIO<span class="info-project-description">Music, images and audiovisual experiments.</span><a class="info-project-link" href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP ↗</a></dd>
-                    <dt>CONTROLS</dt><dd><span data-mode-controls="whirl">Click or tap for ripples · Hold to build a whirlpool<br>Drag to stir · Pinch to zoom<br>Hold right-click or RETURN for a faster return</span><span data-mode-controls="fluid" hidden>Drag to move the image · Hold to stir<br>Hold right-click or RETURN to settle<br>Reset to restore the original image<br>VISUALIZER: automatic random flow, shaped by the music</span><br>Escape to leave fullscreen</dd>
-                    <dt>KEYBOARD</dt><dd>P — Play / pause<br>M — Mute<br>F — Fullscreen</dd>
-                </dl>
-                <button class="experience-button info-modifier" type="button" data-shortcuts-toggle aria-pressed="true">KEYBOARD SHORTCUTS / ON</button>
-                <button class="experience-button info-modifier" type="button" data-glitch-toggle data-mode-controls="whirl" aria-pressed="false" aria-label="SRC_GLITCH: off">SRC_GLITCH / OFF</button>
             </dialog>
         </section>
     </main>
     <footer class="legal-footer">
-        <p class="site-updates"><span>RELEASE / MERCH UPDATES</span><span class="site-updates-signup" data-newsletter-signup>MAILING LIST / SOON</span></p>
+        <div data-nosnippet>
+            <p class="site-updates"><span>RELEASE / MERCH UPDATES</span><span class="site-updates-signup" data-newsletter-signup>MAILING LIST / SOON</span></p>
 
-        <p class="copyright-line">
-            <span class="copyright-symbol">©</span> 2026 SECOND SOURCE AUDIO. ALL RIGHTS RESERVED.
-        </p>
+            <p class="copyright-line">
+                <span class="copyright-symbol">©</span> 2026 SECOND SOURCE AUDIO. ALL RIGHTS RESERVED.
+            </p>
 
-        <p class="legal-line">
-            ALL MUSIC, ARTWORK, IMAGES, TEXT, GRAPHIC DESIGN AND OTHER ORIGINAL CONTENT
-            ON THIS WEBSITE ARE PROTECTED BY COPYRIGHT. NO REPRODUCTION, DISTRIBUTION,
-            MODIFICATION OR COMMERCIAL USE WITHOUT PRIOR WRITTEN PERMISSION,
-            EXCEPT AS PERMITTED BY LAW.
-        </p>
+            <p class="legal-line">
+                ALL MUSIC, ARTWORK, IMAGES, TEXT, GRAPHIC DESIGN AND OTHER ORIGINAL CONTENT
+                ON THIS WEBSITE ARE PROTECTED BY COPYRIGHT. NO REPRODUCTION, DISTRIBUTION,
+                MODIFICATION OR COMMERCIAL USE WITHOUT PRIOR WRITTEN PERMISSION,
+                EXCEPT AS PERMITTED BY LAW.
+            </p>
 
+        </div>
     </footer>
 </body>
 </html>
