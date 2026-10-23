@@ -12,9 +12,12 @@ canonical HTTPS URLs and social metadata. The homepage includes `WebSite` and
 1. Open [Google Search Console](https://search.google.com/search-console/welcome)
    using the Google account that should manage the label's search presence.
 2. Add the **URL prefix** `https://www.enterthedream.org/`.
-3. Choose **HTML tag** verification. Add the exact tag Google provides to the
-   homepage's `<head>` in `index.html`, and rebuild `preview.html`. Publish, then
-   select **Verify** in Search Console. Never invent a verification token.
+3. Choose **HTML file** verification. The owner's supplied file
+   `googlec09c60a1ba012786.html` is published unchanged at
+   `https://www.enterthedream.org/googlec09c60a1ba012786.html`. Select **Verify**
+   in Search Console. Keep the file published after verification so Google can
+   continue checking ownership. For a different property or owner, use the exact
+   file Google supplies; never invent a verification token.
 4. Inspect `https://www.enterthedream.org/` with **URL Inspection**. Use **Test
    Live URL** to confirm Google receives the current Second Source page. If it
    still receives a LiteSpeed directory listing, resolve the hosting or domain
