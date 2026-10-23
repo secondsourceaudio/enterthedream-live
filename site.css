@@ -426,8 +426,3 @@ main { animation: scene-arrive .6s ease both; }
     main { animation: none; }
     .site-nav a, .site-nav a::after, .site-logo { transition: none; }
 }
-
-@media (hover: hover) and (pointer: fine) {
-    body { cursor: url("images/interface/src-drop.svg") 12 2, auto; }
-    a[href], button:not(:disabled), summary { cursor: pointer; }
-}

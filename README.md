@@ -116,9 +116,8 @@ layout so dragging does not interfere with scrolling or artwork gestures.
 DRIP image. Its four labelled hotspots lead to RELEASES, MERCH, ABOUT / CONTACT
 and the otherwise unlisted FLOWER page. The ASCII SRC in INDEX toggles the
 artwork's colour polarity for the current visit. Another ASCII mark is in the
-homepage source. Mouse users get a small drop-shaped cursor across the site and
-over manual WHIRL / FLUID artwork, with the normal hand on links and buttons;
-VISUALIZER keeps its automatic behaviour. Skin and polarity
+homepage source. Mouse users get a small custom crosshair over manual WHIRL /
+FLUID artwork; VISUALIZER keeps its automatic behaviour. Skin and polarity
 changes announce their state without starting sound. Without JavaScript the
 extra buttons stay hidden and the existing navigation remains available.
 

@@ -114,7 +114,7 @@
 @media (hover: hover) and (pointer: fine) {
     :is(.landing-study, .has-continuous-player) [data-active-visual="whirl"] [data-visual-panel="whirl"],
     :is(.landing-study, .has-continuous-player) [data-active-visual="fluid"] [data-visual-panel="fluid"],
-    .src-image-map { cursor: url("images/interface/src-drop.svg") 12 2, crosshair; }
+    .src-image-map { cursor: url("images/interface/src-crosshair.svg") 12 12, crosshair; }
 }
 @media (max-width: 360px) {
     :is(.landing-study, .has-continuous-player) .player-controls { gap: 6px; }
