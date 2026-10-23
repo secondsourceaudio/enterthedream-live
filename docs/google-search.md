@@ -10,8 +10,8 @@ canonical HTTPS URLs and social metadata. The homepage includes `WebSite` and
 The homepage description is: “Second Source is an independent record label based
 in Oslo, Norway. Find our releases alongside images, audiovisual work and other
 things to explore.” The same wording is used in its social descriptions and
-`WebSite` structured data. Its player
-dock, information dialog contents and legal footer contents use `data-nosnippet`
+`WebSite` structured data. Its player dock, information dialog contents and legal
+footer contents use `data-nosnippet`
 on `div` elements so controls, instructions and copyright notices are excluded
 from Google's text snippets. This leaves the page indexable and its interface
 unchanged. Google still chooses the final snippet and must recrawl the page to
@@ -41,6 +41,26 @@ Search Console verification and indexing requests require the owner's account.
 Google decides when to recrawl and what title, snippet and site name to display;
 these changes do not guarantee a particular search position. Crawling may take
 days to weeks.
+
+## Searches for Second Source Audio
+
+The homepage and ABOUT / CONTACT titles use **Second Source Audio** to associate
+that full name with this domain. The visible label name remains **Second Source**;
+the homepage's `Organization` and `WebSite` structured data already include
+**Second Source Audio** as an alternate name. Keep the approved homepage
+description consistent across metadata rather than adding repeated keywords.
+
+On the label's Bandcamp and official social profiles, add a website link to
+`https://www.enterthedream.org/` if it is missing. Use the actual label name
+consistently on those profiles. Links from genuine artist, distributor and release
+pages can also help people and search engines discover the site. These external
+edits need access to those accounts; they are not part of this repository.
+
+After publication, request indexing for the homepage and ABOUT / CONTACT, then
+use Search Console's Performance report to monitor the query “Second Source
+Audio” once data is available. Being indexed does not guarantee visibility near
+the top of results. Do not promise an immediate ranking change or repeatedly
+submit the same unchanged URL.
 
 ## References
 
