@@ -97,6 +97,30 @@ against the dark background. Page headings keep their existing scale.
 
 ## Listening and viewing
 
+The homepage has four player skins: **Graphite / Chrome / Cobalt / Amber**.
+Select **SKIN** in the player to cycle through them. Only the skin is remembered
+locally; changing it preserves playback, volume and the current visual mode.
+These details are in `src-desktop.js` and `src-desktop.css`, loaded only on the
+homepage. They do not change the audio analysis or the fluid/whirl renderers.
+
+With a mouse, drag the player's title bar to detach and position the original
+player. Its space stays reserved so the artwork and other controls do not jump.
+Double-click the title bar, press Home while it is focused, or select the small
+dock arrow to return it. Focus a window heading and use arrow keys to move it
+(Shift moves farther). INFO and INDEX can also be moved by their headings.
+Windows stay within the viewport, re-centre on close, and return to their default
+positions when entering or leaving fullscreen. Touch screens keep the normal
+layout so dragging does not interfere with scrolling or artwork gestures.
+
+**INDEX**, beside COPY LINK, opens a compact image map made from an existing
+DRIP image. Its four labelled hotspots lead to RELEASES, MERCH, ABOUT / CONTACT
+and the otherwise unlisted FLOWER page. The ASCII SRC in INDEX toggles the
+artwork's colour polarity for the current visit. Another ASCII mark is in the
+homepage source. Mouse users get a small custom crosshair over manual WHIRL /
+FLUID artwork; VISUALIZER keeps its automatic behaviour. Skin and polarity
+changes announce their state without starting sound. Without JavaScript the
+extra buttons stay hidden and the existing navigation remains available.
+
 The homepage starts in **WHIRL**. Select **FLUID** to use the fluid study with the
 same DRIP artwork. **VISUALIZER** uses the fluid renderer with automatic,
 random currents while the track plays audibly. Select Play to start the flow.

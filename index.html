@@ -1,4 +1,13 @@
 <!DOCTYPE html>
+<!--
+ ____  ____   ____
+/ ___||  _ \ / ___|
+\___ \| |_) | |
+ ___) |  _ <| |___
+|____/|_| \_\\____|
+SECOND SOURCE / AUDIO + VISUAL
+The little SRC in INDEX has another side.
+-->
 <html lang="en" class="experience-page">
 <head>
     <meta charset="UTF-8">
@@ -13,12 +22,14 @@
     <link rel="stylesheet" href="/site.css?v=9">
     <link rel="stylesheet" href="/new.css?v=32">
     <link rel="stylesheet" href="/experience.css?v=16">
+    <link rel="stylesheet" href="/src-desktop.css?v=1">
     <script src="/site.js?v=3" defer></script>
     <link rel="preload" as="image" href="/images/drip_cover_front_2.webp">
     <script src="/experience.js?v=16" defer></script>
     <script src="/landing-experiment.js?v=26" defer></script>
     <script src="/drip-fluid.js?v=15" defer></script>
     <script src="/experience-tools.js?v=2" defer></script>
+    <script src="/src-desktop.js?v=1" defer></script>
     <link rel="canonical" href="https://www.enterthedream.org/">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Second Source">
@@ -109,7 +120,7 @@
             </div>
             <div class="visualizer-dock" data-visualizer-dock data-nosnippet>
                 <div class="compact-player" role="group" aria-labelledby="player-track-title">
-                    <div class="player-titlebar" aria-hidden="true"><img class="player-brand-mark" src="/images/brand/src-icon-512.png" width="512" height="512" alt=""><span class="player-catalogue">SRC001 / DRIP</span><span class="player-state" data-player-state>STOPPED</span></div>
+                    <div class="player-titlebar" data-player-handle><img class="player-brand-mark" src="/images/brand/src-icon-512.png" width="512" height="512" alt=""><span class="player-catalogue">SRC001 / DRIP</span><span class="player-state" data-player-state>STOPPED</span><button class="src-window-dock" type="button" data-dock-player aria-label="Dock player" title="Dock player" hidden>↙</button></div>
                     <div class="player-display">
                         <div class="player-spectrum" data-spectrum aria-hidden="true"></div>
                         <div class="player-readout">
@@ -123,6 +134,7 @@
                     <div class="player-controls">
                         <button class="experience-button player-button" type="button" data-sound data-compact-sound aria-pressed="false" aria-label="Play Sage Counsel" title="Play Sage Counsel"><span data-play-symbol data-state="play" aria-hidden="true"><svg class="transport-play" viewBox="0 0 16 16"><path d="M5 3 13 8 5 13Z"/></svg><svg class="transport-pause" viewBox="0 0 16 16"><path d="M4 3h3v10H4zm5 0h3v10H9z"/></svg><svg class="transport-loading" viewBox="0 0 16 16"><circle cx="3" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="13" cy="8" r="1.5"/></svg></span></button>
                         <button class="experience-button sound-button" type="button" data-mute aria-pressed="false" aria-label="Mute" title="Mute"><span data-mute-symbol data-state="sound" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2 6h3l4-3v10l-4-3H2Z"/><path class="speaker-waves" d="M11 5q3 3 0 6m2-8q5 5 0 10" fill="none" stroke="currentColor" stroke-width="1.2"/><path class="speaker-muted" d="m11 6 4 4m0-4-4 4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></span></button>
+                        <button class="experience-button src-skin-button" type="button" data-skin-cycle data-src-enhancement hidden>SKIN</button>
                         <input class="volume-slider" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="Volume" data-volume>
                         <output class="volume-percent" data-volume-output aria-hidden="true">35%</output>
                     </div>
@@ -143,6 +155,7 @@
                 <div class="experience-tools">
                     <div class="experience-tools-buttons">
                         <button class="experience-button" type="button" data-copy-link>COPY LINK</button>
+                        <button class="experience-button" type="button" data-open-index data-src-enhancement aria-haspopup="dialog" aria-controls="src-index" hidden>INDEX</button>
                     </div>
                     <p class="experience-tools-status" role="status" data-tools-status></p>
                 </div>
@@ -154,9 +167,9 @@
             <dialog id="experience-info" class="experience-info" aria-labelledby="info-title">
                 <div data-nosnippet>
                     <p class="info-number">STUDY 01</p>
-                    <div class="info-heading">
+                    <div class="info-heading" data-info-handle>
                         <h2 id="info-title">DRIP</h2>
-                        <button class="experience-button" type="button" data-close-info aria-label="Close information">CLOSE</button>
+                        <button class="experience-button" type="button" data-close-info autofocus aria-label="Close information">CLOSE</button>
                     </div>
                     <p data-copy-slot="drip-description">An interactive visual experiment made for Drip.</p>
                     <p data-copy-slot="drip-notes">Click around.</p>
@@ -166,8 +179,35 @@
                         <dt>CONTROLS</dt><dd><span data-mode-controls="whirl">Click or tap for ripples · Hold to build a whirlpool<br>Drag to stir · Pinch to zoom<br>Hold right-click or RETURN for a faster return</span><span data-mode-controls="fluid" hidden>Drag to move the image · Hold to stir<br>Hold right-click or RETURN to settle<br>Reset to restore the original image<br>VISUALIZER: automatic random flow, shaped by the music</span><br>Escape to leave fullscreen</dd>
                         <dt>KEYBOARD</dt><dd>P — Play / pause<br>M — Mute<br>F — Fullscreen</dd>
                     </dl>
+                    <div class="src-window-help" data-src-enhancement hidden>
+                        <p>Drag the player title bar or this window heading to move it. Double-click to return it. With the heading focused, use arrow keys to move and Home to return.</p>
+                        <p>SKIN cycles Graphite / Chrome / Cobalt / Amber.</p>
+                    </div>
                     <button class="experience-button info-modifier" type="button" data-shortcuts-toggle aria-pressed="true">KEYBOARD SHORTCUTS / ON</button>
                     <button class="experience-button info-modifier" type="button" data-glitch-toggle data-mode-controls="whirl" aria-pressed="false" aria-label="SRC_GLITCH: off">SRC_GLITCH / OFF</button>
+                </div>
+            </dialog>
+            <dialog id="src-index" class="experience-info src-index" aria-labelledby="src-index-title">
+                <div data-nosnippet>
+                    <div class="info-heading" data-index-handle>
+                        <h2 id="src-index-title">SRC / INDEX</h2>
+                        <button class="experience-button" type="button" data-close-index autofocus aria-label="Close index">CLOSE</button>
+                    </div>
+                    <button class="src-ascii-switch" type="button" data-alternate-state aria-label="Invert artwork colours" aria-pressed="false" title="Switch signal polarity">
+                        <span class="src-ascii-logo" aria-hidden="true"> ____  ____   ____
+/ ___||  _ \ / ___|
+\___ \| |_) | |
+ ___) |  _ &lt;| |___
+|____/|_| \_\\____|</span>
+                    </button>
+                    <div class="src-image-map" role="group" aria-label="Visual index">
+                        <img src="/images/src001/inner_back_2.webp" width="3200" height="3200" alt="Reflective blue forms with routes into Second Source" loading="lazy" decoding="async" draggable="false">
+                        <a class="src-map-node src-map-record" href="/releases/" data-map-label="01 / RELEASES"><span class="src-map-point" aria-hidden="true">+</span><span>01 / RELEASES</span></a>
+                        <a class="src-map-node src-map-merch" href="/merch/" data-map-label="02 / MERCH"><span class="src-map-point" aria-hidden="true">+</span><span>02 / MERCH</span></a>
+                        <a class="src-map-node src-map-about" href="/about/" data-map-label="03 / ABOUT / CONTACT"><span class="src-map-point" aria-hidden="true">+</span><span>03 / ABOUT</span></a>
+                        <a class="src-map-node src-map-flower" href="/sources/flower/" data-map-label="04 / FLOWER"><span class="src-map-point" aria-hidden="true">✳</span><span>04 / FLOWER</span></a>
+                    </div>
+                    <div class="src-index-readout" aria-hidden="true"><span data-index-status>SELECT A ROUTE</span><span data-polarity-status>POLARITY / +</span></div>
                 </div>
             </dialog>
         </section>
