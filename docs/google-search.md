@@ -8,7 +8,7 @@ canonical HTTPS URLs and social metadata. The homepage includes `WebSite` and
 `keywords` meta tag for indexing or ranking.
 
 The homepage description is: “Second Source is an independent record label based
-in Oslo, Norway. Music, releases, visual experiments and merch.” The same wording
+in Oslo, Norway. Audio and visuals.” The same wording
 is used in its social descriptions and `WebSite` structured data. Its player
 dock, information dialog contents and legal footer contents use `data-nosnippet`
 on `div` elements so controls, instructions and copyright notices are excluded
