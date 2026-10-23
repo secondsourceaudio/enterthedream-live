@@ -2094,7 +2094,7 @@ class WebsiteTests(unittest.TestCase):
 
     def test_releases_navigation_shows_release_information(self):
         self.visit()
-        expect(self.page.locator('.site-nav a')).to_have_text(['RELEASES', 'MERCH', 'SOURCES', 'ABOUT / CONTACT', 'BANDCAMP'])
+        expect(self.page.locator('.site-nav a')).to_have_text(['RELEASES', 'MERCH', 'ABOUT / CONTACT', 'BANDCAMP'])
         self.page.locator('.site-nav').get_by_role('link', name='RELEASES').click()
         self.page.wait_for_url('**/releases/')
         expect(self.page.locator('h1')).to_have_text('RELEASES')
@@ -2115,10 +2115,9 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('h1')).to_have_text('RELEASES')
         expect(self.page.locator('.archive, #gallery-viewer, a[href*="gallery.html"]')).to_have_count(0)
 
-    def test_sources_navigation_transitions_and_back(self):
-        self.visit()
-        self.page.locator('.site-nav').get_by_role('link', name='SOURCES').click()
-        self.page.wait_for_url('**/sources/')
+    def test_unlisted_sources_and_flower_keep_direct_links_and_back_navigation(self):
+        self.visit('experiments.html')
+        expect(self.page.locator('.site-nav a[href="/sources/"]')).to_have_count(0)
         expect(self.page.locator('h1')).to_have_text('SOURCES')
         expect(self.page.locator('meta[name="robots"]')).to_have_count(0)
         expect(self.page.locator(".study-card")).to_have_count(1)

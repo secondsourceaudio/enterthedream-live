@@ -12,8 +12,8 @@ python3 -m http.server 8000
 ```
 
 Open the local server in your browser. The homepage is DRIP, with a WHIRL / FLUID / VISUALIZER
-switch. **SOURCES** in the top navigation opens `/sources/`, which lists
-only FLOWER. `/sources/flower/` is the public, silent FLOWER fluid source,
+switch. **SOURCES** is temporarily omitted from the top navigation. `/sources/` lists
+only FLOWER and remains available by direct link. `/sources/flower/` is the silent FLOWER fluid source,
 using the yellow and black gallery photograph.
 **RELEASES** opens `/releases/`, which shows SRC001 / DRIP with its static
 cover, artist, title, release description and LP/label information. Distribution
@@ -294,5 +294,6 @@ Reduced motion shows the original photograph
 on FLOWER until motion is enabled. The homepage artwork has no visible title or
 instruction overlay.
 
-INTERFERENCE and its vector fallback have been removed. SOURCES and FLOWER are
-public; the release draft and the standalone DRIP fluid URL remain unlisted.
+INTERFERENCE and its vector fallback have been removed. SOURCES and FLOWER remain
+accessible by direct link while SOURCES is temporarily absent from the navigation.
+The release draft and the standalone DRIP fluid URL also remain unlisted.
