@@ -183,6 +183,8 @@ On desktop, the player and controls sit beneath it and the artwork fits the
 remaining space. Both layouts adapt to rotation. Leaving fullscreen
 keeps the selected mode and playback position. WHIRL, manual FLUID and silent FLOWER keep their
 framed fullscreen view.
+The in-page fallback stays inside the browser window, where the browser's own
+address and status bars can remain visible.
 
 **COPY LINK** copies the canonical page URL with `mode` and `t` (seconds) for
 audio pages. For example, `/?mode=visualizer&t=61.25` selects VISUALIZER and seeks
@@ -218,7 +220,9 @@ FLUID keeps its original feel and range. Selecting VISUALIZER before Play
 shows a still image. Pausing, muting, setting volume to zero or buffering freezes
 the current image and simulation; audible playback resumes from that state. Mouse hover and drag never stir VISUALIZER. FLOWER remains silent.
 
-In fullscreen VISUALIZER, controls fade after 3.2 seconds of inactivity. Move the
+Mobile fullscreen VISUALIZER starts with controls hidden and focus on the artwork.
+Touch the screen or use the keyboard to reveal them. Once shown, controls fade
+after 3.2 seconds of inactivity. On desktop, move the
 pointer, touch the screen or use the keyboard to reveal them. Controls stay
 visible while hovered or focused with the keyboard, and while INFO is open.
 Use Exit fullscreen or Escape to return. VISUALIZER runs when explicitly selected

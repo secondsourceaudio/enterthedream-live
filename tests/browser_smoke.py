@@ -1621,8 +1621,14 @@ class WebsiteTests(unittest.TestCase):
                 try:
                     page = context.new_page()
                     page.on('pageerror', lambda error: self.errors.append(str(error)))
+                    playing = width == 375
+                    if playing:
+                        serve_seekable_audio(page)
                     page.goto(BASE_URL + '/', wait_until='networkidle')
                     page.evaluate('document.fonts.ready')
+                    if playing:
+                        page.locator('[data-sound]').tap()
+                        page.wait_for_function('!document.querySelector("audio").paused && document.querySelector("audio").currentTime > .1')
                     if fallback:
                         page.locator('[data-experience]').evaluate('e => { e.requestFullscreen = undefined; }')
                     page.locator('[data-visual-mode="visualizer"]').tap()
@@ -1630,6 +1636,7 @@ class WebsiteTests(unittest.TestCase):
                     normal_width = art.bounding_box()['width']
                     page.locator('[data-fullscreen]').tap()
                     expect(page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'true')
+                    self.assertEqual(page.locator('[data-visualizer-dock]').evaluate('e => getComputedStyle(e).pointerEvents'), 'none')
                     page.wait_for_function('''normal => {
                         const r = document.querySelector('#fluid-container').getBoundingClientRect();
                         return r.width >= normal && r.width <= Math.min(innerWidth, innerHeight) + 1;
@@ -1640,9 +1647,9 @@ class WebsiteTests(unittest.TestCase):
                     self.assertAlmostEqual(full['y'] + full['height'] / 2, height / 2, delta=1)
                     self.assertGreaterEqual(full['x'], 0)
                     self.assertGreaterEqual(full['y'], 0)
-                    page.wait_for_function('getComputedStyle(document.querySelector("[data-visualizer-dock]")).opacity === "0"')
+                    page.wait_for_function('getComputedStyle(document.querySelector("[data-visualizer-dock]")).opacity === "0"', timeout=2000)
                     self.assertAlmostEqual(art.bounding_box()['width'], full['width'], delta=1)
-                    self.assertTrue(page.locator('audio').evaluate('a => a.paused'))
+                    self.assertEqual(page.locator('audio').evaluate('a => a.paused'), not playing)
                     if width == 320:
                         page.set_viewport_size({'width': height, 'height': width})
                         page.wait_for_function('''() => {
@@ -1656,10 +1663,17 @@ class WebsiteTests(unittest.TestCase):
                     page.touchscreen.tap(width / 2, height / 2)
                     page.wait_for_function('getComputedStyle(document.querySelector("[data-visualizer-dock]")).opacity === "1"')
                     self.assertAlmostEqual(art.bounding_box()['width'], full['width'], delta=1)
-                    self.assertTrue(page.locator('audio').evaluate('a => a.paused'))
+                    self.assertEqual(page.locator('audio').evaluate('a => a.paused'), not playing)
                     page.locator('[data-fullscreen]').tap()
                     expect(page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'false')
                     self.assertFalse(page.locator('.site-header').evaluate('e => e.inert'))
+                    if width == 568:
+                        page.locator('[data-fullscreen]').tap()
+                        self.assertEqual(page.locator('[data-visualizer-dock]').evaluate('e => getComputedStyle(e).pointerEvents'), 'none')
+                        page.keyboard.press('Tab')
+                        page.wait_for_function('getComputedStyle(document.querySelector("[data-visualizer-dock]")).opacity === "1"')
+                        page.keyboard.press('Escape')
+                        expect(page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'false')
                 finally:
                     context.close()
 

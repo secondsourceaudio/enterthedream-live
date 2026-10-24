@@ -27,6 +27,7 @@
     const status = space.querySelector("[data-status]");
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     const hoverPointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const compactScreen = window.matchMedia("(max-width: 750px), (pointer: coarse)");
     const modeButtons = [...space.querySelectorAll('[data-visual-mode]')];
     const modePanels = [...space.querySelectorAll('[data-visual-panel]')];
     const unavailableModes = new Set();
@@ -425,6 +426,10 @@
         status.textContent = glitchEnabled ? "SRC_GLITCH enabled." : "SRC_GLITCH disabled.";
     });
 
+    function hideVisualizerControls() {
+        window.clearTimeout(controlsTimer);
+        space.classList.add('visualizer-idle');
+    }
     function revealVisualizerControls() {
         window.clearTimeout(controlsTimer);
         space.classList.remove('visualizer-idle');
@@ -435,7 +440,7 @@
                 revealVisualizerControls();
                 return;
             }
-            space.classList.add('visualizer-idle');
+            hideVisualizerControls();
         }, 3200);
     }
     function fitVisualizer() {
@@ -448,11 +453,20 @@
     window.addEventListener('resize', fitVisualizer);
     if (visualizerDock) new ResizeObserver(fitVisualizer).observe(visualizerDock);
     function updateVisualizer() {
-        space.classList.toggle('is-visualizer', immersive && visualMode === 'visualizer');
+        const enabled = immersive && visualMode === 'visualizer';
+        const entering = enabled && !space.classList.contains('is-visualizer');
+        space.classList.toggle('is-visualizer', enabled);
         fitVisualizer();
-        revealVisualizerControls();
+        if (entering && compactScreen.matches) {
+            // Start on the artwork; programmatic focus on the exit button can
+            // otherwise keep the large dock visible in iPhone browsers.
+            modePanels.find(panel => !panel.hidden)?.focus({preventScroll: true});
+            hideVisualizerControls();
+        } else {
+            revealVisualizerControls();
+        }
     }
-    for (const event of ['pointermove', 'pointerdown', 'keydown']) {
+    for (const event of ['pointermove', 'pointerdown', 'keydown', 'focusin']) {
         space.addEventListener(event, revealVisualizerControls);
     }
     document.addEventListener('visibilitychange', revealVisualizerControls);
