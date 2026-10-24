@@ -23,8 +23,8 @@ onesheet text as a placeholder. There is no public tracklist, release date or pr
 TROMSØ PURIST SHOP, linked to `https://www.instagram.com/tromso_purist_shop/`.
 The original supplied T-shirt and cap mockups are stored in `images/merch/`.
 They are shown uncropped in wide product sections and can be opened at full
-resolution. Each product has technical specification fields marked
-To be confirmed until production details are available. The planned T-shirt
+resolution. Technical specifications will be added when production details
+are confirmed. The planned T-shirt
 images are one plain front view and one or two photographs of the shirt being
 worn; those assets and longsleeves are deferred. Products are marked MOCKUP,
 with a notice that final products and specifications may change;
@@ -66,10 +66,8 @@ does not immediately replace previously indexed hosting content. See
 Audio seeking requires a server with HTTP byte-range support, as provided by
 GitHub Pages. Python's basic local server supports playback but not seeking.
 
-The footer prepares release and merch updates with a MAILING LIST / SOON notice.
-When a hosted mailing-list form is available, set `newsletterUrl` in `site.js`
-to its HTTPS URL. This replaces the notice with JOIN THE LIST links; until then
-there is no email field or signup submission. Rebuild the file preview after changing it.
+The footer contains a single copyright notice. A mailing list is deferred
+until a signup service is ready; no empty signup notice is shown.
 
 **ABOUT / CONTACT** in the top navigation opens `/about/`, with the Second Source logo,
 the supplied label description and `mailto:secondsourceaudio@gmail.com`.

@@ -4,27 +4,6 @@
     if (/^https?:$/.test(location.protocol) && location.pathname === '/index.html') {
         history.replaceState(history.state, '', '/' + location.search + location.hash);
     }
-    // Set the hosted sign-up URL when the mailing list is ready.
-    const newsletterUrl = "";
-    function updateNewsletter() {
-        if (!newsletterUrl) return;
-        try {
-            const destination = new URL(newsletterUrl);
-            if (destination.protocol === 'https:') {
-                for (const placeholder of document.querySelectorAll('[data-newsletter-signup]')) {
-                    const link = document.createElement('a');
-                    link.className = placeholder.className;
-                    link.href = destination.href;
-                    link.target = '_blank';
-                    link.rel = 'noopener noreferrer';
-                    link.textContent = 'JOIN THE LIST';
-                    placeholder.replaceWith(link);
-                }
-            }
-        } catch { /* Keep the coming-soon notice until a valid URL is configured. */ }
-    }
-    updateNewsletter();
-    window.addEventListener('site:pagechange', updateNewsletter);
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let navigating = false;
     document.addEventListener("click", event => {
