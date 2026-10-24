@@ -1612,6 +1612,57 @@ class WebsiteTests(unittest.TestCase):
         self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
         self.page.locator('[data-fullscreen]').click()
 
+    def test_mobile_fullscreen_visualizer_stays_large_when_controls_hide_and_return(self):
+        cases = [(320, 568, True), (375, 667, True), (390, 844, False), (844, 390, True)]
+        for width, height, fallback in cases:
+            with self.subTest(width=width, height=height, fallback=fallback):
+                context = self.browser.new_context(
+                    viewport={'width': width, 'height': height}, is_mobile=True, has_touch=True)
+                try:
+                    page = context.new_page()
+                    page.on('pageerror', lambda error: self.errors.append(str(error)))
+                    page.goto(BASE_URL + '/', wait_until='networkidle')
+                    page.evaluate('document.fonts.ready')
+                    if fallback:
+                        page.locator('[data-experience]').evaluate('e => { e.requestFullscreen = undefined; }')
+                    page.locator('[data-visual-mode="visualizer"]').tap()
+                    art = page.locator('#fluid-container')
+                    normal_width = art.bounding_box()['width']
+                    page.locator('[data-fullscreen]').tap()
+                    expect(page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'true')
+                    page.wait_for_function('''normal => {
+                        const r = document.querySelector('#fluid-container').getBoundingClientRect();
+                        return r.width >= normal && r.width <= Math.min(innerWidth, innerHeight) + 1;
+                    }''', arg=normal_width)
+                    full = art.bounding_box()
+                    self.assertAlmostEqual(full['width'], full['height'], delta=1)
+                    self.assertAlmostEqual(full['x'] + full['width'] / 2, width / 2, delta=1)
+                    self.assertAlmostEqual(full['y'] + full['height'] / 2, height / 2, delta=1)
+                    self.assertGreaterEqual(full['x'], 0)
+                    self.assertGreaterEqual(full['y'], 0)
+                    page.wait_for_function('getComputedStyle(document.querySelector("[data-visualizer-dock]")).opacity === "0"')
+                    self.assertAlmostEqual(art.bounding_box()['width'], full['width'], delta=1)
+                    self.assertTrue(page.locator('audio').evaluate('a => a.paused'))
+                    if width == 320:
+                        page.set_viewport_size({'width': height, 'height': width})
+                        page.wait_for_function('''() => {
+                            const r = document.querySelector('#fluid-container').getBoundingClientRect();
+                            return Math.abs(r.width - Math.min(innerWidth, innerHeight)) < 1 && r.y >= 0;
+                        }''')
+                        width, height = height, width
+                        full = art.bounding_box()
+                        self.assertAlmostEqual(full['x'] + full['width'] / 2, width / 2, delta=1)
+                        self.assertAlmostEqual(full['y'] + full['height'] / 2, height / 2, delta=1)
+                    page.touchscreen.tap(width / 2, height / 2)
+                    page.wait_for_function('getComputedStyle(document.querySelector("[data-visualizer-dock]")).opacity === "1"')
+                    self.assertAlmostEqual(art.bounding_box()['width'], full['width'], delta=1)
+                    self.assertTrue(page.locator('audio').evaluate('a => a.paused'))
+                    page.locator('[data-fullscreen]').tap()
+                    expect(page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'false')
+                    self.assertFalse(page.locator('.site-header').evaluate('e => e.inert'))
+                finally:
+                    context.close()
+
     def test_visualizer_preserves_playback_and_respects_explicit_motion_toggle(self):
         serve_seekable_audio(self.page)
         self.visit()

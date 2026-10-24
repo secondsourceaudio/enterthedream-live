@@ -1088,6 +1088,34 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
     .listening-space.is-immersive .volume-slider { width: 72px; }
 }
 
+/* Let the automatic artwork use the mobile screen independently of the controls.
+   The dock overlays the image and fades away without changing its size. */
+@media (max-width: 750px), (pointer: coarse) {
+    .landing-study .listening-space.is-visualizer {
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        gap: 0;
+        overflow: hidden;
+    }
+    .landing-study .listening-space.is-visualizer .visual-container {
+        width: min(
+            calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right)),
+            calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom))
+        );
+    }
+    .landing-study .listening-space.is-visualizer .visualizer-dock {
+        position: absolute;
+        z-index: 4;
+        left: max(12px, env(safe-area-inset-left));
+        right: max(12px, env(safe-area-inset-right));
+        bottom: max(12px, env(safe-area-inset-bottom));
+        width: auto;
+        max-height: calc(100% - max(12px, env(safe-area-inset-top)) - max(12px, env(safe-area-inset-bottom)));
+        padding: 12px 4px 4px;
+        overflow: auto;
+        background: linear-gradient(transparent, rgb(5 5 5 / .94) 24px);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .interaction-cue, .experience-button, .visualizer-dock { transition: none; }
 }
@@ -1545,6 +1573,7 @@ main[data-session-page] { animation: none; }
     const playerState = space.querySelector('[data-player-state]');
     const status = space.querySelector("[data-status]");
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const hoverPointer = window.matchMedia("(hover: hover) and (pointer: fine)");
     const modeButtons = [...space.querySelectorAll('[data-visual-mode]')];
     const modePanels = [...space.querySelectorAll('[data-visual-panel]')];
     const unavailableModes = new Set();
@@ -1949,7 +1978,7 @@ main[data-session-page] { animation: none; }
         if (!space.classList.contains('is-visualizer') || !visualizerDock) return;
         controlsTimer = window.setTimeout(() => {
             const focused = visualizerDock.contains(document.activeElement) && document.activeElement.matches(':focus-visible');
-            if (space.querySelector('dialog[open]') || visualizerDock.matches(':hover') || focused) {
+            if (space.querySelector('dialog[open]') || (hoverPointer.matches && visualizerDock.matches(':hover')) || focused) {
                 revealVisualizerControls();
                 return;
             }

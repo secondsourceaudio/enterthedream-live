@@ -26,6 +26,7 @@
     const playerState = space.querySelector('[data-player-state]');
     const status = space.querySelector("[data-status]");
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const hoverPointer = window.matchMedia("(hover: hover) and (pointer: fine)");
     const modeButtons = [...space.querySelectorAll('[data-visual-mode]')];
     const modePanels = [...space.querySelectorAll('[data-visual-panel]')];
     const unavailableModes = new Set();
@@ -430,7 +431,7 @@
         if (!space.classList.contains('is-visualizer') || !visualizerDock) return;
         controlsTimer = window.setTimeout(() => {
             const focused = visualizerDock.contains(document.activeElement) && document.activeElement.matches(':focus-visible');
-            if (space.querySelector('dialog[open]') || visualizerDock.matches(':hover') || focused) {
+            if (space.querySelector('dialog[open]') || (hoverPointer.matches && visualizerDock.matches(':hover')) || focused) {
                 revealVisualizerControls();
                 return;
             }

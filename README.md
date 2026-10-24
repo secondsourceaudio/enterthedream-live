@@ -177,8 +177,10 @@ hidden. If WebGL is unavailable, the original artwork remains available.
 
 **Fullscreen** expands the selected mode, using browser fullscreen where
 supported and an in-page fallback otherwise. In VISUALIZER the complete square
-artwork stays centred, with the player and controls beneath it. Its size fits the
-space left by those controls, including after mobile rotation. Leaving fullscreen
+artwork stays centred. On phones and touch screens it fills the available screen;
+the player and controls overlay it and fade away without resizing the artwork.
+On desktop, the player and controls sit beneath it and the artwork fits the
+remaining space. Both layouts adapt to rotation. Leaving fullscreen
 keeps the selected mode and playback position. WHIRL, manual FLUID and silent FLOWER keep their
 framed fullscreen view.
 
