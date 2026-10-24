@@ -1454,10 +1454,19 @@ class WebsiteTests(unittest.TestCase):
         self.assertTrue(audio.evaluate('a => a.paused'))
         self.page.keyboard.press('p')
         self.page.wait_for_function('!document.querySelector("audio").paused')
+        audio.evaluate('a => { window.__shortcutAudio = a; }')
         self.page.locator('.site-nav').get_by_role('link', name='MERCH', exact=True).click()
         self.page.wait_for_url('**/merch/')
-        expect(self.page.locator('audio')).to_have_count(0)
+        expect(self.page.locator('[data-corner-player]')).to_be_visible()
+        # The listening session continues, but artwork shortcuts stay on its page.
+        for key in ['p', 'm', 'f']:
+            self.page.keyboard.press(key)
+        self.assertTrue(audio.evaluate('a => a === window.__shortcutAudio && !a.paused && !a.muted'))
+        self.assertFalse(self.page.evaluate('document.fullscreenElement !== null'))
         self.page.go_back(wait_until='networkidle')
+        self.page.wait_for_url(BASE_URL + '/')
+        self.assertTrue(audio.evaluate('a => a === window.__shortcutAudio && !a.paused'))
+        self.page.reload(wait_until='networkidle')
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
 
     def test_flower_shortcuts_keep_it_silent(self):

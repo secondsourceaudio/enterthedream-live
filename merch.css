@@ -20,7 +20,7 @@
 .merch-credit { margin: 0; color: #d2d2d2; font-size: 13px; line-height: 1.8; letter-spacing: .16em; }
 .merch-credit-label { margin-right: 8px; color: #aaa; }
 .merch-credit-glyph { font-family: Arial, Helvetica, sans-serif; }
-.merch-credit a { color: inherit; text-decoration: underline; text-decoration-color: #555; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+.merch-credit a { display: inline-flex; align-items: center; min-height: 44px; color: inherit; text-decoration: underline; text-decoration-color: #555; text-decoration-thickness: 1px; text-underline-offset: 5px; }
 .merch-credit a:hover { color: #fff; text-decoration-color: currentColor; }
 .merch-credit a:focus-visible { outline: 1px solid #eee; outline-offset: 5px; }
 .merch-mockup-notice { max-width: 680px; margin: 0 0 32px; color: #c9c9c9; font: 14px/1.8 Arial, Helvetica, sans-serif; }
@@ -32,7 +32,7 @@
 .merch-product-preview:focus-visible { outline: 1px solid #eee; outline-offset: 5px; }
 .merch-product-preview:hover { color: #fff; border-color: #666; }
 .merch-product-image { display: block; width: 100%; height: auto; }
-.merch-preview-caption { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; font-size: var(--font-micro); line-height: 1.8; letter-spacing: .12em; }
+.merch-preview-caption { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; padding: 12px 16px; font-size: var(--font-micro); line-height: 1.8; letter-spacing: .12em; }
 .merch-product-info { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 20px; padding-top: 18px; }
 .merch-product-title { margin: 0; font-size: 12px; line-height: 1.7; letter-spacing: .12em; }
 .merch-product-status { margin: 0; color: #c9c9c9; font-size: var(--font-micro); line-height: 1.8; letter-spacing: .14em; }
@@ -46,7 +46,7 @@
     .merch-page { padding: 40px 20px 64px; }
     .merch-heading { margin-bottom: 28px; padding-bottom: 20px; }
     .merch-heading h1 { font-size: 22px; }
-    .merch-credit { font-size: 11px; }
+    .merch-credit { font-size: var(--font-small); }
     .merch-grid { grid-template-columns: minmax(0, 1fr); gap: 36px; }
     .merch-specifications dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

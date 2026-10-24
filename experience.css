@@ -79,6 +79,7 @@ html[data-motion="off"] .visual-container { touch-action: pan-y pinch-zoom; }
 .share-url:focus-visible { outline: 1px solid #eee; outline-offset: 4px; }
 
 .experience-button {
+    min-width: 44px;
     min-height: 44px;
     padding: 10px 6px;
     border: 0;
@@ -104,7 +105,7 @@ html[data-motion="off"] .visual-container { touch-action: pan-y pinch-zoom; }
 .experience-button[data-sound]:disabled { cursor: progress; }
 .experience-button:focus-visible,
 .experience-volume input:focus-visible {
-    outline: 1px solid #eee;
+    outline: 2px solid #eee;
     outline-offset: 4px;
 }
 
@@ -150,8 +151,8 @@ html[data-motion="off"] .visual-container { touch-action: pan-y pinch-zoom; }
 .player-track { margin: 0; color: #eee; font-size: var(--font-small); line-height: 1.7; letter-spacing: .08em; }
 .player-artist { display: block; color: #aaa; font-size: var(--font-micro); letter-spacing: .1em; }
 .player-track-name { display: block; }
-.player-clock { display: flex; align-items: baseline; gap: 7px; margin-top: 4px; color: #60636a; font: 11px ui-monospace, SFMono-Regular, Consolas, monospace; }
-.player-time { color: #cbd2e1; font: 11px ui-monospace, SFMono-Regular, Consolas, monospace; font-variant-numeric: tabular-nums; }
+.player-clock { display: flex; align-items: baseline; gap: 7px; margin-top: 4px; color: #9298a3; font: 12px ui-monospace, SFMono-Regular, Consolas, monospace; }
+.player-time { color: #cbd2e1; font: 12px ui-monospace, SFMono-Regular, Consolas, monospace; font-variant-numeric: tabular-nums; }
 .player-time:last-child { color: #8a8d94; }
 .player-spectrum { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 2px; height: 42px; align-self: end; }
 .spectrum-band { position: relative; height: 100%; background: rgb(192 201 224 / .025); }
@@ -197,7 +198,7 @@ html[data-motion="off"] .visual-container { touch-action: pan-y pinch-zoom; }
 }
 .compact-player .volume-slider::-moz-range-track { height: 2px; background: #45474c; }
 .compact-player .volume-slider::-moz-range-thumb { width: 7px; height: 11px; border: 1px solid #d2d3d6; border-radius: 0; background: #a5a8ae; }
-.compact-player .volume-percent { min-width: 36px; margin-left: auto; color: #bfc0c4; font: 11px ui-monospace, SFMono-Regular, Consolas, monospace; text-align: right; }
+.compact-player .volume-percent { min-width: 36px; margin-left: auto; color: #bfc0c4; font: 12px ui-monospace, SFMono-Regular, Consolas, monospace; text-align: right; }
 .compact-player .volume-slider:focus-visible { outline: 1px solid #eee; outline-offset: 4px; }
 .landing-study .experience-controls { margin-top: -12px; }
 .landing-study .visualizer-dock .experience-controls { margin: 0; }
@@ -283,7 +284,7 @@ body.listening-mode { overflow: hidden; }
 .experience-info dt { font-size: var(--font-small); letter-spacing: .14em; color: #aaa; }
 .experience-info dd { margin: 8px 0 20px; font-size: 12px; line-height: 1.7; letter-spacing: .06em; }
 .info-project-description { display: block; margin-top: 6px; font: 12px/1.7 Arial, Helvetica, sans-serif; letter-spacing: 0; color: #bbb; }
-.info-project-link { display: inline-block; padding: 10px 0 4px; color: #c9c9c9; font-size: var(--font-small); letter-spacing: .16em; text-decoration: none; }
+.info-project-link { display: inline-flex; align-items: center; min-height: 44px; padding: 10px 0 4px; color: #c9c9c9; font-size: var(--font-small); letter-spacing: .16em; text-decoration: none; }
 .info-project-link:hover { color: #fff; }
 .info-project-link:focus-visible { outline: 1px solid #eee; outline-offset: 4px; }
 .info-modifier { width: 100%; margin-top: 8px; padding: 18px 0 4px; border-top: 1px solid #333; text-align: left; }

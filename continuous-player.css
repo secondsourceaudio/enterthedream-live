@@ -21,8 +21,8 @@
 .src-corner-button svg { width: 14px; height: 14px; fill: currentColor; }
 .src-corner-track { display: flex; flex: 1; flex-direction: column; justify-content: center; min-width: 0; min-height: 44px; padding: 0 6px; color: #ddd; text-decoration: none; }
 .src-corner-track span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.src-corner-artist { color: #aaa; font-size: 10px; line-height: 1.7; letter-spacing: .06em; }
-.src-corner-title { font-size: 11px; line-height: 1.7; letter-spacing: .04em; }
+.src-corner-artist { color: #aaa; font-size: var(--font-micro); line-height: 1.7; letter-spacing: .06em; }
+.src-corner-title { font-size: var(--font-small); line-height: 1.7; letter-spacing: .04em; }
 .src-corner-detail { border-top: 1px solid #303236; }
 .src-corner-player .compact-player { width: 100%; max-width: 100%; padding: 12px; border: 0; box-shadow: none; }
 .src-corner-player .player-titlebar, .src-corner-player .player-track { display: none; }

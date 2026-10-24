@@ -64,6 +64,6 @@
     .release-entry { grid-template-columns: minmax(0, 1fr); gap: 28px; }
     .release-catalogue { margin-bottom: 16px; }
     .release-title { margin-bottom: 12px; font-size: 32px; }
-    .release-artist { font-size: 11px; }
+    .release-artist { font-size: var(--font-small); }
     .release-description { margin-top: 24px; }
 }
