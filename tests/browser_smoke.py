@@ -1664,9 +1664,28 @@ class WebsiteTests(unittest.TestCase):
                     page.wait_for_function('getComputedStyle(document.querySelector("[data-visualizer-dock]")).opacity === "1"')
                     self.assertAlmostEqual(art.bounding_box()['width'], full['width'], delta=1)
                     self.assertEqual(page.locator('audio').evaluate('a => a.paused'), not playing)
+                    dock = page.locator('[data-visualizer-dock]')
+                    expect(dock.locator('button:visible')).to_have_count(2)
+                    self.assertLessEqual(dock.bounding_box()['width'], 120)
+                    self.assertLessEqual(dock.bounding_box()['height'], 64)
+                    for selector in ['.player-titlebar', '.player-display', '.player-timeline', '[data-volume]', '[data-info]', '[data-copy-link]']:
+                        expect(page.locator(selector)).not_to_be_visible()
+                    for selector in ['[data-sound]', '[data-fullscreen]']:
+                        box = page.locator(selector).bounding_box()
+                        self.assertGreaterEqual(box['width'], 44)
+                        self.assertGreaterEqual(box['height'], 44)
+                    if playing:
+                        page.locator('[data-sound]').tap()
+                        page.wait_for_function('document.querySelector("audio").paused')
+                        expect(page.locator('[data-play-symbol]')).to_have_attribute('data-state', 'play')
+                        page.locator('[data-sound]').tap()
+                        page.wait_for_function('!document.querySelector("audio").paused')
+                        expect(page.locator('[data-play-symbol]')).to_have_attribute('data-state', 'pause')
                     page.locator('[data-fullscreen]').tap()
                     expect(page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'false')
                     self.assertFalse(page.locator('.site-header').evaluate('e => e.inert'))
+                    expect(page.locator('.player-display')).to_be_visible()
+                    expect(page.locator('.player-timeline')).to_be_visible()
                     if width == 568:
                         page.locator('[data-fullscreen]').tap()
                         self.assertEqual(page.locator('[data-visualizer-dock]').evaluate('e => getComputedStyle(e).pointerEvents'), 'none')

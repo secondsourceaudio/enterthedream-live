@@ -178,7 +178,8 @@ hidden. If WebGL is unavailable, the original artwork remains available.
 **Fullscreen** expands the selected mode, using browser fullscreen where
 supported and an in-page fallback otherwise. In VISUALIZER the complete square
 artwork stays centred. On phones and touch screens it fills the available screen;
-the player and controls overlay it and fade away without resizing the artwork.
+the player is minimized to play/pause and exit buttons in the bottom corner.
+These controls fade away without resizing the artwork.
 On desktop, the player and controls sit beneath it and the artwork fits the
 remaining space. Both layouts adapt to rotation. Leaving fullscreen
 keeps the selected mode and playback position. WHIRL, manual FLUID and silent FLOWER keep their
@@ -221,7 +222,9 @@ shows a still image. Pausing, muting, setting volume to zero or buffering freeze
 the current image and simulation; audible playback resumes from that state. Mouse hover and drag never stir VISUALIZER. FLOWER remains silent.
 
 Mobile fullscreen VISUALIZER starts with controls hidden and focus on the artwork.
-Touch the screen or use the keyboard to reveal them. Once shown, controls fade
+Touch the screen or use the keyboard to reveal just the small play/pause and exit
+buttons. The full player and viewing menu return on leaving fullscreen.
+Once shown, controls fade
 after 3.2 seconds of inactivity. On desktop, move the
 pointer, touch the screen or use the keyboard to reveal them. Controls stay
 visible while hovered or focused with the keyboard, and while INFO is open.

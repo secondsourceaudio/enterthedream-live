@@ -355,8 +355,7 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
     .listening-space.is-immersive .volume-slider { width: 72px; }
 }
 
-/* Let the automatic artwork use the mobile screen independently of the controls.
-   The dock overlays the image and fades away without changing its size. */
+/* Mobile fullscreen keeps the artwork clear; the dock becomes two small buttons. */
 @media (max-width: 750px), (pointer: coarse) {
     .landing-study .listening-space.is-visualizer {
         padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
@@ -372,14 +371,51 @@ body.field-study { height: auto; min-height: 100dvh; overflow: auto; }
     .landing-study .listening-space.is-visualizer .visualizer-dock {
         position: absolute;
         z-index: 4;
-        left: max(12px, env(safe-area-inset-left));
+        left: auto;
         right: max(12px, env(safe-area-inset-right));
         bottom: max(12px, env(safe-area-inset-bottom));
+        flex-direction: row;
+        gap: 4px;
         width: auto;
+        max-width: calc(100vw - 24px);
         max-height: calc(100% - max(12px, env(safe-area-inset-top)) - max(12px, env(safe-area-inset-bottom)));
-        padding: 12px 4px 4px;
-        overflow: auto;
-        background: linear-gradient(transparent, rgb(5 5 5 / .94) 24px);
+        padding: 4px;
+        overflow: visible;
+        border: 1px solid #333;
+        background: rgb(5 5 5 / .88);
+    }
+    .landing-study .listening-space.is-visualizer .compact-player {
+        display: block;
+        flex: 0 0 auto;
+        width: auto;
+        max-width: none;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+    .landing-study .listening-space.is-visualizer .compact-player > :not(.player-controls),
+    .landing-study .listening-space.is-visualizer .player-controls > :not([data-sound]),
+    .landing-study .listening-space.is-visualizer .experience-controls > :not([data-fullscreen]),
+    .landing-study .listening-space.is-visualizer .experience-tools {
+        display: none;
+    }
+    .landing-study .listening-space.is-visualizer .player-controls,
+    .landing-study .listening-space.is-visualizer .experience-controls {
+        width: auto;
+        margin: 0;
+        gap: 0;
+    }
+    .landing-study .listening-space.is-visualizer [data-fullscreen] {
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        font-size: 0;
+        letter-spacing: 0;
+    }
+    .landing-study .listening-space.is-visualizer [data-fullscreen]::after {
+        content: "×";
+        font: 24px/1 Arial, Helvetica, sans-serif;
     }
 }
 
