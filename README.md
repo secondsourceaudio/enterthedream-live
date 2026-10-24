@@ -16,8 +16,8 @@ switch. **SOURCES** is temporarily omitted from the top navigation. `/sources/` 
 only FLOWER and remains available by direct link. `/sources/flower/` is the silent FLOWER fluid source,
 using the yellow and black gallery photograph.
 **RELEASES** opens `/releases/`, which shows SRC001 / DRIP with its static
-cover, artist, title, release description and LP/label information. Distribution
-is credited to One Eye Witness. The description currently uses the supplied
+cover, artist, title, release description and LP/label information.
+The description currently uses the supplied
 onesheet text as a placeholder. There is no public tracklist, release date or pressing information.
 **MERCH** opens `/merch/`, with upcoming T-SHIRTS and CAPS credited to
 TROMSØ PURIST SHOP, linked to `https://www.instagram.com/tromso_purist_shop/`.
