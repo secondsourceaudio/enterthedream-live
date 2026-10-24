@@ -72,7 +72,9 @@ until a signup service is ready; no empty signup notice is shown.
 **ABOUT / CONTACT** in the top navigation opens `/about/`, with the Second Source logo,
 the supplied label description and `mailto:secondsourceaudio@gmail.com`.
 This static page works without JavaScript. Edit `about/index.html` and `about.css`.
-The original 3000 × 1500 PNG is preserved at `images/brand/second-source-logo.png`.
+The supplied logo without the domain name is preserved at
+`images/brand/second-source-logo-no-url.png` (3000 × 3000 PNG). About shows the
+centre of the square image in a 2:1 frame, trimming empty margins in CSS.
 
 Social previews use static Open Graph and Twitter metadata in each page's head.
 The 1200 × 630 PNG cards are in `images/share/`, using the original artwork and
