@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#050505">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Layout Studies — Second Source</title>
+    <link rel="icon" href="/favicon.ico?v=1" sizes="16x16 32x32 48x48">
+    <link rel="stylesheet" href="/site.css?v=14">
+    <link rel="stylesheet" href="/layout-studies/layout-studies.css?v=1">
+    <script src="/layout-studies/layout-studies.js?v=1" defer></script>
+</head>
+<body class="study-page">
+    <header class="study-toolbar">
+        <div>
+            <p class="study-kicker">SECOND SOURCE / PRIVATE STUDY</p>
+            <h1>HOMEPAGE LAYOUTS</h1>
+        </div>
+        <nav class="study-switcher" aria-label="Choose layout study">
+            <button type="button" data-study-button="channel" aria-pressed="true">01 / CHANNEL</button>
+            <button type="button" data-study-button="index" aria-pressed="false">02 / INDEX</button>
+            <button type="button" data-study-button="desktop" aria-pressed="false">03 / DESKTOP</button>
+        </nav>
+        <a class="study-return" href="/">RETURN ↗</a>
+    </header>
+
+    <main class="study-stage">
+        <section class="study-panel is-active" data-study-panel="channel" aria-labelledby="channel-title">
+            <h2 class="visually-hidden" id="channel-title">Channel layout</h2>
+            <div class="prototype channel-layout">
+                <header class="channel-head">
+                    <span>SECOND SOURCE</span><span>OSLO / NORWAY</span><span class="channel-state">● TRANSMISSION ACTIVE</span>
+                </header>
+                <div class="channel-grid">
+                    <a class="channel-art" href="/releases/" aria-label="View Drip release">
+                        <img src="/images/drip_cover_front_2.webp" alt="DRIP cover artwork">
+                        <span>SRC001 / SPRING 2027</span>
+                    </a>
+                    <article class="channel-release">
+                        <p>FIRST RELEASE</p>
+                        <h3>DRIP</h3>
+                        <h4>MARTIN SOLLI</h4>
+                        <p class="channel-copy">A ten-track album developed between Tromsø and Oslo. Available on vinyl and digitally in spring 2027.</p>
+                        <a href="/releases/">OPEN RELEASE ↗</a>
+                    </article>
+                    <a class="channel-card channel-source" href="/sources/">
+                        <span>LIVE SOURCE</span><strong>SOURCE 01 / DUSK</strong><small>Dream Scenario · visual loop</small>
+                    </a>
+                    <a class="channel-card channel-about" href="/about/">
+                        <span>INFORMATION</span><strong>AUDIO &amp; VISUALS</strong><small>Second Source · Oslo</small>
+                    </a>
+                </div>
+                <footer class="channel-foot"><span>RELEASES</span><span>SOURCES</span><span>MERCH</span><span>ABOUT / CONTACT</span></footer>
+            </div>
+            <p class="study-caption"><strong>01 / CHANNEL</strong> — One focused transmission at a time. Strongest when one release or source should dominate.</p>
+        </section>
+
+        <section class="study-panel" data-study-panel="index" aria-labelledby="index-title" hidden>
+            <h2 class="visually-hidden" id="index-title">Index layout</h2>
+            <div class="prototype index-layout">
+                <aside class="index-rail">
+                    <img src="/images/brand/src-icon-512.png" alt="SRC">
+                    <span>SECOND<br>SOURCE</span>
+                    <nav><a href="/releases/">RELEASES</a><a href="/sources/">SOURCES</a><a href="/merch/">MERCH</a><a href="/about/">ABOUT</a></nav>
+                    <small>OSLO · 2026</small>
+                </aside>
+                <div class="index-main">
+                    <header><span>CATALOGUE / INDEX</span><span>01 ITEM</span></header>
+                    <a class="index-row index-feature" href="/releases/">
+                        <span class="index-number">001</span>
+                        <span><small>MARTIN SOLLI</small><strong>DRIP</strong></span>
+                        <span>LP / DIGITAL</span><span>SPRING 2027</span>
+                        <img src="/images/drip_cover_front_2.webp" alt="">
+                    </a>
+                    <a class="index-row" href="/sources/"><span class="index-number">S01</span><span><small>DREAM SCENARIO</small><strong>DUSK</strong></span><span>MOVING IMAGE</span><span>ACTIVE</span></a>
+                    <a class="index-row" href="/sources/"><span class="index-number">S02</span><span><small>DREAM SCENARIO</small><strong>NIGHT</strong></span><span>MOVING IMAGE</span><span>ACTIVE</span></a>
+                    <a class="index-row is-muted" href="/merch/"><span class="index-number">M01</span><span><small>TROMSØ PURIST SHOP</small><strong>MERCH</strong></span><span>GARMENTS</span><span>IN DEVELOPMENT</span></a>
+                    <div class="index-statement">INDEPENDENT AUDIO AND VISUAL EXPERIMENTATION.</div>
+                </div>
+            </div>
+            <p class="study-caption"><strong>02 / INDEX</strong> — Catalogue first. Easiest to expand as releases, Sources and objects accumulate.</p>
+        </section>
+
+        <section class="study-panel" data-study-panel="desktop" aria-labelledby="desktop-title" hidden>
+            <h2 class="visually-hidden" id="desktop-title">Desktop layout</h2>
+            <div class="prototype desktop-layout">
+                <div class="desktop-wallpaper" aria-hidden="true"></div>
+                <header class="desktop-menu"><span>SECOND SOURCE</span><span>RELEASES&nbsp;&nbsp; SOURCES&nbsp;&nbsp; MERCH&nbsp;&nbsp; ABOUT</span><span>20:27</span></header>
+                <section class="desktop-window desktop-player" data-drag-window>
+                    <header><span>NOW PLAYING</span><span>− □ ×</span></header>
+                    <div class="desktop-player-body">
+                        <img src="/images/drip_cover_front_2.webp" alt="DRIP cover artwork">
+                        <div><small>SRC001 / 10</small><strong>DREAM SCENARIO</strong><span>MARTIN SOLLI</span><div class="fake-spectrum" aria-hidden="true"></div><button type="button">▶ PLAY</button></div>
+                    </div>
+                </section>
+                <section class="desktop-window desktop-files" data-drag-window>
+                    <header><span>SOURCE DIRECTORY</span><span>− □ ×</span></header>
+                    <div class="desktop-icons">
+                        <a href="/releases/"><b>◫</b><span>SRC001</span></a>
+                        <a href="/sources/"><b>◉</b><span>SOURCES</span></a>
+                        <a href="/merch/"><b>◇</b><span>MERCH</span></a>
+                        <a href="/about/"><b>?</b><span>INFO</span></a>
+                    </div>
+                </section>
+                <section class="desktop-window desktop-note" data-drag-window>
+                    <header><span>SYSTEM MESSAGE</span><span>− □ ×</span></header>
+                    <p>SECOND SOURCE IS AN INDEPENDENT OUTLET FOR AUDIO AND VISUAL EXPERIMENTATION, BASED IN OSLO.</p>
+                    <a href="/about/">READ MORE ↗</a>
+                </section>
+                <p class="desktop-hint">DRAG WINDOWS / OPEN FILES</p>
+            </div>
+            <p class="study-caption"><strong>03 / DESKTOP</strong> — The most early-computer direction. Movable windows make the site feel like a small operating system.</p>
+        </section>
+    </main>
+</body>
+</html>
