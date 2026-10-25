@@ -62,9 +62,9 @@ switch. **SOURCES** is temporarily omitted from the top navigation. `/sources/` 
 only FLOWER and remains available by direct link. `/sources/flower/` is the silent FLOWER fluid source,
 using the yellow and black gallery photograph.
 **RELEASES** opens `/releases/`, which shows SRC001 / DRIP with its static
-cover, artist, title, release description and LP/label information.
-The description currently uses the supplied
-onesheet text as a placeholder. There is no public tracklist, release date or pressing information.
+cover, artist, title, supplied short album text and credits. The public tracklist
+is split into side A and side B, with five tracks per side. Availability is shown
+as `2027 / Vinyl & Digital`; no specific release day or pressing quantities are published.
 **MERCH** opens `/merch/`, with upcoming T-SHIRTS and CAPS credited to
 TROMSØ PURIST SHOP, linked to `https://www.instagram.com/tromso_purist_shop/`.
 The original supplied T-shirt and cap mockups are stored in `images/merch/`.
