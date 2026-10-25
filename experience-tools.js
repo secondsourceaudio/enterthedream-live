@@ -8,6 +8,12 @@
     const notice = space.querySelector('[data-tools-status]');
     const announce = message => { notice.textContent = message; };
 
+    if (space.querySelector('audio') && experience.shareTime > 0) {
+        const seconds = Math.floor(experience.shareTime);
+        announce(`Ready at ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}. Press play to start.`);
+    }
+    if (!share) return;
+
     function shareURL() {
         const url = new URL(document.querySelector('link[rel="canonical"]').href);
         if (experience.visualMode) url.searchParams.set('mode', experience.visualMode);
@@ -45,8 +51,4 @@
         }
     });
 
-    if (space.querySelector('audio') && experience.shareTime > 0) {
-        const seconds = Math.floor(experience.shareTime);
-        announce(`Ready at ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}. Press play to start.`);
-    }
 })();

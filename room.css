@@ -50,12 +50,17 @@
 .room-transport, .room-square { border-color: var(--room-line); background: var(--room-button); color: var(--room-muted); }
 .room-transport { gap: 8px; min-width: 86px; }
 .room-square { width: 44px; padding-inline: 0; }
-.room-track { display: flex; justify-content: space-between; align-items: center; gap: 18px; min-height: 86px; padding: 12px 14px; border: 1px solid var(--room-line); background: var(--room-screen); color: var(--room-ink); }
+.room-track { display: grid; grid-template-columns: min(23%, 92px) minmax(0, 1fr); align-items: center; gap: 0 16px; min-height: 94px; padding: 12px 14px; border: 1px solid var(--room-line); background: var(--room-screen); color: var(--room-ink); }
+.room-spectrum { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 1px; position: relative; height: 48px; grid-row: span 2; align-self: end; }
+.room-spectrum::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(to top, transparent 0 3px, var(--room-screen) 3px 4px); pointer-events: none; }
+.room-spectrum-band { position: relative; background: #ffffff06; }
+.room-spectrum-level { position: absolute; bottom: 0; width: 100%; height: calc(var(--level, 0) * 100%); background: linear-gradient(to top, var(--room-line), var(--room-accent)); }
+.room-spectrum-peak { position: absolute; bottom: calc(var(--peak, 0) * 100%); width: 100%; height: 1px; background: var(--room-accent); opacity: var(--peak-visible, 0); }
 .room-track [data-room-track] { min-width: 0; font-size: var(--font-small); line-height: 1.8; letter-spacing: .08em; text-transform: uppercase; }
 .room-track-artist { display: block; color: var(--room-accent); opacity: .8; font-size: var(--font-micro); }
 .room-track strong { display: block; font-weight: normal; }
 .room-track-separator { display: none; }
-.room-clock { flex-shrink: 0; color: var(--room-accent); font: 13px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: nowrap; }
+.room-clock { grid-column: 2; margin-top: 4px; color: var(--room-accent); font: 13px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: nowrap; }
 .room-seek, .room-volume input { display: block; width: 100%; height: 44px; margin: 0; appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer; }
 .room-seek::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(to right, var(--room-accent) var(--progress, 0%), var(--room-line) var(--progress, 0%)); }
 .room-seek::-moz-range-track { height: 2px; background: var(--room-line); }
@@ -114,7 +119,7 @@ body.room-fullscreen { overflow: hidden; }
     .room-player-toolbar { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0 4px; }
     .room-player-toolbar > :nth-child(-n+3) { grid-column: span 2; }
     .room-player-toolbar > :nth-child(n+4) { grid-column: span 3; }
-    .room-track { align-items: flex-start; flex-direction: column; gap: 5px; }
+    .room-track { gap: 0 12px; padding-inline: 10px; }
     .room-song-scene { max-width: 105px; text-align: right; line-height: 1.8; }
 }
 @media (prefers-reduced-motion: reduce) { .room.is-fullscreen .room-dock { transition: none; } }

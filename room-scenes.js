@@ -106,7 +106,7 @@
             triangle([x-25,-1,-132],[x,height,-137],[x+29,-1,-133],[.41,.50,.51]);
         }
         } else {
-            // An original empty evening street: warm windows, wet stone and distant colour.
+            // An original empty evening street: warm windows and wet stone.
             // One 48-metre street section repeats past the camera, like a slow treadmill.
             const pavement=[.19,.19,.20], iron=[.075,.085,.095];
             for (const side of [-1,1]) {
@@ -165,18 +165,10 @@
                     lights.push(x,-4.68,z,.50,.28,.12,.5);
                 }
             }
-            // Restrained coloured bulbs crossing above the street.
-            const bulbColors=[[.80,.56,.26],[.51,.12,.12],[.18,.43,.30],[.73,.49,.24]];
-            for (const z of [-14]) for (let i=0;i<19;i++) {
-                const x=-7.4+i*14.8/18, y=7.7-.9*Math.sin(i/18*Math.PI);
-                box(x,y+.08,z,.55,.025,.025,iron);
-                const color=bulbColors[i%bulbColors.length];
-                box(x,y-.08,z,.075,.12,.075,color,1);
-                lights.push(x,y-.03,z,...color,.34);
-            }
+
         }
-        // Repeating water geometry is intentionally modest for phone GPUs.
-        const wx=64, wz=72;
+        // The road is one flat quad; only the shore needs a wave mesh.
+        const wx=night ? 1 : 64, wz=night ? 1 : 72;
         for (let z=0;z<wz;z++) for (let x=0;x<wx;x++) {
             const p=(a,b)=>[-130+a/wx*260,-178+b/wz*205];
             water.push(...p(x,z),...p(x+1,z+1),...p(x+1,z),...p(x,z),...p(x,z+1),...p(x+1,z+1));
@@ -304,16 +296,15 @@
                 color+=sheen*exp(-distance*.008);
                 if (u_night > .5) {
                     vec2 street=vec2(v_world.x,v_world.z-u_travel);
-                    vec2 tile=fract(street*vec2(.8,.25));
-                    float edge=step(.975,tile.x)+step(.98,tile.y);
+                    // Unbroken wet asphalt, without a tile grid beneath the reflections.
                     color=mix(vec3(.047,.048,.065),u_fog,1.-exp(-distance*.018));
-                    color+=ripple*.002-edge*.009;
+                    color+=ripple*.002;
                     float pool=exp(-pow(abs(v_world.x)-5.8,2.)*.18)*pow(.5+.5*cos(street.y*(6.28318530718/24.)),5.);
                     float lampZ=mod(floor(street.y/24.+.5)*24.+24.,48.)-24.;
                     float flutter=cityFlicker(vec3(sign(street.x)*5.8,4.68,lampZ),u_phase);
                     color+=vec3(.18,.09,.028)*pool*flutter;
                     float puddle=smoothstep(-.9,.9,sin(street.x*1.7+sin(street.y*(6.28318530718/48.)*6.))*cos(street.y*(6.28318530718/48.)*3.));
-                    gl_FragColor=vec4(finish(color),mix(.45,.94,puddle));
+                    gl_FragColor=vec4(finish(color),mix(.60,.94,puddle));
                 } else gl_FragColor=vec4(finish(color),.84);
             }
         `);

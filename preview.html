@@ -291,6 +291,9 @@ h2 {
 
     letter-spacing: 0.2em;
 }
+.copyright-policy { display: inline-block; min-height: 44px; padding-block: 12px; max-width: 100%; color: inherit; text-decoration: none; }
+.copyright-policy:hover { text-decoration: underline; text-underline-offset: 4px; }
+.copyright-policy:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; }
 
 
 /* =========================================
@@ -1456,7 +1459,6 @@ main[data-session-page] { animation: none; }
                 </div>
                 <div class="experience-tools">
                     <div class="experience-tools-buttons">
-                        <button class="experience-button" type="button" data-copy-link>COPY LINK</button>
                         <button class="experience-button" type="button" data-open-index data-src-enhancement aria-haspopup="dialog" aria-controls="src-index" hidden>INDEX</button>
                     </div>
                     <p class="experience-tools-status" role="status" data-tools-status></p>
@@ -1518,9 +1520,7 @@ main[data-session-page] { animation: none; }
     <footer class="legal-footer">
         <div data-nosnippet>
 
-            <p class="copyright-line">
-                <span class="copyright-symbol">©</span> 2026 SECOND SOURCE AUDIO. ALL RIGHTS RESERVED.
-            </p>
+            <p class="copyright-line"><a class="copyright-policy" href="https://www.enterthedream.org/rights/"><span class="copyright-symbol">©</span> 2026 SECOND SOURCE AUDIO. COPYRIGHT &amp; AI USAGE.</a></p>
 
         </div>
     </footer>
@@ -4662,6 +4662,12 @@ SOFTWARE.
     const notice = space.querySelector('[data-tools-status]');
     const announce = message => { notice.textContent = message; };
 
+    if (space.querySelector('audio') && experience.shareTime > 0) {
+        const seconds = Math.floor(experience.shareTime);
+        announce(`Ready at ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}. Press play to start.`);
+    }
+    if (!share) return;
+
     function shareURL() {
         const url = new URL(document.querySelector('link[rel="canonical"]').href);
         if (experience.visualMode) url.searchParams.set('mode', experience.visualMode);
@@ -4699,10 +4705,6 @@ SOFTWARE.
         }
     });
 
-    if (space.querySelector('audio') && experience.shareTime > 0) {
-        const seconds = Math.floor(experience.shareTime);
-        announce(`Ready at ${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}. Press play to start.`);
-    }
 })();
 </script><script>/* SRC skins, movable windows and a small visual index. Audio stays in its player. */
 (() => {
@@ -4888,7 +4890,7 @@ SOFTWARE.
     });
     for (const element of space.querySelectorAll('[data-src-enhancement]')) element.hidden = false;
 })();
-</script><script>/* Keep the original audio session while navigating the three public text pages.
+</script><script>/* Keep the original audio session while navigating the public text pages.
  * Each URL remains a complete static page for direct visits and search engines.
  * Nothing resumes from storage, another tab, a reload, or a new visit.
  */
@@ -4902,8 +4904,8 @@ SOFTWARE.
     if (!audio || !player) return;
     const playerSlot = player.parentElement;
     const sound = player.querySelector('[data-sound]');
-    const paths = new Set(['/', '/releases/', '/merch/', '/about/']);
-    const metadataSelector = 'meta[name="description"], meta[property^="og:"], meta[name^="twitter:"], link[rel="canonical"], script[type="application/ld+json"]';
+    const paths = new Set(['/', '/releases/', '/merch/', '/about/', '/rights/']);
+    const metadataSelector = 'meta[name="description"], meta[name="robots"], meta[property^="og:"], meta[name^="twitter:"], link[rel="canonical"], script[type="application/ld+json"]';
     const normalPath = path => path === '/index.html' ? '/' : path;
     const views = new Map();
     const styles = new Map([...document.querySelectorAll('link[rel="stylesheet"]')].map(link => [link.href, Promise.resolve()]));

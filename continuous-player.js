@@ -1,4 +1,4 @@
-/* Keep the original audio session while navigating the three public text pages.
+/* Keep the original audio session while navigating the public text pages.
  * Each URL remains a complete static page for direct visits and search engines.
  * Nothing resumes from storage, another tab, a reload, or a new visit.
  */
@@ -12,8 +12,8 @@
     if (!audio || !player) return;
     const playerSlot = player.parentElement;
     const sound = player.querySelector('[data-sound]');
-    const paths = new Set(['/', '/releases/', '/merch/', '/about/']);
-    const metadataSelector = 'meta[name="description"], meta[property^="og:"], meta[name^="twitter:"], link[rel="canonical"], script[type="application/ld+json"]';
+    const paths = new Set(['/', '/releases/', '/merch/', '/about/', '/rights/']);
+    const metadataSelector = 'meta[name="description"], meta[name="robots"], meta[property^="og:"], meta[name^="twitter:"], link[rel="canonical"], script[type="application/ld+json"]';
     const normalPath = path => path === '/index.html' ? '/' : path;
     const views = new Map();
     const styles = new Map([...document.querySelectorAll('link[rel="stylesheet"]')].map(link => [link.href, Promise.resolve()]));

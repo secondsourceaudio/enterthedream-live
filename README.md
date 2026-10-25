@@ -16,11 +16,16 @@ The SRC player keeps its playlist inside the shell, with play/pause, stop,
 volume/mute, repeat-track and a playlist toggle. Its four skins use the same
 optional skin preference as the homepage player. Dream Scenario is the only
 track currently supplied; the playlist can hold further tracks and scene defaults.
+Its 20 spectrum bands measure the recording through a Web Audio analyser created
+only on Play. They stop while silent, paused, offscreen, fullscreen or with motion
+disabled; browsers without Web Audio retain normal playback.
 
 Both original procedural low-poly scenes close on a three-minute loop. The city
 repeats a 48-metre street section past the camera at a slow walking pace. A few
 lamps dip gently and irregularly, including their glow and reflected light;
 there are no scene-wide flashes. The shore stays available as a separate choice.
+The street has no overhead coloured bulbs and uses a flat, ungridded asphalt
+surface; the shore keeps its separate wave mesh.
 The audio source is assigned only after Play or a track selection; a new visit fetches no
 audio and never autoplays. The playlist advances to the next available track when
 the current recording ends. Scene motion follows playback, respects reduced
@@ -33,6 +38,16 @@ revealed on interaction. This preview has its own native audio element; playback
 continues in background tabs but stops on leaving the page. It does not yet join
 the homepage's cross-page player. Scene programs and meshes are cached on a
 single WebGL context, including across manual scene changes.
+
+## Copyright and AI usage
+
+`/rights/` holds the supplied copyright and AI usage reservation. Every site
+footer links to it. It is a utility page with `noindex, follow`, outside the
+four-page sitemap. `robots.txt` asks GPTBot, ClaudeBot, Google-Extended, CCBot,
+Bytespider, Meta-ExternalAgent and Applebot-Extended not to crawl the site.
+Ordinary Googlebot, image search and other search crawlers remain allowed.
+These are crawler instructions, not server-side blocking. GitHub Pages serves
+the same public files; no CDN or DNS configuration is changed by these rules.
 
 ## Local development
 
@@ -143,7 +158,7 @@ Windows stay within the viewport, re-centre on close, and return to their defaul
 positions when entering or leaving fullscreen. Touch screens keep the normal
 layout so dragging does not interfere with scrolling or artwork gestures.
 
-**INDEX**, beside COPY LINK, opens a compact image map made from an existing
+**INDEX**, below the viewing controls, opens a compact image map made from an existing
 DRIP image. Its four labelled hotspots lead to RELEASES, MERCH, ABOUT / CONTACT
 and the otherwise unlisted FLOWER page. The ASCII SRC in INDEX toggles the
 artwork's colour polarity for the current visit. Another ASCII mark is in the
@@ -179,7 +194,7 @@ is selected. A fresh visit, reload or new tab never starts playback automaticall
 ### Continuing a listening session
 
 `continuous-player.js` keeps the original audio element and audio context while
-navigating the three public text pages. A small player appears in the bottom
+navigating the public text pages, including the rights notice. A small player appears in the bottom
 right corner after music was started on the homepage. Its title returns to the
 artwork; pause pauses, the chevron reveals volume/seek/skin controls, and close
 pauses audio and dismisses the corner player until Play is selected again.
@@ -189,7 +204,7 @@ going back to the homepage. The hidden artwork stops rendering on other pages.
 This is progressive navigation within that listening session, with real URLs,
 updated titles/canonical/social metadata, browser back/forward and normal static
 pages for direct visits. It is limited to `/`, `/releases/`, `/merch/` and
-`/about/`. Other destinations, modified clicks, downloads, shared links with
+`/about/` and `/rights/`. Other destinations, modified clicks, downloads, shared links with
 query parameters and failed page fetches use normal navigation. A real page exit
 stops playback. Starting directly on a text page does not load an audio player
 or music. Nothing stores permission to autoplay on a later visit. The file
@@ -218,12 +233,12 @@ framed fullscreen view.
 The in-page fallback stays inside the browser window, where the browser's own
 address and status bars can remain visible.
 
-**COPY LINK** copies the canonical page URL with `mode` and `t` (seconds) for
-audio pages. For example, `/?mode=visualizer&t=61.25` selects VISUALIZER and seeks
+The homepage has no COPY LINK button. Direct links still accept `mode` and `t`
+(seconds). For example, `/?mode=visualizer&t=61.25` selects VISUALIZER and seeks
 to 1:01.25 after the visitor presses Play. Opening the link does not fetch or
 start audio. Invalid modes and times are ignored; times beyond the track end
 are clamped. The random fluid state is not serialized. FLOWER links to its
-canonical page. If clipboard access is unavailable, a dialog shows a selected
+canonical page. COPY LINK remains on the unlisted studies. If clipboard access is unavailable, a dialog shows a selected
 link for manual copying. The file preview shares the public site's URL.
 
 VISUALIZER uses a 2048-point FFT and RMS loudness from the track already playing.

@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import unittest
 from urllib.parse import urlsplit
+from urllib.robotparser import RobotFileParser
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -2025,6 +2026,33 @@ class WebsiteTests(unittest.TestCase):
         finally:
             context.close()
 
+    def test_ai_training_rules_keep_search_crawlers_and_public_pages_accessible(self):
+        response = self.page.request.get(BASE_URL+'/robots.txt')
+        self.assertEqual(response.status, 200)
+        rules = response.text()
+        parser = RobotFileParser()
+        parser.parse(rules.splitlines())
+        for crawler in ['GPTBot','ClaudeBot','Google-Extended','CCBot','Bytespider','Meta-ExternalAgent','Applebot-Extended']:
+            for path in ['/','/audio/dream-scenario.mp3','/images/drip_cover_front_2.webp']:
+                self.assertFalse(parser.can_fetch(crawler,BASE_URL+path), (crawler,path))
+        for crawler in ['Googlebot','Googlebot-Image','Bingbot','OAI-SearchBot','Claude-SearchBot']:
+            for path in ['/','/about/','/releases/','/merch/','/sitemap.xml']:
+                self.assertTrue(parser.can_fetch(crawler,BASE_URL+path), (crawler,path))
+        self.assertIn('https://www.enterthedream.org/sitemap.xml',parser.site_maps())
+        context = self.browser.new_context(java_script_enabled=False, viewport={'width':390,'height':844})
+        try:
+            page = context.new_page()
+            page.goto(BASE_URL+'/about/',wait_until='networkidle')
+            page.locator('.copyright-policy').click()
+            page.wait_for_url('**/rights/')
+            expect(page.locator('h1')).to_have_text('Copyright & AI usage')
+            expect(page.locator('.rights-copy')).to_contain_text('© 2026 Second Source and the respective rightsholders. All rights reserved.')
+            expect(page.locator('.rights-copy')).to_contain_text('prior authorization from the relevant rightsholder.')
+            expect(page.locator('.rights-copy')).to_contain_text('Article 4(3) of Directive (EU) 2019/790.')
+            self.assertLessEqual(page.evaluate('document.body.scrollWidth'),390)
+        finally:
+            context.close()
+
     def test_about_navigation_and_back_keep_the_homepage_usable(self):
         self.visit()
         self.page.locator('.site-nav').get_by_role('link', name='ABOUT / CONTACT', exact=True).click()
@@ -2038,7 +2066,6 @@ class WebsiteTests(unittest.TestCase):
 
     def test_shared_visualizer_link_restores_mode_and_position_only_after_play(self):
         serve_seekable_audio(self.page)
-        self.context.grant_permissions(['clipboard-read', 'clipboard-write'])
         audio_requests = []
         self.page.on('request', lambda request: audio_requests.append(request.url) if '/audio/' in request.url else None)
         self.page.goto(BASE_URL + '/?mode=visualizer&t=61.25', wait_until='networkidle')
@@ -2048,12 +2075,7 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('[data-tools-status]')).to_contain_text('Press play to start.')
         self.assertEqual(audio_requests, [])
         self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
-        self.page.locator('[data-copy-link]').click()
-        expect(self.page.locator('[data-tools-status]')).to_have_text('Link copied.')
-        copied = self.page.evaluate('navigator.clipboard.readText()')
-        self.assertEqual(copied, 'https://www.enterthedream.org/?mode=visualizer&t=61.25')
-        self.page.goto(BASE_URL + '/?' + urlsplit(copied).query, wait_until='networkidle')
-        self.assertEqual(audio_requests, [], 'Opening a shared link must not fetch audio before Play')
+        expect(self.page.locator('[data-copy-link]')).to_have_count(0)
         self.page.locator('[data-sound]').click()
         self.page.wait_for_function('document.querySelector("audio").currentTime >= 61.25 && window.SecondSourceExperience.soundAudible')
         self.assertLess(self.page.locator('audio').evaluate('audio => audio.currentTime'), 65)
@@ -2065,7 +2087,7 @@ class WebsiteTests(unittest.TestCase):
 
     def test_copy_link_has_a_keyboard_safe_fallback_when_clipboard_is_blocked(self):
         self.context.add_init_script("Object.defineProperty(navigator, 'clipboard', {value: {writeText: () => Promise.reject(new Error('Blocked'))}})")
-        self.page.goto(BASE_URL + '/?mode=fluid&t=30', wait_until='networkidle')
+        self.page.goto(BASE_URL + '/drip-fluid/?t=30', wait_until='networkidle')
         self.page.locator('[data-experience]').evaluate("space => { space.requestFullscreen = () => Promise.reject(new Error('Unavailable')); }")
         self.page.locator('[data-fullscreen]').click()
         expect(self.page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'true')
@@ -2073,7 +2095,7 @@ class WebsiteTests(unittest.TestCase):
         dialog = self.page.locator('.share-dialog')
         expect(dialog).to_be_visible()
         field = dialog.locator('input')
-        expect(field).to_have_value('https://www.enterthedream.org/?mode=fluid&t=30')
+        expect(field).to_have_value('https://www.enterthedream.org/drip-fluid/?t=30')
         expect(field).to_be_focused()
         self.assertEqual(field.evaluate('input => input.selectionEnd - input.selectionStart'), len(field.input_value()))
         dialog.get_by_role('button', name='Close sharing').focus()
@@ -2427,6 +2449,22 @@ class WebsiteTests(unittest.TestCase):
         self.page.reload(wait_until='networkidle')
         expect(self.page.locator('audio, [data-corner-player]')).to_have_count(0)
 
+    def test_continuous_player_visits_rights_without_interrupting_audio(self):
+        serve_seekable_audio(self.page)
+        self.visit()
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
+        audio = self.page.locator('audio').element_handle()
+        self.page.locator('.copyright-policy').click()
+        self.page.wait_for_url('**/rights/')
+        expect(self.page.locator('.rights-copy')).to_contain_text('Article 4(3)')
+        expect(self.page.locator('meta[name="robots"]')).to_have_attribute('content','noindex, follow')
+        self.assertTrue(audio.evaluate('a => a === document.querySelector("audio") && !a.paused'))
+        self.page.locator('.site-logo').click()
+        self.page.wait_for_url(BASE_URL + '/')
+        expect(self.page.locator('meta[name="robots"]')).to_have_count(0)
+        self.assertTrue(audio.evaluate('a => a === document.querySelector("audio") && !a.paused'))
+
     def test_continuous_player_falls_back_to_a_real_page_when_soft_navigation_fails(self):
         serve_seekable_audio(self.page)
         self.visit()
@@ -2644,6 +2682,50 @@ class WebsiteTests(unittest.TestCase):
         self.page.reload(wait_until='networkidle')
         expect(self.page.locator('.room-dock')).to_have_attribute('data-skin', 'chrome')
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused && !a.currentSrc'))
+
+    def test_listening_room_spectrum_tracks_audio_and_stops_when_silent_or_hidden(self):
+        serve_seekable_audio(self.page, 'dream-scenario.mp3')
+        self.visit('room/')
+        bars = "[...document.querySelectorAll('.room-spectrum-band')].map(b => Number(b.style.getPropertyValue('--level')))"
+        active = '() => '+bars+'.some(level => level > .05)'
+        quiet = '() => '+bars+'.every(level => level === 0)'
+        expect(self.page.locator('.room-spectrum-band')).to_have_count(20)
+        self.assertTrue(self.page.evaluate(quiet))
+        self.page.get_by_role('button', name='Play music', exact=True).click()
+        self.page.wait_for_function('document.querySelector("audio").currentTime > .2')
+        self.page.locator('audio').evaluate('a => {a.currentTime=45;}')
+        self.page.wait_for_function(active)
+        self.page.get_by_role('button', name='Pause music', exact=True).click()
+        self.page.wait_for_function(quiet)
+        self.page.get_by_role('button', name='Play music', exact=True).click()
+        self.page.wait_for_function(active)
+        self.page.get_by_role('button', name='Mute music', exact=True).click()
+        self.page.wait_for_function(quiet)
+        self.assertFalse(self.page.locator('audio').evaluate('a => a.paused'))
+        self.page.get_by_role('button', name='Unmute music', exact=True).click()
+        self.page.wait_for_function(active)
+        self.page.locator('[data-room-volume]').fill('0')
+        self.page.wait_for_function(quiet)
+        self.page.locator('[data-room-volume]').fill('0.35')
+        self.page.wait_for_function(active)
+        self.page.locator('[data-room]').evaluate('e => {e.requestFullscreen=undefined;}')
+        self.page.locator('[data-room-fullscreen]').click()
+        self.page.wait_for_function(quiet)
+        expect(self.page.locator('[data-room-spectrum]')).not_to_be_visible()
+        self.page.keyboard.press('Escape')
+        self.page.locator('[data-room-spectrum]').scroll_into_view_if_needed()
+        self.page.wait_for_function(active)
+        self.page.emulate_media(reduced_motion='reduce')
+        self.page.wait_for_function(quiet)
+        self.assertFalse(self.page.locator('audio').evaluate('a => a.paused'))
+
+    def test_listening_room_without_webaudio_still_plays_the_recording(self):
+        self.context.add_init_script('window.AudioContext=undefined; window.webkitAudioContext=undefined;')
+        serve_seekable_audio(self.page, 'dream-scenario.mp3')
+        self.visit('room/')
+        self.page.get_by_role('button', name='Play music', exact=True).click()
+        self.page.wait_for_function('document.querySelector("audio").currentTime > .2')
+        self.assertTrue(self.page.evaluate("[...document.querySelectorAll('.room-spectrum-band')].every(b => Number(b.style.getPropertyValue('--level')) === 0)"))
 
     def test_listening_room_city_moves_forward_and_loops_without_a_jump(self):
         self.visit('room/')

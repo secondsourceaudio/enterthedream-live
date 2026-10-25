@@ -18,6 +18,7 @@
     const playlistToggle=room.querySelector('[data-room-playlist-toggle]');
     const playlist=room.querySelector('.room-playlist');
     const skinButton=room.querySelector('[data-room-skin]');
+    const spectrum=room.querySelector('[data-room-spectrum]');
     const status=document.querySelector('[data-room-status]');
     const tracks=[...room.querySelectorAll('[data-room-song]')];
     const scenes=[...room.querySelectorAll('[data-room-scene]')];
@@ -28,6 +29,19 @@
     let moving=!reduced.matches, visible=true, elapsed=0, last=null, animation=0;
     let world=null, scene='shore', selected=null, playRequest=0;
     let immersive=false, controlsTimer=0, returnFocus=null;
+    let meterContext=null, meterAnalyser=null, meterData=null, meterUnavailable=false;
+    let meterFrame=0, meterLast=null, meterVisible=false;
+    const meterBands=[];
+    for (let index=0;index<20;index++) {
+        const element=document.createElement('span');
+        element.className='room-spectrum-band';
+        for (const kind of ['level','peak']) {
+            const part=document.createElement('span');
+            part.className='room-spectrum-'+kind; element.append(part);
+        }
+        spectrum.append(element);
+        meterBands.push({element,level:0,peak:0,hold:0});
+    }
 
     function isRunning() { return moving && !audio.paused && !audio.ended; }
     function updateControls() {
@@ -61,6 +75,76 @@
         if (!world || !visible || document.hidden || !isRunning()) {
             cancelAnimationFrame(animation); animation=0; last=null;
         } else if (!animation) { last=null; animation=requestAnimationFrame(tick); }
+        reconcileSpectrum();
+    }
+    function connectSpectrum() {
+        // Connect once, in the same user gesture as Play. A track change reuses the graph.
+        const AudioContext=window.AudioContext || window.webkitAudioContext;
+        if (!meterContext && AudioContext && !meterUnavailable) {
+            let candidate=null, source=null;
+            try {
+                candidate=new AudioContext();
+                const analyser=candidate.createAnalyser();
+                analyser.fftSize=2048; analyser.smoothingTimeConstant=.5;
+                source=candidate.createMediaElementSource(audio);
+                source.connect(analyser); analyser.connect(candidate.destination);
+                meterContext=candidate; meterAnalyser=analyser;
+                meterData=new Float32Array(analyser.frequencyBinCount);
+            } catch {
+                meterUnavailable=true;
+                if (source) {
+                    source.disconnect(); source.connect(candidate.destination); meterContext=candidate;
+                } else candidate?.close().catch(()=>{});
+            }
+            if (meterContext) meterContext.addEventListener('statechange',reconcileSpectrum);
+        }
+        return meterContext && meterContext.state !== 'running' ? meterContext.resume() : Promise.resolve();
+    }
+    function spectrumAllowed() {
+        return !!meterAnalyser && meterContext.state === 'running' && meterVisible && moving &&
+            !immersive && !document.hidden && !audio.paused && !audio.ended && !audio.muted &&
+            audio.volume > 0 && audio.readyState >= audio.HAVE_FUTURE_DATA;
+    }
+    function clearSpectrum() {
+        for (const band of meterBands) {
+            band.level=band.peak=band.hold=0;
+            band.element.style.setProperty('--level','0');
+            band.element.style.setProperty('--peak','0');
+            band.element.style.setProperty('--peak-visible','0');
+        }
+    }
+    function paintSpectrum(now) {
+        meterFrame=0;
+        if (!spectrumAllowed()) { clearSpectrum(); return; }
+        const dt=meterLast === null ? 1/30 : Math.min(.1,(now-meterLast)/1000);
+        if (dt >= 1/30) {
+            meterLast=now;
+            meterAnalyser.getFloatFrequencyData(meterData);
+            const binWidth=meterContext.sampleRate/meterAnalyser.fftSize;
+            for (let index=0;index<meterBands.length;index++) {
+                const band=meterBands[index];
+                const low=40*Math.pow(350,index/meterBands.length);
+                const high=40*Math.pow(350,(index+1)/meterBands.length);
+                const first=Math.max(1,Math.floor(low/binWidth));
+                const lastBin=Math.min(meterData.length-1,Math.max(first,Math.ceil(high/binWidth)-1));
+                let power=0;
+                for (let bin=first;bin<=lastBin;bin++) power+=Math.pow(10,meterData[bin]/10);
+                const db=power > 0 ? 10*Math.log10(power/Math.max(1,lastBin-first+1)) : -100;
+                const target=Math.max(0,Math.min(.96,(db+70)/60));
+                band.level+=(target-band.level)*(1-Math.exp(-dt/(target > band.level ? .025 : .12)));
+                if (band.level >= band.peak) { band.peak=band.level; band.hold=.18; }
+                else { band.hold-=dt; if (band.hold <= 0) band.peak=Math.max(band.level,band.peak-dt*.65); }
+                band.element.style.setProperty('--level',band.level.toFixed(3));
+                band.element.style.setProperty('--peak',band.peak.toFixed(3));
+                band.element.style.setProperty('--peak-visible',band.peak > .01 ? '1' : '0');
+            }
+        }
+        meterFrame=requestAnimationFrame(paintSpectrum);
+    }
+    function reconcileSpectrum() {
+        if (!spectrumAllowed()) {
+            cancelAnimationFrame(meterFrame); meterFrame=0; meterLast=null; clearSpectrum();
+        } else if (!meterFrame) { meterLast=null; meterFrame=requestAnimationFrame(paintSpectrum); }
     }
     function selectScene(value) {
         if (!scenes.some(button=>button.dataset.roomScene === value)) return;
@@ -84,11 +168,13 @@
     async function startPlayback() {
         const request=++playRequest;
         try {
+            const ready=connectSpectrum();
             if (audio.getAttribute('src') !== selected.dataset.src || audio.error) {
                 audio.src=selected.dataset.src;
                 audio.load();
             }
-            await audio.play();
+            await Promise.all([ready,audio.play()]);
+            reconcileSpectrum();
             if (request === playRequest) status.textContent='';
         } catch (error) {
             if (request === playRequest && error.name !== 'AbortError') {
@@ -131,6 +217,7 @@
         const percent=Math.round(audio.volume*100)+'%';
         volume.setAttribute('aria-valuetext',percent);
         room.querySelector('[data-room-volume-output]').textContent=percent;
+        reconcileSpectrum();
     }
     audio.volume=Number(volume.value);
     mute.addEventListener('click',()=>{
@@ -178,7 +265,7 @@
         seek.setAttribute('aria-valuetext',format(audio.currentTime)+(ready ? ' of '+format(audio.duration) : ''));
         room.querySelector('[data-room-time]').textContent=format(audio.currentTime)+(ready ? ' / '+format(audio.duration) : ' / —:—');
     }
-    for (const event of ['play','pause','ended']) audio.addEventListener(event,updateControls);
+    for (const event of ['play','pause','ended','playing','waiting','canplay']) audio.addEventListener(event,updateControls);
     for (const event of ['loadedmetadata','durationchange','timeupdate','emptied']) audio.addEventListener(event,timeline);
     audio.addEventListener('ended',()=>{
         const available=tracks.filter(track=>!track.disabled);
@@ -218,6 +305,7 @@
             if (returnFocus?.isConnected) returnFocus.focus({preventScroll:true});
         }
         drawStill();
+        reconcileSpectrum();
     }
     async function leaveFullscreen() {
         if (document.fullscreenElement === room) {
@@ -249,6 +337,7 @@
         }
     });
     new IntersectionObserver(entries=>{ visible=entries[0].isIntersecting; reconcile(); }).observe(frame);
+    new IntersectionObserver(entries=>{ meterVisible=entries[0].isIntersecting; reconcileSpectrum(); }).observe(spectrum);
     new ResizeObserver(drawStill).observe(frame);
     document.addEventListener('visibilitychange',reconcile);
     canvas.addEventListener('webglcontextlost',event=>{
@@ -256,7 +345,7 @@
         canvas.dataset.renderState='fallback'; updateControls();
     });
     canvas.addEventListener('webglcontextrestored',()=>selectScene(scene));
-    window.addEventListener('pagehide',()=>{ audio.pause(); cancelAnimationFrame(animation); animation=0; last=null; });
+    window.addEventListener('pagehide',()=>{ audio.pause(); cancelAnimationFrame(animation); animation=0; last=null; reconcileSpectrum(); });
     window.addEventListener('pageshow',reconcile);
     selectTrack(tracks[0],false);
     document.querySelector('[data-room-still]').hidden=true;

@@ -1,0 +1,9 @@
+.rights-page { flex: 1; width: 100%; max-width: 960px; margin: 0 auto; padding: 56px 36px 88px; }
+.rights-heading { margin-bottom: 36px; padding-bottom: 24px; border-bottom: 1px solid #292929; }
+.rights-heading h1 { margin: 0; font-size: 24px; line-height: 1.5; letter-spacing: .12em; text-transform: uppercase; }
+.rights-copy { max-width: 760px; color: #c9c9c9; font: 16px/1.9 Arial, Helvetica, sans-serif; }
+.rights-copy p { margin: 0 0 24px; }
+@media (max-width: 750px) {
+    .rights-page { padding: 40px 20px 64px; }
+    .rights-heading h1 { font-size: 21px; }
+}

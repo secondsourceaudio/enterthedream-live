@@ -269,6 +269,9 @@ h2 {
 
     letter-spacing: 0.2em;
 }
+.copyright-policy { display: inline-block; min-height: 44px; padding-block: 12px; max-width: 100%; color: inherit; text-decoration: none; }
+.copyright-policy:hover { text-decoration: underline; text-underline-offset: 4px; }
+.copyright-policy:focus-visible { outline: 1px solid currentColor; outline-offset: 4px; }
 
 
 /* =========================================

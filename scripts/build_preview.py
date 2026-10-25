@@ -42,7 +42,7 @@ def main():
         lambda m: m.group(1) + 'src="' + embed(asset(m.group(2))) + '"', html)
     html = html.replace('/audio/sage-counsel.mp3', AUDIO)
     html = html.replace('<audio ', '<audio crossorigin="anonymous" ')
-    for route in ['', 'releases/', 'merch/', 'sources/', 'sources/flower/', 'about/']:
+    for route in ['', 'releases/', 'merch/', 'sources/', 'sources/flower/', 'about/', 'rights/']:
         html = html.replace(f'href="/{route}"', f'href="{LIVE}{route}"')
     html = re.sub(r'<title>.*?</title>',
         '<title>SECOND SOURCE — DRIP PREVIEW</title>\n<meta name="robots" content="noindex, nofollow">', html, count=1)

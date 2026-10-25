@@ -1,4 +1,27 @@
 User-agent: *
 Allow: /
 
+# AI training and dataset collection. Ordinary search crawlers remain allowed.
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+# Copyright and AI usage: https://www.enterthedream.org/rights/
 Sitemap: https://www.enterthedream.org/sitemap.xml
