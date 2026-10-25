@@ -26,7 +26,7 @@ repeats a 48-metre street section past the camera at a slow walking pace, with
 fine windblown drizzle over the wet street. A few
 lamps dip gently and irregularly, including their glow and reflected light;
 there are no scene-wide flashes. The dusk source shows a distant skyline and
-suspension bridge across slowly moving water.
+suspension bridge across slowly moving water in fine dusk drizzle.
 The street has no overhead coloured bulbs and uses a flat, ungridded asphalt
 surface; the dusk source keeps its separate wave mesh.
 The audio source is assigned only after Play or a track selection; a new visit fetches no
@@ -35,7 +35,7 @@ the current recording ends. Scene motion follows playback, respects reduced
 motion, pauses offscreen and in hidden tabs, and has a still fallback when WebGL
 or JavaScript is unavailable.
 
-The renderer is limited to 640 × 480 backing pixels and 30 frames per second.
+The renderer is limited to 800 × 600 backing pixels and 30 frames per second.
 Fullscreen uses an adaptive 3D camera, with just play/pause and exit controls
 revealed on interaction. This section has its own native audio element; playback
 continues in background tabs but stops on leaving the page. It does not yet join

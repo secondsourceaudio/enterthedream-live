@@ -41,14 +41,20 @@
 .release-description p { margin: 0 0 16px; }
 .release-description p:last-child { margin-bottom: 0; }
 .release-availability { margin: 14px 0 0; color: #aaa; font-size: var(--font-small); line-height: 1.8; letter-spacing: .1em; }
-.release-tracklist { grid-column: 1 / -1; padding-top: 28px; border-top: 1px solid #292929; }
-.release-tracklist h3 { margin: 0 0 24px; color: #aaa; font-size: var(--font-small); font-weight: normal; line-height: 1.6; letter-spacing: .14em; }
+.release-tracklist,
+.release-credits { grid-column: 1 / -1; padding-top: 28px; border-top: 1px solid #292929; }
+.release-tracklist h3,
+.release-credits h3 { margin: 0 0 24px; color: #aaa; font-size: var(--font-small); font-weight: normal; line-height: 1.6; letter-spacing: .14em; }
 .release-sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(36px, 5vw, 72px); }
 .release-side h4 { margin: 0 0 10px; color: #c9c9c9; font-size: var(--font-small); font-weight: normal; line-height: 1.6; letter-spacing: .12em; }
 .release-tracks { list-style: none; padding: 0; margin: 0; }
 .release-tracks li { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: baseline; gap: 12px; padding-block: 8px; border-bottom: 1px solid #1c1c1c; }
 .release-position { color: #999; font: 12px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .release-track-name { color: #d2d2d2; font: 15px/1.7 Arial, Helvetica, sans-serif; }
+.release-credit-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px clamp(36px, 5vw, 72px); margin: 0; }
+.release-credit-list div { min-width: 0; }
+.release-credit-list dt { margin: 0 0 6px; color: #999; font-size: var(--font-small); line-height: 1.6; letter-spacing: .12em; }
+.release-credit-list dd { margin: 0; color: #d2d2d2; font: 15px/1.7 Arial, Helvetica, sans-serif; }
 
 @media (max-width: 750px) {
     .releases-page { padding: 40px 20px 64px; }
@@ -63,4 +69,5 @@
 
 @media (max-width: 500px) {
     .release-sides { grid-template-columns: minmax(0, 1fr); row-gap: 28px; }
+    .release-credit-list { grid-template-columns: minmax(0, 1fr); }
 }

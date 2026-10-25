@@ -156,7 +156,7 @@
         room.querySelector('.room-scene-label').textContent=sourceName;
         room.querySelector('.room-player-catalogue').textContent=sourceName;
         for (const track of tracks) track.querySelector('.room-song-scene').textContent=sourceNames[track === selected ? scene : track.dataset.scene];
-        const description=scene === 'city' ? 'A quiet low-poly evening street in fine drizzle, with warm windows and reflections on wet asphalt.' : 'A low-poly city skyline and suspension bridge at dusk, seen across slowly moving water.';
+        const description=scene === 'city' ? 'A quiet low-poly evening street in fine drizzle, with warm windows and reflections on wet asphalt.' : 'A low-poly city skyline and suspension bridge in fine dusk drizzle, seen across slowly moving water.';
         frame.setAttribute('aria-label',description+' Slowly looping scenery. Press Space to play or pause music, F for fullscreen.');
         for (const button of scenes) button.setAttribute('aria-pressed',String(button.dataset.roomScene === scene));
         try {

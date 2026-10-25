@@ -2,7 +2,7 @@
 (() => {
     'use strict';
     function createScene(kind, canvas, frame) {
-        const gl = canvas.getContext('webgl', {alpha: false, antialias: false});
+        const gl = canvas.getContext('webgl', {alpha: false, antialias: true});
         if (!gl) throw new Error('WebGL unavailable');
         const night = kind === 'city';
         const fog = night ? [.045, .051, .085] : [.49, .31, .32];
@@ -75,11 +75,11 @@
             const height=5+hash(i+63)*15+(i===15 ? 14 : 0);
             const z=-69-hash(i+87)*9;
             const color=[.075+hash(i+4)*.035,.07+hash(i+9)*.025,.10+hash(i+13)*.045];
-            box(x,-.1,z,width,height,5+hash(i+44)*4,color,0,1);
+            box(x,-.1,z,width,height,5+hash(i+44)*4,color,0,i===15 ? 3 : 1);
             skyline.push({x,width,height,z,seed:i});
             if (i===15) {
-                box(x,height-.1,z,.8,7,.8,[.07,.07,.10]);
-                box(x,height+6.9,z,.18,3.6,.18,[.13,.10,.12]);
+                box(x,height-.1,z,.8,7,.8,[.07,.07,.10],0,3);
+                box(x,height+6.9,z,.18,3.6,.18,[.13,.10,.12],0,3);
             }
         }
         for (const building of skyline) {
@@ -91,7 +91,7 @@
                 const x=building.x-building.width*.34+(column/Math.max(1,columns-1))*building.width*.68;
                 const y=1.4+floor*2.15;
                 const glow=.48+hash(seed+3)*.38;
-                box(x,y,building.z+3.05,.42,.72,.08,warm.map(value=>value*glow),1);
+                box(x,y,building.z+3.05,.42,.72,.08,warm.map(value=>value*glow),1,building.seed===15 ? 3 : 0);
             }
         }
         // Suspension bridge between the viewer and skyline.
@@ -132,6 +132,7 @@
         // Sparse waterfront rail and marker lights keep the foreground grounded.
         box(0,.15,7,130,.22,.5,[.055,.055,.072],0,2);
         for (let x=-54;x<=54;x+=9) {
+            if (Math.abs(x)<1) continue;
             box(x,.1,7,.16,1.3,.16,[.075,.07,.085],0,2);
             box(x,1.35,7,.18,.16,.18,[.55,.24,.12],1);
         }
@@ -245,7 +246,7 @@
                 vec2 uv=gl_FragCoord.xy/u_resolution-.5;
                 float vignette=smoothstep(.3,.72,length(uv*vec2(.9,1.)));
                 color*=1.-vignette*.18*u_night;
-                return floor(clamp(color+d/100.,0.,1.)*63.+.5)/63.;
+                return floor(clamp(color+d/160.,0.,1.)*127.+.5)/127.;
             }
         `;
         const sky=compile(`
@@ -287,6 +288,7 @@
         `,common+`
             varying vec3 v_world; varying vec3 v_local; varying vec3 v_normal; varying vec3 v_color; varying float v_glow; varying float v_material; uniform float u_reflect;
             void main() {
+                if (u_reflect > .5 && v_material > 2.5) discard;
                 float light=.66+.34*max(0.,dot(normalize(v_normal),normalize(vec3(-.45,.8,.3))));
                 float texture=(grain(floor(v_local.xz*3.))- .5)*.025;
                 vec3 color=v_color*light+texture;
@@ -358,7 +360,7 @@
                 gl_FragColor=vec4(v_color,alpha);
             }
         `);
-        const drizzle=night ? compile(`
+        const drizzle=compile(`
             attribute vec2 a_position;
             varying vec2 v_uv;
             void main() {
@@ -375,17 +377,17 @@
                 vec2 id=floor(cells);
                 float seed=grain(id);
                 float localX=fract(cells.x);
-                float fall=fract(cells.y+u_phase*(18.+floor(seed*6.))+seed*13.);
+                float fall=fract(cells.y+(u_phase/6.28318530718)*(126.+floor(seed*24.))+seed*13.);
                 float x=.15+seed*.70;
                 float narrow=smoothstep(.052,.012,abs(localX-x));
-                float shortDrop=(1.-smoothstep(.03,.28,fall))*step(.925,seed);
+                float shortDrop=(1.-smoothstep(.03,.28,fall))*step(mix(.958,.925,u_night),seed);
                 float depth=.35+.65*grain(id+vec2(19.,7.));
                 float edgeFade=smoothstep(.02,.13,v_uv.y)*(1.-smoothstep(.94,1.,v_uv.y));
-                float alpha=narrow*shortDrop*depth*edgeFade*.22;
+                float alpha=narrow*shortDrop*depth*edgeFade*mix(.14,.22,u_night);
                 vec3 color=mix(vec3(.32,.38,.52),vec3(.72,.69,.65),v_uv.y);
                 gl_FragColor=vec4(color,alpha);
             }
-        `) : null;
+        `);
         function buffer(data) {
             const value=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,value);
             gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.STATIC_DRAW); return value;
@@ -442,7 +444,7 @@
         function draw(seconds) {
             const size=frame.getBoundingClientRect();
             if (size.width < 1 || size.height < 1) return;
-            const scale=Math.min(1,640/size.width,480/size.height);
+            const scale=Math.min(1,800/size.width,600/size.height);
             const width=Math.max(1,Math.round(size.width*scale)), height=Math.max(1,Math.round(size.height*scale));
             if (canvas.width !== width || canvas.height !== height) { canvas.width=width; canvas.height=height; }
             gl.viewport(0,0,width,height);
@@ -475,14 +477,14 @@
                     gl.drawArrays(gl.POINTS,0,lights.length/7);
                 }
                 gl.depthMask(true); gl.disable(gl.BLEND);
-                use(drizzle,phase,eye);
-                gl.bindBuffer(gl.ARRAY_BUFFER,skyBuffer);
-                attribute(drizzle,'a_position',2,2,0);
-                gl.disable(gl.DEPTH_TEST);
-                gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
-                gl.drawArrays(gl.TRIANGLES,0,6);
-                gl.disable(gl.BLEND);
             }
+            use(drizzle,phase,eye);
+            gl.bindBuffer(gl.ARRAY_BUFFER,skyBuffer);
+            attribute(drizzle,'a_position',2,2,0);
+            gl.disable(gl.DEPTH_TEST);
+            gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+            gl.drawArrays(gl.TRIANGLES,0,6);
+            gl.disable(gl.BLEND);
         }
         return {draw};
     }

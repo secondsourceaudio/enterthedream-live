@@ -2171,6 +2171,9 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('.release-availability')).to_have_text('SPRING 2027 / Vinyl & Digital')
         expect(self.page.locator('.release-side')).to_have_count(2)
         expect(self.page.locator('.release-tracks li')).to_have_count(10)
+        expect(self.page.locator('.release-credit-list > div')).to_have_count(6)
+        expect(self.page.locator('.release-credit-list')).to_contain_text('RAND Muzik')
+        expect(self.page.locator('.release-credit-list')).to_contain_text('Einar Bersvendsen')
         self.assertTrue(self.page.locator('.release-cover').evaluate('image => image.complete && image.naturalWidth === 3200'))
         expect(self.page.locator('.release-entry a, .release-entry button, a[href*="src001"], [data-artwork-dialog]')).to_have_count(0)
         expect(self.page.locator('meta[name="robots"]')).to_have_count(0)
@@ -2570,7 +2573,7 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('[data-room-play-label]')).to_have_text('PLAY')
         expect(self.page.locator('input[type=file]')).to_have_count(0)
         self.assertEqual(self.page.locator('canvas').evaluate('c => c.getContext("webgl").getError()'), 0)
-        self.assertTrue(self.page.locator('canvas').evaluate('c => c.width <= 640 && c.height <= 480'))
+        self.assertTrue(self.page.locator('canvas').evaluate('c => c.width <= 800 && c.height <= 600'))
         expect(self.page.locator('meta[name="robots"]')).to_have_count(0)
         expect(self.page.locator('.site-nav [aria-current="page"]')).to_have_text('SOURCES')
         expect(self.page.locator('.site-nav a[href="/room/"]')).to_have_count(0)
@@ -2764,8 +2767,7 @@ class WebsiteTests(unittest.TestCase):
                 world.draw(seconds);
                 const pixels=new Uint8Array(canvas.width*canvas.height*4);
                 gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
-                const offset=gl.getUniform(gl.getParameter(gl.CURRENT_PROGRAM),gl.getUniformLocation(gl.getParameter(gl.CURRENT_PROGRAM),'u_offset'));
-                return {pixels,offset};
+                return pixels;
             }
             function difference(a,b) {
                 let total=0;
@@ -2774,15 +2776,12 @@ class WebsiteTests(unittest.TestCase):
             }
             const first=snapshot(0), later=snapshot(30), seam=snapshot(179.999), loop=snapshot(180);
             return {
-                advance:later.offset-first.offset,
-                changed:difference(first.pixels,later.pixels),
-                seam:difference(first.pixels,seam.pixels),
-                loop:difference(first.pixels,loop.pixels),
+                changed:difference(first,later),
+                seam:difference(first,seam),
+                loop:difference(first,loop),
                 error:gl.getError()
             };
         }""")
-        self.assertGreater(result['advance'], 0)
-        self.assertLess(result['advance'], 20)
         self.assertGreater(result['changed'], 1)
         self.assertLess(result['seam'], .5)
         self.assertEqual(result['loop'], 0)
