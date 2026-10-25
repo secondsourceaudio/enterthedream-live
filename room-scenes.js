@@ -5,7 +5,7 @@
         const gl = canvas.getContext('webgl', {alpha: false, antialias: false});
         if (!gl) throw new Error('WebGL unavailable');
         const night = kind === 'city';
-        const fog = night ? [.045, .051, .085] : [.57, .65, .67];
+        const fog = night ? [.045, .051, .085] : [.49, .31, .32];
         const lights = [];
         const objects = [];
         const water = [];
@@ -65,45 +65,75 @@
             return surface;
         }
         if (!night) {
-        const near = island(-28,1,28,31,4.6,7);
-        const centre = island(0,-32,8,6,2.8,31);
-        const back = island(-33,-64,25,10,4.5,52);
-        const right = island(38,-78,32,12,6,78);
-        for (let i=0;i<24;i++) {
-            const x=-53+i*1.75, z=-64+(hash(i*3)-.5)*8;
-            tree(x,back(x,z),z,.75+hash(i)*.8,i+200);
+        // A distant city at dusk, seen across open water from a quiet waterfront.
+        const silhouette=[.075,.075,.105], bridge=[.085,.075,.09], warm=[.82,.38,.18];
+        box(0,-.45,-61,150,.7,6,[.10,.09,.115]);
+        const skyline=[];
+        for (let i=0;i<29;i++) {
+            const x=-79+i*5.7+(hash(i+18)-.5)*1.5;
+            const width=3.2+hash(i+31)*4.3;
+            const height=5+hash(i+63)*15+(i===15 ? 14 : 0);
+            const z=-69-hash(i+87)*9;
+            const color=[.075+hash(i+4)*.035,.07+hash(i+9)*.025,.10+hash(i+13)*.045];
+            box(x,-.1,z,width,height,5+hash(i+44)*4,color,0,1);
+            skyline.push({x,width,height,z,seed:i});
+            if (i===15) {
+                box(x,height-.1,z,.8,7,.8,[.07,.07,.10]);
+                box(x,height+6.9,z,.18,3.6,.18,[.13,.10,.12]);
+            }
         }
-        for (let i=0;i<19;i++) {
-            const x=15+i*2.1, z=-79+(hash(i+14)-.5)*9;
-            tree(x,right(x,z),z,.8+hash(i+9)*.9,i+300);
+        for (const building of skyline) {
+            const floors=Math.max(1,Math.floor((building.height-2)/2.2));
+            const columns=Math.max(1,Math.floor(building.width/1.6));
+            for (let floor=0;floor<floors;floor++) for (let column=0;column<columns;column++) {
+                const seed=building.seed*71+floor*11+column*5;
+                if (hash(seed)<.52) continue;
+                const x=building.x-building.width*.34+(column/Math.max(1,columns-1))*building.width*.68;
+                const y=1.4+floor*2.15;
+                const glow=.48+hash(seed+3)*.38;
+                box(x,y,building.z+3.05,.42,.72,.08,warm.map(value=>value*glow),1);
+            }
         }
-        for (const [x,z,size] of [[-16,1,2],[-19,-8,1.7],[-12,-7,1.45],[-23,12,2.8],[-6,-32,1.2],[4,-34,1.0]]) {
-            tree(x,(z < -25 ? centre : near)(x,z),z,size,Math.round(x*17-z));
+        // Suspension bridge between the viewer and skyline.
+        const deckY=3.2, deckZ=-45, towerHeight=11.5;
+        box(0,deckY,deckZ,116,.55,2.2,bridge,0,2);
+        box(0,deckY-.45,deckZ,116,.3,1.3,[.055,.055,.072],0,2);
+        for (const x of [-27,27]) {
+            box(x,deckY-.6,deckZ-.65,1.05,towerHeight,1.1,bridge,0,2);
+            box(x,deckY-.6,deckZ+.65,1.05,towerHeight,1.1,bridge,0,2);
+            box(x,deckY+towerHeight-1.1,deckZ,4,.6,2.4,bridge,0,2);
+            box(x,deckY-6,deckZ,2.4,6,2.8,[.065,.06,.075],0,2);
         }
-        // A weathered arch gives the scene scale, without a moving character.
-        const stone = [.65,.67,.57], base = centre(0,-32)+.1, archY=base+2.65;
-        box(0,base-.25,-32,5.8,.35,2.4,[.48,.53,.44]);
-        box(-2,base,-32,.55,2.65,.72,stone);
-        box(2,base,-32,.55,2.65,.72,stone);
-        for (let i=0;i<11;i++) {
-            const a=i/11*Math.PI, b=(i+1)/11*Math.PI;
-            const p=(r,angle,z)=>[Math.cos(angle)*r,archY+Math.sin(angle)*r,-32+z];
-            quad(p(2.28,a,.36),p(1.72,a,.36),p(1.72,b,.36),p(2.28,b,.36),stone);
-            quad(p(2.28,b,-.36),p(1.72,b,-.36),p(1.72,a,-.36),p(2.28,a,-.36),stone);
-            quad(p(2.28,a,-.36),p(2.28,a,.36),p(2.28,b,.36),p(2.28,b,-.36),stone);
-            quad(p(1.72,b,-.36),p(1.72,b,.36),p(1.72,a,.36),p(1.72,a,-.36),stone);
+        function ribbon(x1,y1,x2,y2,z,width,color) {
+            const dx=x2-x1, dy=y2-y1, length=Math.hypot(dx,dy)||1;
+            const px=-dy/length*width, py=dx/length*width;
+            quad([x1+px,y1+py,z],[x2+px,y2+py,z],[x2-px,y2-py,z],[x1-px,y1-py,z],color);
         }
-        box(4.2,centre(4.2,-31),-31,.7,1.15,.7,[.53,.58,.48]);
-        // Quiet foreground details: a short pier and simple shoreline rocks.
-        for (let i=0;i<19;i++) box(-3.5,1.0,6-i*.65,2.1,.1,.57,[.34+hash(i)*.04,.36+hash(i)*.04,.31]);
-        for (const z of [6,1,-5]) for (const x of [-4.4,-2.6]) box(x,-.4,z,.16,1.75,.16,[.28,.32,.28]);
-        for (const [x,z,r,h] of [[-8,-4,1.2,1],[-9,5,1.6,1.4],[7,-30,1,.8],[-5,-26,.6,.8]]) {
-            cone(x,-.15,z,r,h,[.38,.43,.38]);
+        const cableY=x=>deckY+3.2+Math.pow(Math.abs(x)/27,1.7)*5.5;
+        let previous=[-27,cableY(-27)];
+        for (let step=1;step<=18;step++) {
+            const x=-27+step*3, point=[x,cableY(x)];
+            ribbon(previous[0],previous[1],point[0],point[1],deckZ+.72,.10,[.16,.13,.14]);
+            previous=point;
         }
-        for (let i=0;i<12;i++) {
-            const x=-132+i*24;
-            const height=9+hash(i+60)*15;
-            triangle([x-25,-1,-132],[x,height,-137],[x+29,-1,-133],[.41,.50,.51]);
+        for (let x=-24;x<=24;x+=4) {
+            ribbon(x,deckY+.35,x,cableY(x),deckZ+.72,.045,[.13,.115,.125]);
+        }
+        for (const side of [-1,1]) {
+            const towerX=side*27, anchorX=side*66;
+            previous=[towerX,deckY+towerHeight-1];
+            for (let step=1;step<=10;step++) {
+                const t=step/10, x=towerX+(anchorX-towerX)*t;
+                const y=deckY+towerHeight-1-(deckY+towerHeight-3.4)*Math.pow(t,.82);
+                ribbon(previous[0],previous[1],x,y,deckZ+.72,.10,[.16,.13,.14]);
+                previous=[x,y];
+            }
+        }
+        // Sparse waterfront rail and marker lights keep the foreground grounded.
+        box(0,.15,7,130,.22,.5,[.055,.055,.072],0,2);
+        for (let x=-54;x<=54;x+=9) {
+            box(x,.1,7,.16,1.3,.16,[.075,.07,.085],0,2);
+            box(x,1.35,7,.18,.16,.18,[.55,.24,.12],1);
         }
         } else {
             // An original empty evening street: warm windows and wet stone.
@@ -167,7 +197,7 @@
             }
 
         }
-        // The road is one flat quad; only the shore needs a wave mesh.
+        // The road is one flat quad; the dusk skyline keeps a wave mesh.
         const wx=night ? 1 : 64, wz=night ? 1 : 72;
         for (let z=0;z<wz;z++) for (let x=0;x<wx;x++) {
             const p=(a,b)=>[-130+a/wx*260,-178+b/wz*205];
@@ -228,14 +258,17 @@
                 return mix(mix(grain(a),grain(a+vec2(1,0)),b.x),mix(grain(a+vec2(0,1)),grain(a+1.),b.x),b.y);
             }
             void main() {
-                vec3 day=mix(vec3(.68,.71,.69),vec3(.35,.45,.56),smoothstep(.3,1.,v_uv.y));
+                vec3 day=mix(vec3(.82,.40,.27),vec3(.11,.14,.29),smoothstep(.24,1.,v_uv.y));
                 vec3 dusk=mix(u_fog,vec3(.018,.025,.065),smoothstep(.48,1.,v_uv.y));
                 vec3 color=mix(day,dusk,u_night);
                 float clouds=noise(v_uv*vec2(5.,15.)+vec2(sin(u_phase)*.28,cos(u_phase)*.035));
-                color+=smoothstep(.51,.78,clouds)*mix(.055,.012,u_night)*smoothstep(.55,.7,v_uv.y);
-                color+=vec3(.045,.018,.01)*exp(-pow((v_uv.y-.52)*9.,2.));
+                color+=smoothstep(.51,.78,clouds)*mix(.035,.012,u_night)*smoothstep(.55,.7,v_uv.y);
+                color+=vec3(.13,.045,.018)*exp(-pow((v_uv.y-.34)*8.,2.))*(1.-u_night);
+                color+=vec3(.045,.018,.01)*exp(-pow((v_uv.y-.52)*9.,2.))*u_night;
+                float sun=1.-smoothstep(.021,.026,length((v_uv-vec2(.76,.42))*vec2(u_aspect,1.)));
+                color=mix(color,vec3(1.,.66,.37),sun*.72*(1.-u_night));
                 float moon=1.-smoothstep(.015,.018,length((v_uv-vec2(.76,.82))*vec2(u_aspect,1.)));
-                color=mix(color,vec3(.85,.85,.74),moon*mix(.64,.30,u_night));
+                color=mix(color,vec3(.85,.85,.74),moon*.30*u_night);
                 gl_FragColor=vec4(finish(color),1.);
             }
         `);
@@ -266,7 +299,7 @@
                         color-=min(1.,mortar)*.018;
                     }
                     color=mix(color,v_color*(.9+.025*sin(u_phase*2.))*cityFlicker(v_local,u_phase),v_glow);
-                }
+                } else color=mix(color,v_color*(1.05+.018*sin(u_phase*2.))+vec3(.055,.02,.008),v_glow*.82);
                 float fog=1.-exp(-length(v_world-u_eye)*mix(.014,.021,u_night));
                 if (u_night > .5) fog=max(fog,smoothstep(60.,108.,length(v_world-u_eye)));
                 color=mix(color,u_fog,clamp(fog,0.,u_night > .5 ? 1. : .97));
@@ -290,10 +323,10 @@
                 float distance=length(v_world-u_eye);
                 float ripple=sin(v_world.x*.65+v_world.z*.43+u_phase*5.);
                 ripple+=sin(v_world.x*.21-v_world.z*.54+u_phase*3.)*.6;
-                vec3 color=mix(vec3(.27,.40,.40),u_fog,1.-exp(-distance*.018));
-                color+=ripple*.018;
-                float sheen=pow(max(0.,sin(v_world.x*.08-v_world.z*.03+u_phase)),12.)*.025;
-                color+=sheen*exp(-distance*.008);
+                vec3 color=mix(vec3(.10,.13,.20),u_fog,1.-exp(-distance*.018));
+                color+=ripple*.012;
+                float sheen=pow(max(0.,sin(v_world.x*.08-v_world.z*.03+u_phase)),12.)*.018;
+                color+=sheen*exp(-distance*.008)+vec3(.08,.025,.012)*exp(-pow(v_world.x*.018,2.))*exp(-distance*.013);
                 if (u_night > .5) {
                     vec2 street=vec2(v_world.x,v_world.z-u_travel);
                     // Unbroken wet asphalt, without a tile grid beneath the reflections.

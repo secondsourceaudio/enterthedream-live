@@ -9,7 +9,7 @@ GitHub Pages and needs no build step or production dependencies.
 navigation and included in the sitemap. `/room/` redirects here, preserving query
 parameters and fragments. Its playlist currently pairs Dream Scenario
 with a quiet evening street. Sage Counsel remains on the homepage only. Tracks
-have default scenes, but the independent SOURCE 1 / DAY and SOURCE 2 / NIGHT controls
+have default scenes, but the independent SOURCE 1 / DUSK and SOURCE 2 / NIGHT controls
 preserve the current music, playback position and paused state. There is no
 local-file picker.
 
@@ -24,9 +24,10 @@ disabled; browsers without Web Audio retain normal playback.
 Both original procedural low-poly scenes close on a three-minute loop. The city
 repeats a 48-metre street section past the camera at a slow walking pace. A few
 lamps dip gently and irregularly, including their glow and reflected light;
-there are no scene-wide flashes. The shore stays available as a separate choice.
+there are no scene-wide flashes. The dusk source shows a distant skyline and
+suspension bridge across slowly moving water.
 The street has no overhead coloured bulbs and uses a flat, ungridded asphalt
-surface; the shore keeps its separate wave mesh.
+surface; the dusk source keeps its separate wave mesh.
 The audio source is assigned only after Play or a track selection; a new visit fetches no
 audio and never autoplays. The playlist advances to the next available track when
 the current recording ends. Scene motion follows playback, respects reduced

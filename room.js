@@ -22,7 +22,7 @@
     const status=document.querySelector('[data-room-status]');
     const tracks=[...room.querySelectorAll('[data-room-song]')];
     const scenes=[...room.querySelectorAll('[data-room-scene]')];
-    const sourceNames={shore:'SOURCE 1 / DAY',city:'SOURCE 2 / NIGHT'};
+    const sourceNames={shore:'SOURCE 1 / DUSK',city:'SOURCE 2 / NIGHT'};
     playlist.querySelector('h2 span').textContent=String(tracks.length).padStart(2,'0');
     const reduced=matchMedia('(prefers-reduced-motion: reduce)');
     const hover=matchMedia('(hover: hover) and (pointer: fine)');
@@ -156,7 +156,7 @@
         room.querySelector('.room-scene-label').textContent=sourceName;
         room.querySelector('.room-player-catalogue').textContent=sourceName;
         for (const track of tracks) track.querySelector('.room-song-scene').textContent=sourceNames[track === selected ? scene : track.dataset.scene];
-        const description=scene === 'city' ? 'A quiet low-poly evening street with warm windows and reflections on wet asphalt.' : 'A misty low-poly shore with gentle waves, trees and a stone arch.';
+        const description=scene === 'city' ? 'A quiet low-poly evening street with warm windows and reflections on wet asphalt.' : 'A low-poly city skyline and suspension bridge at dusk, seen across slowly moving water.';
         frame.setAttribute('aria-label',description+' Slowly looping scenery. Press Space to play or pause music, F for fullscreen.');
         for (const button of scenes) button.setAttribute('aria-pressed',String(button.dataset.roomScene === scene));
         try {

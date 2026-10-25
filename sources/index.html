@@ -4,20 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#050505">
-    <meta name="description" content="Music and moving images from Second Source. Choose SOURCE 1 / DAY or SOURCE 2 / NIGHT and listen.">
+    <meta name="description" content="Music and moving images from Second Source. Choose SOURCE 1 / DUSK or SOURCE 2 / NIGHT and listen.">
     <link rel="icon" href="/favicon.ico?v=1" sizes="16x16 32x32 48x48">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=1">
     <title>Sources — Second Source</title>
     <link rel="stylesheet" href="/site.css?v=14">
     <link rel="stylesheet" href="/room.css?v=5">
     <script src="/site.js?v=5" defer></script>
-    <script src="/room-scenes.js?v=3" defer></script>
-    <script src="/room.js?v=5" defer></script>
+    <script src="/room-scenes.js?v=4" defer></script>
+    <script src="/room.js?v=6" defer></script>
     <link rel="canonical" href="https://www.enterthedream.org/sources/">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Second Source">
     <meta property="og:title" content="Sources — Second Source">
-    <meta property="og:description" content="Music and moving images from Second Source. Choose SOURCE 1 / DAY or SOURCE 2 / NIGHT and listen.">
+    <meta property="og:description" content="Music and moving images from Second Source. Choose SOURCE 1 / DUSK or SOURCE 2 / NIGHT and listen.">
     <meta property="og:url" content="https://www.enterthedream.org/sources/">
     <meta property="og:image" content="https://www.enterthedream.org/images/share/second-source.png?v=1">
     <meta property="og:image:type" content="image/png">
@@ -26,7 +26,7 @@
     <meta property="og:image:alt" content="SRC mark and Second Source.">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Sources — Second Source">
-    <meta name="twitter:description" content="Music and moving images from Second Source. Choose SOURCE 1 / DAY or SOURCE 2 / NIGHT and listen.">
+    <meta name="twitter:description" content="Music and moving images from Second Source. Choose SOURCE 1 / DUSK or SOURCE 2 / NIGHT and listen.">
     <meta name="twitter:image" content="https://www.enterthedream.org/images/share/second-source.png?v=1">
     <meta name="twitter:image:alt" content="SRC mark and Second Source.">
 </head>
@@ -48,18 +48,21 @@
         </header>
         <section class="room" data-room data-scene="city" aria-label="Music and scenery">
             <div class="room-scenes" role="group" aria-label="Choose source">
-                <button type="button" data-room-scene="shore" aria-pressed="false">SOURCE 1 / DAY</button>
+                <button type="button" data-room-scene="shore" aria-pressed="false">SOURCE 1 / DUSK</button>
                 <button type="button" data-room-scene="city" aria-pressed="true">SOURCE 2 / NIGHT</button>
             </div>
             <div class="room-frame" tabindex="0" role="group" aria-label="A quiet low-poly evening street with warm windows and reflections on wet asphalt. Slowly looping scenery. Press Space to play or pause music, F for fullscreen.">
                 <svg class="room-fallback" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-                    <defs><linearGradient id="room-sky" x2="0" y2="1"><stop stop-color="#4e647a"/><stop offset="1" stop-color="#bdc0bd"/></linearGradient><linearGradient id="room-water" x2="0" y2="1"><stop stop-color="#9aaeb5"/><stop offset="1" stop-color="#395e63"/></linearGradient></defs>
-                    <path fill="url(#room-sky)" d="M0 0h1600v1000H0z"/>
-                    <path fill="#85979c" d="m0 520 190-120 130 100 160-90 170 105 140-70 170 80 160-130 150 100 150-90 180 120v500H0z"/>
-                    <path fill="url(#room-water)" d="M0 540h1600v460H0z"/>
-                    <path fill="#526b65" d="m430 610 210-65 230 5 190 62-265 25z"/>
-                    <path fill="none" stroke="#b6b6a8" stroke-width="25" d="M715 565v-65a70 70 0 0 1 140 0v65"/>
-                    <path fill="#3b554d" d="M0 670 175 620 285 685 390 810 315 1000H0z"/>
+                    <defs><linearGradient id="room-sunset" x2="0" y2="1"><stop stop-color="#171a35"/><stop offset=".62" stop-color="#985646"/><stop offset="1" stop-color="#d98a56"/></linearGradient><linearGradient id="room-river" x2="0" y2="1"><stop stop-color="#49343e"/><stop offset="1" stop-color="#101522"/></linearGradient></defs>
+                    <path fill="url(#room-sunset)" d="M0 0h1600v1000H0z"/>
+                    <circle cx="1205" cy="365" r="28" fill="#ffd09b" opacity=".8"/>
+                    <path fill="#171625" d="M0 530h70V390h60v140h70V330h90v200h42V420h85v110h58V280h75v250h35V365h88v165h54V245h78v285h40V345h70v185h45V405h80v125h38V310h110v220h55V375h74v155h84V420h80v110h70v470H0z"/>
+                    <path fill="url(#room-river)" d="M0 530h1600v470H0z"/>
+                    <path fill="#11111b" d="M0 625h1600v28H0z"/>
+                    <path fill="none" stroke="#171522" stroke-width="18" d="M210 625V470m1180 155V470M210 475Q800 625 1390 475"/>
+                    <path fill="none" stroke="#211b25" stroke-width="5" d="M210 475Q800 625 1390 475"/>
+                    <path stroke="#1b1822" stroke-width="4" d="M300 503v122m100-94v94m100-70v70m100-47v47m100-28v28m100-18v18m100-28v28m100-47v47m100-70v70m100-94v94"/>
+                    <path stroke="#b6673a" stroke-width="3" opacity=".35" d="m1170 560-100 440m150-440-45 440m95-440 10 440"/>
                 </svg>
                 <svg class="room-fallback room-fallback-city" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
                     <defs><linearGradient id="room-night" x2="0" y2="1"><stop stop-color="#11162f"/><stop offset="1" stop-color="#48404b"/></linearGradient></defs>
