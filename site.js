@@ -1,6 +1,22 @@
 /* Page transitions and keyboard-safe artwork viewers. */
 (() => {
     "use strict";
+    const updateClock = () => {
+        const clocks = document.querySelectorAll("[data-os-clock]");
+        if (!clocks.length) return;
+        const value = new Intl.DateTimeFormat("en-GB", {
+            timeZone: "Europe/Oslo",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+        }).format(new Date());
+        for (const clock of clocks) clock.textContent = value;
+    };
+    if (document.querySelector("[data-os-clock]")) {
+        updateClock();
+        window.setInterval(updateClock, 30000);
+    }
+    window.addEventListener("site:pagechange", updateClock);
     if (/^https?:$/.test(location.protocol) && location.pathname === '/index.html') {
         history.replaceState(history.state, '', '/' + location.search + location.hash);
     }

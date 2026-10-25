@@ -14,7 +14,8 @@
     <link rel="stylesheet" href="/site.css?v=15">
     <link rel="stylesheet" href="/new.css?v=32">
     <link rel="stylesheet" href="/experience.css?v=20">
-    <script src="/site.js?v=5" defer></script>
+    <link rel="stylesheet" href="/src-os.css?v=1">
+    <script src="/site.js?v=6" defer></script>
     <link rel="preload" as="image" href="/images/drip_cover_front_2.webp">
     <script src="/experience.js?v=18" defer></script>
     <script src="/drip-fluid.js?v=15" defer></script>
@@ -36,10 +37,10 @@
     <meta name="twitter:image" content="https://www.enterthedream.org/images/share/drip.png?v=1">
     <meta name="twitter:image:alt" content="Blue DRIP artwork, Martin Solli / SRC001.">
 </head>
-<body class="landing-study">
+<body class="landing-study src-os">
     <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
     <header class="site-header">
-        <a class="site-logo" href="/">SECOND SOURCE</a>
+        <a class="site-logo" href="/">SECOND SOURCE <span class="src-os-label" aria-hidden="true">SRC OS</span></a>
         <nav class="site-nav" aria-label="Main navigation">
             <a href="/releases/">RELEASES</a>
             <a href="/sources/">SOURCES</a>
@@ -47,8 +48,10 @@
             <a href="/about/">ABOUT / CONTACT</a>
             <a href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP <svg class="external-arrow" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 10 10 2M2 2h8v8" fill="none" stroke="currentColor" stroke-width="1"/></svg></a>
         </nav>
+        <time class="src-os-clock" data-os-clock aria-label="Current time in Oslo">--:--</time>
     </header>
     <main tabindex="-1" id="main-content" class="landing-experiment">
+        <div class="src-os-windowbar"><span>SOURCES / DRIP.FLUID</span><span class="src-os-window-controls" aria-hidden="true">− □ ×</span></div>
         <section id="listening-space" class="listening-space" data-experience data-motion-default-on aria-label="DRIP fluid study">
             <h1 class="visually-hidden">DRIP</h1>
             <div id="visual-container" class="visual-container" data-fluid-material="oil" tabindex="0" role="group" aria-label="Interactive DRIP fluid study. Drag to move the artwork, hold to stir, or press Space for a vortex.">

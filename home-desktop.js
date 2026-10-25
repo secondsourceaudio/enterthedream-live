@@ -1,16 +1,6 @@
 (() => {
     'use strict';
 
-    const clock = document.querySelector('[data-home-clock]');
-    const updateClock = () => {
-        if (!clock) return;
-        clock.textContent = new Intl.DateTimeFormat('en-GB', {
-            timeZone: 'Europe/Oslo', hour: '2-digit', minute: '2-digit', hour12: false
-        }).format(new Date());
-    };
-    updateClock();
-    window.setInterval(updateClock, 30000);
-
     const desktopPointer = window.matchMedia('(min-width: 981px) and (pointer: fine)');
     const stage = document.querySelector('[data-experience]');
     if (!stage) return;

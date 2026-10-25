@@ -12,12 +12,13 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=1" sizes="180x180">
     <link rel="stylesheet" href="/site.css?v=15">
     <link rel="stylesheet" href="/error.css?v=1">
-    <script src="/site.js?v=5" defer></script>
+    <link rel="stylesheet" href="/src-os.css?v=1">
+    <script src="/site.js?v=6" defer></script>
 </head>
-<body>
+<body class="src-os">
     <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
     <header class="site-header">
-        <a class="site-logo" href="/">SECOND SOURCE</a>
+        <a class="site-logo" href="/">SECOND SOURCE <span class="src-os-label" aria-hidden="true">SRC OS</span></a>
         <nav class="site-nav" aria-label="Main navigation">
             <a href="/releases/">RELEASES</a>
             <a href="/sources/">SOURCES</a>
@@ -25,12 +26,16 @@
             <a href="/about/">ABOUT / CONTACT</a>
             <a href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP <svg class="external-arrow" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 10 10 2M2 2h8v8" fill="none" stroke="currentColor" stroke-width="1"/></svg></a>
         </nav>
+        <time class="src-os-clock" data-os-clock aria-label="Current time in Oslo">--:--</time>
     </header>
     <main tabindex="-1" id="main-content" class="error-page">
-        <p class="error-code" aria-hidden="true">404</p>
-        <h1>PAGE NOT FOUND</h1>
-        <p class="error-message">There’s nothing here.</p>
-        <a class="error-return" href="/">RETURN</a>
+        <div class="src-os-windowbar"><span>SYSTEM / ERROR.LOG</span><span class="src-os-window-controls" aria-hidden="true">− □ ×</span></div>
+        <div class="error-panel">
+            <p class="error-code" aria-hidden="true">404</p>
+            <h1>PAGE NOT FOUND</h1>
+            <p class="error-message">There’s nothing here.</p>
+            <a class="error-return" href="/">RETURN</a>
+        </div>
     </main>
     <footer class="legal-footer">
         <p class="copyright-line"><a class="copyright-policy" href="/rights/"><span class="copyright-symbol">©</span> 2026 SECOND SOURCE AUDIO. COPYRIGHT &amp; AI USAGE.</a></p>
