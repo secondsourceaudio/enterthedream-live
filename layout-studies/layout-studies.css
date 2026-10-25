@@ -8,7 +8,7 @@
 .study-switcher button[aria-pressed="true"] { background: #e6e6e6; color: #090909; border-color: #e6e6e6; }
 .study-stage { width: 100%; max-width: 1500px; margin: 0 auto; padding: 40px 30px 80px; }
 .study-panel { width: 100%; }
-.study-caption { max-width: 850px; margin: 18px 0 0; color: #8d8d8d; font: 13px/1.7 Arial,sans-serif; }
+.study-caption { max-width: 850px; margin: 18px 0 0; color: #8d8d8d; font: 11px/1.7 var(--font-interface); letter-spacing: .035em; }
 .study-caption strong { color: #d6d6d6; font: 11px/1.7 "Microgramma",Arial,sans-serif; letter-spacing: .1em; }
 .prototype { position: relative; width: 100%; min-height: min(810px, calc(100vh - 180px)); overflow: hidden; border: 1px solid #303030; background: #080808; }
 

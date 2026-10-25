@@ -19,6 +19,16 @@
 ========================================= */
 
 :root {
+    --font-interface:
+        "Microgramma",
+        Arial,
+        Helvetica,
+        sans-serif;
+    --font-copy:
+        Arial,
+        Helvetica,
+        sans-serif;
+
     --font-brand: 14px;
     --font-nav: 12px;
 
@@ -75,11 +85,7 @@ body {
     display: flex;
     flex-direction: column;
 
-    font-family:
-        "Microgramma",
-        Arial,
-        Helvetica,
-        sans-serif;
+    font-family: var(--font-interface);
 }
 
 
@@ -129,11 +135,11 @@ h2 {
 
 .site-header {
     width: 100%;
-    min-height: 76px;
+    min-height: 42px;
 
     padding:
         0
-        32px;
+        18px;
 
     display: flex;
 
@@ -141,9 +147,9 @@ h2 {
 
     column-gap: 28px;
 
-    border-bottom:
-        1px solid
-        rgba(255, 255, 255, 0.18);
+    border-bottom: 1px solid #7b8497;
+    background: #c7ccd5;
+    color: #151820;
 }
 
 
@@ -153,11 +159,11 @@ h2 {
     align-items: center;
     min-height: 44px;
 
-    color: #ffffff;
+    color: #151820;
 
-    font-size: var(--font-brand);
+    font-size: 11px;
 
-    letter-spacing: 0.3em;
+    letter-spacing: 0.15em;
 
     text-decoration: none;
 
@@ -194,11 +200,11 @@ h2 {
 .site-nav a {
     position: relative;
 
-    color: #ffffff;
+    color: #151820;
 
-    font-size: var(--font-nav);
+    font-size: 10px;
 
-    letter-spacing: 0.22em;
+    letter-spacing: 0.12em;
 
     text-decoration: none;
 
@@ -220,7 +226,7 @@ h2 {
     width: 0;
     height: 1px;
 
-    background: #ffffff;
+    background: #151820;
 
     transition:
         width 0.25s ease;
@@ -305,9 +311,7 @@ h2 {
 
         width: 100%;
 
-        padding:
-            24px
-            16px;
+        padding: 12px 14px 10px;
 
         display: block;
 
@@ -322,7 +326,7 @@ h2 {
         margin:
             0
             auto
-            24px;
+            6px;
 
         text-align: center;
     }
@@ -346,7 +350,7 @@ h2 {
 
 
     .site-nav a {
-        font-size: var(--font-nav);
+        font-size: 10px;
 
         letter-spacing: 0.14em;
     }
@@ -382,10 +386,10 @@ main { animation: scene-arrive .6s ease both; }
 }
 .skip-link:focus { transform: none; }
 @media (max-width: 750px) {
-    .site-header { padding: 18px 16px 10px; }
+    .site-header { padding: 12px 14px 10px; }
     .site-logo { margin-bottom: 8px; }
     .site-nav { gap: 4px 18px; }
-    .site-nav a { font-size: var(--font-small); letter-spacing: .1em; }
+    .site-nav a { font-size: 10px; letter-spacing: .08em; }
 }
 @media (min-width: 751px) and (max-width: 1000px) {
     .site-nav { gap: 20px; }

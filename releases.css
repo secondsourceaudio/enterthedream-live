@@ -49,12 +49,12 @@
 .release-side h4 { margin: 0 0 10px; color: #c9c9c9; font-size: var(--font-small); font-weight: normal; line-height: 1.6; letter-spacing: .12em; }
 .release-tracks { list-style: none; padding: 0; margin: 0; }
 .release-tracks li { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: baseline; gap: 12px; padding-block: 8px; border-bottom: 1px solid #1c1c1c; }
-.release-position { color: #999; font: 12px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; }
-.release-track-name { color: #d2d2d2; font: 15px/1.7 Arial, Helvetica, sans-serif; }
+.release-position { color: #999; font: 11px/1.7 var(--font-interface); letter-spacing: .08em; }
+.release-track-name { color: #d2d2d2; font: 13px/1.7 var(--font-interface); letter-spacing: .045em; }
 .release-credit-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px clamp(36px, 5vw, 72px); margin: 0; }
 .release-credit-list div { min-width: 0; }
 .release-credit-list dt { margin: 0 0 6px; color: #999; font-size: var(--font-small); line-height: 1.6; letter-spacing: .12em; }
-.release-credit-list dd { margin: 0; color: #d2d2d2; font: 13px/1.7 "Microgramma", Arial, Helvetica, sans-serif; letter-spacing: .035em; }
+.release-credit-list dd { margin: 0; color: #d2d2d2; font: 13px/1.7 var(--font-interface); letter-spacing: .035em; }
 
 @media (max-width: 750px) {
     .releases-page { padding: 40px 20px 64px; }

@@ -19,18 +19,18 @@ The little SRC in INDEX has another side.
     <link rel="icon" type="image/png" href="/favicon-192x192.png?v=1" sizes="192x192">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=1" sizes="180x180">
     <title>Second Source Audio — Independent Record Label, Oslo</title>
-    <link rel="stylesheet" href="/site.css?v=14">
+    <link rel="stylesheet" href="/site.css?v=15">
     <link rel="stylesheet" href="/new.css?v=32">
-    <link rel="stylesheet" href="/experience.css?v=19">
-    <link rel="stylesheet" href="/src-desktop.css?v=4">
+    <link rel="stylesheet" href="/experience.css?v=20">
     <link rel="stylesheet" href="/continuous-player.css?v=2">
+    <link rel="stylesheet" href="/home-desktop.css?v=1">
     <script src="/site.js?v=5" defer></script>
     <link rel="preload" as="image" href="/images/drip_cover_front_2.webp">
     <script src="/experience.js?v=18" defer></script>
     <script src="/landing-experiment.js?v=26" defer></script>
     <script src="/drip-fluid.js?v=15" defer></script>
     <script src="/experience-tools.js?v=3" defer></script>
-    <script src="/src-desktop.js?v=2" defer></script>
+    <script src="/home-desktop.js?v=1" defer></script>
     <script src="/continuous-player.js?v=2" defer></script>
     <link rel="canonical" href="https://www.enterthedream.org/">
     <meta property="og:type" content="website">
@@ -94,19 +94,20 @@ The little SRC in INDEX has another side.
 }
     </script>
 </head>
-<body class="landing-study">
+<body class="landing-study home-desktop">
     <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
-    <header class="site-header">
-        <a class="site-logo" href="/">SECOND SOURCE</a>
-        <nav class="site-nav" aria-label="Main navigation">
-            <a href="/releases/">RELEASES</a>
-            <a href="/sources/">SOURCES</a>
-            <a href="/merch/">MERCH</a>
-            <a href="/about/">ABOUT / CONTACT</a>
-            <a href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP <svg class="external-arrow" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 10 10 2M2 2h8v8" fill="none" stroke="currentColor" stroke-width="1"/></svg></a>
-        </nav>
-    </header>
-    <main tabindex="-1" id="main-content" class="landing-experiment">
+        <header class="site-header">
+            <a class="site-logo" href="/">SECOND SOURCE</a>
+            <nav class="site-nav" aria-label="Main navigation">
+                <a href="/releases/">RELEASES</a>
+                <a href="/sources/">SOURCES</a>
+                <a href="/merch/">MERCH</a>
+                <a href="/about/">ABOUT / CONTACT</a>
+                <a href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP <svg class="external-arrow" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 10 10 2M2 2h8v8" fill="none" stroke="currentColor" stroke-width="1"/></svg></a>
+            </nav>
+            <time class="home-menu-clock" data-home-clock aria-label="Current time in Oslo">--:--</time>
+        </header>
+        <main tabindex="-1" id="main-content" class="landing-experiment">
         <section id="listening-space" class="listening-space" data-experience data-motion-default-on aria-label="DRIP audiovisual experience">
             <h1 class="visually-hidden">Second Source</h1>
             <div id="visual-container" class="visual-container" data-visual-panel="whirl" tabindex="0" role="group" aria-label="Interactive DRIP artwork. Click or tap for ripples, hold for a growing whirlpool, drag to stir, or press Space or Enter for a ripple.">
@@ -121,9 +122,11 @@ The little SRC in INDEX has another side.
                     <canvas id="fluid-visual" class="visual-canvas" aria-hidden="true"></canvas>
                 </div>
             </div>
-            <div class="visualizer-dock" data-visualizer-dock data-nosnippet>
+            <div class="visualizer-dock home-window home-player-window" data-visualizer-dock data-home-window data-nosnippet>
+                <div class="home-window-titlebar" data-home-window-handle tabindex="0"><span>NOW PLAYING</span><span aria-hidden="true">− □ ×</span></div>
                 <div class="compact-player" role="group" aria-labelledby="player-track-title">
                     <div class="player-titlebar" data-player-handle><img class="player-brand-mark" src="/images/brand/src-icon-512.png" width="512" height="512" alt=""><span class="player-catalogue">SRC001 / DRIP</span><span class="player-state" data-player-state>STOPPED</span><button class="src-window-dock" type="button" data-dock-player aria-label="Dock player" title="Dock player" hidden>↙</button></div>
+                    <img class="home-player-art" src="/images/drip_cover_front_2.webp" width="3200" height="3200" alt="DRIP cover artwork" decoding="async" draggable="false">
                     <div class="player-display">
                         <div class="player-spectrum" data-spectrum aria-hidden="true"></div>
                         <div class="player-readout">
@@ -162,6 +165,21 @@ The little SRC in INDEX has another side.
                     <p class="experience-tools-status" role="status" data-tools-status></p>
                 </div>
             </div>
+            <section class="home-window home-directory-window" data-home-window aria-labelledby="home-directory-title">
+                <div class="home-window-titlebar" data-home-window-handle tabindex="0"><span id="home-directory-title">SOURCE DIRECTORY</span><span aria-hidden="true">− □ ×</span></div>
+                <nav class="home-directory" aria-label="Second Source directory">
+                    <a href="/releases/"><span class="home-directory-icon" aria-hidden="true">▣</span><span>SRC001</span></a>
+                    <a href="/sources/"><span class="home-directory-icon" aria-hidden="true">◉</span><span>SOURCES</span></a>
+                    <a href="/merch/"><span class="home-directory-icon" aria-hidden="true">◇</span><span>MERCH</span></a>
+                    <a href="/about/"><span class="home-directory-icon" aria-hidden="true">?</span><span>INFO</span></a>
+                </nav>
+            </section>
+            <section class="home-window home-message-window" data-home-window aria-labelledby="home-message-title">
+                <div class="home-window-titlebar" data-home-window-handle tabindex="0"><span id="home-message-title">SYSTEM MESSAGE</span><span aria-hidden="true">− □ ×</span></div>
+                <p>SECOND SOURCE IS AN INDEPENDENT OUTLET FOR AUDIO AND VISUAL EXPERIMENTATION, BASED IN OSLO.</p>
+                <a href="/about/">READ MORE <span aria-hidden="true">↗</span></a>
+            </section>
+            <p class="home-desktop-hint">DRAG WINDOWS / OPEN FILES</p>
             <p class="visually-hidden" role="status" data-status></p>
             <audio id="experience-audio" data-track-title="Sage Counsel" data-bpm="114" data-beats-per-bar="4" loop preload="none">
                 <source src="/audio/sage-counsel.mp3" type="audio/mpeg">
@@ -214,7 +232,7 @@ The little SRC in INDEX has another side.
                 </div>
             </dialog>
         </section>
-    </main>
+        </main>
     <footer class="legal-footer">
         <div data-nosnippet>
 

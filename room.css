@@ -18,7 +18,7 @@
 .room[data-scene="city"] .room-fallback-city { display: block; }
 .room.has-scene .room-frame canvas { opacity: 1; }
 .room.has-scene .room-fallback { visibility: hidden; }
-.room-scene-label { position: absolute; left: 20px; bottom: 16px; margin: 0; color: #e4e8dc; opacity: .75; font: 11px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .14em; text-shadow: 0 1px 4px #1b3138; pointer-events: none; }
+.room-scene-label { position: absolute; left: 20px; bottom: 16px; margin: 0; color: #e4e8dc; opacity: .75; font: 11px/1.7 var(--font-interface); letter-spacing: .14em; text-shadow: 0 1px 4px #1b3138; pointer-events: none; }
 .room-dock {
     --room-shell: linear-gradient(120deg, #151618, #0b0c0e 55%, #101113);
     --room-border: #36383c; --room-screen: #060709; --room-ink: #e4e8ec;
@@ -59,7 +59,7 @@
 .room-track-artist { display: block; color: var(--room-accent); opacity: .8; font-size: var(--font-micro); }
 .room-track strong { display: block; font-weight: normal; }
 .room-track-separator { display: none; }
-.room-clock { grid-column: 2; margin-top: 4px; color: var(--room-accent); font: 13px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: nowrap; }
+.room-clock { grid-column: 2; margin-top: 4px; color: var(--room-accent); font: 12px/1.6 var(--font-interface); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .room-seek, .room-volume input { display: block; width: 100%; height: 44px; margin: 0; appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer; }
 .room-seek::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(to right, var(--room-accent) var(--progress, 0%), var(--room-line) var(--progress, 0%)); }
 .room-seek::-moz-range-track { height: 2px; background: var(--room-line); }
@@ -70,7 +70,7 @@
 .room-volume input { flex: 1; width: 50px; min-width: 40px; }
 .room-volume input::-webkit-slider-runnable-track { height: 2px; background: var(--room-line); }
 .room-volume input::-moz-range-track { height: 2px; background: var(--room-line); }
-.room-volume output { min-width: 32px; color: var(--room-muted); font: 12px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; text-align: right; }
+.room-volume output { min-width: 32px; color: var(--room-muted); font: 11px/1.6 var(--font-interface); font-variant-numeric: tabular-nums; text-align: right; }
 .room-dock input:focus-visible { outline: 2px solid var(--room-muted); outline-offset: 3px; }
 .room-player-toolbar { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px; width: 100%; margin-top: 4px; border-top: 1px solid var(--room-line); }
 .room-player-toolbar .room-button { font-size: var(--font-micro); padding-inline: 4px; }
@@ -83,12 +83,12 @@
 .room-playlist button:hover, .room-playlist button[aria-pressed="true"] { background: #ffffff05; }
 .room-playlist button[aria-pressed="true"] { border-left-color: var(--room-accent); }
 .room-playlist button:disabled { cursor: default; color: #8c9390; }
-.room-playlist strong, .room-playlist small { display: block; font-family: Arial, Helvetica, sans-serif; font-weight: normal; }
-.room-playlist strong { font-size: 15px; line-height: 1.5; }
-.room-playlist small { font-size: 13px; line-height: 1.6; color: var(--room-accent); opacity: .8; }
-.room-song-number { color: var(--room-accent); font: 12px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.room-playlist strong, .room-playlist small { display: block; font-family: var(--font-interface); font-weight: normal; }
+.room-playlist strong { font-size: 13px; line-height: 1.6; letter-spacing: .045em; }
+.room-playlist small { font-size: 11px; line-height: 1.7; color: var(--room-accent); opacity: .8; letter-spacing: .06em; }
+.room-song-number { color: var(--room-accent); font: 11px/1.6 var(--font-interface); font-variant-numeric: tabular-nums; }
 .room-song-scene { margin-left: auto; color: var(--room-accent); font-size: var(--font-micro); letter-spacing: .08em; }
-.room-note, .room-status { max-width: 590px; margin: 16px auto 0; color: #a7aeab; text-align: center; font: 13px/1.8 Arial, Helvetica, sans-serif; }
+.room-note, .room-status { max-width: 590px; margin: 16px auto 0; color: #a7aeab; text-align: center; font: 12px/1.8 var(--font-interface); letter-spacing: .035em; }
 .room-status:empty { display: none; }
 .room.is-fullscreen { position: fixed; inset: 0; z-index: 4500; width: 100%; height: 100dvh; background: #050505; }
 .room.is-fullscreen .room-frame { flex: 1; width: 100%; height: 100%; aspect-ratio: auto; }
