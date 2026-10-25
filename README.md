@@ -3,12 +3,13 @@
 A static site for artwork, sound, and audiovisual studies. It runs directly on
 GitHub Pages and needs no build step or production dependencies.
 
-## Listening-room preview
+## Sources
 
-`/room/` is an unlisted, noindex prototype for a future mix series, without a new
-navigation item or sitemap entry. Its playlist currently pairs Dream Scenario
+`/sources/` is the public listening section, linked as SOURCES in the main
+navigation and included in the sitemap. `/room/` redirects here, preserving query
+parameters and fragments. Its playlist currently pairs Dream Scenario
 with a quiet evening street. Sage Counsel remains on the homepage only. Tracks
-have default scenes, but the independent DAY / SHORE and NIGHT / CITY controls
+have default scenes, but the independent SOURCE 1 / DAY and SOURCE 2 / NIGHT controls
 preserve the current music, playback position and paused state. There is no
 local-file picker.
 
@@ -34,7 +35,7 @@ or JavaScript is unavailable.
 
 The renderer is limited to 640 × 480 backing pixels and 30 frames per second.
 Fullscreen uses an adaptive 3D camera, with just play/pause and exit controls
-revealed on interaction. This preview has its own native audio element; playback
+revealed on interaction. This section has its own native audio element; playback
 continues in background tabs but stops on leaving the page. It does not yet join
 the homepage's cross-page player. Scene programs and meshes are cached on a
 single WebGL context, including across manual scene changes.
@@ -43,7 +44,7 @@ single WebGL context, including across manual scene changes.
 
 `/rights/` holds the supplied copyright and AI usage reservation. Every site
 footer links to it. It is a utility page with `noindex, follow`, outside the
-four-page sitemap. `robots.txt` asks GPTBot, ClaudeBot, Google-Extended, CCBot,
+five-page sitemap. `robots.txt` asks GPTBot, ClaudeBot, Google-Extended, CCBot,
 Bytespider, Meta-ExternalAgent and Applebot-Extended not to crawl the site.
 Ordinary Googlebot, image search and other search crawlers remain allowed.
 These are crawler instructions, not server-side blocking. GitHub Pages serves
@@ -58,8 +59,8 @@ python3 -m http.server 8000
 ```
 
 Open the local server in your browser. The homepage is DRIP, with a WHIRL / FLUID / VISUALIZER
-switch. **SOURCES** is temporarily omitted from the top navigation. `/sources/` lists
-only FLOWER and remains available by direct link. `/sources/flower/` is the silent FLOWER fluid source,
+switch. **SOURCES** opens the public music and moving-image section at `/sources/`.
+`/sources/flower/` remains available by direct link as the silent FLOWER fluid source,
 using the yellow and black gallery photograph.
 **RELEASES** opens `/releases/`, which shows SRC001 / DRIP with its static
 cover, artist, title, supplied short album text and credits. The public tracklist
@@ -97,9 +98,9 @@ the homepage. Its assets use root-relative paths so nested missing URLs also
 work. Python's basic server can preview it at `/404.html` but does not use it
 automatically for missing addresses.
 
-`robots.txt` advertises `sitemap.xml`, which lists the four public destinations:
-the homepage, RELEASES, MERCH and ABOUT / CONTACT. Add future public routes there
-when they are ready. The temporarily unlisted sources and release drafts are
+`robots.txt` advertises `sitemap.xml`, which lists the five public destinations:
+the homepage, SOURCES, RELEASES, MERCH and ABOUT / CONTACT. Add future public routes there
+when they are ready. Unlisted release drafts and the standalone FLOWER source are
 omitted from the sitemap.
 
 Public pages have descriptive search titles and descriptions. The homepage's

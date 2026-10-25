@@ -1,13 +1,12 @@
-/* An unlisted listening-room study. No episode is advertised before its audio exists. */
+/* Second Source listening player and the two selectable visual sources. */
 .room-main { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; padding: 42px 28px 56px; }
 .room-heading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px 24px; margin-bottom: 24px; }
 .room-heading h1 { margin: 0; font-size: 19px; line-height: 1.6; letter-spacing: .14em; }
 .room-heading p { margin: 0; color: #b1b6b4; font-size: var(--font-micro); line-height: 1.8; letter-spacing: .12em; }
 .room-heading p span { margin-left: 20px; color: #858d8e; }
 .room { position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px; }
-.room-scenes { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 4px 18px; width: 100%; visibility: hidden; }
+.room-scenes { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; width: 100%; visibility: hidden; }
 .room.is-ready .room-scenes { visibility: visible; }
-.room-scenes > span { color: #8d9595; font-size: var(--font-micro); letter-spacing: .12em; margin-right: auto; }
 .room-scenes button { min-height: 44px; padding: 8px 0; border: 0; border-bottom: 1px solid transparent; color: #929a99; background: transparent; font-size: var(--font-micro); letter-spacing: .1em; cursor: pointer; }
 .room-scenes button[aria-pressed="true"] { color: #e0e6e2; border-color: #a9b8b1; }
 .room-scenes button:focus-visible, .room-playlist button:focus-visible { outline: 2px solid #eee; outline-offset: 3px; }
@@ -33,10 +32,10 @@
 .room-dock[data-skin="amber"] { --room-shell: linear-gradient(120deg, #272119, #13100c 55%, #201a12); --room-border: #736044; --room-screen: #110d07; --room-ink: #ffe1a4; --room-muted: #c7b28c; --room-line: #64513a; --room-accent: #ffd084; --room-button: linear-gradient(#3b3020, #20190f); }
 .room.is-ready .room-dock { visibility: visible; }
 .room-player-titlebar { display: flex; align-items: center; gap: 14px; padding-bottom: 12px; color: var(--room-muted); font-size: var(--font-micro); line-height: 1.5; letter-spacing: .12em; }
-.room-player-mark { display: block; width: 48px; height: 16px; object-fit: cover; mix-blend-mode: screen; }
+.room-player-mark { display: block; flex-shrink: 0; width: 48px; height: 16px; object-fit: cover; mix-blend-mode: screen; }
 .room-dock[data-skin="chrome"] .room-player-mark { filter: invert(1); mix-blend-mode: multiply; }
-.room-player-catalogue { padding-left: 14px; border-left: 1px solid var(--room-line); }
-.room-player-state { display: flex; align-items: center; gap: 7px; margin-left: auto; font-size: var(--font-micro); letter-spacing: .04em; }
+.room-player-catalogue { min-width: 0; padding-left: 14px; border-left: 1px solid var(--room-line); }
+.room-player-state { display: flex; flex-shrink: 0; align-items: center; gap: 7px; margin-left: auto; font-size: var(--font-micro); letter-spacing: .04em; }
 .room-player-state::before { content: ""; width: 4px; height: 4px; background: var(--room-muted); opacity: .5; }
 .room.is-playing .room-player-state::before { background: var(--room-accent); box-shadow: 0 0 5px var(--room-accent); opacity: 1; }
 .room-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
@@ -123,3 +122,8 @@ body.room-fullscreen { overflow: hidden; }
     .room-song-scene { max-width: 105px; text-align: right; line-height: 1.8; }
 }
 @media (prefers-reduced-motion: reduce) { .room.is-fullscreen .room-dock { transition: none; } }
+@media (max-width: 360px) {
+    .room-scenes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .room-scenes button { padding-inline: 0; }
+    .room-song-scene { display: none; }
+}
