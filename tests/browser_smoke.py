@@ -2016,10 +2016,10 @@ class WebsiteTests(unittest.TestCase):
                     expect(page.locator('.site-nav [aria-current="page"]')).to_have_text('ABOUT / CONTACT')
                     about = page.locator('.about-page')
                     expect(about.locator('.about-copy p').first).to_have_text(
-                        'Second Source is an independent record label based in Oslo, Norway.')
-                    expect(about).to_contain_text('alongside visual experiments and other things to explore.')
-                    expect(about.get_by_role('link')).to_have_attribute('href', 'mailto:secondsourceaudio@gmail.com')
-                    expect(about.get_by_role('link')).to_be_visible()
+                        'Second Source is an independent outlet for electronic music and visual experimentation, based in Oslo, Norway.')
+                    expect(about).to_contain_text('exploring the overlap between them.')
+                    expect(about.locator('.about-contact').get_by_role('link')).to_have_attribute('href', 'mailto:secondsourceaudio@gmail.com')
+                    expect(about.locator('.about-contact').get_by_role('link')).to_be_visible()
                     expect(about.get_by_role('img', name='Second Source', exact=True)).to_be_visible()
                     self.assertTrue(about.locator('img').evaluate('image => image.complete && image.naturalWidth > 0'))
         finally:
@@ -2495,6 +2495,133 @@ class WebsiteTests(unittest.TestCase):
             page.wait_for_url(BASE_URL + '/')
             self.assertTrue(page.locator('audio').evaluate('a => a.paused'))
             expect(page.locator('[data-player-handle]')).not_to_have_attribute('tabindex', '0')
+        finally:
+            context.close()
+
+    def test_listening_room_renders_silently_and_can_pause_its_scene(self):
+        requests = []
+        self.page.on('request', lambda request: requests.append(request.url) if '/audio/' in request.url else None)
+        self.visit('room/')
+        expect(self.page.locator('#room-scene')).to_have_attribute('data-render-state', 'ready')
+        self.page.wait_for_function("window.__drawsByCanvas['room-scene'] > 0")
+        self.assertEqual(requests, [])
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.paused && !a.currentSrc'))
+        self.assertEqual(self.page.locator('canvas').evaluate('c => c.getContext("webgl").getError()'), 0)
+        self.assertTrue(self.page.locator('canvas').evaluate('c => c.width <= 640 && c.height <= 480'))
+        expect(self.page.locator('meta[name="robots"]')).to_have_attribute('content', 'noindex, nofollow')
+        expect(self.page.locator('.site-nav a[href="/room/"]')).to_have_count(0)
+        self.page.get_by_role('button', name='Pause scenery', exact=True).click()
+        self.wait_for_frames(4)
+        before = self.page.evaluate("window.__drawsByCanvas['room-scene']")
+        self.wait_for_frames(12)
+        self.assertEqual(self.page.evaluate("window.__drawsByCanvas['room-scene']"), before)
+        self.page.get_by_role('button', name='Play scenery', exact=True).click()
+        self.page.wait_for_function("before => window.__drawsByCanvas['room-scene'] > before", arg=before)
+        self.page.locator('.room-frame').evaluate('e => {e.style.marginTop = "3000px";}')
+        self.wait_for_frames(4)
+        before = self.page.evaluate("window.__drawsByCanvas['room-scene']")
+        self.wait_for_frames(8)
+        self.assertEqual(self.page.evaluate("window.__drawsByCanvas['room-scene']"), before)
+        self.page.locator('.room-frame').evaluate('e => {e.style.marginTop = "";}')
+        self.page.wait_for_function("before => window.__drawsByCanvas['room-scene'] > before", arg=before)
+
+    def test_listening_room_local_mix_plays_seeks_and_stays_on_the_device(self):
+        requests = []
+        self.page.on('request', lambda request: requests.append((request.method, request.url)))
+        self.visit('room/')
+        self.page.locator('[data-room-file]').set_input_files(str(Path(__file__).resolve().parents[1] / 'audio/sage-counsel.mp3'))
+        self.page.wait_for_function('Number.isFinite(document.querySelector("audio").duration)')
+        expect(self.page.locator('[data-room-track]')).to_have_text('sage-counsel')
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.paused && a.currentSrc.startsWith("blob:")'))
+        self.page.get_by_role('button', name='Play mix', exact=True).click()
+        self.page.wait_for_function('document.querySelector("audio").currentTime > .2')
+        self.page.get_by_role('button', name='Pause mix', exact=True).click()
+        self.wait_for_frames(4)
+        before = self.page.evaluate("window.__drawsByCanvas['room-scene']")
+        self.wait_for_frames(8)
+        self.assertEqual(self.page.evaluate("window.__drawsByCanvas['room-scene']"), before)
+        self.page.locator('[data-room-seek]').fill('25')
+        self.page.wait_for_function('document.querySelector("audio").currentTime >= 24')
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
+        self.page.get_by_role('button', name='Play mix', exact=True).click()
+        self.page.wait_for_function('document.querySelector("audio").currentTime > 25.1')
+        self.assertFalse(any(method in ['POST', 'PUT', 'PATCH'] for method, _ in requests))
+        self.assertFalse(any('/audio/' in url and url.startswith('http') for _, url in requests))
+
+    def test_listening_room_respects_reduced_motion(self):
+        self.page.emulate_media(reduced_motion='reduce')
+        self.visit('room/')
+        expect(self.page.locator('#room-scene')).to_have_attribute('data-render-state', 'ready')
+        expect(self.page.get_by_role('button', name='Play scenery', exact=True)).to_be_visible()
+        self.wait_for_frames(4)
+        before = self.page.evaluate("window.__drawsByCanvas['room-scene']")
+        self.wait_for_frames(8)
+        self.assertEqual(self.page.evaluate("window.__drawsByCanvas['room-scene']"), before)
+        self.page.get_by_role('button', name='Play scenery', exact=True).click()
+        self.page.wait_for_function("before => window.__drawsByCanvas['room-scene'] > before", arg=before)
+
+    def test_listening_room_touch_fullscreen_keeps_the_player_minimized(self):
+        context = self.browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True)
+        try:
+            page = context.new_page()
+            page.on('pageerror', lambda error: self.errors.append(str(error)))
+            page.goto(BASE_URL + '/room/', wait_until='networkidle')
+            page.locator('[data-room-file]').set_input_files(str(Path(__file__).resolve().parents[1] / 'audio/sage-counsel.mp3'))
+            page.get_by_role('button', name='Play mix', exact=True).tap()
+            page.wait_for_function('document.querySelector("audio").currentTime > .2')
+            source = page.locator('audio').evaluate('a => a.currentSrc')
+            page.locator('[data-room]').evaluate('e => {e.requestFullscreen = undefined;}')
+            page.locator('[data-room-fullscreen]').tap()
+            expect(page.locator('[data-room-fullscreen]')).to_have_attribute('aria-pressed', 'true')
+            page.wait_for_function('getComputedStyle(document.querySelector(".room-dock")).opacity === "0"')
+            self.assertTrue(page.locator('.site-header').evaluate('e => e.inert'))
+            box = page.locator('.room-frame').bounding_box()
+            self.assertAlmostEqual(box['width'], 390, delta=1)
+            self.assertAlmostEqual(box['height'], 844, delta=1)
+            page.touchscreen.tap(195, 422)
+            page.wait_for_function('getComputedStyle(document.querySelector(".room-dock")).opacity === "1"')
+            expect(page.locator('.room-controls button:visible')).to_have_count(2)
+            self.assertLessEqual(page.locator('.room-dock').bounding_box()['width'], 120)
+            self.assertLessEqual(page.locator('.room-dock').bounding_box()['height'], 64)
+            page.get_by_role('button', name='Pause mix', exact=True).tap()
+            self.assertTrue(page.locator('audio').evaluate('a => a.paused'))
+            page.get_by_role('button', name='Play mix', exact=True).tap()
+            page.wait_for_function('!document.querySelector("audio").paused')
+            page.locator('[data-room-fullscreen]').tap()
+            expect(page.locator('[data-room-fullscreen]')).to_have_attribute('aria-pressed', 'false')
+            self.assertFalse(page.locator('.site-header').evaluate('e => e.inert'))
+            expect(page.locator('[data-room-seek]')).to_be_visible()
+            self.assertEqual(page.locator('audio').evaluate('a => a.currentSrc'), source)
+        finally:
+            context.close()
+
+    def test_listening_room_webgl_fallback_keeps_local_audio_available(self):
+        self.context.add_init_script('''(() => {
+            const original = HTMLCanvasElement.prototype.getContext;
+            HTMLCanvasElement.prototype.getContext = function(type, ...args) {
+                if (type === 'webgl' || type === 'webgl2') return null;
+                return original.call(this, type, ...args);
+            };
+        })();''')
+        self.visit('room/')
+        expect(self.page.locator('#room-scene')).to_have_attribute('data-render-state', 'fallback')
+        expect(self.page.locator('.room-fallback')).to_be_visible()
+        expect(self.page.locator('[data-room-play]')).to_be_disabled()
+        self.page.locator('[data-room-file]').set_input_files(str(Path(__file__).resolve().parents[1] / 'audio/sage-counsel.mp3'))
+        self.page.get_by_role('button', name='Play mix', exact=True).click()
+        self.page.wait_for_function('document.querySelector("audio").currentTime > .1')
+        expect(self.page.locator('[data-room-motion]')).to_be_disabled()
+
+    def test_listening_room_without_javascript_shows_a_still_scene(self):
+        context = self.browser.new_context(java_script_enabled=False, viewport={'width': 390, 'height': 844})
+        try:
+            page = context.new_page()
+            page.goto(BASE_URL + '/room/', wait_until='networkidle')
+            expect(page.locator('.room-fallback')).to_be_visible()
+            expect(page.locator('.room-dock')).not_to_be_visible()
+            expect(page.locator('[data-room-still]')).to_be_visible()
+            expect(page.locator('[data-room-still]')).to_contain_text('still preview')
+            self.assertLessEqual(page.evaluate('document.body.scrollWidth'), 390)
         finally:
             context.close()
 

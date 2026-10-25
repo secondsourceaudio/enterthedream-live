@@ -8,6 +8,8 @@
 .about-copy { color: #c9c9c9; font: 16px/1.9 Arial, Helvetica, sans-serif; }
 .about-copy p { margin: 0 0 20px; }
 .about-copy p:last-child { margin-bottom: 0; }
+.about-copy a { color: #eee; text-decoration-color: #777; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.about-copy a:hover { color: #fff; text-decoration-color: currentColor; }
 .about-contact { margin-top: 32px; padding-top: 24px; border-top: 1px solid #292929; }
 .about-contact h2 { margin: 0 0 12px; color: #aaa; font-size: var(--font-small); line-height: 1.8; letter-spacing: .16em; }
 .about-contact a { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; color: #eee; font: 16px/1.8 Arial, Helvetica, sans-serif; overflow-wrap: anywhere; text-underline-offset: 5px; }

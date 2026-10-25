@@ -3,6 +3,23 @@
 A static site for artwork, sound, and audiovisual studies. It runs directly on
 GitHub Pages and needs no build step or production dependencies.
 
+## Listening-room preview
+
+`/room/` is an unlisted, noindex prototype for a future mix series, without a new
+navigation item or sitemap entry. It contains an original procedural low-poly
+shore, a three-minute repeating scene, and an optional local-file player.
+OPEN MIX opens an audio file from the visitor's device; the file is never uploaded
+and no mix episode is claimed or bundled with this preview. Playback starts only
+after Play. The scene respects reduced motion, pauses offscreen and in hidden
+tabs, and has a still fallback when WebGL or JavaScript is unavailable.
+
+The renderer is limited to 640 × 480 backing pixels and 30 frames per second.
+Fullscreen uses an adaptive 3D camera, with just play/pause and exit controls
+revealed on interaction. This preview has its own native audio element; playback
+continues in background tabs but stops on leaving the page. It does not yet join
+the homepage's cross-page player. A real episode can be integrated when its audio
+and metadata are ready.
+
 ## Local development
 
 From the repository root:

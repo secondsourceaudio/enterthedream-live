@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#050505">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="A quiet landscape for listening. A Second Source preview.">
+    <link rel="icon" href="/favicon.ico?v=1" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=1">
+    <title>Listening Room — Second Source / Preview</title>
+    <link rel="stylesheet" href="/site.css?v=13">
+    <link rel="stylesheet" href="/room.css?v=1">
+    <script src="/site.js?v=5" defer></script>
+    <script src="/room.js?v=1" defer></script>
+    <link rel="canonical" href="https://www.enterthedream.org/room/">
+</head>
+<body class="room-page">
+    <a class="skip-link" href="#main-content">SKIP TO CONTENT</a>
+    <header class="site-header">
+        <a class="site-logo" href="/">SECOND SOURCE</a>
+        <nav class="site-nav" aria-label="Main navigation">
+            <a href="/releases/">RELEASES</a>
+            <a href="/merch/">MERCH</a>
+            <a href="/about/">ABOUT / CONTACT</a>
+            <a href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP ↗</a>
+        </nav>
+    </header>
+    <main id="main-content" tabindex="-1" class="room-main">
+        <header class="room-heading">
+            <h1>LISTENING ROOM</h1>
+            <p>SCENE 01 / SHORE <span>PREVIEW</span></p>
+        </header>
+        <section class="room" data-room aria-label="A quiet landscape for listening">
+            <div class="room-frame" tabindex="0" role="group" aria-label="A misty low-poly shore with still water, trees and a stone arch. Slowly looping scenery. Press Space to pause or resume, F for fullscreen.">
+                <svg class="room-fallback" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+                    <defs><linearGradient id="room-sky" x2="0" y2="1"><stop stop-color="#4e647a"/><stop offset="1" stop-color="#bdc0bd"/></linearGradient><linearGradient id="room-water" x2="0" y2="1"><stop stop-color="#9aaeb5"/><stop offset="1" stop-color="#395e63"/></linearGradient></defs>
+                    <path fill="url(#room-sky)" d="M0 0h1600v1000H0z"/>
+                    <path fill="#85979c" d="m0 520 190-120 130 100 160-90 170 105 140-70 170 80 160-130 150 100 150-90 180 120v500H0z"/>
+                    <path fill="url(#room-water)" d="M0 540h1600v460H0z"/>
+                    <path fill="#526b65" d="m430 610 210-65 230 5 190 62-265 25z"/>
+                    <path fill="none" stroke="#b6b6a8" stroke-width="25" d="M715 565v-65a70 70 0 0 1 140 0v65"/>
+                    <path fill="#3b554d" d="M0 670 175 620 285 685 390 810 315 1000H0z"/>
+                </svg>
+                <canvas id="room-scene" aria-hidden="true"></canvas>
+                <p class="room-scene-label" aria-hidden="true">SHORE / 01</p>
+            </div>
+            <div class="room-dock">
+                <div class="room-track" hidden><span data-room-track></span><span data-room-time>0:00</span></div>
+                <input class="room-seek" type="range" min="0" max="1" value="0" step="0.1" aria-label="Playback position" data-room-seek disabled hidden>
+                <div class="room-controls">
+                    <label class="room-button room-open">OPEN MIX<input type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.flac" data-room-file></label>
+                    <button type="button" class="room-button room-transport" data-room-play aria-label="Pause scenery" aria-pressed="true"><svg data-room-pause viewBox="0 0 16 16" aria-hidden="true"><path d="M4 3h3v10H4zm5 0h3v10H9z"/></svg><svg data-room-start viewBox="0 0 16 16" aria-hidden="true" hidden><path d="M5 3 13 8 5 13Z"/></svg></button>
+                    <button type="button" class="room-button room-motion" data-room-motion aria-pressed="true" hidden>MOTION ON</button>
+                    <button type="button" class="room-button room-fullscreen" data-room-fullscreen aria-label="Enter fullscreen" aria-pressed="false">FULLSCREEN</button>
+                </div>
+            </div>
+            <audio data-room-audio loop preload="none"></audio>
+        </section>
+        <p class="room-note" data-room-help hidden>A slow scene for a long listen. Open an audio file to try it with your own mix. The file plays from your device.</p>
+        <p class="room-note" data-room-still>This is a still preview. Enable JavaScript for motion and playback.</p>
+        <p class="room-status" data-room-status role="status"></p>
+    </main>
+    <footer class="legal-footer"><p class="copyright-line"><span class="copyright-symbol">©</span> 2026 SECOND SOURCE AUDIO. ALL RIGHTS RESERVED.</p></footer>
+</body>
+</html>
