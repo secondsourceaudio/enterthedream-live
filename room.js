@@ -11,9 +11,17 @@
     const motion=room.querySelector('[data-room-motion]');
     const fullscreen=room.querySelector('[data-room-fullscreen]');
     const seek=room.querySelector('[data-room-seek]');
+    const stop=room.querySelector('[data-room-stop]');
+    const mute=room.querySelector('[data-room-mute]');
+    const volume=room.querySelector('[data-room-volume]');
+    const repeat=room.querySelector('[data-room-repeat]');
+    const playlistToggle=room.querySelector('[data-room-playlist-toggle]');
+    const playlist=room.querySelector('.room-playlist');
+    const skinButton=room.querySelector('[data-room-skin]');
     const status=document.querySelector('[data-room-status]');
     const tracks=[...room.querySelectorAll('[data-room-song]')];
     const scenes=[...room.querySelectorAll('[data-room-scene]')];
+    playlist.querySelector('h2 span').textContent=String(tracks.length).padStart(2,'0');
     const reduced=matchMedia('(prefers-reduced-motion: reduce)');
     const hover=matchMedia('(hover: hover) and (pointer: fine)');
     const inertElements=new Map(), worlds=new Map(), sceneTimes=new Map();
@@ -27,8 +35,10 @@
         play.setAttribute('aria-pressed',String(playing));
         play.setAttribute('aria-label',playing ? 'Pause music' : 'Play music');
         play.querySelector('[data-room-play-label]').textContent=playing ? 'PAUSE' : 'PLAY';
-        play.querySelector('[data-room-pause]').hidden=!playing;
-        play.querySelector('[data-room-start]').hidden=playing;
+        play.querySelector('[data-room-pause]').toggleAttribute('hidden',!playing);
+        play.querySelector('[data-room-start]').toggleAttribute('hidden',playing);
+        room.classList.toggle('is-playing',playing);
+        room.querySelector('[data-room-state]').textContent=playing ? 'PLAYING' : audio.ended ? 'ENDED' : audio.currentTime > 0 ? 'PAUSED' : 'STOPPED';
         motion.disabled=!world;
         motion.textContent=moving && world ? 'MOTION ON' : 'MOTION OFF';
         motion.setAttribute('aria-pressed',String(moving && !!world));
@@ -94,7 +104,8 @@
         audio.removeAttribute('src');
         audio.load();
         for (const track of tracks) track.setAttribute('aria-pressed',String(track === selected));
-        room.querySelector('[data-room-track]').textContent=button.dataset.artist+' — '+button.dataset.title;
+        room.querySelector('[data-room-artist]').textContent=button.dataset.artist;
+        room.querySelector('[data-room-title]').textContent=button.dataset.title;
         status.textContent=''; timeline(); selectScene(button.dataset.scene);
         if (autoplay) startPlayback();
     }
@@ -104,6 +115,53 @@
         await startPlayback();
     }
     play.addEventListener('click',togglePlay);
+    stop.addEventListener('click',()=>{
+        ++playRequest; audio.pause();
+        if (audio.currentSrc) audio.currentTime=0;
+        timeline(); updateControls();
+    });
+    function updateVolume() {
+        const silent=audio.muted || audio.volume === 0;
+        mute.setAttribute('aria-pressed',String(silent));
+        mute.setAttribute('aria-label',silent ? 'Unmute music' : 'Mute music');
+        mute.title=silent ? 'Unmute' : 'Mute';
+        room.querySelector('[data-room-speaker]').toggleAttribute('hidden',silent);
+        room.querySelector('[data-room-muted]').toggleAttribute('hidden',!silent);
+        volume.value=audio.volume;
+        const percent=Math.round(audio.volume*100)+'%';
+        volume.setAttribute('aria-valuetext',percent);
+        room.querySelector('[data-room-volume-output]').textContent=percent;
+    }
+    audio.volume=Number(volume.value);
+    mute.addEventListener('click',()=>{
+        if (audio.volume === 0) { audio.volume=.35; audio.muted=false; }
+        else audio.muted=!audio.muted;
+    });
+    volume.addEventListener('input',()=>{ audio.volume=Number(volume.value); audio.muted=false; });
+    audio.addEventListener('volumechange',updateVolume);
+    updateVolume();
+    repeat.addEventListener('click',()=>{
+        audio.loop=!audio.loop;
+        repeat.setAttribute('aria-pressed',String(audio.loop));
+    });
+    playlistToggle.addEventListener('click',()=>{
+        playlist.hidden=!playlist.hidden;
+        playlistToggle.setAttribute('aria-expanded',String(!playlist.hidden));
+    });
+    const skins=['graphite','chrome','cobalt','amber'];
+    function setSkin(skin) {
+        dock.dataset.skin=skin;
+        skinButton.setAttribute('aria-label','Change player skin. Current skin: '+skin[0].toUpperCase()+skin.slice(1));
+    }
+    try {
+        const stored=localStorage.getItem('second-source-player-skin');
+        if (skins.includes(stored)) setSkin(stored);
+    } catch { /* Skin preferences are optional. */ }
+    skinButton.addEventListener('click',()=>{
+        const skin=skins[(skins.indexOf(dock.dataset.skin)+1)%skins.length];
+        setSkin(skin);
+        try { localStorage.setItem('second-source-player-skin',skin); } catch { /* Optional preference. */ }
+    });
     for (const track of tracks) track.addEventListener('click',()=>selectTrack(track));
     for (const button of scenes) button.addEventListener('click',()=>selectScene(button.dataset.roomScene));
     motion.addEventListener('click',()=>{ moving=!moving; updateControls(); });
@@ -116,6 +174,7 @@
         const ready=Number.isFinite(audio.duration) && audio.duration > 0;
         seek.disabled=!ready;
         seek.max=ready ? audio.duration : 1; seek.value=ready ? audio.currentTime : 0;
+        seek.style.setProperty('--progress',(ready ? audio.currentTime/audio.duration*100 : 0)+'%');
         seek.setAttribute('aria-valuetext',format(audio.currentTime)+(ready ? ' of '+format(audio.duration) : ''));
         room.querySelector('[data-room-time]').textContent=format(audio.currentTime)+(ready ? ' / '+format(audio.duration) : ' / —:—');
     }

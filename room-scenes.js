@@ -107,13 +107,13 @@
         }
         } else {
             // An original empty evening street: warm windows, wet stone and distant colour.
-            // The camera stays still enough for a long listen; no landmarks or film assets.
+            // One 48-metre street section repeats past the camera, like a slow treadmill.
             const pavement=[.19,.19,.20], iron=[.075,.085,.095];
             for (const side of [-1,1]) {
-                box(side*6.05,.02,-65,2.9,.18,170,pavement,0,2);
-                box(side*4.64,.02,-65,.14,.23,170,[.30,.28,.25],0,2);
-                for (let block=0;block<10;block++) {
-                    const seed=block*29+(side+1)*17, z=10-block*16;
+                box(side*6.05,.02,0,2.9,.18,48,pavement,0,2);
+                box(side*4.64,.02,0,.14,.23,48,[.30,.28,.25],0,2);
+                for (let block=0;block<3;block++) {
+                    const seed=block*29+(side+1)*17, z=16-block*16;
                     const height=12+Math.floor(hash(seed+2)*4)*2.4;
                     const color=side < 0 ? [.26,.19,.19] : [.22,.22,.25];
                     const shade=.85+hash(seed)*.4;
@@ -153,7 +153,7 @@
                         for (let rail=0;rail<5;rail++) box(side*6.6,y,z-1.5+rail*.75,.045,1,.045,iron);
                     }
                 }
-                for (const z of [1,-23,-47,-71,-95,-119]) {
+                for (const z of [0,-24]) {
                     const x=side*5.8;
                     box(x,.2,z,.13,4.2,.13,iron);
                     box(x,4.30,z,.52,.12,.52,iron);
@@ -167,16 +167,13 @@
             }
             // Restrained coloured bulbs crossing above the street.
             const bulbColors=[[.80,.56,.26],[.51,.12,.12],[.18,.43,.30],[.73,.49,.24]];
-            for (const z of [-14,-46,-78]) for (let i=0;i<19;i++) {
+            for (const z of [-14]) for (let i=0;i<19;i++) {
                 const x=-7.4+i*14.8/18, y=7.7-.9*Math.sin(i/18*Math.PI);
                 box(x,y+.08,z,.55,.025,.025,iron);
                 const color=bulbColors[i%bulbColors.length];
                 box(x,y-.08,z,.075,.12,.075,color,1);
                 lights.push(x,y-.03,z,...color,.34);
             }
-            // A closed doorway and a distant cross street end the view in haze.
-            box(0,0,-155,23,12,4,[.15,.15,.19],0,1);
-            box(-1,0,-152.8,2.4,3.6,.16,[.15,.23,.25],.6);
         }
         // Repeating water geometry is intentionally modest for phone GPUs.
         const wx=64, wz=72;
@@ -198,6 +195,18 @@
             if (!gl.getProgramParameter(program,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
             return {program, attributes:{}, uniforms:{}};
         }
+        const lampFlicker=`
+            // Only a few street lamps dip; there is no whole-screen flash.
+            float cityFlicker(vec3 p, float phase) {
+                float lamp=1.-smoothstep(.25,.48,abs(abs(p.x)-5.8));
+                lamp*=1.-smoothstep(.55,.9,abs(abs(p.y)-4.68));
+                float faulty=lamp*step(p.x,0.)*(1.-smoothstep(1.,2.,abs(p.z)));
+                float dip=pow(.5+.5*sin(phase*31.+1.1),12.);
+                dip*=.55+.45*sin(phase*7.+2.);
+                float flutter=.035*sin(phase*97.+.4)*sin(phase*43.+1.2);
+                return 1.-faulty*clamp(dip*.46+flutter,0.,.5);
+            }
+        `;
         const common=`
             precision highp float;
             uniform float u_phase;
@@ -205,9 +214,15 @@
             uniform vec3 u_fog;
             uniform float u_aspect;
             uniform float u_night;
+            uniform float u_travel;
+            uniform vec2 u_resolution;
+            ${lampFlicker}
             float grain(vec2 p) { return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453); }
             vec3 finish(vec3 color) {
                 float d=fract(dot(floor(gl_FragCoord.xy),vec2(.754877,.56984)))-.5;
+                vec2 uv=gl_FragCoord.xy/u_resolution-.5;
+                float vignette=smoothstep(.3,.72,length(uv*vec2(.9,1.)));
+                color*=1.-vignette*.18*u_night;
                 return floor(clamp(color+d/100.,0.,1.)*63.+.5)/63.;
             }
         `;
@@ -222,7 +237,7 @@
             }
             void main() {
                 vec3 day=mix(vec3(.68,.71,.69),vec3(.35,.45,.56),smoothstep(.3,1.,v_uv.y));
-                vec3 dusk=mix(vec3(.15,.115,.15),vec3(.018,.025,.065),smoothstep(.22,1.,v_uv.y));
+                vec3 dusk=mix(u_fog,vec3(.018,.025,.065),smoothstep(.48,1.,v_uv.y));
                 vec3 color=mix(day,dusk,u_night);
                 float clouds=noise(v_uv*vec2(5.,15.)+vec2(sin(u_phase)*.28,cos(u_phase)*.035));
                 color+=smoothstep(.51,.78,clouds)*mix(.055,.012,u_night)*smoothstep(.55,.7,v_uv.y);
@@ -234,33 +249,35 @@
         `);
         const land=compile(`
             attribute vec3 a_position; attribute vec3 a_normal; attribute vec3 a_color; attribute float a_wind; attribute float a_glow; attribute float a_material;
-            uniform mat4 u_matrix; uniform float u_phase; uniform float u_reflect;
-            varying vec3 v_world; varying vec3 v_normal; varying vec3 v_color; varying float v_glow; varying float v_material;
+            uniform mat4 u_matrix; uniform float u_phase; uniform float u_reflect; uniform float u_offset;
+            varying vec3 v_world; varying vec3 v_local; varying vec3 v_normal; varying vec3 v_color; varying float v_glow; varying float v_material;
             void main() {
                 vec3 p=a_position;
+                p.z+=u_offset;
                 p.x+=sin(u_phase*2.+p.z*.4)*a_wind;
                 p.y=mix(p.y,-p.y-.1,u_reflect);
-                v_world=p; v_normal=a_normal; v_color=a_color; v_glow=a_glow; v_material=a_material;
+                v_world=p; v_local=a_position; v_normal=a_normal; v_color=a_color; v_glow=a_glow; v_material=a_material;
                 gl_Position=u_matrix*vec4(p,1.);
             }
         `,common+`
-            varying vec3 v_world; varying vec3 v_normal; varying vec3 v_color; varying float v_glow; varying float v_material; uniform float u_reflect;
+            varying vec3 v_world; varying vec3 v_local; varying vec3 v_normal; varying vec3 v_color; varying float v_glow; varying float v_material; uniform float u_reflect;
             void main() {
                 float light=.66+.34*max(0.,dot(normalize(v_normal),normalize(vec3(-.45,.8,.3))));
-                float texture=(grain(floor(v_world.xz*3.))- .5)*.025;
+                float texture=(grain(floor(v_local.xz*3.))- .5)*.025;
                 vec3 color=v_color*light+texture;
                 if (u_night > .5) {
-                    float lamps=exp(-pow(abs(v_world.x)-5.8,2.)*.09)*(.6+.4*cos(v_world.z*.262));
+                    float lamps=exp(-pow(abs(v_world.x)-5.8,2.)*.09)*(.6+.4*cos((v_world.z-u_travel)*(6.28318530718/24.)));
                     color=v_color*(.32+max(0.,v_normal.y)*.12)+vec3(.12,.07,.028)*lamps;
                     if (v_material > .5 && v_material < 1.5) {
-                        vec2 brick=vec2(v_world.z*1.5+step(.5,fract(v_world.y*1.7))*.5,v_world.y*3.4);
+                        vec2 brick=vec2(v_local.z*1.5+step(.5,fract(v_local.y*1.7))*.5,v_local.y*3.4);
                         float mortar=step(.94,fract(brick.x))+step(.91,fract(brick.y));
                         color-=min(1.,mortar)*.018;
                     }
-                    color=mix(color,v_color*(.88+.04*sin(u_phase*2.)),v_glow);
+                    color=mix(color,v_color*(.9+.025*sin(u_phase*2.))*cityFlicker(v_local,u_phase),v_glow);
                 }
                 float fog=1.-exp(-length(v_world-u_eye)*mix(.014,.021,u_night));
-                color=mix(color,u_fog,clamp(fog,0.,.97));
+                if (u_night > .5) fog=max(fog,smoothstep(60.,108.,length(v_world-u_eye)));
+                color=mix(color,u_fog,clamp(fog,0.,u_night > .5 ? 1. : .97));
                 color=mix(color,u_fog,.25*u_reflect);
                 gl_FragColor=vec4(finish(color),1.);
             }
@@ -286,23 +303,29 @@
                 float sheen=pow(max(0.,sin(v_world.x*.08-v_world.z*.03+u_phase)),12.)*.025;
                 color+=sheen*exp(-distance*.008);
                 if (u_night > .5) {
-                    vec2 tile=fract(v_world.xz*vec2(.8,.25));
+                    vec2 street=vec2(v_world.x,v_world.z-u_travel);
+                    vec2 tile=fract(street*vec2(.8,.25));
                     float edge=step(.975,tile.x)+step(.98,tile.y);
                     color=mix(vec3(.047,.048,.065),u_fog,1.-exp(-distance*.018));
                     color+=ripple*.002-edge*.009;
-                    float pool=exp(-pow(abs(v_world.x)-5.8,2.)*.18)*pow(.5+.5*cos(v_world.z*.262),5.);
-                    color+=vec3(.18,.09,.028)*pool;
-                    float puddle=smoothstep(-.9,.9,sin(v_world.x*1.7+sin(v_world.z*.8))*cos(v_world.z*.37));
+                    float pool=exp(-pow(abs(v_world.x)-5.8,2.)*.18)*pow(.5+.5*cos(street.y*(6.28318530718/24.)),5.);
+                    float lampZ=mod(floor(street.y/24.+.5)*24.+24.,48.)-24.;
+                    float flutter=cityFlicker(vec3(sign(street.x)*5.8,4.68,lampZ),u_phase);
+                    color+=vec3(.18,.09,.028)*pool*flutter;
+                    float puddle=smoothstep(-.9,.9,sin(street.x*1.7+sin(street.y*(6.28318530718/48.)*6.))*cos(street.y*(6.28318530718/48.)*3.));
                     gl_FragColor=vec4(finish(color),mix(.45,.94,puddle));
                 } else gl_FragColor=vec4(finish(color),.84);
             }
         `);
         const glow=compile(`
             attribute vec3 a_position; attribute vec3 a_color; attribute float a_strength;
-            uniform mat4 u_matrix; uniform float u_size; varying vec3 v_color;
+            uniform mat4 u_matrix; uniform float u_size; uniform float u_offset; uniform float u_phase;
+            varying vec3 v_color;
+            ${lampFlicker}
             void main() {
-                vec4 p=u_matrix*vec4(a_position,1.);
-                gl_Position=p; gl_PointSize=clamp(u_size*a_strength/p.w,2.,50.); v_color=a_color;
+                vec4 p=u_matrix*vec4(a_position+vec3(0.,0.,u_offset),1.);
+                gl_Position=p; gl_PointSize=clamp(u_size*a_strength/p.w,2.,50.);
+                v_color=a_color*cityFlicker(a_position,u_phase);
             }
         `,`precision mediump float; varying vec3 v_color;
             void main() {
@@ -328,11 +351,13 @@
             if (!(name in pass.uniforms)) pass.uniforms[name]=gl.getUniformLocation(pass.program,name);
             return pass.uniforms[name];
         }
-        function use(pass,phase,eye,matrix) {
+        function use(pass,phase,eye,matrix,travel=0) {
             for (let i=0;i<8;i++) gl.disableVertexAttribArray(i);
             gl.useProgram(pass.program);
             gl.uniform1f(uniform(pass,'u_phase'),phase);
             gl.uniform1f(uniform(pass,'u_night'),night ? 1 : 0);
+            gl.uniform1f(uniform(pass,'u_travel'),travel);
+            gl.uniform2f(uniform(pass,'u_resolution'),canvas.width,canvas.height);
             gl.uniform3fv(uniform(pass,'u_eye'),eye);
             gl.uniform3fv(uniform(pass,'u_fog'),fog);
             gl.uniform1f(uniform(pass,'u_aspect'),canvas.width/canvas.height);
@@ -350,14 +375,17 @@
             const projection=new Float32Array([f/aspect,0,0,0,0,f,0,0,0,0,(far+n)/(n-far),-1,0,0,2*far*n/(n-far),0]);
             return multiply(projection,view);
         }
-        function geometry(phase,eye,matrix,reflect) {
-            use(land,phase,eye,matrix);
+        function geometry(phase,eye,matrix,reflect,offsets,travel) {
+            use(land,phase,eye,matrix,travel);
             gl.uniform1f(uniform(land,'u_reflect'),reflect);
             gl.bindBuffer(gl.ARRAY_BUFFER,landBuffer);
             attribute(land,'a_position',3,12,0); attribute(land,'a_normal',3,12,3);
             attribute(land,'a_color',3,12,6); attribute(land,'a_wind',1,12,9);
             attribute(land,'a_glow',1,12,10); attribute(land,'a_material',1,12,11);
-            gl.drawArrays(gl.TRIANGLES,0,objects.length/12);
+            for (const offset of offsets) {
+                gl.uniform1f(uniform(land,'u_offset'),offset);
+                gl.drawArrays(gl.TRIANGLES,0,objects.length/12);
+            }
         }
         function draw(seconds) {
             const size=frame.getBoundingClientRect();
@@ -367,7 +395,9 @@
             if (canvas.width !== width || canvas.height !== height) { canvas.width=width; canvas.height=height; }
             gl.viewport(0,0,width,height);
             const phase=(seconds%180)/180*Math.PI*2;
-            const eye=night ? [Math.sin(phase)*.055,1.85+Math.sin(phase*2)*.02,14] : [Math.sin(phase)*.08,5.1+Math.sin(phase*2)*.035,15];
+            const travel=night ? (seconds%180)/180*48 : 0;
+            const offsets=night ? [travel+48,travel,travel-48,travel-96,travel-144] : [0];
+            const eye=night ? [Math.sin(phase*36)*.028,1.85+Math.sin(phase*72)*.012,14] : [Math.sin(phase)*.08,5.1+Math.sin(phase*2)*.035,15];
             const matrix=camera(eye,size.width/size.height);
             gl.disable(gl.BLEND); gl.disable(gl.DEPTH_TEST);
             gl.clearColor(...fog,1); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
@@ -375,20 +405,23 @@
             gl.bindBuffer(gl.ARRAY_BUFFER,skyBuffer); attribute(sky,'a_position',2,2,0);
             gl.drawArrays(gl.TRIANGLES,0,6);
             gl.enable(gl.DEPTH_TEST);
-            geometry(phase,eye,matrix,1);
-            use(sea,phase,eye,matrix);
+            geometry(phase,eye,matrix,1,offsets,travel);
+            use(sea,phase,eye,matrix,travel);
             gl.bindBuffer(gl.ARRAY_BUFFER,waterBuffer); attribute(sea,'a_position',2,2,0);
             gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
             gl.drawArrays(gl.TRIANGLES,0,water.length/2);
             gl.disable(gl.BLEND);
-            geometry(phase,eye,matrix,0);
+            geometry(phase,eye,matrix,0,offsets,travel);
             if (night) {
                 use(glow,phase,eye,matrix);
                 gl.uniform1f(uniform(glow,'u_size'),height*1.3);
                 gl.bindBuffer(gl.ARRAY_BUFFER,lightBuffer);
                 attribute(glow,'a_position',3,7,0); attribute(glow,'a_color',3,7,3); attribute(glow,'a_strength',1,7,6);
                 gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE); gl.depthMask(false);
-                gl.drawArrays(gl.POINTS,0,lights.length/7);
+                for (const offset of offsets) {
+                    gl.uniform1f(uniform(glow,'u_offset'),offset);
+                    gl.drawArrays(gl.POINTS,0,lights.length/7);
+                }
                 gl.depthMask(true); gl.disable(gl.BLEND);
             }
         }

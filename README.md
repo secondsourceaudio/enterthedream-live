@@ -12,8 +12,16 @@ have default scenes, but the independent DAY / SHORE and NIGHT / CITY controls
 preserve the current music, playback position and paused state. There is no
 local-file picker.
 
-Both original procedural low-poly scenes close on a three-minute loop. The audio
-source is assigned only after Play or a track selection; a new visit fetches no
+The SRC player keeps its playlist inside the shell, with play/pause, stop,
+volume/mute, repeat-track and a playlist toggle. Its four skins use the same
+optional skin preference as the homepage player. Dream Scenario is the only
+track currently supplied; the playlist can hold further tracks and scene defaults.
+
+Both original procedural low-poly scenes close on a three-minute loop. The city
+repeats a 48-metre street section past the camera at a slow walking pace. A few
+lamps dip gently and irregularly, including their glow and reflected light;
+there are no scene-wide flashes. The shore stays available as a separate choice.
+The audio source is assigned only after Play or a track selection; a new visit fetches no
 audio and never autoplays. The playlist advances to the next available track when
 the current recording ends. Scene motion follows playback, respects reduced
 motion, pauses offscreen and in hidden tabs, and has a still fallback when WebGL

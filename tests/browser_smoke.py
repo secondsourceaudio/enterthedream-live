@@ -2605,6 +2605,79 @@ class WebsiteTests(unittest.TestCase):
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused && !a.currentSrc'))
         expect(self.page.locator('[data-room-play-label]')).to_have_text('PLAY')
 
+    def test_listening_room_player_controls_keep_the_session_and_skin_preference(self):
+        serve_seekable_audio(self.page, 'dream-scenario.mp3')
+        self.visit('room/')
+        expect(self.page.locator('[data-room-state]')).to_have_text('STOPPED')
+        self.page.get_by_role('button', name='Play music', exact=True).click()
+        self.page.wait_for_function('document.querySelector("audio").currentTime > .2')
+        expect(self.page.locator('[data-room-state]')).to_have_text('PLAYING')
+        expect(self.page.locator('[data-room-pause]')).to_be_visible()
+        expect(self.page.locator('[data-room-start]')).not_to_be_visible()
+        source = self.page.locator('audio').evaluate('a => a.currentSrc')
+        self.page.locator('[data-room-volume]').fill('0.22')
+        self.page.wait_for_function('document.querySelector("audio").volume === .22')
+        expect(self.page.locator('[data-room-volume-output]')).to_have_text('22%')
+        self.page.get_by_role('button', name='Mute music', exact=True).click()
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.muted'))
+        expect(self.page.locator('[data-room-muted]')).to_be_visible()
+        self.page.locator('[data-room-volume]').fill('0.3')
+        self.page.wait_for_function('!document.querySelector("audio").muted')
+        self.page.locator('[data-room-playlist-toggle]').click()
+        expect(self.page.locator('.room-playlist')).not_to_be_visible()
+        self.page.locator('[data-room-playlist-toggle]').click()
+        expect(self.page.locator('.room-playlist')).to_be_visible()
+        self.page.locator('[data-room-skin]').click()
+        expect(self.page.locator('.room-dock')).to_have_attribute('data-skin', 'chrome')
+        self.assertEqual(self.page.locator('audio').evaluate('a => a.currentSrc'), source)
+        self.assertFalse(self.page.locator('audio').evaluate('a => a.paused'))
+        self.page.locator('[data-room-repeat]').click()
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.loop'))
+        self.page.locator('audio').evaluate('a => {a.currentTime=a.duration-.15;}')
+        self.page.wait_for_function('a => a.currentTime < 2 && !a.paused', arg=self.page.locator('audio').element_handle())
+        self.page.locator('[data-room-repeat]').click()
+        self.assertFalse(self.page.locator('audio').evaluate('a => a.loop'))
+        self.page.get_by_role('button', name='Stop music', exact=True).click()
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.paused && a.currentTime === 0'))
+        expect(self.page.locator('[data-room-state]')).to_have_text('STOPPED')
+        expect(self.page.locator('[data-room-song=dream-scenario]')).to_have_attribute('aria-pressed', 'true')
+        self.page.reload(wait_until='networkidle')
+        expect(self.page.locator('.room-dock')).to_have_attribute('data-skin', 'chrome')
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.paused && !a.currentSrc'))
+
+    def test_listening_room_city_moves_forward_and_loops_without_a_jump(self):
+        self.visit('room/')
+        result = self.page.evaluate("""() => {
+            const canvas=document.querySelector('canvas'), gl=canvas.getContext('webgl');
+            const world=window.SecondSourceRoomScenes.create('city',canvas,document.querySelector('.room-frame'));
+            function snapshot(seconds) {
+                world.draw(seconds);
+                const pixels=new Uint8Array(canvas.width*canvas.height*4);
+                gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+                const offset=gl.getUniform(gl.getParameter(gl.CURRENT_PROGRAM),gl.getUniformLocation(gl.getParameter(gl.CURRENT_PROGRAM),'u_offset'));
+                return {pixels,offset};
+            }
+            function difference(a,b) {
+                let total=0;
+                for (let i=0;i<a.length;i++) total+=Math.abs(a[i]-b[i]);
+                return total/a.length;
+            }
+            const first=snapshot(0), later=snapshot(30), seam=snapshot(179.999), loop=snapshot(180);
+            return {
+                advance:later.offset-first.offset,
+                changed:difference(first.pixels,later.pixels),
+                seam:difference(first.pixels,seam.pixels),
+                loop:difference(first.pixels,loop.pixels),
+                error:gl.getError()
+            };
+        }""")
+        self.assertGreater(result['advance'], 0)
+        self.assertLess(result['advance'], 20)
+        self.assertGreater(result['changed'], 1)
+        self.assertLess(result['seam'], .5)
+        self.assertEqual(result['loop'], 0)
+        self.assertEqual(result['error'], 0)
+
     def test_listening_room_respects_reduced_motion(self):
         serve_seekable_audio(self.page, 'dream-scenario.mp3')
         self.page.emulate_media(reduced_motion='reduce')
