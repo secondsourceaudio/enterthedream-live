@@ -358,6 +358,34 @@
                 gl_FragColor=vec4(v_color,alpha);
             }
         `);
+        const drizzle=night ? compile(`
+            attribute vec2 a_position;
+            varying vec2 v_uv;
+            void main() {
+                v_uv=a_position*.5+.5;
+                gl_Position=vec4(a_position,0.,1.);
+            }
+        `,common+`
+            varying vec2 v_uv;
+            void main() {
+                // Fine, windblown drizzle. Each drop is only a few pixels long,
+                // and the pattern loops with the three-minute scene.
+                vec2 slant=vec2(v_uv.x+v_uv.y*.026,v_uv.y);
+                vec2 cells=slant*vec2(58.*u_aspect,36.);
+                vec2 id=floor(cells);
+                float seed=grain(id);
+                float localX=fract(cells.x);
+                float fall=fract(cells.y+u_phase*(18.+floor(seed*6.))+seed*13.);
+                float x=.15+seed*.70;
+                float narrow=smoothstep(.052,.012,abs(localX-x));
+                float shortDrop=(1.-smoothstep(.03,.28,fall))*step(.925,seed);
+                float depth=.35+.65*grain(id+vec2(19.,7.));
+                float edgeFade=smoothstep(.02,.13,v_uv.y)*(1.-smoothstep(.94,1.,v_uv.y));
+                float alpha=narrow*shortDrop*depth*edgeFade*.22;
+                vec3 color=mix(vec3(.32,.38,.52),vec3(.72,.69,.65),v_uv.y);
+                gl_FragColor=vec4(color,alpha);
+            }
+        `) : null;
         function buffer(data) {
             const value=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,value);
             gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data),gl.STATIC_DRAW); return value;
@@ -447,6 +475,13 @@
                     gl.drawArrays(gl.POINTS,0,lights.length/7);
                 }
                 gl.depthMask(true); gl.disable(gl.BLEND);
+                use(drizzle,phase,eye);
+                gl.bindBuffer(gl.ARRAY_BUFFER,skyBuffer);
+                attribute(drizzle,'a_position',2,2,0);
+                gl.disable(gl.DEPTH_TEST);
+                gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+                gl.drawArrays(gl.TRIANGLES,0,6);
+                gl.disable(gl.BLEND);
             }
         }
         return {draw};

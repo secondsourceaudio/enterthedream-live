@@ -22,7 +22,8 @@ only on Play. They stop while silent, paused, offscreen, fullscreen or with moti
 disabled; browsers without Web Audio retain normal playback.
 
 Both original procedural low-poly scenes close on a three-minute loop. The city
-repeats a 48-metre street section past the camera at a slow walking pace. A few
+repeats a 48-metre street section past the camera at a slow walking pace, with
+fine windblown drizzle over the wet street. A few
 lamps dip gently and irregularly, including their glow and reflected light;
 there are no scene-wide flashes. The dusk source shows a distant skyline and
 suspension bridge across slowly moving water.
@@ -66,7 +67,7 @@ using the yellow and black gallery photograph.
 **RELEASES** opens `/releases/`, which shows SRC001 / DRIP with its static
 cover, artist, title, supplied short album text and credits. The public tracklist
 is split into side A and side B, with five tracks per side. Availability is shown
-as `2027 / Vinyl & Digital`; no specific release day or pressing quantities are published.
+as `SPRING 2027 / Vinyl & Digital`; no specific release day or pressing quantities are published.
 **MERCH** opens `/merch/`, with upcoming T-SHIRTS and CAPS credited to
 TROMSØ PURIST SHOP, linked to `https://www.instagram.com/tromso_purist_shop/`.
 The original supplied T-shirt and cap mockups are stored in `images/merch/`.

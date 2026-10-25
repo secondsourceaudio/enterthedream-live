@@ -2168,7 +2168,7 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('.release-catalogue')).to_have_text('SECOND SOURCE / SRC001')
         expect(self.page.locator('.release-title')).to_have_text('DRIP')
         expect(self.page.locator('.release-artist')).to_have_text('MARTIN SOLLI')
-        expect(self.page.locator('.release-availability')).to_have_text('2027 / Vinyl & Digital')
+        expect(self.page.locator('.release-availability')).to_have_text('SPRING 2027 / Vinyl & Digital')
         expect(self.page.locator('.release-side')).to_have_count(2)
         expect(self.page.locator('.release-tracks li')).to_have_count(10)
         self.assertTrue(self.page.locator('.release-cover').evaluate('image => image.complete && image.naturalWidth === 3200'))
