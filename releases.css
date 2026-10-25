@@ -21,9 +21,9 @@
 
 .release-entry {
     display: grid;
-    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-    align-items: center;
-    gap: clamp(36px, 7vw, 100px);
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    align-items: start;
+    gap: clamp(36px, 5vw, 72px);
 }
 .release-cover { display: block; width: 100%; height: auto; }
 .release-catalogue { margin: 0 0 28px; color: #aaa; font-size: var(--font-small); letter-spacing: .2em; }

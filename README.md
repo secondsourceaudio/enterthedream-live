@@ -6,19 +6,25 @@ GitHub Pages and needs no build step or production dependencies.
 ## Listening-room preview
 
 `/room/` is an unlisted, noindex prototype for a future mix series, without a new
-navigation item or sitemap entry. It contains an original procedural low-poly
-shore, a three-minute repeating scene, and an optional local-file player.
-OPEN MIX opens an audio file from the visitor's device; the file is never uploaded
-and no mix episode is claimed or bundled with this preview. Playback starts only
-after Play. The scene respects reduced motion, pauses offscreen and in hidden
-tabs, and has a still fallback when WebGL or JavaScript is unavailable.
+navigation item or sitemap entry. Its playlist pairs Sage Counsel with a daylight
+shore and Dream Scenario with a quiet evening street. Dream Scenario remains
+disabled until its MP3 is supplied. The tracks have default scenes, but the
+independent DAY / SHORE and NIGHT / CITY controls preserve the current music,
+playback position and paused state. There is no local-file picker.
+
+Both original procedural low-poly scenes close on a three-minute loop. The audio
+source is assigned only after Play or a track selection; a new visit fetches no
+audio and never autoplays. The playlist advances to the next available track when
+the current recording ends. Scene motion follows playback, respects reduced
+motion, pauses offscreen and in hidden tabs, and has a still fallback when WebGL
+or JavaScript is unavailable.
 
 The renderer is limited to 640 × 480 backing pixels and 30 frames per second.
 Fullscreen uses an adaptive 3D camera, with just play/pause and exit controls
 revealed on interaction. This preview has its own native audio element; playback
 continues in background tabs but stops on leaving the page. It does not yet join
-the homepage's cross-page player. A real episode can be integrated when its audio
-and metadata are ready.
+the homepage's cross-page player. Scene programs and meshes are cached on a
+single WebGL context, including across manual scene changes.
 
 ## Local development
 

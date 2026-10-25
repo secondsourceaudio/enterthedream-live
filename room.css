@@ -5,9 +5,18 @@
 .room-heading p { margin: 0; color: #b1b6b4; font-size: var(--font-micro); line-height: 1.8; letter-spacing: .12em; }
 .room-heading p span { margin-left: 20px; color: #858d8e; }
 .room { position: relative; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.room-scenes { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: 4px 18px; width: 100%; visibility: hidden; }
+.room.is-ready .room-scenes { visibility: visible; }
+.room-scenes > span { color: #8d9595; font-size: var(--font-micro); letter-spacing: .12em; margin-right: auto; }
+.room-scenes button { min-height: 44px; padding: 8px 0; border: 0; border-bottom: 1px solid transparent; color: #929a99; background: transparent; font-size: var(--font-micro); letter-spacing: .1em; cursor: pointer; }
+.room-scenes button[aria-pressed="true"] { color: #e0e6e2; border-color: #a9b8b1; }
+.room-scenes button:focus-visible, .room-playlist button:focus-visible { outline: 2px solid #eee; outline-offset: 3px; }
 .room-frame { position: relative; width: 100%; aspect-ratio: 16 / 10; overflow: hidden; background: #708a92; outline-offset: 4px; }
 .room-frame canvas, .room-fallback { display: block; position: absolute; inset: 0; width: 100%; height: 100%; }
 .room-frame canvas { opacity: 0; image-rendering: auto; }
+.room-fallback-city { display: none; }
+.room[data-scene="city"] .room-fallback { display: none; }
+.room[data-scene="city"] .room-fallback-city { display: block; }
 .room.has-scene .room-frame canvas { opacity: 1; }
 .room.has-scene .room-fallback { visibility: hidden; }
 .room-scene-label { position: absolute; left: 20px; bottom: 16px; margin: 0; color: #e4e8dc; opacity: .75; font: 11px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .14em; text-shadow: 0 1px 4px #1b3138; pointer-events: none; }
@@ -16,21 +25,38 @@
 .room-controls { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 4px 20px; }
 .room-button { display: inline-flex; justify-content: center; align-items: center; position: relative; min-width: 44px; min-height: 44px; padding: 10px 6px; border: 0; background: transparent; color: #bfc6c5; font-size: var(--font-small); line-height: 1.6; letter-spacing: .12em; cursor: pointer; }
 .room-button:hover { color: #fff; }
-.room-button:focus-visible, .room-open:focus-within { outline: 2px solid #eee; outline-offset: 3px; }
+.room-button:focus-visible { outline: 2px solid #eee; outline-offset: 3px; }
 .room-button svg { display: block; width: 16px; height: 16px; fill: currentColor; }
 .room-button [hidden], .room [hidden] { display: none; }
-.room-open input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.room-transport { gap: 9px; min-width: 86px; color: #e3e8e3; }
 .room-track { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 12px 6px 0; color: #c1c9c7; font: 13px/1.6 Arial, Helvetica, sans-serif; }
 .room-track [data-room-track] { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .room-track [data-room-time] { flex-shrink: 0; color: #a0b1ac; font: 12px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; }
 .room-seek { display: block; width: 100%; height: 44px; margin: 0; accent-color: #c0cec7; cursor: pointer; }
+.room-playlist { width: min(620px, 100%); margin-top: 14px; visibility: hidden; }
+.room.is-ready .room-playlist { visibility: visible; }
+.room-playlist h2 { margin: 0 0 14px; color: #929b98; font-size: var(--font-micro); font-weight: normal; letter-spacing: .12em; }
+.room-playlist ol { list-style: none; padding: 0; margin: 0; border-top: 1px solid #292f2d; }
+.room-playlist li { border-bottom: 1px solid #292f2d; }
+.room-playlist button { display: flex; align-items: center; gap: 18px; width: 100%; min-height: 72px; padding: 14px 12px; border: 0; border-left: 2px solid transparent; background: transparent; color: #a6afac; text-align: left; cursor: pointer; }
+.room-playlist button:hover, .room-playlist button[aria-pressed="true"] { background: #101411; color: #e2e9e5; }
+.room-playlist button[aria-pressed="true"] { border-left-color: #a9b8b1; }
+.room-playlist button:disabled { cursor: default; color: #8c9390; }
+.room-playlist strong, .room-playlist small { display: block; font-family: Arial, Helvetica, sans-serif; font-weight: normal; }
+.room-playlist strong { font-size: 15px; line-height: 1.5; }
+.room-playlist small { font-size: 13px; line-height: 1.6; color: #98a49e; }
+.room-song-number { color: #8d9a92; font: 12px/1.6 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.room-song-scene { margin-left: auto; color: #a6b1ab; font-size: var(--font-micro); letter-spacing: .08em; }
 .room-note, .room-status { max-width: 590px; margin: 16px auto 0; color: #a7aeab; text-align: center; font: 13px/1.8 Arial, Helvetica, sans-serif; }
 .room-status:empty { display: none; }
 .room.is-fullscreen { position: fixed; inset: 0; z-index: 4500; width: 100%; height: 100dvh; background: #050505; }
 .room.is-fullscreen .room-frame { flex: 1; width: 100%; height: 100%; aspect-ratio: auto; }
 .room.is-fullscreen .room-scene-label { display: none; }
+.room.is-fullscreen > .room-scenes, .room.is-fullscreen > .room-playlist { display: none; }
 .room.is-fullscreen .room-dock { position: absolute; right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); width: auto; padding: 4px; border: 1px solid #52645d66; background: #07110fd9; transition: opacity .4s; }
 .room.is-fullscreen .room-controls { gap: 4px; }
+.room.is-fullscreen .room-transport { width: 44px; min-width: 44px; }
+.room.is-fullscreen [data-room-play-label] { display: none; }
 .room.is-fullscreen .room-dock > :not(.room-controls),
 .room.is-fullscreen .room-controls > :not([data-room-play]):not([data-room-fullscreen]) { display: none; }
 .room.is-fullscreen .room-fullscreen { width: 44px; font-size: 0; letter-spacing: 0; }
@@ -45,5 +71,7 @@ body.room-fullscreen { overflow: hidden; }
     .room-heading p { font-size: var(--font-micro); }
     .room-note, .room-status { padding-inline: 12px; }
     .room-controls { gap: 4px 12px; }
+    .room-track { align-items: flex-start; flex-direction: column; gap: 2px; }
+    .room-song-scene { max-width: 105px; text-align: right; line-height: 1.8; }
 }
 @media (prefers-reduced-motion: reduce) { .room.is-fullscreen .room-dock { transition: none; } }
