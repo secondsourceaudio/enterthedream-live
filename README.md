@@ -6,11 +6,11 @@ GitHub Pages and needs no build step or production dependencies.
 ## Listening-room preview
 
 `/room/` is an unlisted, noindex prototype for a future mix series, without a new
-navigation item or sitemap entry. Its playlist pairs Sage Counsel with a daylight
-shore and Dream Scenario with a quiet evening street. Dream Scenario remains
-disabled until its MP3 is supplied. The tracks have default scenes, but the
-independent DAY / SHORE and NIGHT / CITY controls preserve the current music,
-playback position and paused state. There is no local-file picker.
+navigation item or sitemap entry. Its playlist currently pairs Dream Scenario
+with a quiet evening street. Sage Counsel remains on the homepage only. Tracks
+have default scenes, but the independent DAY / SHORE and NIGHT / CITY controls
+preserve the current music, playback position and paused state. There is no
+local-file picker.
 
 Both original procedural low-poly scenes close on a three-minute loop. The audio
 source is assigned only after Play or a track selection; a new visit fetches no
