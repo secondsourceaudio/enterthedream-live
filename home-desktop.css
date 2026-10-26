@@ -70,7 +70,7 @@
 .home-player-window .player-spectrum { height: 46px; }
 .home-player-window .player-timeline { grid-column: 2; grid-row: 3; padding-left: 22px; }
 .home-player-window .player-controls { grid-column: 2; grid-row: 4; padding-left: 22px; }
-.home-player-window .experience-controls { padding: 2px 14px 8px; border-top: 1px solid #2b3341; }
+.home-player-window .experience-controls { padding: 14px 14px 8px; border-top: 1px solid #2b3341; }
 .home-player-window .experience-tools { min-height: 0; }
 .home-player-window .experience-tools-status { min-height: 0; }
 .home-directory-window { right: 7%; top: 9%; width: min(440px, 34vw); }
