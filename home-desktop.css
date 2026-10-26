@@ -33,6 +33,18 @@
     --artwork-feather: 0px;
     background: linear-gradient(135deg, rgb(5 9 18 / .45), rgb(5 5 8 / .16) 50%, rgb(0 0 0 / .34));
 }
+.home-desktop .listening-space[data-active-visual="visualizer"] [data-visual-panel="whirl"] {
+    display: block !important;
+    z-index: 0;
+}
+.home-desktop .listening-space[data-active-visual="visualizer"] [data-visual-panel="fluid"] {
+    display: block !important;
+    z-index: 1;
+    background: transparent;
+    pointer-events: none;
+}
+.home-desktop .listening-space[data-active-visual="visualizer"] [data-visual-panel="fluid"] .fallback-image { opacity: 0; }
+.home-desktop .listening-space[data-active-visual="visualizer"] [data-visual-panel="fluid"]::after { display: none; }
 .home-window {
     position: absolute; z-index: 5; min-width: 0;
     border: 1px solid #78859c; background: rgb(7 10 16 / .95);
@@ -90,6 +102,13 @@
     position: relative; inset: auto; flex: 0 0 auto;
     width: min(max(80px, calc(100dvh - var(--player-space, 180px))), calc(100vw - 48px));
     height: auto; aspect-ratio: 1 / 1;
+}
+.home-desktop .listening-space[data-active-visual="visualizer"].is-immersive [data-visual-panel="fluid"],
+.home-desktop .listening-space[data-active-visual="visualizer"]:fullscreen [data-visual-panel="fluid"] {
+    position: absolute;
+    inset: 50% auto auto 50%;
+    margin: 0;
+    transform: translate(-50%, -50%);
 }
 
 @media (max-width: 980px) {

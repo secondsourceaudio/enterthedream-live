@@ -17,6 +17,57 @@
         window.setInterval(updateClock, 30000);
     }
     window.addEventListener("site:pagechange", updateClock);
+
+    const controlIcon = action => ({
+        minimize: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 11.5h10"/></svg>',
+        maximize: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="3.5" width="9" height="9"/></svg>',
+        close: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8m0-8-8 8"/></svg>'
+    }[action]);
+    function enhanceOsControls() {
+        for (const button of document.querySelectorAll('[data-os-back]')) {
+            if (button.dataset.osReady) continue;
+            button.dataset.osReady = 'true';
+            button.addEventListener('click', () => history.back());
+        }
+        for (const button of document.querySelectorAll('[data-os-forward]')) {
+            if (button.dataset.osReady) continue;
+            button.dataset.osReady = 'true';
+            button.addEventListener('click', () => history.forward());
+        }
+        for (const controls of document.querySelectorAll('.src-os-window-controls')) {
+            if (controls.dataset.osReady) continue;
+            controls.dataset.osReady = 'true';
+            controls.removeAttribute('aria-hidden');
+            controls.setAttribute('aria-label', 'Window controls');
+            controls.textContent = '';
+            const main = controls.closest('main');
+            for (const action of ['minimize', 'maximize', 'close']) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'src-os-window-button';
+                button.dataset.osAction = action;
+                button.setAttribute('aria-label', action[0].toUpperCase() + action.slice(1) + ' window');
+                button.title = button.getAttribute('aria-label');
+                button.innerHTML = controlIcon(action);
+                button.addEventListener('click', () => {
+                    if (action === 'minimize') {
+                        const minimized = main.classList.toggle('src-os-minimized');
+                        button.setAttribute('aria-pressed', String(minimized));
+                    } else if (action === 'maximize') {
+                        const maximized = main.classList.toggle('src-os-maximized');
+                        document.body.classList.toggle('src-os-has-maximized', maximized);
+                        button.setAttribute('aria-pressed', String(maximized));
+                    } else {
+                        document.body.classList.remove('src-os-has-maximized');
+                        document.querySelector('.site-logo')?.click();
+                    }
+                });
+                controls.append(button);
+            }
+        }
+    }
+    enhanceOsControls();
+    window.addEventListener('site:pagechange', enhanceOsControls);
     if (/^https?:$/.test(location.protocol) && location.pathname === '/index.html') {
         history.replaceState(history.state, '', '/' + location.search + location.hash);
     }

@@ -24,6 +24,10 @@
     const scenes=[...room.querySelectorAll('[data-room-scene]')];
     const sourceNames={shore:'SOURCE 1 / DUSK',city:'SOURCE 2 / NIGHT'};
     playlist.querySelector('h2 span').textContent=String(tracks.length).padStart(2,'0');
+    if (matchMedia('(max-width: 750px)').matches) {
+        playlist.hidden=true;
+        playlistToggle.setAttribute('aria-expanded','false');
+    }
     const reduced=matchMedia('(prefers-reduced-motion: reduce)');
     const hover=matchMedia('(hover: hover) and (pointer: fine)');
     const inertElements=new Map(), worlds=new Map(), sceneTimes=new Map();

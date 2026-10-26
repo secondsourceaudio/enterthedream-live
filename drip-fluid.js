@@ -55,7 +55,7 @@ SOFTWARE.
 
     let gl;
     try {
-        gl = canvas.getContext('webgl', {alpha: false, depth: false, stencil: false,
+        gl = canvas.getContext('webgl', {alpha: !ink, depth: false, stencil: false,
             antialias: false, preserveDrawingBuffer: false});
     } catch (error) {}
     if (!gl) { fallback(); return; }
@@ -342,6 +342,7 @@ SOFTWARE.
             uniform vec2 u_whirlPoint;
             uniform vec2 u_counterPoint;
             uniform vec4 u_drips[8];
+            uniform float u_overlay;
             vec2 whirl(vec2 point, float angle) {
                 vec2 p = vUv - point;
                 float a = angle * exp(-dot(p, p) / 0.12);
@@ -375,7 +376,13 @@ SOFTWARE.
                 vec2 reach = max(mix(vUv - 0.001, 0.999 - vUv, step(vec2(0.0), offset)), 0.0005);
                 vec2 bounded = sign(offset) * reach * (1.0 - exp(-abs(offset) / reach));
                 vec2 uv = clamp(vUv + bounded, 0.001, 0.999);
-                gl_FragColor = vec4(texture2D(u_artwork, uv).rgb, 1.0);
+                vec3 shifted = texture2D(u_artwork, uv).rgb;
+                if (u_overlay > 0.5) {
+                    float activity = smoothstep(0.001, 0.035, length(bounded) + length(rippleOffset));
+                    gl_FragColor = vec4(shifted, activity * 0.58);
+                } else {
+                    gl_FragColor = vec4(shifted, 1.0);
+                }
             }
         `);
 
@@ -699,6 +706,7 @@ SOFTWARE.
             const visualizing = experience.visualMode === 'visualizer';
             draw(display, null, {u_map: imageMap.read.texture, u_artwork: artwork},
                 {'u_drips[0]': dripData, u_whirl: visualizing ? dance.twist : 0,
+                    u_overlay: visualizing ? 1 : 0,
                     u_whirlPoint: [currents[0].x, currents[0].y], u_counterPoint: [currents[1].x, currents[1].y]});
         }
 

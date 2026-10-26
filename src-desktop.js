@@ -141,12 +141,15 @@
         windows.push({reset, fit, cancel: end, configure});
         return reset;
     }
-    const dockPlayer = movable(player, player.querySelector('[data-player-handle]'), 'Player', true);
-    dock.addEventListener('click', () => {
-        dockPlayer();
-        player.querySelector('[data-player-handle]').focus({preventScroll: true});
-        announce('PLAYER / DOCKED');
-    });
+    const osPlayerWindow = player.closest('.home-player-window');
+    const dockPlayer = osPlayerWindow ? () => {} : movable(player, player.querySelector('[data-player-handle]'), 'Player', true);
+    if (!osPlayerWindow) {
+        dock.addEventListener('click', () => {
+            dockPlayer();
+            player.querySelector('[data-player-handle]').focus({preventScroll: true});
+            announce('PLAYER / DOCKED');
+        });
+    }
     movable(space.querySelector('#experience-info'), space.querySelector('[data-info-handle]'), 'Info');
     movable(index, index.querySelector('[data-index-handle]'), 'Index');
     window.addEventListener('resize', () => windows.forEach(window => window.fit()));
