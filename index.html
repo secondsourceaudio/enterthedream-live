@@ -21,18 +21,18 @@ The little SRC in INDEX has another side.
     <title>Second Source Audio — Independent Record Label, Oslo</title>
     <link rel="stylesheet" href="/site.css?v=15">
     <link rel="stylesheet" href="/new.css?v=32">
-    <link rel="stylesheet" href="/experience.css?v=20">
+    <link rel="stylesheet" href="/experience.css?v=21">
     <link rel="stylesheet" href="/continuous-player.css?v=2">
     <link rel="stylesheet" href="/src-desktop.css?v=5">
     <link rel="stylesheet" href="/home-desktop.css?v=2">
-    <link rel="stylesheet" href="/src-os.css?v=3">
+    <link rel="stylesheet" href="/src-os.css?v=4">
     <script src="/site.js?v=8" defer></script>
     <link rel="preload" as="image" href="/images/drip_cover_front_2.webp">
-    <script src="/experience.js?v=18" defer></script>
+    <script src="/experience.js?v=19" defer></script>
     <script src="/landing-experiment.js?v=26" defer></script>
     <script src="/drip-fluid.js?v=16" defer></script>
     <script src="/experience-tools.js?v=3" defer></script>
-    <script src="/src-desktop.js?v=3" defer></script>
+    <script src="/src-desktop.js?v=4" defer></script>
     <script src="/home-desktop.js?v=2" defer></script>
     <script src="/continuous-player.js?v=2" defer></script>
     <link rel="canonical" href="https://www.enterthedream.org/">
@@ -147,20 +147,19 @@ The little SRC in INDEX has another side.
                     <div class="player-controls">
                         <button class="experience-button player-button" type="button" data-sound data-compact-sound aria-pressed="false" aria-label="Play Sage Counsel" title="Play Sage Counsel"><span data-play-symbol data-state="play" aria-hidden="true"><svg class="transport-play" viewBox="0 0 16 16"><path d="M5 3 13 8 5 13Z"/></svg><svg class="transport-pause" viewBox="0 0 16 16"><path d="M4 3h3v10H4zm5 0h3v10H9z"/></svg><svg class="transport-loading" viewBox="0 0 16 16"><circle cx="3" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="13" cy="8" r="1.5"/></svg></span></button>
                         <button class="experience-button sound-button" type="button" data-mute aria-pressed="false" aria-label="Mute" title="Mute"><span data-mute-symbol data-state="sound" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2 6h3l4-3v10l-4-3H2Z"/><path class="speaker-waves" d="M11 5q3 3 0 6m2-8q5 5 0 10" fill="none" stroke="currentColor" stroke-width="1.2"/><path class="speaker-muted" d="m11 6 4 4m0-4-4 4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></span></button>
-                        <button class="experience-button src-skin-button" type="button" data-skin-cycle data-src-enhancement hidden>SKIN</button>
                         <input class="volume-slider" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="Volume" data-volume>
                         <output class="volume-percent" data-volume-output aria-hidden="true">35%</output>
                     </div>
                 </div>
                 <div class="experience-controls" aria-label="Viewing controls">
                     <div class="visual-mode-switch" role="group" aria-label="Visual mode">
-                        <button class="experience-button" type="button" data-visual-mode="whirl" aria-controls="visual-container" aria-pressed="true">WHIRL</button>
-                        <button class="experience-button" type="button" data-visual-mode="fluid" aria-controls="fluid-container" aria-pressed="false">FLUID</button>
-                        <button class="experience-button" type="button" data-visual-mode="visualizer" aria-controls="fluid-container" aria-pressed="false">VISUALIZER</button>
+                        <button class="experience-button experience-icon-button" type="button" data-visual-mode="whirl" aria-controls="visual-container" aria-pressed="true" aria-label="Whirl" title="Whirl"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M12.7 5.2A5.2 5.2 0 1 0 12 11.7M12.7 5.2H9.5m3.2 0V2" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="8" cy="8" r="1.5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
+                        <button class="experience-button experience-icon-button" type="button" data-visual-mode="fluid" aria-controls="fluid-container" aria-pressed="false" aria-label="Fluid" title="Fluid"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5c2.2-2 3.8 2 6 0s3.8 2 6 0M2 10c2.2-2 3.8 2 6 0s3.8 2 6 0" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
+                        <button class="experience-button experience-icon-button" type="button" data-visual-mode="visualizer" aria-controls="fluid-container" aria-pressed="false" aria-label="Visualizer" title="Visualizer"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13V9m3 4V4m4 9V7m3 6V2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
                     </div>
-                    <button class="experience-button" type="button" data-motion-toggle aria-pressed="true" aria-label="Use static artwork">MOTION ON</button>
-                    <button class="experience-button" type="button" data-fullscreen aria-pressed="false" aria-label="Enter fullscreen listening mode">FULLSCREEN</button>
-                    <button class="experience-button" type="button" data-info aria-haspopup="dialog" aria-controls="experience-info">INFO</button>
+                    <button class="experience-button experience-icon-button" type="button" data-motion-toggle aria-pressed="true" aria-label="Motion on: use static artwork" title="Motion on"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 5h5M2 8h7M2 11h5m5-7 4 4-4 4Z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
+                    <button class="experience-button experience-icon-button" type="button" data-fullscreen aria-pressed="false" aria-label="Enter fullscreen listening mode" title="Fullscreen"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
+                    <button class="experience-button experience-icon-button" type="button" data-info aria-haspopup="dialog" aria-controls="experience-info" aria-label="Information" title="Information"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M8 7v4M8 4.7v.2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></button>
                     <button class="experience-button vortex-return" type="button" data-vortex-return aria-pressed="false" aria-label="Hold to return the whirlpool faster" hidden disabled>RETURN</button>
                     <button class="experience-button vortex-return" type="button" data-fluid-return data-mode-controls="fluid" aria-pressed="false" aria-label="Hold to return to the original artwork" hidden>RETURN</button>
                     <button class="experience-button" type="button" data-fluid-reset data-mode-controls="fluid" hidden>RESET</button>
@@ -209,7 +208,6 @@ The little SRC in INDEX has another side.
                     <details class="src-window-help" data-src-enhancement hidden>
                         <summary>PLAYER / WINDOW CONTROLS</summary>
                         <p>Drag the player title bar or this window heading to move it. Double-click to return it. With the heading focused, use arrow keys to move and Home to return.</p>
-                        <p>SKIN cycles Graphite / Chrome / Cobalt / Amber.</p>
                     </details>
                     <button class="experience-button info-modifier" type="button" data-shortcuts-toggle aria-pressed="true">KEYBOARD SHORTCUTS / ON</button>
                     <button class="experience-button info-modifier" type="button" data-glitch-toggle data-mode-controls="whirl" aria-pressed="false" aria-label="SRC_GLITCH: off">SRC_GLITCH / OFF</button>

@@ -54,8 +54,8 @@
 .room-spectrum { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 1px; position: relative; height: 36px; grid-row: span 1; align-self: center; }
 .room-spectrum::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(to top, transparent 0 3px, var(--room-screen) 3px 4px); pointer-events: none; }
 .room-spectrum-band { position: relative; background: #ffffff06; }
-.room-spectrum-level { position: absolute; bottom: 0; width: 100%; height: calc(var(--level, 0) * 100%); background: linear-gradient(to top, var(--room-line), var(--room-accent)); }
-.room-spectrum-peak { position: absolute; bottom: calc(var(--peak, 0) * 100%); width: 100%; height: 1px; background: var(--room-accent); opacity: var(--peak-visible, 0); }
+.room-spectrum-level { position: absolute; inset-inline: 0; bottom: 0; height: calc(var(--level, 0) * 100%); background: linear-gradient(to top, #667798, var(--room-accent)); }
+.room-spectrum-peak { position: absolute; inset-inline: 0; bottom: calc(var(--peak, 0) * 100%); height: 1px; background: var(--room-accent); opacity: var(--peak-visible, 0); }
 .room-track [data-room-track] { min-width: 0; font-size: var(--font-small); line-height: 1.8; letter-spacing: .08em; text-transform: uppercase; }
 .room-track-artist { display: block; color: var(--room-accent); opacity: .8; font-size: var(--font-micro); }
 .room-track strong { display: block; font-weight: normal; }
@@ -126,7 +126,18 @@ body.room-fullscreen > main.room-main {
     overflow: hidden !important;
 }
 body.room-fullscreen .room-main > :not(.room) { display: none !important; }
-body.room-fullscreen .room { position: absolute; inset: 0; width: 100%; height: 100%; gap: 0; }
+body.room-fullscreen .room {
+    position: absolute;
+    inset: 0;
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    height: 100%;
+    gap: 0;
+    grid-template-columns: none !important;
+    grid-template-rows: none !important;
+}
 @media (max-width: 750px) {
     .room-main { padding: 28px 12px 40px; }
     .room-heading { padding: 0 8px; gap: 6px; }

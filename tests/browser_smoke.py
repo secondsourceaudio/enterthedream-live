@@ -2176,7 +2176,9 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('.release-availability')).to_have_text('SPRING 2027 / Vinyl & Digital')
         expect(self.page.locator('.release-side')).to_have_count(2)
         expect(self.page.locator('.release-tracks li')).to_have_count(10)
-        expect(self.page.locator('.release-credit-list > div')).to_have_count(5)
+        expect(self.page.locator('.release-credit-list > div')).to_have_count(6)
+        expect(self.page.locator('.release-credit-list')).to_contain_text('EXECUTIVE PRODUCED BY')
+        expect(self.page.locator('.release-credit-list')).to_contain_text('OLSEN MEDIA')
         expect(self.page.locator('.release-credit-list')).to_contain_text('ADDITIONAL SYNTH & BASS (TRACKS 3 & 10)')
         expect(self.page.locator('.release-credit-list')).to_contain_text('Einar Bersvendsen')
         self.assertTrue(self.page.locator('.release-cover').evaluate('image => image.complete && image.naturalWidth === 3200'))
@@ -2269,28 +2271,22 @@ class WebsiteTests(unittest.TestCase):
         self.page.locator("[data-info]").click()
         expect(self.page.locator("#experience-info")).to_be_visible()
 
-    def test_src_skins_preserve_audio_and_remember_the_selected_skin(self):
+    def test_home_player_uses_one_consistent_skin(self):
         serve_seekable_audio(self.page)
         self.visit()
+        expect(self.page.locator('.experience-controls .experience-icon-button')).to_have_count(6)
+        self.assertTrue(self.page.locator('.experience-controls .experience-icon-button').evaluate_all(
+            'buttons => buttons.every(button => button.textContent.trim() === "" && button.querySelector("svg"))'))
         self.page.evaluate('window.__srcAudio = document.querySelector("audio")')
         self.page.locator('[data-volume]').fill('0.42')
         self.page.locator('[data-sound]').click()
         self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
-        started = self.page.locator('audio').evaluate('a => a.currentTime')
         player = self.page.locator('.compact-player')
-        colours = set()
-        for skin in ['chrome', 'cobalt', 'amber', 'graphite']:
-            self.page.locator('[data-skin-cycle]').click()
-            expect(player).to_have_attribute('data-skin', skin)
-            colours.add(player.locator('.player-display').evaluate('e => getComputedStyle(e).backgroundColor'))
-            self.assertTrue(self.page.evaluate('document.querySelector("audio") === window.__srcAudio && !window.__srcAudio.paused'))
-            expect(self.page.locator('[data-volume-output]')).to_have_text('42%')
-        self.assertEqual(len(colours), 4)
-        self.assertGreaterEqual(self.page.locator('audio').evaluate('a => a.currentTime'), started)
-        self.page.locator('[data-skin-cycle]').click()
-        self.page.locator('[data-skin-cycle]').click()
+        expect(self.page.locator('[data-skin-cycle]')).to_have_count(0)
+        expect(player).not_to_have_attribute('data-skin', 'amber')
+        self.assertTrue(self.page.evaluate('document.querySelector("audio") === window.__srcAudio && !window.__srcAudio.paused'))
+        expect(self.page.locator('[data-volume-output]')).to_have_text('42%')
         self.page.reload(wait_until='networkidle')
-        expect(player).to_have_attribute('data-skin', 'cobalt')
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
 
     def test_src_windows_move_with_pointer_and_keyboard_and_dock_for_fullscreen(self):
@@ -2373,8 +2369,7 @@ class WebsiteTests(unittest.TestCase):
             page = context.new_page()
             page.goto(BASE_URL + '/', wait_until='networkidle')
             expect(page.locator('[data-player-handle]')).not_to_have_attribute('tabindex', '0')
-            page.locator('[data-skin-cycle]').tap()
-            expect(page.locator('.compact-player')).to_have_attribute('data-skin', 'chrome')
+            expect(page.locator('[data-skin-cycle]')).to_have_count(0)
             self.assertTrue(page.locator('.player-controls button, .player-controls input, .volume-percent').evaluate_all(
                 'elements => elements.every(e => { const r = e.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth; })'))
             page.locator('[data-open-index]').tap()
@@ -2513,7 +2508,7 @@ class WebsiteTests(unittest.TestCase):
         self.assertLessEqual(box['x'] + box['width'], 320)
         self.assertLessEqual(box['y'] + box['height'], 740)
         self.page.locator('[data-corner-expand]').click()
-        expect(self.page.locator('[data-skin-cycle]')).to_be_visible()
+        expect(self.page.locator('[data-skin-cycle]')).to_have_count(0)
         self.assertTrue(corner.evaluate('e => e.scrollWidth <= e.clientWidth'))
         self.page.locator('[data-corner-close]').click()
         expect(corner).not_to_be_visible()
@@ -2823,6 +2818,20 @@ class WebsiteTests(unittest.TestCase):
             self.assertLessEqual(page.evaluate('document.body.scrollWidth'), 390)
         finally:
             context.close()
+
+    def test_listening_room_desktop_fullscreen_uses_the_whole_viewport(self):
+        self.visit('sources/')
+        self.page.locator('[data-room]').evaluate('element => { element.requestFullscreen = undefined; }')
+        self.page.locator('[data-room-fullscreen]').click()
+        expect(self.page.locator('[data-room-fullscreen]')).to_have_attribute('aria-pressed', 'true')
+        frame = self.page.locator('.room-frame').bounding_box()
+        self.assertAlmostEqual(frame['x'], 0, delta=1)
+        self.assertAlmostEqual(frame['y'], 0, delta=1)
+        self.assertAlmostEqual(frame['width'], 1440, delta=1)
+        self.assertAlmostEqual(frame['height'], 1000, delta=1)
+        self.assertEqual(self.page.locator('.site-header').evaluate('element => getComputedStyle(element).display'), 'none')
+        self.page.locator('[data-room-fullscreen]').click()
+        expect(self.page.locator('[data-room-fullscreen]')).to_have_attribute('aria-pressed', 'false')
 
     def test_listening_room_webgl_fallback_keeps_music_and_scene_choices_available(self):
         serve_sources_audio(self.page)

@@ -127,7 +127,7 @@
                 let power=0;
                 for (let bin=first;bin<=lastBin;bin++) power+=Math.pow(10,meterData[bin]/10);
                 const db=power > 0 ? 10*Math.log10(power/Math.max(1,lastBin-first+1)) : -100;
-                const target=Math.max(0,Math.min(.96,(db+70)/60));
+                const target=Math.max(0,Math.min(.96,(db+82)/54));
                 band.level+=(target-band.level)*(1-Math.exp(-dt/(target > band.level ? .025 : .12)));
                 if (band.level >= band.peak) { band.peak=band.level; band.hold=.18; }
                 else { band.hold-=dt; if (band.hold <= 0) band.peak=Math.max(band.level,band.peak-dt*.65); }

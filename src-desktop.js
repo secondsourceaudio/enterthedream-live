@@ -1,4 +1,4 @@
-/* SRC skins, movable windows and a small visual index. Audio stays in its player. */
+/* SRC movable windows and a small visual index. Audio stays in its player. */
 (() => {
     'use strict';
     const space = document.querySelector('.landing-study [data-experience]');
@@ -6,25 +6,8 @@
     const index = space?.querySelector('#src-index');
     if (!player || !index) return;
 
-    const skins = ['graphite', 'chrome', 'cobalt', 'amber'];
-    const skinButton = player.querySelector('[data-skin-cycle]');
     const notice = space.querySelector('[data-status]');
     const announce = text => { notice.textContent = text; };
-    let savedSkin;
-    try { savedSkin = localStorage.getItem('second-source-player-skin'); } catch { /* Optional preference. */ }
-    function setSkin(skin) {
-        player.dataset.skin = skin;
-        const name = skin[0].toUpperCase() + skin.slice(1);
-        skinButton.title = `Skin: ${name}. Select next skin.`;
-        skinButton.setAttribute('aria-label', `Change player skin. Current skin: ${name}`);
-    }
-    setSkin(skins.includes(savedSkin) ? savedSkin : skins[0]);
-    skinButton.addEventListener('click', () => {
-        const skin = skins[(skins.indexOf(player.dataset.skin) + 1) % skins.length];
-        setSkin(skin);
-        try { localStorage.setItem('second-source-player-skin', skin); } catch { /* Optional preference. */ }
-        announce(`SKIN / ${skin.toUpperCase()}`);
-    });
 
     // Keep the space occupied by a detached player, so the artwork and controls
     // stay put. Move the original node; do not recreate audio or its controls.

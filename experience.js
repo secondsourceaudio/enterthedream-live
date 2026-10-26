@@ -381,9 +381,9 @@
         motionButton.disabled = unavailable;
         if (glitchButton) glitchButton.disabled = unavailable;
         document.documentElement.dataset.motion = motionEnabled ? "on" : "off";
-        motionButton.textContent = motionEnabled ? "MOTION ON" : "MOTION OFF";
         motionButton.setAttribute("aria-pressed", String(motionEnabled));
         motionButton.setAttribute("aria-label", motionEnabled ? "Motion on: use static artwork" : "Motion off: animate artwork");
+        motionButton.title = motionEnabled ? "Motion on" : "Motion off";
         window.dispatchEvent(new Event("experience:motionchange"));
     }
     motionButton.addEventListener("click", () => {
@@ -476,10 +476,10 @@
         immersive = enabled;
         space.classList.toggle("is-immersive", enabled);
         document.body.classList.toggle("listening-mode", enabled);
-        fullscreenButton.textContent = enabled ? "EXIT FULLSCREEN" : "FULLSCREEN";
         fullscreenButton.setAttribute("aria-pressed", String(enabled));
         const modeLabel = audio ? "listening" : "viewing";
         fullscreenButton.setAttribute("aria-label", `${enabled ? "Exit" : "Enter"} fullscreen ${modeLabel} mode`);
+        fullscreenButton.title = enabled ? "Exit fullscreen" : "Fullscreen";
         if (enabled) {
             for (const element of document.body.children) {
                 if (element.contains(space) || element.tagName === "SCRIPT") continue;
