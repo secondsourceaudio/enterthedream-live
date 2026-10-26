@@ -57,6 +57,10 @@ def serve_seekable_audio(page, filename="sage-counsel.mp3", source=None):
     page.route("**/audio/" + filename, respond)
 
 
+def serve_sources_audio(page):
+    serve_seekable_audio(page, "src_player_ambient_tape_1_192.mp3", source="sage-counsel.mp3")
+
+
 class WebsiteTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -2034,7 +2038,7 @@ class WebsiteTests(unittest.TestCase):
         parser = RobotFileParser()
         parser.parse(rules.splitlines())
         for crawler in ['GPTBot','ClaudeBot','Google-Extended','CCBot','Bytespider','Meta-ExternalAgent','Applebot-Extended']:
-            for path in ['/','/audio/dream-scenario.mp3','/images/drip_cover_front_2.webp']:
+            for path in ['/','/audio/src_player_ambient_tape_1_192.mp3','/images/drip_cover_front_2.webp']:
                 self.assertFalse(parser.can_fetch(crawler,BASE_URL+path), (crawler,path))
         for crawler in ['Googlebot','Googlebot-Image','Bingbot','OAI-SearchBot','Claude-SearchBot']:
             for path in ['/','/about/','/releases/','/sources/','/merch/','/sitemap.xml']:
@@ -2554,8 +2558,8 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('link[rel="canonical"]')).to_have_attribute('href','https://www.enterthedream.org/sources/')
         expect(self.page.locator('meta[property="og:url"]')).to_have_attribute('content','https://www.enterthedream.org/sources/')
         expect(self.page.get_by_role('button',name='SOURCE 1 / DUSK',exact=True)).to_be_visible()
-        expect(self.page.get_by_role('button',name='SOURCE 2 / NIGHT',exact=True)).to_have_attribute('aria-pressed','true')
-        expect(self.page.locator('[data-room-source]')).to_have_text('SOURCE 2 / NIGHT')
+        expect(self.page.get_by_role('button',name='SOURCE 1 / DUSK',exact=True)).to_have_attribute('aria-pressed','true')
+        expect(self.page.locator('[data-room-source]')).to_have_text('SOURCE 1 / DUSK')
         sitemap=self.page.request.get(BASE_URL+'/sitemap.xml')
         self.assertIn('<loc>https://www.enterthedream.org/sources/</loc>',sitemap.text())
         self.page.goto(BASE_URL+'/room/?source=night#player',wait_until='networkidle')
@@ -2565,7 +2569,7 @@ class WebsiteTests(unittest.TestCase):
 
     def test_listening_room_renders_silently_and_can_pause_its_scene(self):
         requests = []
-        serve_seekable_audio(self.page, 'dream-scenario.mp3')
+        serve_sources_audio(self.page)
         self.page.on('request', lambda request: requests.append(request.url) if '/audio/' in request.url else None)
         self.visit('sources/')
         expect(self.page.locator('#room-scene')).to_have_attribute('data-render-state', 'ready')
@@ -2581,14 +2585,7 @@ class WebsiteTests(unittest.TestCase):
         self.page.get_by_role('button', name='Play music', exact=True).click()
         self.page.wait_for_function('document.querySelector("audio").currentTime > .2')
         expect(self.page.locator('[data-room-play-label]')).to_have_text('PAUSE')
-        self.page.get_by_role('button', name='MOTION ON', exact=True).click()
-        self.wait_for_frames(4)
-        before = self.page.evaluate("window.__drawsByCanvas['room-scene']")
-        self.wait_for_frames(12)
-        self.assertEqual(self.page.evaluate("window.__drawsByCanvas['room-scene']"), before)
         self.assertFalse(self.page.locator('audio').evaluate('a => a.paused'))
-        self.page.get_by_role('button', name='MOTION OFF', exact=True).click()
-        self.page.wait_for_function("before => window.__drawsByCanvas['room-scene'] > before", arg=before)
         self.page.locator('.room-frame').evaluate('e => {e.style.marginTop = "3000px";}')
         self.wait_for_frames(4)
         before = self.page.evaluate("window.__drawsByCanvas['room-scene']")
@@ -2611,7 +2608,7 @@ class WebsiteTests(unittest.TestCase):
                 return original.apply(this, args);
             };
         })();""")
-        serve_seekable_audio(self.page, 'dream-scenario.mp3')
+        serve_sources_audio(self.page)
         self.visit('sources/')
         self.page.get_by_role('button', name='Play music', exact=True).click()
         self.page.wait_for_function('document.querySelector("audio").currentTime > .2')
@@ -2627,10 +2624,8 @@ class WebsiteTests(unittest.TestCase):
         self.page.locator('[data-room-scene=city]').click()
         self.page.locator('[data-room-scene=shore]').click()
         programs = self.page.evaluate('window.__roomPrograms')
-        self.page.locator('[data-room-song=dream-scenario]').click()
         expect(self.page.locator('[data-room]')).to_have_attribute('data-scene', 'shore')
         expect(self.page.locator('[data-room-source]')).to_have_text('SOURCE 1 / DUSK')
-        expect(self.page.locator('.room-song-scene')).to_have_text('SOURCE 1 / DUSK')
         self.assertGreater(self.page.locator('audio').evaluate('a => a.currentTime'), 24)
         self.assertEqual(self.page.locator('audio').evaluate('a => a.currentSrc'), source)
         for _ in range(3):
@@ -2644,40 +2639,38 @@ class WebsiteTests(unittest.TestCase):
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
         self.assertAlmostEqual(self.page.locator('audio').evaluate('a => a.currentTime'), paused_time, delta=.1)
 
-    def test_listening_room_plays_uploaded_tracks_and_advances_at_the_end(self):
-        serve_seekable_audio(self.page, 'dream-scenario.mp3')
-        serve_seekable_audio(self.page, 'src_player_ambient_tape_1_192.mp3', source='dream-scenario.mp3')
+    def test_listening_room_plays_uploaded_ambient_tape_and_stops_at_the_end(self):
+        serve_sources_audio(self.page)
         requests = []
         self.page.on('request', lambda request: requests.append(request.url) if '/audio/' in request.url else None)
         self.visit('sources/')
-        expect(self.page.locator('[data-room-song]')).to_have_count(2)
+        expect(self.page.locator('[data-room-song]')).to_have_count(1)
         expect(self.page.locator('[data-room-song=sage-counsel]')).to_have_count(0)
         expect(self.page.locator('[data-room-song=ambient-tape-1]')).to_contain_text('Ambient Tape 1')
-        expect(self.page.locator('[data-room-track]')).to_have_text('Martin Solli — Dream Scenario')
-        expect(self.page.locator('[data-room]')).to_have_attribute('data-scene', 'city')
+        expect(self.page.locator('[data-room-track]')).to_have_text('Second Source — Ambient Tape 1')
+        expect(self.page.locator('[data-room]')).to_have_attribute('data-scene', 'shore')
         self.assertEqual(requests, [])
-        self.page.locator('[data-room-song=dream-scenario]').click()
+        self.page.get_by_role('button', name='Play music', exact=True).click()
         self.page.wait_for_function('document.querySelector("audio").currentTime > .2')
-        self.assertTrue(self.page.locator('audio').evaluate('a => a.currentSrc.endsWith("/audio/dream-scenario.mp3")'))
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.currentSrc.endsWith("/audio/src_player_ambient_tape_1_192.mp3")'))
         duration = self.page.locator('audio').evaluate('a => a.duration')
-        self.assertGreater(duration, 282)
-        self.assertLess(duration, 284)
+        self.assertGreater(duration, 275)
         self.page.locator('[data-room-seek]').fill('40')
         self.page.wait_for_function('document.querySelector("audio").currentTime >= 40')
         self.page.get_by_role('button', name='Pause music', exact=True).click()
-        self.page.locator('[data-room-song=dream-scenario]').click()
+        self.page.get_by_role('button', name='Play music', exact=True).click()
         self.page.wait_for_function('document.querySelector("audio").currentTime > 40.1')
         self.page.locator('audio').evaluate('a => {a.currentTime=a.duration-.15;}')
-        self.page.wait_for_function('document.querySelector("[data-room-song=ambient-tape-1]").getAttribute("aria-pressed") === "true" && document.querySelector("audio").currentTime > .1')
-        self.assertTrue(self.page.locator('audio').evaluate('a => a.currentSrc.endsWith("/audio/src_player_ambient_tape_1_192.mp3") && !a.paused'))
+        self.page.wait_for_function('document.querySelector("audio").ended')
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
         expect(self.page.locator('[data-room-track]')).to_have_text('Second Source — Ambient Tape 1')
         expect(self.page.locator('[data-room-source]')).to_have_text('SOURCE 1 / DUSK')
         self.page.reload(wait_until='networkidle')
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused && !a.currentSrc'))
         expect(self.page.locator('[data-room-play-label]')).to_have_text('PLAY')
 
-    def test_listening_room_player_controls_keep_the_session_and_skin_preference(self):
-        serve_seekable_audio(self.page, 'dream-scenario.mp3')
+    def test_listening_room_compact_player_controls_keep_the_session(self):
+        serve_sources_audio(self.page)
         self.visit('sources/')
         expect(self.page.locator('[data-room-state]')).to_have_text('STOPPED')
         self.page.get_by_role('button', name='Play music', exact=True).click()
@@ -2694,30 +2687,20 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('[data-room-muted]')).to_be_visible()
         self.page.locator('[data-room-volume]').fill('0.3')
         self.page.wait_for_function('!document.querySelector("audio").muted')
-        self.page.locator('[data-room-playlist-toggle]').click()
         expect(self.page.locator('.room-playlist')).not_to_be_visible()
         self.page.locator('[data-room-playlist-toggle]').click()
         expect(self.page.locator('.room-playlist')).to_be_visible()
-        self.page.locator('[data-room-skin]').click()
-        expect(self.page.locator('.room-dock')).to_have_attribute('data-skin', 'chrome')
         self.assertEqual(self.page.locator('audio').evaluate('a => a.currentSrc'), source)
         self.assertFalse(self.page.locator('audio').evaluate('a => a.paused'))
-        self.page.locator('[data-room-repeat]').click()
-        self.assertTrue(self.page.locator('audio').evaluate('a => a.loop'))
-        self.page.locator('audio').evaluate('a => {a.currentTime=a.duration-.15;}')
-        self.page.wait_for_function('a => a.currentTime < 2 && !a.paused', arg=self.page.locator('audio').element_handle())
-        self.page.locator('[data-room-repeat]').click()
-        self.assertFalse(self.page.locator('audio').evaluate('a => a.loop'))
+        expect(self.page.locator('[data-room-skin], [data-room-repeat], [data-room-motion]')).to_have_count(0)
         self.page.get_by_role('button', name='Stop music', exact=True).click()
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused && a.currentTime === 0'))
-        expect(self.page.locator('[data-room-state]')).to_have_text('STOPPED')
-        expect(self.page.locator('[data-room-song=dream-scenario]')).to_have_attribute('aria-pressed', 'true')
+        expect(self.page.locator('[data-room-song=ambient-tape-1]')).to_have_attribute('aria-pressed', 'true')
         self.page.reload(wait_until='networkidle')
-        expect(self.page.locator('.room-dock')).to_have_attribute('data-skin', 'chrome')
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused && !a.currentSrc'))
 
     def test_listening_room_spectrum_tracks_audio_and_stops_when_silent_or_hidden(self):
-        serve_seekable_audio(self.page, 'dream-scenario.mp3')
+        serve_sources_audio(self.page)
         self.visit('sources/')
         bars = "[...document.querySelectorAll('.room-spectrum-band')].map(b => Number(b.style.getPropertyValue('--level')))"
         active = '() => '+bars+'.some(level => level > .05)'
@@ -2754,7 +2737,7 @@ class WebsiteTests(unittest.TestCase):
 
     def test_listening_room_without_webaudio_still_plays_the_recording(self):
         self.context.add_init_script('window.AudioContext=undefined; window.webkitAudioContext=undefined;')
-        serve_seekable_audio(self.page, 'dream-scenario.mp3')
+        serve_sources_audio(self.page)
         self.visit('sources/')
         self.page.get_by_role('button', name='Play music', exact=True).click()
         self.page.wait_for_function('document.querySelector("audio").currentTime > .2')
@@ -2790,26 +2773,24 @@ class WebsiteTests(unittest.TestCase):
         self.assertEqual(result['error'], 0)
 
     def test_listening_room_respects_reduced_motion(self):
-        serve_seekable_audio(self.page, 'dream-scenario.mp3')
+        serve_sources_audio(self.page)
         self.page.emulate_media(reduced_motion='reduce')
         self.visit('sources/')
         expect(self.page.locator('#room-scene')).to_have_attribute('data-render-state', 'ready')
-        expect(self.page.get_by_role('button', name='MOTION OFF', exact=True)).to_be_visible()
+        expect(self.page.locator('[data-room-motion]')).to_have_count(0)
         self.page.get_by_role('button', name='Play music', exact=True).click()
         self.page.wait_for_function('document.querySelector("audio").currentTime > .1')
         self.wait_for_frames(4)
         before = self.page.evaluate("window.__drawsByCanvas['room-scene']")
         self.wait_for_frames(8)
         self.assertEqual(self.page.evaluate("window.__drawsByCanvas['room-scene']"), before)
-        self.page.get_by_role('button', name='MOTION OFF', exact=True).click()
-        self.page.wait_for_function("before => window.__drawsByCanvas['room-scene'] > before", arg=before)
 
     def test_listening_room_touch_fullscreen_keeps_the_player_minimized(self):
         context = self.browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True)
         try:
             page = context.new_page()
             page.on('pageerror', lambda error: self.errors.append(str(error)))
-            serve_seekable_audio(page, 'dream-scenario.mp3')
+            serve_sources_audio(page)
             page.goto(BASE_URL + '/sources/', wait_until='networkidle')
             page.get_by_role('button', name='Play music', exact=True).tap()
             page.wait_for_function('document.querySelector("audio").currentTime > .2')
@@ -2844,7 +2825,7 @@ class WebsiteTests(unittest.TestCase):
             context.close()
 
     def test_listening_room_webgl_fallback_keeps_music_and_scene_choices_available(self):
-        serve_seekable_audio(self.page, 'dream-scenario.mp3')
+        serve_sources_audio(self.page)
         self.context.add_init_script('''(() => {
             const original = HTMLCanvasElement.prototype.getContext;
             HTMLCanvasElement.prototype.getContext = function(type, ...args) {
@@ -2854,10 +2835,10 @@ class WebsiteTests(unittest.TestCase):
         })();''')
         self.visit('sources/')
         expect(self.page.locator('#room-scene')).to_have_attribute('data-render-state', 'fallback')
-        expect(self.page.locator('.room-fallback-city')).to_be_visible()
+        expect(self.page.locator('.room-fallback').first).to_be_visible()
         self.page.get_by_role('button', name='Play music', exact=True).click()
         self.page.wait_for_function('document.querySelector("audio").currentTime > .1')
-        expect(self.page.locator('[data-room-motion]')).to_be_disabled()
+        expect(self.page.locator('[data-room-motion]')).to_have_count(0)
         self.page.locator('[data-room-scene=shore]').click()
         expect(self.page.locator('.room-fallback').first).to_be_visible()
         self.page.locator('[data-room-scene=city]').click()
@@ -2869,7 +2850,7 @@ class WebsiteTests(unittest.TestCase):
         try:
             page = context.new_page()
             page.goto(BASE_URL + '/sources/', wait_until='networkidle')
-            expect(page.locator('.room-fallback-city')).to_be_visible()
+            expect(page.locator('.room-fallback').first).to_be_visible()
             expect(page.locator('.room-dock')).not_to_be_visible()
             expect(page.locator('[data-room-still]')).to_be_visible()
             expect(page.locator('[data-room-still]')).to_contain_text('still scene')

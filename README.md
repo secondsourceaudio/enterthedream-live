@@ -7,15 +7,14 @@ GitHub Pages and needs no build step or production dependencies.
 
 `/sources/` is the public listening section, linked as SOURCES in the main
 navigation and included in the sitemap. `/room/` redirects here, preserving query
-parameters and fragments. Its playlist currently pairs Dream Scenario
-with a quiet evening street. Sage Counsel remains on the homepage only. Tracks
+parameters and fragments. Its playlist currently pairs Ambient Tape 1
+with the dusk skyline. Sage Counsel remains on the homepage only. Tracks
 have default scenes, but the independent SOURCE 1 / DUSK and SOURCE 2 / NIGHT controls
 preserve the current music, playback position and paused state. There is no
 local-file picker.
 
-The SRC player keeps its playlist inside the shell, with play/pause, stop,
-volume/mute, repeat-track and a playlist toggle. Its four skins use the same
-optional skin preference as the homepage player. Dream Scenario is the only
+The compact SRC player keeps its playlist inside the shell, with play/pause,
+stop, volume/mute, playlist and fullscreen controls. Ambient Tape 1 is the only
 track currently supplied; the playlist can hold further tracks and scene defaults.
 Its 20 spectrum bands measure the recording through a Web Audio analyser created
 only on Play. They stop while silent, paused, offscreen, fullscreen or with motion

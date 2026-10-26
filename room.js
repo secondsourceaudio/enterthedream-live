@@ -8,26 +8,21 @@
     const dock=room.querySelector('.room-dock');
     const audio=room.querySelector('audio');
     const play=room.querySelector('[data-room-play]');
-    const motion=room.querySelector('[data-room-motion]');
     const fullscreen=room.querySelector('[data-room-fullscreen]');
     const seek=room.querySelector('[data-room-seek]');
     const stop=room.querySelector('[data-room-stop]');
     const mute=room.querySelector('[data-room-mute]');
     const volume=room.querySelector('[data-room-volume]');
-    const repeat=room.querySelector('[data-room-repeat]');
     const playlistToggle=room.querySelector('[data-room-playlist-toggle]');
     const playlist=room.querySelector('.room-playlist');
-    const skinButton=room.querySelector('[data-room-skin]');
     const spectrum=room.querySelector('[data-room-spectrum]');
     const status=document.querySelector('[data-room-status]');
     const tracks=[...room.querySelectorAll('[data-room-song]')];
     const scenes=[...room.querySelectorAll('[data-room-scene]')];
     const sourceNames={shore:'SOURCE 1 / DUSK',city:'SOURCE 2 / NIGHT'};
     playlist.querySelector('h2 span').textContent=String(tracks.length).padStart(2,'0');
-    if (matchMedia('(max-width: 750px)').matches) {
-        playlist.hidden=true;
-        playlistToggle.setAttribute('aria-expanded','false');
-    }
+    playlist.hidden=true;
+    playlistToggle.setAttribute('aria-expanded','false');
     const reduced=matchMedia('(prefers-reduced-motion: reduce)');
     const hover=matchMedia('(hover: hover) and (pointer: fine)');
     const inertElements=new Map(), worlds=new Map(), sceneTimes=new Map();
@@ -58,9 +53,6 @@
         play.querySelector('[data-room-start]').toggleAttribute('hidden',playing);
         room.classList.toggle('is-playing',playing);
         room.querySelector('[data-room-state]').textContent=playing ? 'PLAYING' : audio.ended ? 'ENDED' : audio.currentTime > 0 ? 'PAUSED' : 'STOPPED';
-        motion.disabled=!world;
-        motion.textContent=moving && world ? 'MOTION ON' : 'MOTION OFF';
-        motion.setAttribute('aria-pressed',String(moving && !!world));
         reconcile();
     }
     function tick(now) {
@@ -235,31 +227,13 @@
     volume.addEventListener('input',()=>{ audio.volume=Number(volume.value); audio.muted=false; });
     audio.addEventListener('volumechange',updateVolume);
     updateVolume();
-    repeat.addEventListener('click',()=>{
-        audio.loop=!audio.loop;
-        repeat.setAttribute('aria-pressed',String(audio.loop));
-    });
     playlistToggle.addEventListener('click',()=>{
         playlist.hidden=!playlist.hidden;
         playlistToggle.setAttribute('aria-expanded',String(!playlist.hidden));
-    });
-    const skins=['graphite','chrome','cobalt','amber'];
-    function setSkin(skin) {
-        dock.dataset.skin=skin;
-        skinButton.setAttribute('aria-label','Change player skin. Current skin: '+skin[0].toUpperCase()+skin.slice(1));
-    }
-    try {
-        const stored=localStorage.getItem('second-source-player-skin');
-        if (skins.includes(stored)) setSkin(stored);
-    } catch { /* Skin preferences are optional. */ }
-    skinButton.addEventListener('click',()=>{
-        const skin=skins[(skins.indexOf(dock.dataset.skin)+1)%skins.length];
-        setSkin(skin);
-        try { localStorage.setItem('second-source-player-skin',skin); } catch { /* Optional preference. */ }
+        playlistToggle.setAttribute('aria-label',playlist.hidden ? 'Open playlist' : 'Close playlist');
     });
     for (const track of tracks) track.addEventListener('click',()=>selectTrack(track));
     for (const button of scenes) button.addEventListener('click',()=>selectScene(button.dataset.roomScene));
-    motion.addEventListener('click',()=>{ moving=!moving; updateControls(); });
     reduced.addEventListener('change',()=>{ moving=!reduced.matches; updateControls(); });
     const format=seconds=>{
         const value=Math.max(0,Math.floor(Number.isFinite(seconds) ? seconds : 0));
@@ -299,14 +273,14 @@
         document.body.classList.toggle('room-fullscreen',enabled);
         fullscreen.setAttribute('aria-pressed',String(enabled));
         fullscreen.setAttribute('aria-label',enabled ? 'Exit fullscreen' : 'Enter fullscreen');
-        fullscreen.textContent=enabled ? 'EXIT FULLSCREEN' : 'FULLSCREEN';
+        fullscreen.title=enabled ? 'Exit fullscreen' : 'Fullscreen';
         if (enabled) {
             for (const element of document.body.children) {
                 if (element.contains(room) || element.tagName === 'SCRIPT') continue;
                 inertElements.set(element,element.inert); element.inert=true;
             }
             frame.focus({preventScroll:true});
-            clearTimeout(controlsTimer); room.classList.add('controls-hidden');
+            revealControls();
         } else {
             for (const [element,inert] of inertElements) element.inert=inert;
             inertElements.clear(); clearTimeout(controlsTimer); room.classList.remove('controls-hidden');

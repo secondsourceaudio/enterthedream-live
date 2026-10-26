@@ -9,11 +9,11 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=1">
     <title>Sources — Second Source</title>
     <link rel="stylesheet" href="/site.css?v=15">
-    <link rel="stylesheet" href="/room.css?v=6">
+    <link rel="stylesheet" href="/room.css?v=7">
     <link rel="stylesheet" href="/src-os.css?v=3">
     <script src="/site.js?v=8" defer></script>
     <script src="/room-scenes.js?v=6" defer></script>
-    <script src="/room.js?v=8" defer></script>
+    <script src="/room.js?v=9" defer></script>
     <link rel="canonical" href="https://www.enterthedream.org/sources/">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Second Source">
@@ -50,10 +50,10 @@
         <header class="room-heading">
             <h1>SOURCES</h1>
         </header>
-        <section class="room" data-room data-scene="city" aria-label="Music and scenery">
+        <section class="room" data-room data-scene="shore" aria-label="Music and scenery">
             <div class="room-scenes" role="group" aria-label="Choose source">
-                <button type="button" data-room-scene="shore" aria-pressed="false">SOURCE 1 / DUSK</button>
-                <button type="button" data-room-scene="city" aria-pressed="true">SOURCE 2 / NIGHT</button>
+                <button type="button" data-room-scene="shore" aria-pressed="true">SOURCE 1 / DUSK</button>
+                <button type="button" data-room-scene="city" aria-pressed="false">SOURCE 2 / NIGHT</button>
             </div>
             <div class="room-frame" tabindex="0" role="group" aria-label="A quiet low-poly evening street with warm windows and reflections on wet asphalt. Slowly looping scenery. Press Space to play or pause music, F for fullscreen.">
                 <svg class="room-fallback" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
@@ -85,17 +85,17 @@
                     </g>
                 </svg>
                 <canvas id="room-scene" aria-hidden="true"></canvas>
-                <p class="room-scene-label" aria-hidden="true">SOURCE 2 / NIGHT</p>
+                <p class="room-scene-label" aria-hidden="true">SOURCE 1 / DUSK</p>
             </div>
             <div class="room-dock" role="group" aria-label="Second Source music player" data-skin="graphite">
                 <div class="room-player-titlebar">
                     <img class="room-player-mark" src="/images/brand/src-icon-512.png" width="512" height="512" alt="SRC">
-                    <span class="room-player-catalogue" data-room-source>SOURCE 2 / NIGHT</span>
+                    <span class="room-player-catalogue" data-room-source>SOURCE 1 / DUSK</span>
                     <span class="room-player-state" data-room-state>STOPPED</span>
                 </div>
                 <div class="room-track">
                     <div class="room-spectrum" data-room-spectrum aria-hidden="true"></div>
-                    <span data-room-track><span class="room-track-artist" data-room-artist>Martin Solli</span><span class="room-track-separator"> — </span><strong data-room-title>Dream Scenario</strong></span>
+                    <span data-room-track><span class="room-track-artist" data-room-artist>Second Source</span><span class="room-track-separator"> — </span><strong data-room-title>Ambient Tape 1</strong></span>
                     <span class="room-clock" data-room-time>0:00 / —:—</span>
                 </div>
                 <input class="room-seek" type="range" min="0" max="1" value="0" step="0.1" aria-label="Playback position" data-room-seek disabled>
@@ -105,18 +105,14 @@
                     <button type="button" class="room-button room-square" data-room-mute aria-label="Mute music" aria-pressed="false" title="Mute"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6h3l4-3v10l-4-3H2Z"/><path data-room-speaker d="M11 5q3 3 0 6m2-8q5 5 0 10" fill="none" stroke="currentColor" stroke-width="1.2"/><path data-room-muted d="m11 6 4 4m0-4-4 4" fill="none" stroke="currentColor" stroke-width="1.3" hidden/></svg></button>
                     <label class="room-volume"><span class="room-sr-only">Volume</span><input type="range" min="0" max="1" step="0.01" value="0.35" aria-label="Volume" data-room-volume><output data-room-volume-output aria-hidden="true">35%</output></label>
                     <div class="room-player-toolbar">
-                        <button type="button" class="room-button" data-room-skin aria-label="Change player skin. Current skin: Graphite">SKIN</button>
-                        <button type="button" class="room-button" data-room-repeat aria-label="Repeat track" aria-pressed="false">REPEAT</button>
-                        <button type="button" class="room-button" data-room-playlist-toggle aria-controls="room-playlist" aria-expanded="true">PLAYLIST</button>
-                        <button type="button" class="room-button room-motion" data-room-motion aria-pressed="true">MOTION ON</button>
-                        <button type="button" class="room-button room-fullscreen" data-room-fullscreen aria-label="Enter fullscreen" aria-pressed="false">FULLSCREEN</button>
+                        <button type="button" class="room-button room-icon-button" data-room-playlist-toggle aria-controls="room-playlist" aria-expanded="false" aria-label="Open playlist" title="Playlist"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4h7M3 8h7M3 12h7M13 4v8" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
+                        <button type="button" class="room-button room-fullscreen room-icon-button" data-room-fullscreen aria-label="Enter fullscreen" aria-pressed="false" title="Fullscreen"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10" fill="none" stroke="currentColor" stroke-width="1.2"/></svg></button>
                     </div>
                 </div>
                 <div class="room-playlist" id="room-playlist" aria-labelledby="room-playlist-title">
-                    <h2 id="room-playlist-title">PLAYLIST <span>02</span></h2>
+                    <h2 id="room-playlist-title">PLAYLIST <span>01</span></h2>
                     <ol>
-                        <li><button type="button" data-room-song="dream-scenario" data-src="/audio/dream-scenario.mp3" data-title="Dream Scenario" data-artist="Martin Solli" data-scene="city" aria-pressed="false"><span class="room-song-number">01</span><span><strong>Dream Scenario</strong><small>Martin Solli</small></span><span class="room-song-scene">SOURCE 2 / NIGHT</span></button></li>
-                        <li><button type="button" data-room-song="ambient-tape-1" data-src="/audio/src_player_ambient_tape_1_192.mp3" data-title="Ambient Tape 1" data-artist="Second Source" data-scene="shore" aria-pressed="false"><span class="room-song-number">02</span><span><strong>Ambient Tape 1</strong><small>Second Source</small></span><span class="room-song-scene">SOURCE 1 / DUSK</span></button></li>
+                        <li><button type="button" data-room-song="ambient-tape-1" data-src="/audio/src_player_ambient_tape_1_192.mp3" data-title="Ambient Tape 1" data-artist="Second Source" data-scene="shore" aria-pressed="false"><span class="room-song-number">01</span><span><strong>Ambient Tape 1</strong><small>Second Source</small></span><span class="room-song-scene">SOURCE 1 / DUSK</span></button></li>
                     </ol>
                 </div>
             </div>
