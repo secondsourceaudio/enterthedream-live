@@ -365,4 +365,9 @@ body.src-os {
     .home-desktop .home-player-window .player-timeline,
     .home-desktop .home-player-window .player-controls { grid-column: 1; padding-left: 0; }
 }
-
+@media (min-width: 981px) and (min-height: 700px) {
+    body.src-os.releases-os .release-description {
+        font-size: 14px;
+        line-height: 1.65;
+    }
+}
