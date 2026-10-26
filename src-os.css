@@ -261,8 +261,8 @@ body.src-os {
     .src-os .release-track-name { font-size: 11px; }
     .src-os .release-credits { grid-column: 1 / -1; padding-top: 16px; }
     .src-os .release-credit-list { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px 22px; }
-    .src-os .release-credit-list dt { font-size: 12px; line-height: 1.45; }
-    .src-os .release-credit-list dd { font-size: 14px; line-height: 1.55; }
+    .src-os .release-credit-list dt { font-size: 10px; line-height: 1.45; }
+    .src-os .release-credit-list dd { font-size: 11px; line-height: 1.45; }
 
     .src-os .merch-mockup-notice { margin-bottom: 14px; padding: 10px 14px; font-size: 12px; }
     .src-os .merch-grid {
