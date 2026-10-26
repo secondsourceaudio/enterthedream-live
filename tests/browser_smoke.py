@@ -2121,13 +2121,14 @@ class WebsiteTests(unittest.TestCase):
             self.assertEqual(image.evaluate('image => [image.naturalWidth, image.naturalHeight]'), [1536, height])
             box = image.bounding_box()
             self.assertAlmostEqual(box['width'] / box['height'], 1536 / height, delta=.01)
-        with self.page.expect_popup() as opened:
-            self.page.locator('.merch-product-preview').first.click()
-        full_size = opened.value
-        full_size.wait_for_load_state()
-        self.assertTrue(full_size.url.endswith('/images/merch/second-source-tshirt.webp'))
-        expect(full_size.locator('img')).to_be_visible()
-        full_size.close()
+        preview = self.page.locator('.merch-product-preview').first
+        preview.click()
+        viewer = self.page.locator('[data-merch-viewer]')
+        expect(viewer).to_be_visible()
+        self.assertTrue(viewer.locator('[data-merch-viewer-image]').get_attribute('src').endswith('/images/merch/second-source-tshirt.webp'))
+        viewer.locator('[data-merch-close]').click()
+        expect(viewer).not_to_be_visible()
+        expect(preview).to_be_focused()
 
     def test_legacy_page_urls_redirect_without_losing_query_or_fragment(self):
         for legacy, route, title in [
@@ -2643,13 +2644,15 @@ class WebsiteTests(unittest.TestCase):
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
         self.assertAlmostEqual(self.page.locator('audio').evaluate('a => a.currentTime'), paused_time, delta=.1)
 
-    def test_listening_room_plays_uploaded_dream_scenario_and_stops_at_the_end(self):
+    def test_listening_room_plays_uploaded_tracks_and_advances_at_the_end(self):
         serve_seekable_audio(self.page, 'dream-scenario.mp3')
+        serve_seekable_audio(self.page, 'src_player_ambient_tape_1_192.mp3', source='dream-scenario.mp3')
         requests = []
         self.page.on('request', lambda request: requests.append(request.url) if '/audio/' in request.url else None)
         self.visit('sources/')
-        expect(self.page.locator('[data-room-song]')).to_have_count(1)
+        expect(self.page.locator('[data-room-song]')).to_have_count(2)
         expect(self.page.locator('[data-room-song=sage-counsel]')).to_have_count(0)
+        expect(self.page.locator('[data-room-song=ambient-tape-1]')).to_contain_text('Ambient Tape 1')
         expect(self.page.locator('[data-room-track]')).to_have_text('Martin Solli — Dream Scenario')
         expect(self.page.locator('[data-room]')).to_have_attribute('data-scene', 'city')
         self.assertEqual(requests, [])
@@ -2665,11 +2668,10 @@ class WebsiteTests(unittest.TestCase):
         self.page.locator('[data-room-song=dream-scenario]').click()
         self.page.wait_for_function('document.querySelector("audio").currentTime > 40.1')
         self.page.locator('audio').evaluate('a => {a.currentTime=a.duration-.15;}')
-        self.page.wait_for_function('document.querySelector("audio").ended')
-        self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
-        expect(self.page.locator('[data-room-play-label]')).to_have_text('PLAY')
-        self.page.get_by_role('button', name='Play music', exact=True).click()
-        self.page.wait_for_function('a => a.currentTime > .1 && a.currentTime < 5 && !a.paused', arg=self.page.locator('audio').element_handle())
+        self.page.wait_for_function('document.querySelector("[data-room-song=ambient-tape-1]").getAttribute("aria-pressed") === "true" && document.querySelector("audio").currentTime > .1')
+        self.assertTrue(self.page.locator('audio').evaluate('a => a.currentSrc.endsWith("/audio/src_player_ambient_tape_1_192.mp3") && !a.paused'))
+        expect(self.page.locator('[data-room-track]')).to_have_text('Second Source — Ambient Tape 1')
+        expect(self.page.locator('[data-room-source]')).to_have_text('SOURCE 1 / DUSK')
         self.page.reload(wait_until='networkidle')
         self.assertTrue(self.page.locator('audio').evaluate('a => a.paused && !a.currentSrc'))
         expect(self.page.locator('[data-room-play-label]')).to_have_text('PLAY')

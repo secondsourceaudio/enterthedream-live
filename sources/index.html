@@ -10,8 +10,8 @@
     <title>Sources — Second Source</title>
     <link rel="stylesheet" href="/site.css?v=15">
     <link rel="stylesheet" href="/room.css?v=6">
-    <link rel="stylesheet" href="/src-os.css?v=2">
-    <script src="/site.js?v=7" defer></script>
+    <link rel="stylesheet" href="/src-os.css?v=3">
+    <script src="/site.js?v=8" defer></script>
     <script src="/room-scenes.js?v=6" defer></script>
     <script src="/room.js?v=8" defer></script>
     <link rel="canonical" href="https://www.enterthedream.org/sources/">
@@ -46,7 +46,7 @@
         <time class="src-os-clock" data-os-clock aria-label="Current time in Oslo">--:--</time>
     </header>
     <main id="main-content" tabindex="-1" class="room-main">
-        <div class="src-os-windowbar"><span>SOURCES / AV PLAYER</span><span class="src-os-window-controls" aria-hidden="true">− □ ×</span></div>
+        <div class="src-os-windowbar"><span>SOURCES / AV PLAYER</span><span class="src-os-window-controls" aria-hidden="true">− ×</span></div>
         <header class="room-heading">
             <h1>SOURCES</h1>
         </header>
@@ -113,13 +113,14 @@
                     </div>
                 </div>
                 <div class="room-playlist" id="room-playlist" aria-labelledby="room-playlist-title">
-                    <h2 id="room-playlist-title">PLAYLIST <span>01</span></h2>
+                    <h2 id="room-playlist-title">PLAYLIST <span>02</span></h2>
                     <ol>
                         <li><button type="button" data-room-song="dream-scenario" data-src="/audio/dream-scenario.mp3" data-title="Dream Scenario" data-artist="Martin Solli" data-scene="city" aria-pressed="false"><span class="room-song-number">01</span><span><strong>Dream Scenario</strong><small>Martin Solli</small></span><span class="room-song-scene">SOURCE 2 / NIGHT</span></button></li>
+                        <li><button type="button" data-room-song="ambient-tape-1" data-src="/audio/src_player_ambient_tape_1_192.mp3" data-title="Ambient Tape 1" data-artist="Second Source" data-scene="shore" aria-pressed="false"><span class="room-song-number">02</span><span><strong>Ambient Tape 1</strong><small>Second Source</small></span><span class="room-song-scene">SOURCE 1 / DUSK</span></button></li>
                     </ol>
                 </div>
             </div>
-            <audio data-room-audio preload="none"></audio>
+            <audio data-room-audio preload="metadata"></audio>
         </section>
         <p class="room-note" data-room-still>This is a still scene. Enable JavaScript for motion and playback.</p>
         <p class="room-status" data-room-status role="status"></p>

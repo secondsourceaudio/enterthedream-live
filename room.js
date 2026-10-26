@@ -194,7 +194,7 @@
         if (button.disabled) return;
         if (button === selected) { if (autoplay && audio.paused) startPlayback(); return; }
         ++playRequest; audio.pause(); selected=button;
-        // Assign the source only on Play: preload=none alone is merely a browser hint.
+        // Assign the source only on Play: the preload attribute alone is merely a browser hint.
         audio.removeAttribute('src');
         audio.load();
         for (const track of tracks) track.setAttribute('aria-pressed',String(track === selected));

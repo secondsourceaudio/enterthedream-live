@@ -11,9 +11,10 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=1" sizes="180x180">
     <title>Second Source Merch — T-shirts &amp; Caps</title>
     <link rel="stylesheet" href="/site.css?v=15">
-    <link rel="stylesheet" href="/merch.css?v=8">
-    <link rel="stylesheet" href="/src-os.css?v=2">
-    <script src="/site.js?v=7" defer></script>
+    <link rel="stylesheet" href="/merch.css?v=9">
+    <link rel="stylesheet" href="/src-os.css?v=3">
+    <script src="/site.js?v=8" defer></script>
+    <script src="/merch.js?v=1" defer></script>
     <link rel="canonical" href="https://www.enterthedream.org/merch/">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Second Source">
@@ -46,37 +47,36 @@
         <time class="src-os-clock" data-os-clock aria-label="Current time in Oslo">--:--</time>
     </header>
     <main tabindex="-1" id="main-content" class="merch-page">
-        <div class="src-os-windowbar"><span>MERCH DIRECTORY / MOCKUPS</span><span class="src-os-window-controls" aria-hidden="true">− □ ×</span></div>
+        <div class="src-os-windowbar"><span>MERCH DIRECTORY / MOCKUPS</span><span class="src-os-window-controls" aria-hidden="true">− ×</span></div>
         <header class="merch-heading">
             <h1>MERCH</h1>
-            <p class="merch-credit"><span class="merch-credit-label">BY</span> <a href="https://www.instagram.com/tromso_purist_shop/" target="_blank" rel="noopener noreferrer">TROMS<span class="merch-credit-glyph">Ø</span> PURIST SHOP</a></p>
         </header>
         <p class="merch-mockup-notice"><strong>Design mockups only.</strong> Final products and specifications may change.</p>
+        <p class="merch-credit"><span class="merch-credit-label">MERCH BY /</span> <a href="https://www.instagram.com/tromso_purist_shop/" target="_blank" rel="noopener noreferrer"><span>TROMS<span class="merch-credit-glyph">Ø</span> PURIST SHOP</span><svg class="external-arrow" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 10 10 2M2 2h8v8" fill="none" stroke="currentColor" stroke-width="1"/></svg></a></p>
         <div class="merch-grid">
             <article class="merch-product" aria-labelledby="merch-tshirts-title">
-                <a class="merch-product-preview" href="/images/merch/second-source-tshirt.webp" target="_blank" rel="noopener noreferrer" aria-label="View the full-size T-shirt design mockup">
+                <a class="merch-product-preview" href="/images/merch/second-source-tshirt.webp" data-merch-preview data-title="T-SHIRTS / MOCKUP" aria-label="Open the full-size T-shirt design mockup">
                     <img class="merch-product-image" src="/images/merch/second-source-tshirt.webp" width="1536" height="569" alt="Design mockup of a black Second Source T-shirt, showing the front, plain back and close-up details." fetchpriority="high" decoding="async">
-                    <span class="merch-preview-caption">MOCKUP / VIEW FULL SIZE <svg class="external-arrow" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 10 10 2M2 2h8v8" fill="none" stroke="currentColor" stroke-width="1"/></svg></span>
+                    <span class="merch-preview-caption">SELECT / VIEW MOCKUP</span>
+                    <span class="merch-product-info"><span class="merch-product-title" id="merch-tshirts-title">T-SHIRTS</span><span class="merch-product-status">MOCKUP</span></span>
                 </a>
-                <div class="merch-product-info">
-                    <h2 class="merch-product-title" id="merch-tshirts-title">T-SHIRTS</h2>
-                    <p class="merch-product-status">MOCKUP</p>
-                </div>
-
             </article>
             <article class="merch-product" aria-labelledby="merch-caps-title">
-                <a class="merch-product-preview" href="/images/merch/second-source-cap.webp" target="_blank" rel="noopener noreferrer" aria-label="View the full-size cap design mockup">
+                <a class="merch-product-preview" href="/images/merch/second-source-cap.webp" data-merch-preview data-title="CAPS / MOCKUP" aria-label="Open the full-size cap design mockup">
                     <img class="merch-product-image" src="/images/merch/second-source-cap.webp" width="1536" height="450" alt="Design mockup of a black Second Source cap, showing front and back views and close-ups of the logo and buckle." loading="lazy" decoding="async">
-                    <span class="merch-preview-caption">MOCKUP / VIEW FULL SIZE <svg class="external-arrow" width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 10 10 2M2 2h8v8" fill="none" stroke="currentColor" stroke-width="1"/></svg></span>
+                    <span class="merch-preview-caption">SELECT / VIEW MOCKUP</span>
+                    <span class="merch-product-info"><span class="merch-product-title" id="merch-caps-title">CAPS</span><span class="merch-product-status">MOCKUP</span></span>
                 </a>
-                <div class="merch-product-info">
-                    <h2 class="merch-product-title" id="merch-caps-title">CAPS</h2>
-                    <p class="merch-product-status">MOCKUP</p>
-                </div>
-
             </article>
         </div>
     </main>
+    <dialog class="merch-viewer" data-merch-viewer aria-labelledby="merch-viewer-title">
+        <div class="merch-viewer-window">
+            <div class="merch-viewer-titlebar"><span id="merch-viewer-title" data-merch-viewer-title>MERCH / MOCKUP</span><button type="button" data-merch-close aria-label="Close merch preview" title="Close"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8m0-8-8 8"/></svg></button></div>
+            <div class="merch-viewer-stage"><img data-merch-viewer-image src="" alt=""></div>
+            <p>DESIGN MOCKUP / FINAL PRODUCT MAY CHANGE</p>
+        </div>
+    </dialog>
     <footer class="legal-footer">
         <p class="copyright-line"><a class="copyright-policy" href="/rights/"><span class="copyright-symbol">©</span> 2026 SECOND SOURCE AUDIO. COPYRIGHT &amp; AI USAGE.</a></p>
     </footer>
