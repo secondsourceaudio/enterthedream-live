@@ -50,8 +50,8 @@
 .room-transport { gap: 0; min-width: 44px; width: 44px; padding-inline: 0; }
 .room-transport [data-room-play-label] { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .room-square { width: 44px; padding-inline: 0; }
-.room-track { display: grid; grid-template-columns: 68px minmax(0, 1fr) auto; align-items: center; gap: 0 12px; min-height: 68px; padding: 9px 11px; border: 1px solid var(--room-line); background: var(--room-screen); color: var(--room-ink); }
-.room-spectrum { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 1px; position: relative; height: 36px; grid-row: span 1; align-self: center; }
+.room-track { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto 24px; align-items: center; gap: 5px 12px; min-height: 76px; padding: 9px 11px; border: 1px solid var(--room-line); background: var(--room-screen); color: var(--room-ink); }
+.room-spectrum { display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 2px; position: relative; grid-column: 1 / -1; grid-row: 2; width: 100%; height: 20px; align-self: end; }
 .room-spectrum::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(to top, transparent 0 3px, var(--room-screen) 3px 4px); pointer-events: none; }
 .room-spectrum-band { position: relative; background: #ffffff06; }
 .room-spectrum-level { position: absolute; inset-inline: 0; bottom: 0; height: calc(var(--level, 0) * 100%); background: linear-gradient(to top, #667798, var(--room-accent)); }
@@ -60,7 +60,7 @@
 .room-track-artist { display: block; color: var(--room-accent); opacity: .8; font-size: var(--font-micro); }
 .room-track strong { display: block; font-weight: normal; }
 .room-track-separator { display: none; }
-.room-clock { grid-column: 3; grid-row: 1; margin: 0; color: var(--room-accent); font: 10px/1.6 var(--font-interface); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.room-clock { grid-column: 2; grid-row: 1; margin: 0; color: var(--room-accent); font: 10px/1.6 var(--font-interface); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .room-seek, .room-volume input { display: block; width: 100%; height: 30px; margin: 0; appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer; }
 .room-seek::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(to right, var(--room-accent) var(--progress, 0%), var(--room-line) var(--progress, 0%)); }
 .room-seek::-moz-range-track { height: 2px; background: var(--room-line); }
@@ -145,10 +145,10 @@ body.room-fullscreen .room {
     .room-heading p { font-size: var(--font-micro); }
     .room-note, .room-status { padding-inline: 12px; }
     .room-dock { padding: 10px 10px 7px; }
-    .room-controls { gap: 5px; }
-    .room-track { grid-template-columns: 48px minmax(0, 1fr); gap: 0 10px; padding-inline: 9px; }
-    .room-spectrum { height: 30px; }
-    .room-clock { grid-column: 2; grid-row: auto; }
+    .room-controls { gap: 3px; }
+    .room-volume { min-width: 58px; gap: 4px; }
+    .room-track { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; padding-inline: 9px; }
+    .room-spectrum { height: 18px; }
     .room-song-scene { max-width: 105px; text-align: right; line-height: 1.8; }
 }
 @media (prefers-reduced-motion: reduce) { .room.is-fullscreen .room-dock { transition: none; } }

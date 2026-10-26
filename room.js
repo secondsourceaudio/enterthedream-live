@@ -8,6 +8,7 @@
     const dock=room.querySelector('.room-dock');
     const audio=room.querySelector('audio');
     const play=room.querySelector('[data-room-play]');
+    const motion=room.querySelector('[data-room-motion]');
     const fullscreen=room.querySelector('[data-room-fullscreen]');
     const seek=room.querySelector('[data-room-seek]');
     const stop=room.querySelector('[data-room-stop]');
@@ -53,6 +54,10 @@
         play.querySelector('[data-room-start]').toggleAttribute('hidden',playing);
         room.classList.toggle('is-playing',playing);
         room.querySelector('[data-room-state]').textContent=playing ? 'PLAYING' : audio.ended ? 'ENDED' : audio.currentTime > 0 ? 'PAUSED' : 'STOPPED';
+        motion.disabled=!world;
+        motion.setAttribute('aria-pressed',String(moving && !!world));
+        motion.setAttribute('aria-label',moving && world ? 'Motion on: use static scene' : 'Motion off: animate scene');
+        motion.title=moving && world ? 'Motion on' : 'Motion off';
         reconcile();
     }
     function tick(now) {
@@ -127,7 +132,8 @@
                 let power=0;
                 for (let bin=first;bin<=lastBin;bin++) power+=Math.pow(10,meterData[bin]/10);
                 const db=power > 0 ? 10*Math.log10(power/Math.max(1,lastBin-first+1)) : -100;
-                const target=Math.max(0,Math.min(.96,(db+82)/54));
+                const normalized=Math.max(0,Math.min(1,(db+92)/58));
+                const target=.96*Math.pow(normalized,.72);
                 band.level+=(target-band.level)*(1-Math.exp(-dt/(target > band.level ? .025 : .12)));
                 if (band.level >= band.peak) { band.peak=band.level; band.hold=.18; }
                 else { band.hold-=dt; if (band.hold <= 0) band.peak=Math.max(band.level,band.peak-dt*.65); }
@@ -234,6 +240,7 @@
     });
     for (const track of tracks) track.addEventListener('click',()=>selectTrack(track));
     for (const button of scenes) button.addEventListener('click',()=>selectScene(button.dataset.roomScene));
+    motion.addEventListener('click',()=>{ moving=!moving; updateControls(); });
     reduced.addEventListener('change',()=>{ moving=!reduced.matches; updateControls(); });
     const format=seconds=>{
         const value=Math.max(0,Math.floor(Number.isFinite(seconds) ? seconds : 0));
