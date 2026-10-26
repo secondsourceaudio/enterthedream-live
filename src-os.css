@@ -253,7 +253,7 @@ body.src-os {
     .src-os .release-tracklist h3,
    .src-os .release-credits h3 {
     margin-bottom: 10px;
-    font-size: 12px;
+    font-size: 10px;
 }
     .src-os .release-sides { column-gap: 20px; }
     .src-os .release-side h4 { margin-bottom: 2px; }
