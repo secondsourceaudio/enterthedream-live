@@ -67,7 +67,11 @@
 .home-player-art { grid-column: 1; grid-row: 2 / 5; display: block; width: 155px; height: 155px; object-fit: cover; }
 .home-player-window .player-display { grid-column: 2; grid-row: 2; display: flex; flex-direction: column; gap: 8px; padding: 0 0 0 22px; border: 0; background: transparent; }
 .home-player-window .player-readout { order: -1; }
-.home-player-window .player-spectrum { height: 46px; }
+.home-player-window .player-spectrum {
+    width: 100%;
+    height: 46px;
+    align-self: stretch;
+}
 .home-player-window .player-timeline { grid-column: 2; grid-row: 3; padding-left: 22px; }
 .home-player-window .player-controls { grid-column: 2; grid-row: 4; padding-left: 22px; }
 .home-player-window .experience-controls { padding: 14px 14px 8px; border-top: 1px solid #2b3341; }
