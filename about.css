@@ -4,7 +4,7 @@
 .about-heading h1 { margin: 0; font-size: 24px; line-height: 1.5; letter-spacing: .16em; }
 .about-content { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: center; gap: clamp(36px, 6vw, 80px); }
 /* The square source has generous empty margins; show its centre without changing the artwork. */
-.about-logo { display: block; width: 100%; max-width: 480px; height: auto; aspect-ratio: 2 / 1; object-fit: cover; object-position: center; mix-blend-mode: screen; }
+.about-logo { display: block; width: 100%; max-width: 400px; height: auto; aspect-ratio: 2 / 1; object-fit: cover; object-position: center; mix-blend-mode: screen; }
 .about-copy { color: #c9c9c9; font: 16px/1.9 Arial, Helvetica, sans-serif; }
 .about-copy p { margin: 0 0 20px; }
 .about-copy p:last-child { margin-bottom: 0; }

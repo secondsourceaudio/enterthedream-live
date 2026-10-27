@@ -103,7 +103,7 @@
         return meterContext && meterContext.state !== 'running' ? meterContext.resume() : Promise.resolve();
     }
     function spectrumAllowed() {
-        return !!meterAnalyser && meterContext.state === 'running' && meterVisible && moving &&
+        return !!meterAnalyser && meterContext.state === 'running' && meterVisible &&
             !immersive && !document.hidden && !audio.paused && !audio.ended && !audio.muted &&
             audio.volume > 0 && audio.readyState >= audio.HAVE_FUTURE_DATA;
     }

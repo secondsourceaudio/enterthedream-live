@@ -2728,7 +2728,7 @@ class WebsiteTests(unittest.TestCase):
         self.page.locator('[data-room-spectrum]').scroll_into_view_if_needed()
         self.page.wait_for_function(active)
         self.page.emulate_media(reduced_motion='reduce')
-        self.page.wait_for_function(quiet)
+        self.page.wait_for_function(active)
         self.assertFalse(self.page.locator('audio').evaluate('a => a.paused'))
 
     def test_listening_room_without_webaudio_still_plays_the_recording(self):

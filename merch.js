@@ -15,7 +15,7 @@
             const source = preview.querySelector('img');
             image.src = preview.href;
             image.alt = source?.alt || '';
-            title.textContent = preview.dataset.title || 'MERCH / MOCKUP';
+            title.textContent = preview.dataset.title || 'MERCH';
             viewer.showModal();
             close.focus({preventScroll: true});
         });
