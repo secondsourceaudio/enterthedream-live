@@ -4,12 +4,12 @@
     width: 100%;
     max-width: 1160px;
     margin: 0 auto;
-    padding: 56px 36px 88px;
+    padding: 48px 32px 72px;
 }
 
 .releases-heading {
-    margin: 0 0 40px;
-    padding-bottom: 24px;
+    margin: 0 0 32px;
+    padding-bottom: 18px;
     border-bottom: 1px solid #292929;
 }
 .releases-heading h1 {
@@ -23,51 +23,58 @@
     display: grid;
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
     align-items: start;
-    column-gap: clamp(36px, 5vw, 72px);
-    row-gap: 40px;
+    column-gap: clamp(32px, 4vw, 64px);
+    row-gap: 32px;
 }
 .release-cover { display: block; width: 100%; height: auto; }
-.release-catalogue { margin: 0 0 28px; color: #aaa; font-size: var(--font-small); letter-spacing: .2em; }
-.release-title { margin: 0 0 16px; font-size: clamp(30px, 4vw, 52px); line-height: 1.1; letter-spacing: .06em; }
+.release-catalogue { margin: 0 0 20px; color: #aaa; font-size: var(--font-small); letter-spacing: .2em; }
+.release-title { margin: 0 0 12px; font-size: clamp(30px, 4vw, 52px); line-height: 1.1; letter-spacing: .06em; }
 .release-artist { margin: 0; color: #c9c9c9; font-size: 12px; line-height: 1.8; letter-spacing: .12em; }
 
 .release-description {
-    margin-top: 28px;
+    margin-top: 24px;
     color: #b7b7b7;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 17px;
     line-height: 1.8;
 }
-.release-description p { margin: 0 0 16px; }
+.release-description p { margin: 0 0 12px; }
 .release-description p:last-child { margin-bottom: 0; }
 .release-availability { margin: 14px 0 0; color: #aaa; font-size: var(--font-small); line-height: 1.8; letter-spacing: .1em; }
 .release-tracklist,
-.release-credits { grid-column: 1 / -1; padding-top: 28px; border-top: 1px solid #292929; }
+.release-credits { grid-column: 1 / -1; padding-top: 22px; border-top: 1px solid #292929; }
 .release-tracklist h3,
-.release-credits h3 { margin: 0 0 24px; color: #aaa; font-size: var(--font-small); font-weight: normal; line-height: 1.6; letter-spacing: .14em; }
-.release-sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(36px, 5vw, 72px); }
+.release-credits h3 { margin: 0 0 14px; color: #aaa; font-size: var(--font-small); font-weight: normal; line-height: 1.6; letter-spacing: .14em; }
+.release-sides { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: clamp(28px, 4vw, 56px); }
 .release-side h4 { margin: 0 0 10px; color: #c9c9c9; font-size: var(--font-small); font-weight: normal; line-height: 1.6; letter-spacing: .12em; }
 .release-tracks { list-style: none; padding: 0; margin: 0; }
-.release-tracks li { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: baseline; gap: 12px; padding-block: 8px; border-bottom: 1px solid #1c1c1c; }
+.release-tracks li { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: baseline; gap: 12px; padding-block: 6px; border-bottom: 1px solid #1c1c1c; }
 .release-position { color: #999; font: 11px/1.7 var(--font-interface); letter-spacing: .08em; }
 .release-track-name { color: #d2d2d2; font: 13px/1.7 var(--font-interface); letter-spacing: .045em; }
-.release-credit-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px clamp(36px, 5vw, 72px); margin: 0; }
-.release-credit-list div { min-width: 0; }
-.release-credit-list dt { margin: 0 0 6px; color: #999; font-size: var(--font-small); line-height: 1.6; letter-spacing: .12em; }
+.release-credit-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 clamp(28px, 4vw, 56px); margin: 0; }
+.release-credit-list div { min-width: 0; padding-block: 6px; border-bottom: 1px solid #1c1c1c; }
+.release-credit-list dt { margin: 0 0 3px; color: #999; font-size: var(--font-small); line-height: 1.6; letter-spacing: .12em; }
 .release-credit-list dd { margin: 0; color: #d2d2d2; font: 13px/1.7 var(--font-interface); letter-spacing: .035em; }
+
+@media (min-width: 501px) {
+    .release-sides { grid-template-rows: auto repeat(5, auto); }
+    .release-side { display: grid; grid-row: 1 / -1; grid-template-rows: subgrid; }
+    .release-side h4 { grid-row: 1; }
+    .release-tracks { display: grid; grid-row: 2 / -1; grid-template-rows: subgrid; }
+}
 
 @media (max-width: 750px) {
     .releases-page { padding: 40px 20px 64px; }
-    .releases-heading { margin-bottom: 28px; padding-bottom: 20px; }
+    .releases-heading { margin-bottom: 24px; padding-bottom: 16px; }
     .releases-heading h1 { font-size: 22px; }
-    .release-entry { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    .release-entry { grid-template-columns: minmax(0, 1fr); gap: 24px; }
     .release-catalogue { margin-bottom: 16px; }
     .release-title { margin-bottom: 12px; font-size: 32px; }
     .release-artist { font-size: var(--font-small); }
-    .release-description { margin-top: 24px; }
+    .release-description { margin-top: 20px; }
 }
 
 @media (max-width: 500px) {
-    .release-sides { grid-template-columns: minmax(0, 1fr); row-gap: 28px; }
+    .release-sides { grid-template-columns: minmax(0, 1fr); row-gap: 20px; }
     .release-credit-list { grid-template-columns: minmax(0, 1fr); }
 }
