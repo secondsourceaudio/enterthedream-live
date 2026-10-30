@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000">
+  <defs><linearGradient id="night" x2="0" y2="1"><stop stop-color="#11162f"/><stop offset="1" stop-color="#48404b"/></linearGradient></defs>
+  <path fill="url(#night)" d="M0 0h1600v1000H0z"/><path fill="#171b29" d="M0 100h270v85h170v180h180v270H0zm1600-40h-300v200h-190v160H980v215h620z"/>
+  <path fill="#27242c" d="M0 590h1600v410H0z"/><path fill="#161924" d="m0 1000 710-410h180l710 410z"/>
+  <path fill="#aa7947" d="M100 310h70v90h-70zm0 175h70v100h-70zm220-100h48v70h-48zm900 40h55v90h-55zm200-150h75v105h-75zm0 210h75v95h-75z"/>
+  <path stroke="#c19a64" stroke-width="6" d="M460 780V440m680 345V450"/><path fill="#d2ab72" d="M443 434h34v40h-34zm680 10h34v40h-34z"/>
+  <path stroke="#9d6339" opacity=".4" stroke-width="10" d="m460 800-105 200m785-195 95 195"/>
+  <g stroke="#9ba2b5" stroke-width="2" opacity=".18"><path d="m130 120-11 28m182-65-10 27m188 64-12 31m177-116-9 25m207 63-11 29m171-91-10 27m190 89-11 29m178-137-10 26m175 78-12 32"/><path d="m214 334-9 24m185-56-11 29m196 88-10 27m184-71-10 25m196 94-12 30m174-68-9 25m193 75-11 29"/></g>
+</svg>

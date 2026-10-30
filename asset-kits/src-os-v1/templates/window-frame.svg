@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720">
+  <defs><linearGradient id="titlebar" x2="0" y2="1"><stop stop-color="#343d4d"/><stop offset="1" stop-color="#1b2230"/></linearGradient></defs>
+  <rect width="1200" height="720" fill="#030407"/>
+  <rect x="1" y="1" width="1198" height="718" fill="#06090f" stroke="#596273" stroke-width="2"/>
+  <rect x="1" y="1" width="1198" height="41" fill="url(#titlebar)" stroke="#596273" stroke-width="2"/>
+  <text x="15" y="27" fill="#d7dce6" font-family="Microgramma, Eurostile, sans-serif" font-size="12" letter-spacing="2">SRC OS / WINDOW TITLE</text>
+  <path d="M1108 24h12M1140 18h12v12h-12zm37 0 12 12m0-12-12 12" fill="none" stroke="#aeb7c7" stroke-width="1.25"/>
+</svg>

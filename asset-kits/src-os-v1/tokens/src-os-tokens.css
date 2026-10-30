@@ -1,0 +1,19 @@
+:root {
+    --src-os-border: #596273;
+    --src-os-border-soft: #303642;
+    --src-os-panel: #06090f;
+    --src-os-panel-solid: #080b12;
+    --src-os-titlebar-top: #343d4d;
+    --src-os-titlebar-bottom: #1b2230;
+    --src-os-ink: #d7dce6;
+    --src-os-muted: #8f99ab;
+    --src-os-header: #c7ccd5;
+    --src-os-header-ink: #151820;
+    --src-os-active: #3c4657;
+    --src-os-close: #71454b;
+
+    --src-os-titlebar-height: 41px;
+    --src-os-button-size: 28px;
+    --src-os-icon-size: 14px;
+    --src-os-stroke: 1.25px;
+}
