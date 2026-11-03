@@ -1639,14 +1639,13 @@ class WebsiteTests(unittest.TestCase):
                         page.locator('[data-experience]').evaluate('e => { e.requestFullscreen = undefined; }')
                     page.locator('[data-visual-mode="visualizer"]').tap()
                     art = page.locator('#fluid-container')
-                    normal_width = art.bounding_box()['width']
                     page.locator('[data-fullscreen]').tap()
                     expect(page.locator('[data-fullscreen]')).to_have_attribute('aria-pressed', 'true')
                     self.assertEqual(page.locator('[data-visualizer-dock]').evaluate('e => getComputedStyle(e).pointerEvents'), 'none')
-                    page.wait_for_function('''normal => {
+                    page.wait_for_function('''() => {
                         const r = document.querySelector('#fluid-container').getBoundingClientRect();
-                        return r.width >= normal && r.width <= Math.min(innerWidth, innerHeight) + 1;
-                    }''', arg=normal_width)
+                        return Math.abs(r.width - Math.min(innerWidth, innerHeight)) < 1;
+                    }''')
                     full = art.bounding_box()
                     self.assertAlmostEqual(full['width'], full['height'], delta=1)
                     self.assertAlmostEqual(full['x'] + full['width'] / 2, width / 2, delta=1)
@@ -2230,6 +2229,38 @@ class WebsiteTests(unittest.TestCase):
                             self.assertGreaterEqual(box["height"], 44)
                             self.assertGreaterEqual(box["x"], 0)
                             self.assertLessEqual(box["x"] + box["width"], width)
+
+    def test_home_mobile_keeps_windows_floating_over_the_artwork(self):
+        for width in [320, 390, 768]:
+            with self.subTest(width=width):
+                self.page.set_viewport_size({"width": width, "height": 844})
+                self.visit()
+                layout = self.page.evaluate('''() => {
+                    const rect = selector => {
+                        const node = document.querySelector(selector);
+                        const box = node.getBoundingClientRect();
+                        return {x: box.x, y: box.y, width: box.width, height: box.height,
+                                right: box.right, bottom: box.bottom,
+                                position: getComputedStyle(node).position};
+                    };
+                    return {
+                        stage: rect('.listening-space'),
+                        artwork: rect('[data-visual-panel="whirl"]'),
+                        player: rect('.home-player-window'),
+                        directory: rect('.home-directory-window'),
+                        message: rect('.home-message-window')
+                    };
+                }''')
+                self.assertEqual(layout['artwork']['position'], 'absolute')
+                self.assertAlmostEqual(layout['artwork']['width'], layout['stage']['width'], delta=1)
+                self.assertAlmostEqual(layout['artwork']['height'], layout['stage']['height'], delta=1)
+                for name in ['player', 'directory', 'message']:
+                    window = layout[name]
+                    self.assertEqual(window['position'], 'absolute')
+                    self.assertGreater(window['width'], 0)
+                    self.assertGreater(window['height'], 0)
+                    self.assertGreaterEqual(window['x'], 0)
+                    self.assertLessEqual(window['right'], width + 1)
 
     def test_audio_failure_can_retry(self):
         self.page.route("**/audio/**", lambda route: route.abort())

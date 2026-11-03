@@ -376,11 +376,4 @@ body.src-os {
     .src-os .site-header { margin-top: 0; }
     .src-os > .legal-footer { margin-bottom: 0; }
     .src-os-label { font-size: 7px; }
-    .home-desktop .home-directory-window,
-    .home-desktop .home-message-window { display: none; }
-    .home-desktop .home-player-window .home-player-art { display: none; }
-    .home-desktop .home-player-window .compact-player { grid-template-columns: minmax(0, 1fr); }
-    .home-desktop .home-player-window .player-display,
-    .home-desktop .home-player-window .player-timeline,
-    .home-desktop .home-player-window .player-controls { grid-column: 1; padding-left: 0; }
 }
