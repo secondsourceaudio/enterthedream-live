@@ -139,11 +139,12 @@ class WebsiteTests(unittest.TestCase):
         audio_requests = []
         self.page.on("request", lambda request: audio_requests.append(request.url)
                      if "/audio/" in request.url else None)
+        serve_seekable_audio(self.page, "src_player_ambient_2_192.mp3", source="sage-counsel.mp3")
         self.visit(path)
         self.page.wait_for_function("document.querySelector('#visual').classList.contains('is-ready') && window.__drawCalls > 0")
-        self.assertEqual(audio_requests, [], "Sound should not download before consent")
+        self.assertTrue(all(url.endswith("/audio/src_player_ambient_2_192.mp3") for url in audio_requests))
         expect(self.page.locator("[data-sound]")).to_have_attribute("aria-label",
-            "Play Sage Counsel")
+            "Play SRC Player Ambient 2")
         audio = self.page.locator("audio")
         self.assertTrue(audio.evaluate("a => a.paused"))
         art = self.page.locator("#visual-container")
@@ -2231,6 +2232,7 @@ class WebsiteTests(unittest.TestCase):
                             self.assertLessEqual(box["x"] + box["width"], width)
 
     def test_home_mobile_keeps_windows_floating_over_the_artwork(self):
+        serve_seekable_audio(self.page, "src_player_ambient_2_192.mp3", source="sage-counsel.mp3")
         for width in [320, 390, 768]:
             with self.subTest(width=width):
                 self.page.set_viewport_size({"width": width, "height": 844})

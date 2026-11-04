@@ -132,12 +132,12 @@ The little SRC in INDEX has another side.
             <div class="visualizer-dock home-window home-player-window" data-visualizer-dock data-home-window data-nosnippet>
                 <div class="home-window-titlebar" data-home-window-handle tabindex="0"><span>PLAYER</span><span aria-hidden="true">− □ ×</span></div>
                 <div class="compact-player" role="group" aria-labelledby="player-track-title">
-                    <div class="player-titlebar" data-player-handle><img class="player-brand-mark" src="/images/brand/src-icon-512.png" width="512" height="512" alt=""><span class="player-catalogue">SRC / HOME</span><span class="player-state" data-player-state>OFFLINE</span><button class="src-window-dock" type="button" data-dock-player aria-label="Dock player" title="Dock player" hidden>↙</button></div>
+                    <div class="player-titlebar" data-player-handle><img class="player-brand-mark" src="/images/brand/src-icon-512.png" width="512" height="512" alt=""><span class="player-catalogue">SRC / HOME</span><span class="player-state" data-player-state>STOPPED</span><button class="src-window-dock" type="button" data-dock-player aria-label="Dock player" title="Dock player" hidden>↙</button></div>
                     <img class="home-player-art" src="/images/src001/inner_front.webp" width="3200" height="3200" alt="Abstract reflective blue forms" decoding="async" draggable="false">
                     <div class="player-display">
                         <div class="player-spectrum" data-spectrum aria-hidden="true"></div>
                         <div class="player-readout">
-                            <p class="player-track" id="player-track-title"><span class="player-artist">SECOND SOURCE</span> <span class="player-track-name">OFFLINE</span></p>
+                            <p class="player-track" id="player-track-title"><span class="player-artist">SECOND SOURCE</span> <span class="player-track-name">AMBIENT 2</span></p>
                             <div class="player-clock" aria-hidden="true"><output class="player-time" data-current-time>0:00</output><span>/</span><output class="player-time" data-duration>--:--</output></div>
                         </div>
                     </div>
@@ -145,9 +145,9 @@ The little SRC in INDEX has another side.
                         <input class="seek-slider" type="range" min="0" max="1" step="0.1" value="0" aria-label="Playback position" aria-valuetext="Playback not started" data-seek disabled>
                     </div>
                     <div class="player-controls">
-                        <button class="experience-button player-button" type="button" data-sound data-compact-sound aria-pressed="false" aria-label="Audio offline" title="Audio offline" disabled><span data-play-symbol data-state="play" aria-hidden="true"><svg class="transport-play" viewBox="0 0 16 16"><path d="M5 3 13 8 5 13Z"/></svg><svg class="transport-pause" viewBox="0 0 16 16"><path d="M4 3h3v10H4zm5 0h3v10H9z"/></svg><svg class="transport-loading" viewBox="0 0 16 16"><circle cx="3" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="13" cy="8" r="1.5"/></svg></span></button>
-                        <button class="experience-button sound-button" type="button" data-mute aria-pressed="false" aria-label="Audio offline" title="Audio offline" disabled><span data-mute-symbol data-state="sound" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2 6h3l4-3v10l-4-3H2Z"/><path class="speaker-waves" d="M11 5q3 3 0 6m2-8q5 5 0 10" fill="none" stroke="currentColor" stroke-width="1.2"/><path class="speaker-muted" d="m11 6 4 4m0-4-4 4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></span></button>
-                        <input class="volume-slider" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="Volume" data-volume disabled>
+                        <button class="experience-button player-button" type="button" data-sound data-compact-sound aria-pressed="false" aria-label="Play SRC Player Ambient 2" title="Play SRC Player Ambient 2"><span data-play-symbol data-state="play" aria-hidden="true"><svg class="transport-play" viewBox="0 0 16 16"><path d="M5 3 13 8 5 13Z"/></svg><svg class="transport-pause" viewBox="0 0 16 16"><path d="M4 3h3v10H4zm5 0h3v10H9z"/></svg><svg class="transport-loading" viewBox="0 0 16 16"><circle cx="3" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="13" cy="8" r="1.5"/></svg></span></button>
+                        <button class="experience-button sound-button" type="button" data-mute aria-pressed="false" aria-label="Mute" title="Mute"><span data-mute-symbol data-state="sound" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2 6h3l4-3v10l-4-3H2Z"/><path class="speaker-waves" d="M11 5q3 3 0 6m2-8q5 5 0 10" fill="none" stroke="currentColor" stroke-width="1.2"/><path class="speaker-muted" d="m11 6 4 4m0-4-4 4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></span></button>
+                        <input class="volume-slider" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="Volume" data-volume>
                         <output class="volume-percent" data-volume-output aria-hidden="true">35%</output>
                     </div>
                 </div>
@@ -187,7 +187,7 @@ The little SRC in INDEX has another side.
             </section>
             <p class="home-desktop-hint">DRAG WINDOWS / OPEN FILES</p>
             <p class="visually-hidden" role="status" data-status></p>
-            <audio id="experience-audio" data-track-title="SRC PLAYER" data-audio-offline loop preload="none">
+            <audio id="experience-audio" data-track-title="SRC Player Ambient 2" loop preload="metadata">
                 <source src="/audio/src_player_ambient_2_192.mp3" type="audio/mpeg">
             </audio>
             <dialog id="experience-info" class="experience-info" aria-labelledby="info-title">
@@ -200,7 +200,7 @@ The little SRC in INDEX has another side.
                     <p data-copy-slot="drip-description">An interactive visual system for Second Source.</p>
                     <p data-copy-slot="drip-notes">Click around.</p>
                     <dl>
-                        <dt>SOUND</dt><dd>OFFLINE</dd>
+                        <dt>SOUND</dt><dd>SRC PLAYER AMBIENT 2</dd>
                         <dt>PROJECT</dt><dd>SECOND SOURCE AUDIO<span class="info-project-description">Music, images and audiovisual experiments.</span><a class="info-project-link" href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP ↗</a></dd>
                         <dt>CONTROLS</dt><dd><span data-mode-controls="whirl">Click or tap for ripples · Hold to build a whirlpool<br>Drag to stir · Pinch to zoom<br>Hold right-click or RETURN for a faster return</span><span data-mode-controls="fluid" hidden>Drag to move the image · Hold to stir<br>Hold right-click or RETURN to settle<br>Reset to restore the original image<br>VISUALIZER: automatic random flow, shaped by the music</span><br>Escape to leave fullscreen</dd>
                         <dt>KEYBOARD</dt><dd>P — Play / pause<br>M — Mute<br>F — Fullscreen</dd>
