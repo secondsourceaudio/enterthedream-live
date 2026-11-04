@@ -41,6 +41,27 @@
 .release-description p { margin: 0 0 12px; }
 .release-description p:last-child { margin-bottom: 0; }
 .release-availability { margin: 14px 0 0; color: #aaa; font-size: var(--font-small); line-height: 1.8; letter-spacing: .1em; }
+.release-announcement {
+    grid-column: 2;
+    align-self: center;
+    padding: 18px 0;
+    border-block: 1px solid #292929;
+}
+.release-announcement > p:first-child {
+    margin: 0 0 10px;
+    color: #999;
+    font-size: var(--font-small);
+    line-height: 1.6;
+    letter-spacing: .14em;
+}
+.release-announcement time {
+    display: block;
+    color: #dce2ee;
+    font-size: clamp(32px, 4vw, 52px);
+    line-height: 1;
+    letter-spacing: .08em;
+}
+.release-announcement .release-availability { margin-top: 14px; }
 .release-tracklist,
 .release-credits { grid-column: 1 / -1; padding-top: 22px; border-top: 1px solid #292929; }
 .release-tracklist h3,
@@ -56,6 +77,10 @@
 .release-credit-list div { min-width: 0; padding-block: 6px; border-bottom: 1px solid #1c1c1c; }
 .release-credit-list dt { margin: 0 0 3px; color: #999; font-size: var(--font-small); line-height: 1.6; letter-spacing: .12em; }
 .release-credit-list dd { margin: 0; }
+
+@media (min-width: 981px) {
+    .src-os .release-prerelease .release-announcement { grid-column: 3; }
+}
 
 @media (min-width: 501px) {
     .release-sides { grid-template-rows: auto repeat(5, auto); }
@@ -73,6 +98,7 @@
     .release-title { margin-bottom: 12px; font-size: 32px; }
     .release-artist { font-size: var(--font-small); }
     .release-description { margin-top: 20px; }
+    .release-announcement { grid-column: 1; }
 }
 
 @media (max-width: 500px) {
