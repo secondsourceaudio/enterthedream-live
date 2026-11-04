@@ -24,11 +24,11 @@ The little SRC in INDEX has another side.
     <link rel="stylesheet" href="/experience.css?v=21">
     <link rel="stylesheet" href="/continuous-player.css?v=2">
     <link rel="stylesheet" href="/src-desktop.css?v=5">
-    <link rel="stylesheet" href="/home-desktop.css?v=4">
+    <link rel="stylesheet" href="/home-desktop.css?v=5">
     <link rel="stylesheet" href="/src-os.css?v=9">
     <script src="/site.js?v=8" defer></script>
-    <link rel="preload" as="image" href="/images/drip_cover_front_2.webp">
-    <script src="/experience.js?v=19" defer></script>
+    <link rel="preload" as="image" href="/images/src001/inner_front.webp">
+    <script src="/experience.js?v=20" defer></script>
     <script src="/landing-experiment.js?v=26" defer></script>
     <script src="/drip-fluid.js?v=16" defer></script>
     <script src="/experience-tools.js?v=3" defer></script>
@@ -115,29 +115,29 @@ The little SRC in INDEX has another side.
             <time class="home-menu-clock src-os-clock" data-os-clock aria-label="Current time in Oslo">--:--</time>
         </header>
         <main tabindex="-1" id="main-content" class="landing-experiment">
-        <section id="listening-space" class="listening-space" data-experience data-motion-default-on aria-label="DRIP audiovisual experience">
+        <section id="listening-space" class="listening-space" data-experience data-motion-default-on aria-label="Second Source audiovisual system">
             <h1 class="visually-hidden">Second Source</h1>
-            <div id="visual-container" class="visual-container" data-visual-panel="whirl" tabindex="0" role="group" aria-label="Interactive DRIP artwork. Click or tap for ripples, hold for a growing whirlpool, drag to stir, or press Space or Enter for a ripple.">
+            <div id="visual-container" class="visual-container" data-visual-panel="whirl" tabindex="0" role="group" aria-label="Interactive abstract artwork. Click or tap for ripples, hold for a growing whirlpool, drag to stir, or press Space or Enter for a ripple.">
                 <div id="visual-media" class="visual-media">
-                    <img id="fallback-image" class="fallback-image" src="/images/drip_cover_front_2.webp" alt="Blue liquid forms in reflective light" width="3200" height="3200" fetchpriority="high" decoding="async" draggable="false">
+                    <img id="fallback-image" class="fallback-image" src="/images/src001/inner_front.webp" alt="Abstract reflective blue forms" width="3200" height="3200" fetchpriority="high" decoding="async" draggable="false">
                     <canvas id="visual" class="visual-canvas" aria-hidden="true"></canvas>
                 </div>
             </div>
-            <div id="fluid-container" class="visual-container" data-visual-panel="fluid" data-fluid-material="oil" tabindex="0" role="group" aria-label="Interactive DRIP fluid artwork. Drag to move the image, hold to stir, or press Space or Enter for a vortex." hidden>
+            <div id="fluid-container" class="visual-container" data-visual-panel="fluid" data-fluid-material="oil" tabindex="0" role="group" aria-label="Interactive abstract fluid artwork. Drag to move the image, hold to stir, or press Space or Enter for a vortex." hidden>
                 <div class="visual-media">
-                    <img id="fluid-fallback-image" class="fallback-image" src="/images/drip_cover_front_2.webp" alt="Blue liquid forms in reflective light" width="3200" height="3200" decoding="async" draggable="false">
+                    <img id="fluid-fallback-image" class="fallback-image" src="/images/src001/inner_front.webp" alt="Abstract reflective blue forms" width="3200" height="3200" decoding="async" draggable="false">
                     <canvas id="fluid-visual" class="visual-canvas" aria-hidden="true"></canvas>
                 </div>
             </div>
             <div class="visualizer-dock home-window home-player-window" data-visualizer-dock data-home-window data-nosnippet>
-                <div class="home-window-titlebar" data-home-window-handle tabindex="0"><span>NOW PLAYING</span><span aria-hidden="true">− □ ×</span></div>
+                <div class="home-window-titlebar" data-home-window-handle tabindex="0"><span>PLAYER</span><span aria-hidden="true">− □ ×</span></div>
                 <div class="compact-player" role="group" aria-labelledby="player-track-title">
-                    <div class="player-titlebar" data-player-handle><img class="player-brand-mark" src="/images/brand/src-icon-512.png" width="512" height="512" alt=""><span class="player-catalogue">SRC001 / DRIP</span><span class="player-state" data-player-state>STOPPED</span><button class="src-window-dock" type="button" data-dock-player aria-label="Dock player" title="Dock player" hidden>↙</button></div>
-                    <img class="home-player-art" src="/images/drip_cover_front_2.webp" width="3200" height="3200" alt="DRIP cover artwork" decoding="async" draggable="false">
+                    <div class="player-titlebar" data-player-handle><img class="player-brand-mark" src="/images/brand/src-icon-512.png" width="512" height="512" alt=""><span class="player-catalogue">SRC / HOME</span><span class="player-state" data-player-state>OFFLINE</span><button class="src-window-dock" type="button" data-dock-player aria-label="Dock player" title="Dock player" hidden>↙</button></div>
+                    <img class="home-player-art" src="/images/src001/inner_front.webp" width="3200" height="3200" alt="Abstract reflective blue forms" decoding="async" draggable="false">
                     <div class="player-display">
                         <div class="player-spectrum" data-spectrum aria-hidden="true"></div>
                         <div class="player-readout">
-                            <p class="player-track" id="player-track-title"><span class="player-artist">MARTIN SOLLI</span> <span class="player-track-name">SAGE COUNSEL</span></p>
+                            <p class="player-track" id="player-track-title"><span class="player-artist">SECOND SOURCE</span> <span class="player-track-name">OFFLINE</span></p>
                             <div class="player-clock" aria-hidden="true"><output class="player-time" data-current-time>0:00</output><span>/</span><output class="player-time" data-duration>--:--</output></div>
                         </div>
                     </div>
@@ -145,9 +145,9 @@ The little SRC in INDEX has another side.
                         <input class="seek-slider" type="range" min="0" max="1" step="0.1" value="0" aria-label="Playback position" aria-valuetext="Playback not started" data-seek disabled>
                     </div>
                     <div class="player-controls">
-                        <button class="experience-button player-button" type="button" data-sound data-compact-sound aria-pressed="false" aria-label="Play Sage Counsel" title="Play Sage Counsel"><span data-play-symbol data-state="play" aria-hidden="true"><svg class="transport-play" viewBox="0 0 16 16"><path d="M5 3 13 8 5 13Z"/></svg><svg class="transport-pause" viewBox="0 0 16 16"><path d="M4 3h3v10H4zm5 0h3v10H9z"/></svg><svg class="transport-loading" viewBox="0 0 16 16"><circle cx="3" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="13" cy="8" r="1.5"/></svg></span></button>
-                        <button class="experience-button sound-button" type="button" data-mute aria-pressed="false" aria-label="Mute" title="Mute"><span data-mute-symbol data-state="sound" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2 6h3l4-3v10l-4-3H2Z"/><path class="speaker-waves" d="M11 5q3 3 0 6m2-8q5 5 0 10" fill="none" stroke="currentColor" stroke-width="1.2"/><path class="speaker-muted" d="m11 6 4 4m0-4-4 4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></span></button>
-                        <input class="volume-slider" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="Volume" data-volume>
+                        <button class="experience-button player-button" type="button" data-sound data-compact-sound aria-pressed="false" aria-label="Audio offline" title="Audio offline" disabled><span data-play-symbol data-state="play" aria-hidden="true"><svg class="transport-play" viewBox="0 0 16 16"><path d="M5 3 13 8 5 13Z"/></svg><svg class="transport-pause" viewBox="0 0 16 16"><path d="M4 3h3v10H4zm5 0h3v10H9z"/></svg><svg class="transport-loading" viewBox="0 0 16 16"><circle cx="3" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="13" cy="8" r="1.5"/></svg></span></button>
+                        <button class="experience-button sound-button" type="button" data-mute aria-pressed="false" aria-label="Audio offline" title="Audio offline" disabled><span data-mute-symbol data-state="sound" aria-hidden="true"><svg viewBox="0 0 16 16"><path d="M2 6h3l4-3v10l-4-3H2Z"/><path class="speaker-waves" d="M11 5q3 3 0 6m2-8q5 5 0 10" fill="none" stroke="currentColor" stroke-width="1.2"/><path class="speaker-muted" d="m11 6 4 4m0-4-4 4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></span></button>
+                        <input class="volume-slider" type="range" min="0" max="1" step="0.01" value="0.35" aria-label="Volume" data-volume disabled>
                         <output class="volume-percent" data-volume-output aria-hidden="true">35%</output>
                     </div>
                 </div>
@@ -187,20 +187,20 @@ The little SRC in INDEX has another side.
             </section>
             <p class="home-desktop-hint">DRAG WINDOWS / OPEN FILES</p>
             <p class="visually-hidden" role="status" data-status></p>
-            <audio id="experience-audio" data-track-title="Sage Counsel" data-bpm="114" data-beats-per-bar="4" loop preload="none">
-                <source src="/audio/sage-counsel.mp3" type="audio/mpeg">
+            <audio id="experience-audio" data-track-title="SRC PLAYER" data-audio-offline loop preload="none">
+                <source src="/audio/src_player_ambient_2_192.mp3" type="audio/mpeg">
             </audio>
             <dialog id="experience-info" class="experience-info" aria-labelledby="info-title">
                 <div data-nosnippet>
-                    <p class="info-number">STUDY 01</p>
+                    <p class="info-number">SRC / VISUAL</p>
                     <div class="info-heading" data-info-handle>
-                        <h2 id="info-title">DRIP</h2>
+                        <h2 id="info-title">SECOND SOURCE</h2>
                         <button class="experience-button" type="button" data-close-info autofocus aria-label="Close information">CLOSE</button>
                     </div>
-                    <p data-copy-slot="drip-description">An interactive visual experiment made for Drip.</p>
+                    <p data-copy-slot="drip-description">An interactive visual system for Second Source.</p>
                     <p data-copy-slot="drip-notes">Click around.</p>
                     <dl>
-                        <dt>SOUND</dt><dd>SAGE COUNSEL</dd>
+                        <dt>SOUND</dt><dd>OFFLINE</dd>
                         <dt>PROJECT</dt><dd>SECOND SOURCE AUDIO<span class="info-project-description">Music, images and audiovisual experiments.</span><a class="info-project-link" href="https://secondsource.bandcamp.com" target="_blank" rel="noopener noreferrer">BANDCAMP ↗</a></dd>
                         <dt>CONTROLS</dt><dd><span data-mode-controls="whirl">Click or tap for ripples · Hold to build a whirlpool<br>Drag to stir · Pinch to zoom<br>Hold right-click or RETURN for a faster return</span><span data-mode-controls="fluid" hidden>Drag to move the image · Hold to stir<br>Hold right-click or RETURN to settle<br>Reset to restore the original image<br>VISUALIZER: automatic random flow, shaped by the music</span><br>Escape to leave fullscreen</dd>
                         <dt>KEYBOARD</dt><dd>P — Play / pause<br>M — Mute<br>F — Fullscreen</dd>
