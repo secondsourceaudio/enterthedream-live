@@ -6,6 +6,7 @@
     if (!space) return;
 
     const audio = space.querySelector('audio');
+    const audioIsOffline = () => !!audio?.hasAttribute("data-audio-offline");
     const trackTitle = audio?.dataset.trackTitle || "Sage Counsel";
     const soundButton = space.querySelector("[data-sound]");
     const compactSound = soundButton?.hasAttribute("data-compact-sound");
@@ -130,6 +131,26 @@
 
     function updateSound() {
         if (!audio) return;
+        if (audioIsOffline()) {
+            soundButton.setAttribute("aria-pressed", "false");
+            soundButton.setAttribute("aria-label", "Audio offline");
+            soundButton.title = "Audio offline";
+            soundButton.disabled = true;
+            soundButton.querySelector("[data-play-symbol]")?.setAttribute("data-state", "play");
+            space.classList.remove("sound-is-on");
+            if (muteButton) {
+                muteButton.disabled = true;
+                muteButton.setAttribute("aria-pressed", "false");
+                muteButton.setAttribute("aria-label", "Audio offline");
+                muteButton.title = "Audio offline";
+                muteButton.querySelector("[data-mute-symbol]")?.setAttribute("data-state", "sound");
+            }
+            if (volumeInput) volumeInput.disabled = true;
+            if (seekInput) seekInput.disabled = true;
+            if (playerState) playerState.textContent = "OFFLINE";
+            reconcileSpectrum();
+            return;
+        }
         const playing = !audio.paused;
         const silent = audio.muted || volume === 0;
         soundButton.setAttribute("aria-pressed", String(playing));
@@ -145,11 +166,13 @@
         soundButton.disabled = loading;
         space.classList.toggle("sound-is-on", playing && !silent);
         if (muteButton) {
+            muteButton.disabled = false;
             muteButton.setAttribute("aria-pressed", String(audio.muted));
             muteButton.setAttribute("aria-label", audio.muted ? "Unmute" : "Mute");
             muteButton.title = audio.muted ? "Unmute" : "Mute";
             muteButton.querySelector("[data-mute-symbol]").dataset.state = silent ? "muted" : "sound";
         }
+        if (volumeInput) volumeInput.disabled = false;
         if (playerState) playerState.textContent = loading ? 'LOADING' : !playing
             ? hasStarted ? 'PAUSED' : 'STOPPED' : silent ? 'MUTED' : soundAudible() ? 'PLAYING' : 'BUFFERING';
         reconcileSpectrum();
@@ -280,13 +303,14 @@
         for (const event of ['playing', 'waiting', 'canplay', 'ended']) audio.addEventListener(event, updateSound);
     }
     if (muteButton) muteButton.addEventListener("click", () => {
+        if (audioIsOffline()) return;
         audio.muted = !audio.muted;
         updateSound();
         status.textContent = audio.muted ? "Sound muted." : "Sound unmuted.";
     });
 
     soundButton?.addEventListener("click", async () => {
-        if (loading) return;
+        if (audioIsOffline() || loading) return;
         if (!audio.paused) {
             audio.pause();
             status.textContent = "Sound paused.";
@@ -330,6 +354,7 @@
         status.textContent = "Sound could not load. Select the sound button to try again.";
     }, true);
     volumeInput?.addEventListener("input", () => {
+        if (audioIsOffline()) return;
         volume = Number(volumeInput.value);
         applyVolume();
         updateSound();
@@ -346,7 +371,7 @@
         const duration = audio.duration;
         const ready = Number.isFinite(duration) && duration > 0 && !audio.error;
         const current = ready ? Math.min(duration, Math.max(0, audio.currentTime)) : 0;
-        seekInput.disabled = !ready;
+        seekInput.disabled = audioIsOffline() || !ready;
         seekInput.max = ready ? duration : 1;
         seekInput.value = current;
         seekInput.style.setProperty("--progress", `${ready ? current / duration * 100 : 0}%`);
