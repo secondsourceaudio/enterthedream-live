@@ -66,4 +66,28 @@
             event.preventDefault();
         });
     }
+
+    const compactLayout = window.matchMedia('(max-width: 980px)');
+    const secondaryToggle = stage.querySelector('[data-home-secondary-toggle]');
+    const secondaryControls = stage.querySelector('#home-secondary-controls');
+    let secondaryExpanded = false;
+
+    const syncSecondaryControls = () => {
+        if (!secondaryToggle || !secondaryControls) return;
+        const compact = compactLayout.matches;
+        secondaryToggle.hidden = !compact;
+        secondaryControls.hidden = compact && !secondaryExpanded;
+        secondaryToggle.setAttribute('aria-expanded', String(compact && secondaryExpanded));
+        secondaryToggle.setAttribute('aria-label', secondaryExpanded ? 'Hide visual controls' : 'Show visual controls');
+    };
+
+    secondaryToggle?.addEventListener('click', () => {
+        secondaryExpanded = !secondaryExpanded;
+        syncSecondaryControls();
+    });
+    compactLayout.addEventListener('change', event => {
+        if (event.matches) secondaryExpanded = false;
+        syncSecondaryControls();
+    });
+    syncSecondaryControls();
 })();

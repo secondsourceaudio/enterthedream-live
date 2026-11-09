@@ -2250,6 +2250,7 @@ class WebsiteTests(unittest.TestCase):
             context.close()
 
     def test_releases_navigation_shows_release_information(self):
+        serve_seekable_audio(self.page)
         self.visit()
         expect(self.page.locator('.site-nav a')).to_have_text(['RELEASES', 'SOURCES', 'MERCH', 'ABOUT / CONTACT', 'BANDCAMP'])
         self.page.locator('.site-nav').get_by_role('link', name='RELEASES').click()
@@ -2258,9 +2259,14 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('.site-nav [aria-current="page"]')).to_have_text('RELEASES')
         expect(self.page.locator('.release-entry')).to_have_count(1)
         expect(self.page.locator('.release-catalogue')).to_have_text('SECOND SOURCE / SRC001')
-        expect(self.page.locator('.release-title')).to_have_text('DRIP')
+        expect(self.page.locator('.release-title')).to_have_text('INNER PASSAGE')
         expect(self.page.locator('.release-artist')).to_have_text('MARTIN SOLLI')
-        expect(self.page.locator('.release-availability')).to_have_text('SPRING 2027 / Vinyl & Digital')
+        expect(self.page.locator('.release-announcement time')).to_have_text('27.11.26')
+        expect(self.page.locator('.release-context')).to_have_text('FIRST SINGLE FROM DRIP')
+        expect(self.page.locator('.release-availability')).to_have_text('ALBUM / SPRING 2027')
+        expect(self.page.locator('[data-post-release]')).to_have_count(3)
+        self.assertTrue(self.page.locator('[data-post-release]').evaluate_all(
+            'sections => sections.every(section => section.hidden)'))
         expect(self.page.locator('.release-side')).to_have_count(2)
         expect(self.page.locator('.release-tracks li')).to_have_count(10)
         expect(self.page.locator('.release-credit-list > div')).to_have_count(6)
@@ -2292,6 +2298,7 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('#visual')).to_have_attribute('data-fluid', 'ready')
 
     def test_mobile_layout_and_player_controls(self):
+        serve_seekable_audio(self.page)
         for width in [320, 390, 768]:
             self.page.set_viewport_size({"width": width, "height": 844})
             for path in ["index.html", "drip-fluid.html", "experiment.html", "experiments.html", "releases.html", "merch.html", "src001.html", "about/"]:
@@ -2299,11 +2306,15 @@ class WebsiteTests(unittest.TestCase):
                     self.visit(path)
                     self.assertLessEqual(self.page.evaluate("document.body.scrollWidth"), width)
                     self.assertTrue(self.page.locator(".site-nav a").evaluate_all(
-                        "links => links.every(a => {const r=a.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.height >= 44;})"
+                        "links => links.filter(a => getComputedStyle(a).display !== 'none').every(a => {const r=a.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.height >= 44;})"
                     ))
                     if path in ["index.html", "drip-fluid.html", "experiment.html"]:
                         if path == "index.html":
                             expect(self.page.locator('[data-vortex-return]')).to_be_hidden()
+                            expect(self.page.locator('[data-home-secondary-toggle]')).to_be_visible()
+                            expect(self.page.locator('#home-secondary-controls')).to_be_hidden()
+                            self.page.locator('[data-home-secondary-toggle]').click()
+                            expect(self.page.locator('#home-secondary-controls')).to_be_visible()
                         if path in ["index.html", "drip-fluid.html"]:
                             seek = self.page.locator("[data-seek]")
                             expect(seek).to_be_visible()
@@ -2318,7 +2329,7 @@ class WebsiteTests(unittest.TestCase):
                             self.assertGreaterEqual(box["x"], 0)
                             self.assertLessEqual(box["x"] + box["width"], width)
 
-    def test_home_mobile_keeps_windows_floating_over_the_artwork(self):
+    def test_home_mobile_keeps_one_primary_window_over_the_artwork(self):
         serve_seekable_audio(self.page, "src_player_ambient_2_192.mp3", source="sage-counsel.mp3")
         for width in [320, 390, 768]:
             with self.subTest(width=width):
@@ -2336,20 +2347,44 @@ class WebsiteTests(unittest.TestCase):
                         stage: rect('.listening-space'),
                         artwork: rect('[data-visual-panel="whirl"]'),
                         player: rect('.home-player-window'),
-                        directory: rect('.home-directory-window'),
-                        message: rect('.home-message-window')
+                        directoryDisplay: getComputedStyle(document.querySelector('.home-directory-window')).display,
+                        messageDisplay: getComputedStyle(document.querySelector('.home-message-window')).display
                     };
                 }''')
                 self.assertEqual(layout['artwork']['position'], 'absolute')
                 self.assertAlmostEqual(layout['artwork']['width'], layout['stage']['width'], delta=1)
                 self.assertAlmostEqual(layout['artwork']['height'], layout['stage']['height'], delta=1)
-                for name in ['player', 'directory', 'message']:
-                    window = layout[name]
-                    self.assertEqual(window['position'], 'absolute')
-                    self.assertGreater(window['width'], 0)
-                    self.assertGreater(window['height'], 0)
-                    self.assertGreaterEqual(window['x'], 0)
-                    self.assertLessEqual(window['right'], width + 1)
+                player = layout['player']
+                self.assertEqual(player['position'], 'absolute')
+                self.assertGreater(player['width'], 0)
+                self.assertGreater(player['height'], 0)
+                self.assertGreaterEqual(player['x'], 0)
+                self.assertLessEqual(player['right'], width + 1)
+                self.assertEqual(layout['directoryDisplay'], 'none')
+                self.assertEqual(layout['messageDisplay'], 'none')
+                toggle = self.page.locator('[data-home-secondary-toggle]')
+                controls = self.page.locator('#home-secondary-controls')
+                expect(toggle).to_be_visible()
+                expect(controls).to_be_hidden()
+                toggle.click()
+                expect(controls).to_be_visible()
+                expect(toggle).to_have_attribute('aria-expanded', 'true')
+
+    def test_home_info_dialog_keeps_only_essential_copy(self):
+        serve_seekable_audio(self.page)
+        self.visit()
+        self.page.locator('[data-info]').click()
+        dialog = self.page.locator('#experience-info')
+        expect(dialog).to_be_visible()
+        expect(dialog.locator('.info-number')).to_have_text('SRC / VISUAL')
+        expect(dialog.locator('h2')).to_have_text('SECOND SOURCE')
+        expect(dialog.locator('p').last).to_have_text('Interactive audio / visual system.')
+        expect(dialog.locator('dt')).to_have_text(['SOUND', 'CONTROLS'])
+        expect(dialog.locator('dd').first).to_have_text('SECOND SOURCE / AMBIENT 2')
+        expect(dialog.locator('dd').last).to_contain_text('DRAG / MOVE')
+        expect(dialog.locator('dd').last).to_contain_text('R / RESET')
+        expect(dialog.locator('dd').last).to_contain_text('F / FULLSCREEN')
+        expect(dialog.locator('[data-shortcuts-toggle], [data-glitch-toggle], .src-window-help')).to_have_count(0)
 
     def test_audio_failure_can_retry(self):
         self.page.route("**/audio/**", lambda route: route.abort())

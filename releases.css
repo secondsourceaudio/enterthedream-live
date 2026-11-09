@@ -47,8 +47,8 @@
     padding: 18px 0;
     border-block: 1px solid #292929;
 }
-.release-announcement > p:first-child {
-    margin: 0 0 10px;
+.release-announcement .release-context {
+    margin: 14px 0 0;
     color: #999;
     font-size: var(--font-small);
     line-height: 1.6;

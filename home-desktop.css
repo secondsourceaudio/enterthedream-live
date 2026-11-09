@@ -80,6 +80,9 @@ body.home-desktop.src-os {
 }
 .home-player-window .player-timeline { grid-column: 2; grid-row: 3; padding-left: 22px; }
 .home-player-window .player-controls { grid-column: 2; grid-row: 4; padding-left: 22px; }
+.home-secondary-toggle { display: none; margin: 0 auto 12px; }
+.home-secondary-panel { display: flex; flex-direction: column; align-items: center; width: 100%; }
+.home-secondary-panel[hidden] { display: none; }
 .home-player-window .experience-controls { padding: 14px 14px 8px; border-top: 1px solid #2b3341; }
 .home-player-window .experience-tools { min-height: 0; }
 .home-player-window .experience-tools-status { min-height: 0; }
@@ -173,8 +176,9 @@ body.home-desktop.src-os {
     .home-window { position: absolute; box-shadow: 5px 6px 0 rgb(0 0 0 / .28); }
     .home-window-titlebar { cursor: default; }
     .home-player-window { left: 3%; top: 16%; width: min(570px, calc(100% - 24px)); }
-    .home-directory-window { right: 3%; top: 5%; width: min(360px, 54vw); }
-    .home-message-window { right: 7%; bottom: 7%; width: min(380px, 68vw); }
+    .home-directory-window,
+    .home-message-window { display: none; }
+    .home-secondary-toggle:not([hidden]) { display: grid; }
     .home-player-window .compact-player { grid-template-columns: 130px minmax(0, 1fr); padding: 16px; }
     .home-player-art { width: 130px; height: 130px; }
     .home-directory { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 20px 12px; }
@@ -189,14 +193,8 @@ body.home-desktop.src-os {
 }
 
 @media (max-width: 560px) {
-    .home-desktop .site-header,
     .home-desktop .landing-experiment { width: 100%; border-inline: 0; }
-    body.home-desktop.src-os .site-header { margin-top: 0; padding: 2px 5px 0; }
-    body.home-desktop.src-os .site-logo { min-height: 34px; font-size: 11px; }
-    body.home-desktop.src-os .src-os-history button { width: 34px; height: 34px; }
-    body.home-desktop.src-os .site-nav { padding: 0 5px; }
-    body.home-desktop.src-os .site-nav a { gap: 2px; font-size: 7px; letter-spacing: .04em; }
-    body.home-desktop.src-os .site-nav .external-arrow { width: 7px; height: 7px; }
+    body.home-desktop.src-os .site-nav { grid-template-columns: repeat(4, max-content); padding: 0 5px; }
     .home-menu-clock { display: none; }
     .home-desktop > .legal-footer { flex-basis: 32px; margin-bottom: 0; padding: 0 5px; }
     .home-desktop .copyright-policy {
@@ -211,17 +209,6 @@ body.home-desktop.src-os {
         top: 18%; width: 570px;
         transform: scale(var(--home-window-scale));
         transform-origin: top left;
-    }
-    .home-directory-window {
-        width: 360px;
-        transform: scale(var(--home-window-scale));
-        transform-origin: top right;
-    }
-    .home-message-window {
-        bottom: 2%; width: 380px;
-        transform: scale(var(--home-window-scale));
-        transform-origin: bottom right;
-        pointer-events: none;
     }
     .home-player-window .compact-player { grid-template-columns: 155px minmax(0, 1fr); padding: 20px; }
     .home-player-art { width: 155px; height: 155px; }
@@ -242,13 +229,9 @@ body.home-desktop.src-os {
     }
     .home-player-window .seek-slider,
     .home-player-window .volume-slider { height: calc(44.1px / var(--home-window-scale)); }
-    .home-directory { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; padding: 28px; }
-    .home-directory a,
-    .home-message-window a { min-height: calc(44.1px / var(--home-window-scale)); }
-    .home-message-window a { pointer-events: auto; }
-    .home-message-window p { padding: 25px 25px 16px; }
-    .home-message-window a { margin: 0 25px 12px; }
 }
+
+.home-desktop .listening-space.is-visualizer .home-secondary-toggle { display: none; }
 
 @media (max-width: 750px), (pointer: coarse) {
     .home-desktop .listening-space.is-visualizer {
@@ -256,6 +239,7 @@ body.home-desktop.src-os {
         gap: 0;
         overflow: hidden;
     }
+    .home-desktop .listening-space.is-visualizer .home-secondary-panel { width: auto; }
     .home-desktop .listening-space.is-visualizer.is-immersive .visual-container,
     .home-desktop .listening-space.is-visualizer:fullscreen .visual-container {
         width: min(
