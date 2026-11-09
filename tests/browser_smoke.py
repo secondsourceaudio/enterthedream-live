@@ -35,7 +35,7 @@ WebGLRenderingContext.prototype.drawArrays = function (...args) {
 """
 
 
-def serve_seekable_audio(page, filename="sage-counsel.mp3", source=None):
+def serve_seekable_audio(page, filename="src_player_ambient_2_192.mp3", source="sage-counsel.mp3"):
     """Model GitHub Pages' byte-range support, absent from Python's dev server."""
     data = (Path(__file__).resolve().parents[1] / "audio" / (source or filename)).read_bytes()
 
@@ -188,6 +188,92 @@ class WebsiteTests(unittest.TestCase):
     def test_landing_sound_and_actual_audio_reactivity(self):
         self.check_study("index.html")
 
+    def test_home_audio_plays_without_web_audio_analysis(self):
+        serve_seekable_audio(self.page)
+        self.context.add_init_script("""(() => {
+            Object.defineProperty(HTMLMediaElement.prototype, 'captureStream', {
+                configurable: true, value: undefined
+            });
+            Object.defineProperty(HTMLMediaElement.prototype, 'mozCaptureStream', {
+                configurable: true, value: undefined
+            });
+            const Native = window.AudioContext;
+            window.__audioContextsCreated = 0;
+            window.AudioContext = class extends Native {
+                constructor(...args) { super(...args); window.__audioContextsCreated++; }
+            };
+        })();""")
+        self.visit()
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function("document.querySelector('audio').currentTime > .25")
+        self.assertFalse(self.page.locator('audio').evaluate('audio => audio.paused'))
+        self.assertEqual(self.page.evaluate('window.__audioContextsCreated'), 0)
+        self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundAudible'))
+
+    def test_background_audio_and_media_session_use_the_native_player(self):
+        serve_seekable_audio(self.page)
+        self.context.add_init_script("""(() => {
+            const Native = window.AudioContext;
+            window.__analysisContexts = [];
+            window.__mediaElementSources = 0;
+            window.__mediaStreamSources = 0;
+            window.AudioContext = class extends Native {
+                constructor(...args) { super(...args); window.__analysisContexts.push(this); }
+                createMediaElementSource(...args) {
+                    window.__mediaElementSources++;
+                    return super.createMediaElementSource(...args);
+                }
+                createMediaStreamSource(...args) {
+                    window.__mediaStreamSources++;
+                    return super.createMediaStreamSource(...args);
+                }
+            };
+            window.__mediaHandlers = {};
+            const session = {
+                _metadata: null,
+                _playbackState: 'none',
+                set metadata(value) { this._metadata = value; },
+                get metadata() { return this._metadata; },
+                set playbackState(value) { this._playbackState = value; },
+                get playbackState() { return this._playbackState; },
+                setActionHandler(action, handler) { window.__mediaHandlers[action] = handler; }
+            };
+            Object.defineProperty(navigator, 'mediaSession', {configurable: true, value: session});
+            window.MediaMetadata = class { constructor(data) { Object.assign(this, data); } };
+        })();""")
+        self.visit()
+        self.assertEqual(self.page.evaluate('navigator.mediaSession.metadata.title'), 'SRC Player Ambient 2')
+        self.assertEqual(self.page.evaluate('navigator.mediaSession.metadata.artist'), 'Second Source')
+        self.assertEqual(self.page.evaluate('Object.keys(window.__mediaHandlers).sort()'), ['pause', 'play'])
+
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function("document.querySelector('audio').currentTime > .25")
+        self.page.wait_for_function("window.__analysisContexts.length === 1")
+        self.assertEqual(self.page.evaluate('window.__mediaElementSources'), 0)
+        self.assertEqual(self.page.evaluate('window.__mediaStreamSources'), 1)
+        self.assertEqual(self.page.evaluate('navigator.mediaSession.playbackState'), 'playing')
+
+        before = self.page.locator('audio').evaluate('audio => audio.currentTime')
+        self.page.evaluate('window.__analysisContexts[0].suspend()')
+        self.page.wait_for_function("window.__analysisContexts[0].state === 'suspended'")
+        self.page.wait_for_timeout(600)
+        after = self.page.locator('audio').evaluate('audio => audio.currentTime')
+        self.assertGreater(after, before + .3)
+        self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundAudible'))
+
+        self.page.evaluate("document.dispatchEvent(new Event('visibilitychange'))")
+        self.page.wait_for_function("window.__analysisContexts[0].state === 'running'")
+        self.page.evaluate("window.dispatchEvent(new Event('pagehide'))")
+        self.page.wait_for_timeout(300)
+        self.assertFalse(self.page.locator('audio').evaluate('audio => audio.paused'))
+
+        self.page.evaluate('window.__mediaHandlers.pause()')
+        self.page.wait_for_function("document.querySelector('audio').paused")
+        self.assertEqual(self.page.evaluate('navigator.mediaSession.playbackState'), 'paused')
+        self.page.evaluate('window.__mediaHandlers.play()')
+        self.page.wait_for_function("!document.querySelector('audio').paused")
+        self.assertEqual(self.page.evaluate('navigator.mediaSession.playbackState'), 'playing')
+
     def test_flower_stays_silent_and_viewing_controls_work_without_a_player(self):
         requests = []
         self.page.on('request', lambda request: requests.append(request.url))
@@ -234,7 +320,7 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('#experience-info')).to_be_visible()
         self.assertFalse(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
 
-    def test_timeline_waits_for_play_and_seeks_without_changing_playback(self):
+    def test_timeline_preloads_metadata_and_seeks_without_changing_playback(self):
         serve_seekable_audio(self.page)
         audio_requests = []
         self.page.on("request", lambda request: audio_requests.append(request.url)
@@ -242,10 +328,11 @@ class WebsiteTests(unittest.TestCase):
         self.visit()
         seek = self.page.locator("[data-seek]")
         expect(seek).to_be_visible()
-        expect(seek).to_be_disabled()
+        expect(seek).to_be_enabled()
         expect(self.page.locator("[data-current-time]")).to_have_text("0:00")
-        expect(self.page.locator("[data-duration]")).to_have_text("--:--")
-        self.assertEqual(audio_requests, [], "The timeline must not preload sound")
+        expect(self.page.locator("[data-duration]")).not_to_have_text("--:--")
+        self.assertTrue(all(url.endswith("/audio/src_player_ambient_2_192.mp3") for url in audio_requests))
+        self.assertTrue(self.page.locator('audio').evaluate('audio => audio.paused'))
         self.page.locator("[data-sound]").click()
         expect(seek).to_be_enabled()
         self.page.wait_for_function("document.querySelector('audio').currentTime > 0.1")
@@ -1781,7 +1868,7 @@ class WebsiteTests(unittest.TestCase):
         self.page.add_init_script("""(() => {
             const Native = window.AudioContext;
             window.AudioContext = class extends Native {
-                createMediaElementSource() {
+                createMediaStreamSource() {
                     const oscillator = this.createOscillator();
                     const level = this.createGain();
                     oscillator.frequency.value = 80;

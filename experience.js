@@ -58,7 +58,8 @@
     let glitchEnabled = false;
     let context = null;
     let analyser = null;
-    let gain = null;
+    let analysisStream = null;
+    let analysisSource = null;
     let frequencies = null;
     let spectrum = null;
     let waveform = null;
@@ -83,50 +84,48 @@
 
     function applyVolume() {
         if (!audio) return;
-        if (gain) {
-            gain.gain.setTargetAtTime(volume, context.currentTime, 0.02);
-        } else {
-            audio.volume = volume;
-        }
+        // Keep ordinary playback on the media element so it can continue when
+        // a mobile browser suspends Web Audio in the background.
+        audio.volume = volume;
         volumeInput.value = volume;
         volumeInput.setAttribute("aria-valuetext", `${Math.round(volume * 100)} percent`);
         volumeOutput.textContent = `${Math.round(volume * 100)}%`;
     }
 
     function connectAudio() {
-        if (context) return;
+        if (context || !audio || document.hidden) return;
         const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return;
-        const candidate = new AudioContext();
-        let source = null;
+        const capture = audio.captureStream || audio.mozCaptureStream;
+        if (!AudioContext || !capture) return;
+        let candidate = null;
         try {
+            const stream = capture.call(audio);
+            if (!stream?.getAudioTracks().length) return;
+            candidate = new AudioContext();
             const candidateAnalyser = candidate.createAnalyser();
             candidateAnalyser.fftSize = 2048;
             candidateAnalyser.smoothingTimeConstant = 0.45;
-            const candidateGain = candidate.createGain();
-            source = candidate.createMediaElementSource(audio);
+            const source = candidate.createMediaStreamSource(stream);
             source.connect(candidateAnalyser);
-            candidateAnalyser.connect(candidateGain);
-            candidateGain.connect(candidate.destination);
             context = candidate;
             analyser = candidateAnalyser;
-            gain = candidateGain;
+            analysisStream = stream;
+            analysisSource = source;
             frequencies = new Uint8Array(analyser.frequencyBinCount);
             spectrum = new Float32Array(analyser.frequencyBinCount);
             waveform = new Float32Array(analyser.fftSize);
-            // A gain node also supplies working volume controls on iOS.
-            audio.volume = 1;
-            gain.gain.value = volume;
         } catch {
-            // Keep an already attached media source audible if analysis fails.
-            if (source) {
-                source.disconnect();
-                source.connect(candidate.destination);
-                context = candidate;
-            } else {
-                candidate.close().catch(() => {});
-            }
+            candidate?.close().catch(() => {});
         }
+    }
+
+    async function resumeInteractiveAudio() {
+        if (!audio || audio.paused || document.hidden) return;
+        connectAudio();
+        if (context?.state === 'suspended') {
+            try { await context.resume(); } catch { /* Native playback remains available. */ }
+        }
+        reconcileSpectrum();
     }
 
     function updateSound() {
@@ -180,11 +179,11 @@
 
     function soundAudible() {
         return !!audio && !audio.paused && !audio.ended && !audio.muted && volume > 0 &&
-            !audio.error && audio.readyState >= audio.HAVE_FUTURE_DATA && (!context || context.state === 'running');
+            !audio.error && audio.readyState >= audio.HAVE_FUTURE_DATA;
     }
 
     function sampleAudio() {
-        if (!soundAudible() || !analyser) {
+        if (!soundAudible() || !analyser || context?.state !== 'running') {
             signal = quietSignal;
             analysisTime = -1;
             bassAverage = previousBass = 0;
@@ -246,7 +245,8 @@
         }
     }
     function spectrumAllowed() {
-        return !!spectrumElement && motionEnabled && spectrumVisible && !document.hidden && soundAudible();
+        return !!spectrumElement && !!analyser && context?.state === 'running' &&
+            motionEnabled && spectrumVisible && !document.hidden && soundAudible();
     }
     function paintSpectrum(now) {
         spectrumFrame = 0;
@@ -325,15 +325,12 @@
             timeout = window.setTimeout(() => reject(new Error("Sound loading timed out")), 15000);
         });
         try {
-            connectAudio();
             if (audio.error || audio.networkState === audio.NETWORK_NO_SOURCE) audio.load();
             // Call play inside the gesture, before awaiting anything (Safari).
             const playback = audio.play();
-            await Promise.race([
-                Promise.all([playback, context ? context.resume() : Promise.resolve()]),
-                failed
-            ]);
+            await Promise.race([playback, failed]);
             hasStarted = true;
+            resumeInteractiveAudio();
             status.textContent = `Playing ${trackTitle}. Use the sound button to pause.`;
         } catch {
             audio.pause();
@@ -345,9 +342,28 @@
             updateSound();
         }
     });
-    audio?.addEventListener("play", updateSound);
-    audio?.addEventListener("pause", updateSound);
-    window.addEventListener('pagehide', () => audio?.pause());
+    audio?.addEventListener("play", () => {
+        hasStarted = true;
+        updateSound();
+        updateMediaSession();
+    });
+    audio?.addEventListener("playing", resumeInteractiveAudio);
+    audio?.addEventListener("pause", () => {
+        updateSound();
+        updateMediaSession();
+    });
+    document.addEventListener('visibilitychange', async () => {
+        if (document.hidden) {
+            if (context?.state === 'running') {
+                try { await context.suspend(); } catch { /* The browser may manage this itself. */ }
+            }
+            reconcileSpectrum();
+            return;
+        }
+        await resumeInteractiveAudio();
+        updateSound();
+    });
+    window.addEventListener('pageshow', resumeInteractiveAudio);
     audio?.addEventListener("error", () => {
         if (rejectPlayback) rejectPlayback(new Error("Sound could not load"));
         audio.pause();
@@ -360,6 +376,36 @@
         updateSound();
         savePreference("second-source-volume", String(volume));
     });
+
+    function updateMediaSession() {
+        if (!('mediaSession' in navigator) || !audio) return;
+        try {
+            navigator.mediaSession.playbackState = audio.paused ? 'paused' : 'playing';
+        } catch { /* Media Session support is partial in some browsers. */ }
+    }
+
+    if ('mediaSession' in navigator && window.MediaMetadata && audio) {
+        try {
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: trackTitle,
+                artist: 'Second Source',
+                album: 'SRC Player',
+                artwork: [{
+                    src: new URL('/images/brand/src-icon-512.png', location.origin).href,
+                    sizes: '512x512',
+                    type: 'image/png'
+                }]
+            });
+            navigator.mediaSession.setActionHandler('play', async () => {
+                try {
+                    await audio.play();
+                    await resumeInteractiveAudio();
+                } catch { /* A system control cannot bypass browser playback policy. */ }
+            });
+            navigator.mediaSession.setActionHandler('pause', () => audio.pause());
+            updateMediaSession();
+        } catch { /* Leave ordinary HTML audio controls intact. */ }
+    }
 
     function formatTime(seconds) {
         const whole = Math.floor(Number.isFinite(seconds) ? Math.max(0, seconds) : 0);
@@ -388,7 +434,7 @@
             pendingStartTime = null;
             updateTimeline();
         });
-        // Metadata loads only after Play; seeking never starts or resumes sound.
+        // Metadata may preload; seeking never starts or resumes sound.
         for (const event of ["loadedmetadata", "durationchange", "timeupdate", "seeking", "seeked", "emptied", "error"]) {
             audio.addEventListener(event, updateTimeline);
         }
