@@ -2386,6 +2386,30 @@ class WebsiteTests(unittest.TestCase):
         expect(dialog.locator('dd').last).to_contain_text('F / FULLSCREEN')
         expect(dialog.locator('[data-shortcuts-toggle], [data-glitch-toggle], .src-window-help')).to_have_count(0)
 
+    def test_home_visual_modes_fill_the_desktop_without_a_matte(self):
+        serve_seekable_audio(self.page)
+        self.visit()
+        stage = self.page.locator('.listening-space').bounding_box()
+
+        for mode in ['whirl', 'fluid']:
+            with self.subTest(mode=mode):
+                if mode == 'fluid':
+                    self.page.locator('[data-visual-mode="fluid"]').click()
+                panel = self.page.locator(f'[data-visual-panel="{mode}"]')
+                media = panel.locator('.visual-media')
+                panel_box = panel.bounding_box()
+                media_box = media.bounding_box()
+                self.assertAlmostEqual(panel_box['x'], stage['x'], delta=1)
+                self.assertAlmostEqual(panel_box['y'], stage['y'], delta=1)
+                self.assertAlmostEqual(panel_box['width'], stage['width'], delta=1)
+                self.assertAlmostEqual(panel_box['height'], stage['height'], delta=1)
+                self.assertLess(media_box['x'], panel_box['x'])
+                self.assertLess(media_box['y'], panel_box['y'])
+                self.assertGreater(media_box['x'] + media_box['width'], panel_box['x'] + panel_box['width'])
+                self.assertGreater(media_box['y'] + media_box['height'], panel_box['y'] + panel_box['height'])
+                self.assertEqual(panel.evaluate("element => getComputedStyle(element).backgroundColor"), 'rgba(0, 0, 0, 0)')
+                self.assertEqual(panel.evaluate("element => getComputedStyle(element, '::after').display"), 'none')
+
     def test_audio_failure_can_retry(self):
         self.page.route("**/audio/**", lambda route: route.abort())
         self.visit()
