@@ -78,20 +78,15 @@ worn; those assets and longsleeves are deferred. Products are marked MOCKUP,
 with a notice that final products and specifications may change;
 the page has no prices, purchase links or checkout.
 The former `gallery.html` URL redirects to RELEASES; its image assets remain
-available for FLOWER and future sources. `/src001/` remains a work-in-progress
-release page and is not linked from the public navigation. Its cover is a static
-image without a link or artwork viewer. The unlisted
-`/drip-fluid/` page provides the same DRIP fluid mode on a separate URL. It also
-requests that search engines do not index it.
+available for FLOWER and future sources. The pre-release study routes
+`/src001/`, `/drip-fluid/` and `/layout-studies/` are intentionally absent
+from the public production tree.
 
 Pages use directory indexes, so direct links, refresh and bookmarks work without
-`.html` or server rewrite configuration. Edit the canonical pages at
-`releases/index.html`, `merch/index.html`, `sources/index.html`,
-`sources/flower/index.html`, `src001/index.html` and `drip-fluid/index.html`.
-Their former root `.html` files are redirect pages that preserve query strings
-and fragments in JavaScript, with a no-JavaScript refresh fallback.
-`/experiments/`, `/experiment/` and `/gallery/` also redirect to their current
-destinations. The homepage uses `/`; opening `/index.html` normalizes that URL.
+`.html` or server rewrite configuration. Edit the canonical public pages at
+`releases/index.html`, `merch/index.html`, `sources/index.html` and
+`sources/flower/index.html`. `/experiments/`, `/experiment/` and `/gallery/`
+redirect to their current destinations. The homepage uses `/`; opening `/index.html` normalizes that URL.
 Page assets use root-relative URLs, and the file-preview builder embeds them.
 
 GitHub Pages serves `404.html` for unavailable addresses, with a RETURN link to

@@ -161,7 +161,7 @@ h2 {
 
     color: #151820;
 
-    font-size: 11px;
+    font-size: 13px;
 
     letter-spacing: 0.15em;
 
@@ -202,7 +202,7 @@ h2 {
 
     color: #151820;
 
-    font-size: 10px;
+    font-size: 12px;
 
     letter-spacing: 0.12em;
 
@@ -350,7 +350,7 @@ h2 {
 
 
     .site-nav a {
-        font-size: 10px;
+        font-size: 12px;
 
         letter-spacing: 0.14em;
     }
@@ -389,7 +389,7 @@ main { animation: scene-arrive .6s ease both; }
     .site-header { padding: 12px 14px 10px; }
     .site-logo { margin-bottom: 8px; }
     .site-nav { gap: 4px 18px; }
-    .site-nav a { font-size: 10px; letter-spacing: .08em; }
+    .site-nav a { font-size: 12px; letter-spacing: .08em; }
 }
 @media (min-width: 751px) and (max-width: 1000px) {
     .site-nav { gap: 20px; }

@@ -129,7 +129,7 @@ body.home-desktop.src-os {
     .home-desktop > .legal-footer { width: calc(100% - 24px); }
     body.home-desktop.src-os .site-header {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-columns: minmax(0, 1fr);
         flex: 0 0 auto;
         margin-top: 12px;
         padding: 4px 8px 0;
@@ -143,11 +143,6 @@ body.home-desktop.src-os {
         margin: 0;
         padding-left: 4px;
         justify-content: flex-start;
-    }
-    body.home-desktop.src-os .src-os-history {
-        grid-column: 2;
-        margin: 0;
-        padding-left: 6px;
     }
     body.home-desktop.src-os .site-nav {
         grid-column: 1 / -1;

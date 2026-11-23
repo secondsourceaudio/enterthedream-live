@@ -23,16 +23,6 @@
         close: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8m0-8-8 8"/></svg>'
     }[action]);
     function enhanceOsControls() {
-        for (const button of document.querySelectorAll('[data-os-back]')) {
-            if (button.dataset.osReady) continue;
-            button.dataset.osReady = 'true';
-            button.addEventListener('click', () => history.back());
-        }
-        for (const button of document.querySelectorAll('[data-os-forward]')) {
-            if (button.dataset.osReady) continue;
-            button.dataset.osReady = 'true';
-            button.addEventListener('click', () => history.forward());
-        }
         for (const controls of document.querySelectorAll('.src-os-window-controls')) {
             if (controls.dataset.osReady) continue;
             controls.dataset.osReady = 'true';
