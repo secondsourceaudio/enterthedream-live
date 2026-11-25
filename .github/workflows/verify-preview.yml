@@ -4,6 +4,7 @@ on:
     branches: [verify/inner-passage-preview]
 jobs:
   capture:
+    timeout-minutes: 5
     runs-on: ubuntu-latest
     steps:
       - run: pip install playwright pillow && python -m playwright install --with-deps chromium
@@ -25,7 +26,9 @@ jobs:
                   .home-directory-window {right:5%!important;left:auto!important;top:5%!important;width:360px!important}
                   .home-message-window {right:6%!important;left:auto!important;bottom:9%!important;top:auto!important;width:390px!important}
               """)
-              page.evaluate("async()=>{await document.fonts.ready; await Promise.all([...document.images].map(i=>i.decode()));}")
+              print('layout ready',flush=True)
+              page.evaluate("async()=>{document.querySelectorAll('img[loading=lazy]').forEach(i=>i.loading='eager'); await document.fonts.ready; await Promise.all([...document.images].map(i=>i.decode()));}")
+              print('images and fonts ready',flush=True)
               page.locator('[data-sound]').click()
               page.evaluate("document.querySelector('audio').currentTime=62")
               page.mouse.move(0,1079)
