@@ -362,7 +362,7 @@ SOFTWARE.
                         float distance = length(delta);
                         vec2 direction = delta / max(distance, 0.0001);
                         float wavefront = distance - age * 0.29;
-                        float packet = exp(-pow(wavefront / 0.055, 2.0));
+                        float packet = exp(-wavefront * wavefront / (0.055 * 0.055));
                         float life = exp(-age * 0.65) * (1.0 - smoothstep(2.4, 3.8, age));
                         float wave = sin(wavefront * 115.0) * packet * life;
                         float impact = exp(-distance * distance * 1500.0) * exp(-age * 9.0);
@@ -469,6 +469,7 @@ SOFTWARE.
             const width = Math.max(1, Math.floor(size * ratio));
             const height = Math.max(1, Math.floor(media.clientHeight * ratio));
             if (canvas.width !== width || canvas.height !== height) {
+                canvas.classList.remove('is-ready');
                 canvas.width = width; canvas.height = height;
             }
         }
@@ -590,7 +591,7 @@ SOFTWARE.
         canvas.addEventListener('webglcontextlost', event => { event.preventDefault(); clearInput(); fallback(); });
 
         function render(elapsed) {
-            if (!running) return;
+            if (!running || !media.clientWidth || !media.clientHeight) return;
             resize();
             const dt = previousTime === null ? 0 : clamp((elapsed - previousTime) / 1000, 0, 1 / 30);
             previousTime = elapsed;
@@ -700,11 +701,16 @@ SOFTWARE.
                 dripData[offset + 2] = visualizing ? drip.age : -1;
                 dripData[offset + 3] = drip.strength;
             }
+            if (!canvas.classList.contains('is-ready')) {
+                paintArtwork(false);
+                if (!experience.hasArtworkFrame(gl)) { fallback(); return; }
+                canvas.classList.add('is-ready');
+                canvas.dataset.fluid = 'ready';
+            }
             paintArtwork();
         }
 
-        function paintArtwork() {
-            const visualizing = experience.visualMode === 'visualizer';
+        function paintArtwork(visualizing = experience.visualMode === 'visualizer') {
             draw(display, null, {u_map: imageMap.read.texture, u_artwork: artwork},
                 {'u_drips[0]': dripData, u_whirl: visualizing ? dance.twist : 0,
                     u_overlay: visualizing ? 1 : 0,
@@ -720,13 +726,21 @@ SOFTWARE.
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            let source = image;
+            const scale = gl.getParameter(gl.MAX_TEXTURE_SIZE) / Math.max(image.naturalWidth, image.naturalHeight);
+            if (scale < 1) {
+                source = document.createElement('canvas');
+                source.width = Math.max(1, Math.floor(image.naturalWidth * scale));
+                source.height = Math.max(1, Math.floor(image.naturalHeight * scale));
+                const ctx = source.getContext('2d');
+                if (!ctx) { fallback(); return; }
+                ctx.drawImage(image, 0, 0, source.width, source.height);
+            }
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
             artworkReady = true;
             clearFields();
-            render(0);
-            canvas.classList.add('is-ready');
-            canvas.dataset.fluid = 'ready';
+            if (media.clientWidth && media.clientHeight) render(0);
             experience.createRenderLoop(render, container);
         }
         if (image.complete) loadArtwork();

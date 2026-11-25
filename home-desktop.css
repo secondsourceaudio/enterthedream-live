@@ -47,7 +47,7 @@ body.home-desktop.src-os {
     background: transparent;
     pointer-events: none;
 }
-.home-desktop .listening-space[data-active-visual="visualizer"] [data-visual-panel="fluid"] .fallback-image { opacity: 0; }
+.home-desktop .listening-space[data-active-visual="visualizer"] [data-visual-panel="fluid"] .visual-media:has(.visual-canvas.is-ready) .fallback-image { opacity: 0; }
 .home-desktop .listening-space[data-active-visual="visualizer"] [data-visual-panel="fluid"]::after { display: none; }
 .home-window {
     position: absolute; z-index: 5; min-width: 0;

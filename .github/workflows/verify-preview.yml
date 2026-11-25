@@ -1,18 +1,53 @@
-name: Verify Inner Passage preview
-on: [push, pull_request]
+name: Verify SRC homepage fixes
+on: [push]
 permissions:
   contents: read
 jobs:
-  playback:
+  player-and-rendering:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          pip install playwright
-          python -m playwright install --with-deps chromium
+      - run: pip install playwright
+      - run: python -m playwright install --with-deps chromium
       - run: |
           python -m http.server 8099 --bind 127.0.0.1 >/tmp/server.log 2>&1 &
           export SITE_BASE_URL=http://127.0.0.1:8099
           export CHROMIUM_PATH=$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path)')
-          python tests/browser_smoke.py WebsiteTests.test_home_exclusive_preview_on_desktop_and_mobile WebsiteTests.test_home_audio_analysis_without_capture_stream
+          python tests/browser_smoke.py WebsiteTests.test_home_exclusive_preview_on_desktop_and_mobile WebsiteTests.test_home_native_audio_without_capture_stream WebsiteTests.test_background_audio_and_media_session_use_the_native_player WebsiteTests.test_mobile_artwork_context_loss_and_restore WebsiteTests.test_webgl_unavailable_keeps_artwork_and_information WebsiteTests.test_home_mobile_shows_campaign_without_opening_player_controls
+  mobile-webkit:
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          python3 -m venv /tmp/pw
+          /tmp/pw/bin/pip install playwright pillow
+          /tmp/pw/bin/python -m playwright install webkit
+      - run: |
+          python3 -m http.server 8099 --bind 127.0.0.1 &
+          /tmp/pw/bin/python - <<'PY'
+          from playwright.sync_api import sync_playwright, expect
+          from PIL import Image
+          from io import BytesIO
+          with sync_playwright() as p:
+              browser=p.webkit.launch()
+              page=browser.new_page(**p.devices['iPhone 13'])
+              page.goto('http://127.0.0.1:8099/')
+              canvas=page.locator('#visual')
+              expect(canvas).to_have_class(__import__('re').compile('is-ready'),timeout=20000)
+              shot=Image.open(BytesIO(page.locator('#visual-container').screenshot())).convert('RGB')
+              assert max(shot.crop((0,0,shot.width,shot.height//8)).convert('L').getextrema()) > 10
+              audio=page.locator('audio')
+              assert audio.count()==1 and audio.evaluate('a=>a.paused && !a.autoplay')
+              page.locator('[data-sound]').tap()
+              page.wait_for_function("document.querySelector('audio').currentTime > .5")
+              art=page.evaluate("navigator.mediaSession.metadata.artwork[0]")
+              assert art['sizes']=='512x512' and art['type']=='image/jpeg'
+              assert art['src']=='http://127.0.0.1:8099/images/share/inner-passage-512.jpg'
+              image=Image.open(BytesIO(page.request.get(art['src']).body()))
+              assert image.format=='JPEG' and image.size==(512,512)
+              page.locator('[data-sound]').tap()
+              assert audio.evaluate('a=>a.paused')
+              browser.close()
+          PY
