@@ -90,7 +90,18 @@
         if (!audio) return;
         // Keep ordinary playback on the media element so it can continue when
         // a mobile browser suspends Web Audio in the background.
-        audio.volume = volume;
+        // Probe while paused even if a saved preference already equals native volume.
+        const probe = volume === 1 && audio.paused ? .99 : volume;
+        audio.volume = probe;
+        if (Math.abs(audio.volume - probe) > .001) {
+            // Some mobile browsers reserve native media volume for the device.
+            volume = audio.volume;
+            volumeInput.hidden = true;
+            volumeOutput.textContent = "Use device volume";
+            volumeOutput.removeAttribute("aria-hidden");
+            return;
+        }
+        if (probe !== volume) audio.volume = volume;
         volumeInput.value = volume;
         volumeInput.setAttribute("aria-valuetext", `${Math.round(volume * 100)} percent`);
         volumeOutput.textContent = `${Math.round(volume * 100)}%`;
