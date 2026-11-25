@@ -28,9 +28,13 @@ jobs:
               page.evaluate('document.fonts.ready')
               nav=page.get_by_role('navigation',name='Main navigation')
               link=nav.get_by_role('link',name='ABOUT / CONTACT',exact=True)
+              home=nav.get_by_role('link',name='HOME',exact=True)
+              expect(home).to_have_attribute('aria-current','page')
+              expect(home).to_have_attribute('href','/')
+              expect(page.locator('.site-logo')).to_have_attribute('href','/')
               expect(link).to_have_attribute('href','/about/')
               expect(link).to_have_text('?',use_inner_text=True)
-              expect(nav.locator('a:visible')).to_have_text(['RELEASES','SOURCES','MERCH','?','BANDCAMP'],use_inner_text=True)
+              expect(nav.locator('a:visible')).to_have_text(['HOME','RELEASES','SOURCES','MERCH','?','BANDCAMP'],use_inner_text=True)
               expect(page.locator('#visual')).to_have_class(re.compile('is-ready'))
               expect(page.locator('[data-duration]')).to_have_text('6:13')
               boxes=page.locator('.site-header, [data-home-window], .legal-footer')
@@ -46,6 +50,9 @@ jobs:
               link.click()
               expect(page).to_have_url('http://127.0.0.1:8099/about/', timeout=30000)
           PY
+          export SITE_BASE_URL=http://127.0.0.1:8099
+          export CHROMIUM_PATH=$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path)')
+          python tests/browser_smoke.py WebsiteTests.test_mobile_header_matches_home_on_all_pages
       - uses: actions/upload-artifact@v4
         with:
           name: instagram-slide-2

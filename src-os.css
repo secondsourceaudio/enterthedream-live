@@ -47,12 +47,6 @@ body.src-os {
     transform: translateX(-50%);
     flex-wrap: nowrap;
 }
-@media (min-width: 981px) {
-    /* Keep the desktop link footprint so the other navigation items stay aligned. */
-    .nav-about-label { visibility: hidden; }
-    .nav-about-short[hidden] { position: absolute; inset: 0; display: grid; place-items: center; }
-}
-
 .src-os-window-button {
     display: grid;
     place-items: center;
@@ -329,7 +323,7 @@ body.src-os {
     body.src-os .site-logo { min-height: 36px; margin: 0; padding-left: 4px; }
     body.src-os .site-nav {
         display: grid;
-        grid-template-columns: repeat(4, max-content);
+        grid-template-columns: repeat(5, max-content);
         justify-content: space-between;
         width: 100%;
         margin: 0;
@@ -337,9 +331,7 @@ body.src-os {
         gap: 0;
     }
     body.src-os .site-nav a { min-width: 44px; min-height: 44px; }
-    .src-os .site-nav a[href^="https://secondsource.bandcamp.com"],
-    .nav-about-label { display: none; }
-    .nav-about-short[hidden] { display: inline; }
+    .src-os .site-nav a[href^="https://secondsource.bandcamp.com"] { display: none; }
     .src-os > .legal-footer { margin-bottom: 12px; }
 }
 
@@ -375,7 +367,7 @@ body.src-os {
     .src-os .site-nav a[href^="https://secondsource.bandcamp.com"] { display: none; }
     .src-os .site-nav {
         display: grid;
-        grid-template-columns: repeat(4, max-content);
+        grid-template-columns: repeat(5, max-content);
         justify-content: space-between;
         gap: 0;
         padding-inline: 5px;
