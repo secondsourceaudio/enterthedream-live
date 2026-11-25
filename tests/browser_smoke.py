@@ -2667,9 +2667,12 @@ class WebsiteTests(unittest.TestCase):
     def test_continuous_player_returns_to_visualizer_and_supports_browser_history(self):
         serve_seekable_audio(self.page)
         self.visit()
+        expected_home_title = 'Second Source — Audio & Visual'
+        self.assertEqual(self.page.title(), expected_home_title)
         self.page.locator('[data-visual-mode="visualizer"]').click()
         self.page.locator('[data-sound]').click()
         self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
+        self.assertEqual(self.page.title(), expected_home_title)
         self.page.evaluate('window.__persistentAudio = document.querySelector("audio")')
         self.page.locator('.site-nav a[href="/about/"]').click()
         self.page.wait_for_url('**/about/')
@@ -2689,7 +2692,7 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('[data-visual-mode="visualizer"]')).to_have_attribute('aria-pressed', 'true')
         self.assertTrue(self.page.evaluate('document.querySelector("audio") === window.__persistentAudio && !window.__persistentAudio.paused'))
         self.page.wait_for_function('before => window.__drawCalls > before', arg=draws)
-        self.assertEqual(self.page.title(), 'Second Source Audio — Independent Record Label, Oslo')
+        self.assertEqual(self.page.title(), expected_home_title)
         self.page.go_forward()
         self.page.wait_for_url('**/about/')
         expect(self.page.locator('.about-logo')).to_be_visible()

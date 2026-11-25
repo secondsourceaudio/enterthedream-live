@@ -125,6 +125,7 @@ Python Playwright and Chromium installed. No remote assets are fetched.
 
 For a single campaign, edit `index.html`: the artist and title in the player,
 announcement and info panel, the release date/status, and the head metadata.
+Keep the homepage document title as `Second Source — Audio & Visual`.
 Update the image preload, both visual-panel images and the player image
 together. The player also supplies the title, artist and artwork for Media Session.
 
