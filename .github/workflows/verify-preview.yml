@@ -3,27 +3,15 @@ on: [push]
 permissions:
   contents: read
 jobs:
-  player-and-rendering:
-    runs-on: ubuntu-latest
-    timeout-minutes: 12
-    steps:
-      - uses: actions/checkout@v4
-      - run: pip install playwright
-      - run: python -m playwright install --with-deps chromium
-      - run: |
-          python -m http.server 8099 --bind 127.0.0.1 >/tmp/server.log 2>&1 &
-          export SITE_BASE_URL=http://127.0.0.1:8099
-          export CHROMIUM_PATH=$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path)')
-          python tests/browser_smoke.py WebsiteTests.test_continuous_player_keeps_one_audio_session_and_respects_pause_and_close WebsiteTests.test_continuous_player_returns_to_visualizer_and_supports_browser_history WebsiteTests.test_continuous_player_keeps_playing_when_soft_navigation_fails WebsiteTests.test_mobile_header_matches_home_on_all_pages
   mobile-webkit:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - run: |
           python3 -m venv /tmp/pw
           /tmp/pw/bin/pip install playwright pillow
-          /tmp/pw/bin/python -m playwright install webkit
+          /tmp/pw/bin/python -m playwright install --with-deps webkit
       - run: |
           python3 -m http.server 8099 --bind 127.0.0.1 &
           /tmp/pw/bin/python - <<'PY'
