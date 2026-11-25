@@ -2353,9 +2353,20 @@ class WebsiteTests(unittest.TestCase):
                 self.assertLessEqual(player['right'], width + 1)
                 self.assertEqual(layout['directoryDisplay'], 'none')
                 campaign = layout['campaign']
-                expect(self.page.locator('#home-campaign-title')).to_have_text('INNER PASSAGE')
-                expect(self.page.locator('.home-campaign time')).to_have_text('27.11.26')
-                expect(self.page.locator('.home-campaign a')).to_have_count(0)
+                title = self.page.locator('#home-campaign-title')
+                expect(title).to_be_visible()
+                self.assertTrue(title.inner_text().strip())
+                status = self.page.locator('.home-campaign-status')
+                if status.locator('time').count():
+                    expect(status.locator('time')).to_be_visible()
+                    expect(status.locator('a')).to_have_count(0)
+                else:
+                    expect(status).to_contain_text('OUT NOW')
+                    listen = status.get_by_role('link', name='LISTEN', exact=False)
+                    expect(listen.first).to_be_visible()
+                    for link in listen.all():
+                        self.assertEqual(urlsplit(link.get_attribute('href')).scheme, 'https')
+                        self.assertGreaterEqual(link.bounding_box()['height'], 44)
                 self.assertGreaterEqual(campaign['y'], player['bottom'])
                 self.assertLessEqual(campaign['bottom'], layout['stage']['bottom'])
                 toggle = self.page.locator('[data-home-secondary-toggle]')
