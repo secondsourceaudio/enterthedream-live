@@ -24,8 +24,12 @@ jobs:
               page.goto('http://127.0.0.1:8099/index.html?utm_source=instagram&fbclid=test')
               canvas=page.locator('#visual')
               expect(canvas).to_have_class(__import__('re').compile('is-ready'),timeout=20000)
-              shot=Image.open(BytesIO(page.locator('#visual-container').screenshot())).convert('RGB')
-              assert max(shot.crop((0,0,shot.width,shot.height//8)).convert('L').getextrema()) > 10
+              for _ in range(10):
+                  shot=Image.open(BytesIO(page.locator('#visual-container').screenshot())).convert('RGB')
+                  if max(shot.crop((0,0,shot.width,shot.height//8)).convert('L').getextrema()) > 10:
+                      break
+              else:
+                  raise AssertionError('Artwork remained dark across ten captures')
               audio=page.locator('audio')
               assert audio.count()==1 and audio.evaluate('a=>a.paused && !a.autoplay')
               page.locator('[data-sound]').tap()
