@@ -15,34 +15,28 @@ jobs:
           from io import BytesIO
           with sync_playwright() as p:
               b=p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader'])
-              page=b.new_page(viewport=dict(width=1080,height=1080),device_scale_factor=2)
+              page=b.new_page(viewport=dict(width=1920,height=1280),device_scale_factor=1)
               page.goto('https://www.enterthedream.org/',wait_until='networkidle')
-              page.add_style_tag(content="""
-                  body.home-desktop.src-os {display:flex!important;flex-direction:column!important;width:100vw!important;height:100vh!important;min-height:0!important;margin:0!important;padding:0!important}
-                  body.home-desktop .site-header,body.home-desktop .landing-experiment,body.home-desktop .legal-footer {width:100%!important;max-width:none!important;margin:0!important;box-sizing:border-box!important}
-                  body.home-desktop .landing-experiment {flex:1 1 0!important;min-height:0!important;height:auto!important}
-                  body.home-desktop .site-header,body.home-desktop .legal-footer {flex:none!important}
-                  .home-player-window {left:5%!important;top:23%!important;width:570px!important}
-                  .home-directory-window {right:5%!important;left:auto!important;top:5%!important;width:360px!important}
-                  .home-message-window {right:6%!important;left:auto!important;bottom:9%!important;top:auto!important;width:390px!important}
-              """)
-              print('layout ready',flush=True)
-              page.evaluate("async()=>{document.querySelectorAll('img[loading=lazy]').forEach(i=>i.loading='eager'); await document.fonts.ready; await Promise.all([...document.images].map(i=>i.decode()));}")
-              print('images and fonts ready',flush=True)
+              page.evaluate("""async()=>{document.querySelectorAll('img[loading=lazy]').forEach(i=>i.loading='eager');await document.fonts.ready;await Promise.all([...document.images].map(i=>i.decode()));}""")
+              stage=page.locator('.listening-space').bounding_box()
+              crop=dict(x=round(stage['x']+(stage['width']-1080)/2),y=round(stage['y']+(stage['height']-1080)/2),width=1080,height=1080)
+              assert stage['height']>=1080 and stage['width']>=1080
+              for name,x,y in [('player',52,260),('directory',588,58),('message',540,822)]:
+                  win=page.locator('.home-'+name+'-window')
+                  before=win.bounding_box()
+                  win.evaluate("""(e,p)=>{Object.assign(e.style,{left:p[0]+'px',top:p[1]+'px',right:'auto',bottom:'auto'})}""",[crop['x']-stage['x']+x,crop['y']-stage['y']+y])
+                  after=win.bounding_box()
+                  assert before['width']==after['width'] and before['height']==after['height']
+                  assert after['x']>=crop['x'] and after['x']+after['width']<=crop['x']+1080 and after['y']+after['height']<=crop['y']+1080
               page.locator('[data-sound]').click()
               page.evaluate("document.querySelector('audio').currentTime=62")
-              page.mouse.move(0,1079)
+              page.mouse.move(0,0)
               page.wait_for_function("document.querySelector('audio').currentTime>62.5 && [...document.querySelectorAll('.spectrum-band')].filter(e=>+e.style.getPropertyValue('--level')>.15).length>=7")
-              assert page.evaluate('document.fonts.status') == 'loaded'
-              geo=page.locator('.site-header,.home-window,.legal-footer').evaluate_all("els=>els.map(e=>[e.className,...['x','y','width','height'].map(k=>e.getBoundingClientRect()[k])])")
-              print(geo,flush=True)
-              assert len(geo)==5 and all(x>=-1 and y>=-1 and x+w<=1081 and y+h<=1081 for _,x,y,w,h in geo)
-              assert geo[0][1:3]==[0,0] and geo[-1][2]+geo[-1][4]==1080
-              shot=Image.open(BytesIO(page.screenshot(type='png',scale='device')))
-              assert shot.size==(2160,2160)
-              shot.resize((1080,1080),Image.Resampling.BOX).save('SRC-OS-Instagram.png')
+              assert page.evaluate('devicePixelRatio')==1
+              page.screenshot(path='SRC-OS-Desktop-Crop.png',clip=crop,scale='device',timeout=100000)
+              assert Image.open('SRC-OS-Desktop-Crop.png').size==(1080,1080)
           PY
       - uses: actions/upload-artifact@v4
         with:
-          name: src-square
-          path: SRC-OS-Instagram.png
+          name: native-crop
+          path: SRC-OS-Desktop-Crop.png
