@@ -137,10 +137,9 @@ labelled `LISTEN ↗` within `.home-campaign-status` once a verified listening
 destination is available. Update the description, Open Graph and Twitter
 metadata and advance the home sitemap date.
 
-`python3 scripts/build_share_images.py` renders the 1200 × 630 Inner Passage
-card at `images/share/inner-passage.png`. Once generated and checked, use it for
-both social image tags, update the Open Graph type/dimensions, and switch the
-Twitter card to `summary_large_image`.
+The homepage uses `images/share/inner-passage.jpg`, a 1200 × 630 crop of
+the campaign artwork. For a future campaign, update both social image tags
+and the image descriptions and dimensions.
 
 Tabs and bookmarks use the white SRC mark on a dark background. `favicon.ico`
 contains 16, 32 and 48 px versions, with separate 32 and 192 px PNG icons and a
