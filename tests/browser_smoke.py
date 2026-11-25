@@ -209,22 +209,40 @@ class WebsiteTests(unittest.TestCase):
     def test_landing_sound_and_actual_audio_reactivity(self):
         self.check_study("index.html")
 
-    def test_home_prerelease_has_no_audio_and_visual_modes_are_available(self):
-        media = []
-        self.page.on('request', lambda request: media.append(request.url)
-                     if request.resource_type == 'media' else None)
-        self.visit()
-        if not self.page.locator('.home-campaign time').count():
-            self.skipTest('The homepage campaign is live.')
-        expect(self.page.locator('[data-player-state]')).to_have_text('PRE-RELEASE')
-        for control in ['data-sound', 'data-mute', 'data-volume', 'data-seek']:
-            expect(self.page.locator(f'[{control}]')).to_be_disabled()
-        expect(self.page.locator('#experience-audio source, #experience-audio[src]')).to_have_count(0)
-        for mode in ['fluid', 'visualizer', 'whirl']:
-            self.page.locator(f'[data-visual-mode="{mode}"]').click()
-            expect(self.page.locator('[data-experience]')).to_have_attribute('data-active-visual', mode)
-        self.assertEqual(media, [])
-        self.assertFalse(self.page.locator('audio').evaluate('audio => audio.loop || !!audio.error'))
+    def test_home_exclusive_preview_on_desktop_and_mobile(self):
+        for width, mobile in [(1440, False), (390, True)]:
+            with self.subTest(mobile=mobile):
+                context = self.browser.new_context(viewport={'width': width, 'height': 900},
+                                                   is_mobile=mobile, has_touch=mobile)
+                try:
+                    page = context.new_page()
+                    page.goto(BASE_URL)
+                    audio = page.locator('#experience-audio')
+                    page.wait_for_function("Number.isFinite(document.querySelector('audio').duration)")
+                    self.assertTrue(audio.evaluate('a => a.paused && !a.autoplay && !a.loop'))
+                    self.assertGreater(audio.evaluate('a => a.duration'), 372)
+                    expect(page.locator('.player-catalogue')).to_have_text('PRE-RELEASE')
+                    expect(page.locator('.home-campaign time')).to_have_attribute('datetime', '2026-11-27')
+                    seek = page.locator('[data-seek]')
+                    seek.fill('45')
+                    self.assertTrue(audio.evaluate('a => a.paused && Math.abs(a.currentTime - 45) < 1'))
+                    play = page.locator('[data-sound]')
+                    play.tap() if mobile else play.click()
+                    page.wait_for_function("window.SecondSourceExperience.sampleBass() > .01")
+                    toggle = page.locator('[data-home-secondary-toggle]')
+                    if toggle.is_visible() and toggle.get_attribute('aria-expanded') == 'false':
+                        toggle.click()
+                    page.locator('[data-visual-mode="visualizer"]').click()
+                    expect(page.locator('[data-experience]')).to_have_attribute('data-active-visual', 'visualizer')
+                    page.wait_for_function("window.SecondSourceExperience.sampleBass() > .01")
+                    page.locator('[data-volume]').fill('0.5')
+                    expect(page.locator('[data-volume-output]')).to_have_text('50%')
+                    page.locator('[data-mute]').click()
+                    self.assertTrue(audio.evaluate('a => a.muted && !a.paused'))
+                    play.click()
+                    self.assertTrue(audio.evaluate('a => a.paused'))
+                finally:
+                    context.close()
 
     def test_legal_footer_is_consistent_on_public_pages(self):
         paths = ['', 'releases/', 'sources/', 'sources/flower/', 'merch/', 'about/', 'rights/', '404.html']
@@ -247,7 +265,7 @@ class WebsiteTests(unittest.TestCase):
                         reference = style
                     self.assertEqual(style, reference)
 
-    def test_home_audio_plays_without_web_audio_analysis(self):
+    def test_home_audio_analysis_without_capture_stream(self):
         serve_seekable_audio(self.page)
         self.context.add_init_script("""(() => {
             Object.defineProperty(HTMLMediaElement.prototype, 'captureStream', {
@@ -266,7 +284,8 @@ class WebsiteTests(unittest.TestCase):
         self.page.locator('[data-sound]').click()
         self.page.wait_for_function("document.querySelector('audio').currentTime > .25")
         self.assertFalse(self.page.locator('audio').evaluate('audio => audio.paused'))
-        self.assertEqual(self.page.evaluate('window.__audioContextsCreated'), 0)
+        self.page.wait_for_function('window.SecondSourceExperience.sampleBass() > .01')
+        self.assertEqual(self.page.evaluate('window.__audioContextsCreated'), 1)
         self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundAudible'))
 
     def test_background_audio_and_media_session_use_the_native_player(self):
@@ -362,7 +381,8 @@ class WebsiteTests(unittest.TestCase):
         self.page.evaluate("window.dispatchEvent(new Event('pagehide'))")
         self.assertFalse(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
         self.assertEqual(self.page.evaluate('window.SecondSourceExperience.sampleBass()'), 0)
-        self.assertEqual(self.page.evaluate('window.__audioContextsCreated'), 0)
+        self.page.wait_for_function('window.SecondSourceExperience.sampleBass() > .01')
+        self.assertEqual(self.page.evaluate('window.__audioContextsCreated'), 1)
         self.assertFalse(any('/audio/' in url or 'flower-tone.js' in url for url in requests))
 
     def test_silent_flower_keeps_info_available_without_webgl(self):

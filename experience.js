@@ -61,6 +61,7 @@
     let glitchEnabled = false;
     let context = null;
     let analyser = null;
+    let outputGain = null;
     let analysisStream = null;
     let analysisSource = null;
     let frequencies = null;
@@ -89,7 +90,8 @@
         if (!audio) return;
         // Keep ordinary playback on the media element so it can continue when
         // a mobile browser suspends Web Audio in the background.
-        audio.volume = volume;
+        if (outputGain) outputGain.gain.value = volume;
+        else audio.volume = volume;
         volumeInput.value = volume;
         volumeInput.setAttribute("aria-valuetext", `${Math.round(volume * 100)} percent`);
         volumeOutput.textContent = `${Math.round(volume * 100)}%`;
@@ -99,16 +101,29 @@
         if (context || !audio || document.hidden) return;
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const capture = audio.captureStream || audio.mozCaptureStream;
-        if (!AudioContext || !capture) return;
+        if (!AudioContext) return;
         let candidate = null;
         try {
-            const stream = capture.call(audio);
-            if (!stream?.getAudioTracks().length) return;
+            const stream = capture?.call(audio);
+            if (capture && !stream?.getAudioTracks().length) return;
             candidate = new AudioContext();
             const candidateAnalyser = candidate.createAnalyser();
             candidateAnalyser.fftSize = 2048;
             candidateAnalyser.smoothingTimeConstant = 0.45;
-            const source = candidate.createMediaStreamSource(stream);
+            let source;
+            if (stream) {
+                source = candidate.createMediaStreamSource(stream);
+            } else {
+                // Safari lacks captureStream. Use the same analyser and route audio
+                // through a gain node so the volume slider also works on iOS.
+                const gain = candidate.createGain();
+                gain.gain.value = volume;
+                gain.connect(candidate.destination);
+                source = candidate.createMediaElementSource(audio);
+                source.connect(gain);
+                audio.volume = 1;
+                outputGain = gain;
+            }
             source.connect(candidateAnalyser);
             context = candidate;
             analyser = candidateAnalyser;
@@ -331,6 +346,10 @@
         try {
             if (audio.error || audio.networkState === audio.NETWORK_NO_SOURCE) audio.load();
             // Call play inside the gesture, before awaiting anything (Safari).
+            if (!(audio.captureStream || audio.mozCaptureStream)) {
+                connectAudio();
+                if (context?.state === 'suspended') context.resume().catch(() => {});
+            }
             const playback = audio.play();
             await Promise.race([playback, failed]);
             hasStarted = true;
@@ -358,7 +377,7 @@
     });
     document.addEventListener('visibilitychange', async () => {
         if (document.hidden) {
-            if (context?.state === 'running') {
+            if (!outputGain && context?.state === 'running') {
                 try { await context.suspend(); } catch { /* The browser may manage this itself. */ }
             }
             reconcileSpectrum();
