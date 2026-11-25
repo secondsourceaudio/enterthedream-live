@@ -2453,8 +2453,7 @@ class WebsiteTests(unittest.TestCase):
                 title = self.page.locator('#home-campaign-title')
                 expect(title).to_be_visible()
                 self.assertTrue(title.inner_text().strip())
-                status = self.page.locator('.home-campaign-status')
-                expect(status).to_have_text('- EXCLUSIVE AUDIO PREVIEW')
+                expect(self.page.locator('.home-campaign')).to_have_text('SRC.1 ONLINE 25.11.26 / V1.0')
                 self.assertGreaterEqual(campaign['y'], player['bottom'])
                 self.assertLessEqual(campaign['bottom'], layout['stage']['bottom'])
                 toggle = self.page.locator('[data-home-secondary-toggle]')
@@ -2657,7 +2656,7 @@ class WebsiteTests(unittest.TestCase):
             context.close()
 
     def test_continuous_player_keeps_one_audio_session_and_respects_pause_and_close(self):
-        serve_seekable_audio(self.page)
+        serve_seekable_audio(self.page, "inner-passage.mp3")
         self.visit()
         self.page.evaluate('''() => {
             window.__persistentAudio = document.querySelector('audio');
@@ -2666,6 +2665,8 @@ class WebsiteTests(unittest.TestCase):
         }''')
         self.page.locator('[data-sound]').click()
         self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
+        self.page.locator('[data-volume]').fill('0.25')
+        self.page.evaluate('window.__metadata = navigator.mediaSession.metadata')
         self.page.locator('audio').evaluate('audio => { audio.currentTime = 30; }')
         self.page.wait_for_function('document.querySelector("audio").currentTime >= 30')
         self.page.locator('.site-nav a[href="/releases/"]').click()
@@ -2674,6 +2675,17 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('[data-corner-player]')).to_be_visible()
         self.assertTrue(self.page.evaluate('document.querySelector("audio") === window.__persistentAudio && !window.__persistentAudio.paused && window.__persistentAudio.currentTime >= 30'))
         self.assertEqual(self.page.evaluate('window.__audioPauses'), 0)
+        for navigate, route in [(self.page.go_back, '/'), (self.page.go_forward, '/releases/')]:
+            navigate()
+            expect(self.page.locator('[data-corner-player]')).to_be_visible(visible=route != '/')
+            self.assertEqual(self.page.url, BASE_URL + route)
+            self.assertTrue(self.page.evaluate('''() => {
+                const a = document.querySelector('audio');
+                return a === window.__persistentAudio && !a.paused && a.currentTime >= 30 &&
+                    a.volume === 0.25 && window.__audioPauses === 0 &&
+                    navigator.mediaSession.metadata === window.__metadata &&
+                    window.__metadata.title === 'Inner Passage';
+            }'''))
         self.assertEqual(self.page.locator('link[rel="canonical"]').get_attribute('href'), 'https://www.enterthedream.org/releases/')
         self.page.locator('[data-corner-play]').click()
         self.page.wait_for_function('document.querySelector("audio").paused')
@@ -2697,7 +2709,7 @@ class WebsiteTests(unittest.TestCase):
         self.assertTrue(self.page.evaluate('document.querySelector("audio") === window.__persistentAudio && window.__persistentAudio.paused'))
 
     def test_continuous_player_returns_to_visualizer_and_supports_browser_history(self):
-        serve_seekable_audio(self.page)
+        serve_seekable_audio(self.page, "inner-passage.mp3")
         self.visit()
         expected_home_title = 'Second Source — Audio & Visual'
         self.assertEqual(self.page.title(), expected_home_title)

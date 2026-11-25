@@ -11,6 +11,7 @@
     const player = space?.querySelector('.compact-player');
     if (!audio || !player || audio.hasAttribute('data-audio-offline')) return;
     const playerSlot = player.parentElement;
+    const nextHomeControl = player.nextElementSibling;
     const sound = player.querySelector('[data-sound]');
     const paths = new Set(['/', '/releases/', '/merch/', '/about/', '/rights/']);
     const metadataSelector = 'meta[name="description"], meta[name="robots"], meta[property^="og:"], meta[name^="twitter:"], link[rel="canonical"], script[type="application/ld+json"]';
@@ -22,11 +23,6 @@
     let current = '/';
     let sequence = 0;
     let pending = null;
-    const storage = document.createElement('div');
-    storage.className = 'src-home-storage';
-    storage.hidden = true;
-    storage.inert = true;
-    document.body.append(storage);
 
     const corner = document.createElement('aside');
     corner.className = 'src-corner-player';
@@ -85,7 +81,7 @@
         audio.pause();
         collapse();
         updateMini();
-        document.querySelector('body > main')?.focus({preventScroll: true});
+        views.get(current).main?.focus({preventScroll: true});
     });
 
     function snapshot(doc, main) {
@@ -136,18 +132,22 @@
         for (const dialog of home.querySelectorAll('dialog[open]')) dialog.close();
         window.dispatchEvent(new Event('src:beforepagechange'));
         collapse();
-        if (path === '/') playerSlot.append(player);
+        if (path === '/') playerSlot.insertBefore(player, nextHomeControl);
         else detail.append(player);
-        const oldMain = document.querySelector('body > main');
+        const oldMain = views.get(current).main;
         oldMain?.removeAttribute('aria-busy');
-        if (oldMain === home) storage.append(home);
-        else oldMain?.remove();
+        if (oldMain !== home) oldMain.remove();
+        // Keep the native media element connected throughout the session.
+        home.classList.toggle('src-home-storage', path !== '/');
+        home.inert = path !== '/';
+        if (path === '/') home.id = 'main-content';
+        else home.removeAttribute('id');
         const header = document.querySelector('body > .site-header');
         const footer = document.querySelector('body > .legal-footer');
         header.replaceWith(view.header.cloneNode(true));
         footer.replaceWith(view.footer.cloneNode(true));
         view.main.dataset.sessionPage = '';
-        document.querySelector('body > .legal-footer').before(view.main);
+        if (path !== '/') document.querySelector('body > .legal-footer').before(view.main);
         document.body.className = view.bodyClass;
         document.documentElement.className = view.htmlClass;
         document.documentElement.lang = view.lang;
@@ -167,7 +167,7 @@
         pending = controller;
         if (!pop) history.replaceState({...history.state, srcScroll: scrollY}, '');
         document.body.classList.add('src-route-loading');
-        document.querySelector('body > main')?.setAttribute('aria-busy', 'true');
+        views.get(current).main?.setAttribute('aria-busy', 'true');
         try {
             const view = await getView(url, controller.signal);
             if (request !== sequence) return;
@@ -184,7 +184,7 @@
         } finally {
             if (request === sequence) {
                 document.body.classList.remove('src-route-loading');
-                document.querySelector('body > main')?.removeAttribute('aria-busy');
+                views.get(current).main?.removeAttribute('aria-busy');
             }
         }
     }
