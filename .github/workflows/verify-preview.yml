@@ -1,0 +1,18 @@
+name: Verify Inner Passage preview
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  playback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          pip install playwright
+          python -m playwright install --with-deps chromium
+      - run: |
+          python -m http.server 8099 --bind 127.0.0.1 >/tmp/server.log 2>&1 &
+          export SITE_BASE_URL=http://127.0.0.1:8099
+          export CHROMIUM_PATH=$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path)')
+          python tests/browser_smoke.py WebsiteTests.test_home_exclusive_preview_on_desktop_and_mobile WebsiteTests.test_home_audio_analysis_without_capture_stream
