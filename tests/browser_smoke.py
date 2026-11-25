@@ -35,9 +35,9 @@ WebGLRenderingContext.prototype.drawArrays = function (...args) {
 """
 
 
-def serve_seekable_audio(page, filename="src_player_ambient_2_192.mp3", source="sage-counsel.mp3"):
+def serve_seekable_audio(page, filename="src_player_ambient_2_192.mp3"):
     """Model GitHub Pages' byte-range support, absent from Python's dev server."""
-    data = (Path(__file__).resolve().parents[1] / "audio" / (source or filename)).read_bytes()
+    data = (Path(__file__).resolve().parents[1] / "audio" / filename).read_bytes()
 
     def respond(route):
         headers = {"Content-Type": "audio/mpeg", "Accept-Ranges": "bytes"}
@@ -58,7 +58,7 @@ def serve_seekable_audio(page, filename="src_player_ambient_2_192.mp3", source="
 
 
 def serve_sources_audio(page):
-    serve_seekable_audio(page, "src_player_ambient_tape_1_192.mp3", source="sage-counsel.mp3")
+    serve_seekable_audio(page, "src_player_ambient_tape_1_192.mp3")
 
 
 class WebsiteTests(unittest.TestCase):
@@ -139,7 +139,7 @@ class WebsiteTests(unittest.TestCase):
         audio_requests = []
         self.page.on("request", lambda request: audio_requests.append(request.url)
                      if "/audio/" in request.url else None)
-        serve_seekable_audio(self.page, "src_player_ambient_2_192.mp3", source="sage-counsel.mp3")
+        serve_seekable_audio(self.page, "src_player_ambient_2_192.mp3")
         self.visit(path)
         self.page.wait_for_function("document.querySelector('#visual').classList.contains('is-ready') && window.__drawCalls > 0")
         self.assertTrue(all(url.endswith("/audio/src_player_ambient_2_192.mp3") for url in audio_requests))
@@ -1270,25 +1270,17 @@ class WebsiteTests(unittest.TestCase):
         self.assertEqual(self.hold_uniforms(), [0, 0], 'Losing focus must cancel a held press')
         session.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []})
 
-    def test_file_preview_embeds_visual_assets_and_handles_mobile_layout(self):
-        requests = []
-        self.page.on('request', lambda request: requests.append(request.url))
-        self.visit('preview.html')
-        expect(self.page.locator('meta[name="robots"]')).to_have_attribute('content', 'noindex, nofollow')
-        self.page.wait_for_function('window.__drawCalls > 0')
-        self.assertTrue(self.page.locator('#fallback-image').evaluate('e => e.complete && e.naturalWidth > 0'))
-        self.assertEqual(self.page.locator('.compact-player').evaluate('e => getComputedStyle(e).display'), 'flex')
-        self.assertTrue(self.page.evaluate("document.fonts.check('12px Microgramma')"))
-        self.assertTrue(self.page.locator('audio').evaluate('a => a.paused'))
-        self.assertTrue(all(url.endswith('/preview.html') or url.startswith('data:') for url in requests), requests)
-        self.page.set_viewport_size({'width': 390, 'height': 844})
-        self.assertLessEqual(self.page.evaluate('document.documentElement.scrollWidth'), 390)
-        self.page.locator('[data-info]').click()
-        expect(self.page.locator('[data-glitch-toggle]')).to_be_visible()
-        self.page.keyboard.press('Escape')
-        self.page.locator('[data-open-index]').click()
-        expect(self.page.locator('.src-map-flower')).to_have_attribute('href', 'https://www.enterthedream.org/sources/flower/')
-        self.assertTrue(self.page.locator('.src-image-map img').get_attribute('src').startswith('data:'))
+    def test_production_excludes_retired_studies_and_unreleased_assets(self):
+        paths = [
+            "/preview.html", "/src001/", "/drip-fluid/", "/layout-studies/",
+            "/audio/sage-counsel.mp3", "/images/drip_cover_front_2.webp",
+            "/images/src001/drip_cover_front_2.webp", "/images/drip-cover.webp",
+            "/images/src001/cover_back.webp", "/images/src001.zip",
+        ]
+        for path in paths:
+            with self.subTest(path=path):
+                response = self.page.request.get(BASE_URL + path)
+                self.assertEqual(response.status, 404)
 
     def test_drip_keyboard_ripple_pauses_and_ignores_right_click(self):
         self.visit()
@@ -2259,11 +2251,10 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('.site-nav [aria-current="page"]')).to_have_text('RELEASES')
         expect(self.page.locator('.release-entry')).to_have_count(1)
         expect(self.page.locator('.release-catalogue')).to_have_text('SECOND SOURCE / SRC001')
-        expect(self.page.locator('.release-title')).to_have_text('INNER PASSAGE')
+        expect(self.page.locator('.release-title')).to_have_text('DRIP')
         expect(self.page.locator('.release-artist')).to_have_text('MARTIN SOLLI')
-        expect(self.page.locator('.release-announcement time')).to_have_text('27.11.26')
-        expect(self.page.locator('.release-context')).to_have_text('FIRST SINGLE FROM DRIP')
-        expect(self.page.locator('.release-availability')).to_have_text('ALBUM / SPRING 2027')
+        expect(self.page.locator('.release-season')).to_have_text('SPRING 2027')
+        expect(self.page.locator('.release-availability')).to_have_text('VINYL / DIGITAL')
         expect(self.page.locator('[data-post-release]')).to_have_count(3)
         self.assertTrue(self.page.locator('[data-post-release]').evaluate_all(
             'sections => sections.every(section => section.hidden)'))
@@ -2329,8 +2320,8 @@ class WebsiteTests(unittest.TestCase):
                             self.assertGreaterEqual(box["x"], 0)
                             self.assertLessEqual(box["x"] + box["width"], width)
 
-    def test_home_mobile_keeps_one_primary_window_over_the_artwork(self):
-        serve_seekable_audio(self.page, "src_player_ambient_2_192.mp3", source="sage-counsel.mp3")
+    def test_home_mobile_shows_campaign_without_opening_player_controls(self):
+        serve_seekable_audio(self.page, "src_player_ambient_2_192.mp3")
         for width in [320, 390, 768]:
             with self.subTest(width=width):
                 self.page.set_viewport_size({"width": width, "height": 844})
@@ -2348,7 +2339,7 @@ class WebsiteTests(unittest.TestCase):
                         artwork: rect('[data-visual-panel="whirl"]'),
                         player: rect('.home-player-window'),
                         directoryDisplay: getComputedStyle(document.querySelector('.home-directory-window')).display,
-                        messageDisplay: getComputedStyle(document.querySelector('.home-message-window')).display
+                        campaign: rect('.home-message-window')
                     };
                 }''')
                 self.assertEqual(layout['artwork']['position'], 'absolute')
@@ -2361,7 +2352,12 @@ class WebsiteTests(unittest.TestCase):
                 self.assertGreaterEqual(player['x'], 0)
                 self.assertLessEqual(player['right'], width + 1)
                 self.assertEqual(layout['directoryDisplay'], 'none')
-                self.assertEqual(layout['messageDisplay'], 'none')
+                campaign = layout['campaign']
+                expect(self.page.locator('#home-campaign-title')).to_have_text('INNER PASSAGE')
+                expect(self.page.locator('.home-campaign time')).to_have_text('27.11.26')
+                expect(self.page.locator('.home-campaign a')).to_have_count(0)
+                self.assertGreaterEqual(campaign['y'], player['bottom'])
+                self.assertLessEqual(campaign['bottom'], layout['stage']['bottom'])
                 toggle = self.page.locator('[data-home-secondary-toggle]')
                 controls = self.page.locator('#home-secondary-controls')
                 expect(toggle).to_be_visible()

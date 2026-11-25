@@ -24,9 +24,10 @@ The little SRC in INDEX has another side.
     <link rel="stylesheet" href="/experience.css?v=21">
     <link rel="stylesheet" href="/continuous-player.css?v=2">
     <link rel="stylesheet" href="/src-desktop.css?v=5">
-    <link rel="stylesheet" href="/home-desktop.css?v=8">
+    <link rel="stylesheet" href="/home-desktop.css?v=9">
     <link rel="stylesheet" href="/src-os.css?v=11">
     <script src="/site.js?v=9" defer></script>
+    <!-- Campaign artwork: keep this preload and both visual-panel images in sync. -->
     <link rel="preload" as="image" href="/images/src001/inner_front.webp">
     <script src="/experience.js?v=21" defer></script>
     <script src="/landing-experiment.js?v=26" defer></script>
@@ -179,10 +180,16 @@ The little SRC in INDEX has another side.
                     <a href="/about/"><span class="home-directory-icon" aria-hidden="true">?</span><span>INFO</span></a>
                 </nav>
             </section>
-            <section class="home-window home-message-window" data-home-window aria-labelledby="home-message-title">
-                <div class="home-window-titlebar" data-home-window-handle tabindex="0"><span id="home-message-title">SYSTEM MESSAGE</span><span aria-hidden="true">− □ ×</span></div>
-                <p>SECOND SOURCE IS AN INDEPENDENT OUTLET FOR AUDIO AND VISUAL EXPERIMENTATION, BASED IN OSLO.</p>
-                <a href="/about/">READ MORE <span aria-hidden="true">↗</span></a>
+            <section class="home-window home-message-window" data-home-window aria-labelledby="home-campaign-title">
+                <div class="home-window-titlebar" data-home-window-handle tabindex="0"><span>SYSTEM MESSAGE</span><span aria-hidden="true">− □ ×</span></div>
+                <div class="home-campaign">
+                    <p class="home-campaign-artist">MARTIN SOLLI</p>
+                    <h2 id="home-campaign-title">INNER PASSAGE</h2>
+                    <div class="home-campaign-status">
+                        <time datetime="2026-11-27">27.11.26</time>
+                        <!-- At release, replace the date with OUT NOW and add the verified listening link. -->
+                    </div>
+                </div>
             </section>
             <p class="home-desktop-hint">DRAG WINDOWS / OPEN FILES</p>
             <p class="visually-hidden" role="status" data-status></p>

@@ -59,14 +59,13 @@ From the repository root:
 python3 -m http.server 8000
 ```
 
-Open the local server in your browser. The homepage is DRIP, with a WHIRL / FLUID / VISUALIZER
-switch. **SOURCES** opens the public music and moving-image section at `/sources/`.
+Open the local server in your browser. The homepage presents the current single campaign in the System Message window, with a
+WHIRL / FLUID / VISUALIZER switch and Ambient 2 in the separate player. **SOURCES** opens the public music and moving-image section at `/sources/`.
 `/sources/flower/` remains available by direct link as the silent FLOWER fluid source,
 using the yellow and black gallery photograph.
-**RELEASES** opens `/releases/`, which shows SRC001 / DRIP with its static
-cover, artist, title, supplied short album text and credits. The public tracklist
-is split into side A and side B, with five tracks per side. Availability is shown
-as `SPRING 2027 / Vinyl & Digital`; no specific release day or pressing quantities are published.
+**RELEASES** opens the label catalogue at `/releases/`. SRC001 / DRIP uses abstract
+album artwork and shows `SPRING 2027` and `VINYL / DIGITAL`. The full album
+description, tracklist and credits are kept in the page markup for the album announcement.
 **MERCH** opens `/merch/`, with upcoming T-SHIRTS and CAPS credited to
 TROMSØ PURIST SHOP, linked to `https://www.instagram.com/tromso_purist_shop/`.
 The original supplied T-shirt and cap mockups are stored in `images/merch/`.
@@ -87,7 +86,7 @@ Pages use directory indexes, so direct links, refresh and bookmarks work without
 `releases/index.html`, `merch/index.html`, `sources/index.html` and
 `sources/flower/index.html`. `/experiments/`, `/experiment/` and `/gallery/`
 redirect to their current destinations. The homepage uses `/`; opening `/index.html` normalizes that URL.
-Page assets use root-relative URLs, and the file-preview builder embeds them.
+Page assets use root-relative URLs.
 
 GitHub Pages serves `404.html` for unavailable addresses, with a RETURN link to
 the homepage. Its assets use root-relative paths so nested missing URLs also
@@ -124,14 +123,19 @@ The 1200 × 630 PNG cards are in `images/share/`, using the original artwork and
 SRC mark. To regenerate them, run `python3 scripts/build_share_images.py` with
 Python Playwright and Chromium installed. No remote assets are fetched.
 
-`preview.html` embeds the homepage artwork, font, styles and scripts for file
-viewers that cannot load relative assets. Play streams the existing public track
-from GitHub. Rebuild it after homepage changes with `python3 scripts/build_preview.py`.
+For a single campaign, edit `index.html` in two places: the System Message
+block (artist, title and release date/status) and the head (title, description
+and social metadata). Set the campaign artwork on the image preload and both
+`.visual-container` fallback images, including their alt text and dimensions.
+At release, replace the date with `OUT NOW` and add a `LISTEN ↗` anchor with the
+verified destination inside `.home-campaign-status`. Use a 1200 × 630 social
+image made from the supplied single artwork. Advance the homepage sitemap date
+when the campaign goes live.
 
 Tabs and bookmarks use the white SRC mark on a dark background. `favicon.ico`
 contains 16, 32 and 48 px versions, with separate 32 and 192 px PNG icons and a
 180 px Apple touch icon. The 512 px master is `images/brand/src-icon-512.png`.
-Every page includes the icons; the file preview embeds them as data URLs.
+Every page includes the icons.
 
 Shared small-text sizes live in `site.css`: 10 px for compact metadata and
 11 px for small labels, including mobile. Body copy in product specifications

@@ -1,4 +1,4 @@
-/* Homepage desktop: the DRIP study becomes the wallpaper of a small Second Source system. */
+/* Homepage desktop: interactive artwork and floating SRC OS windows. */
 .home-desktop { min-height: 100dvh; background: #050505; }
 body.home-desktop.src-os {
     background:
@@ -91,8 +91,11 @@ body.home-desktop.src-os {
 .home-directory a:focus-visible { outline: 1px solid #dbe4f5; outline-offset: 6px; }
 .home-directory-icon { display: grid; place-items: center; width: 58px; height: 52px; border: 1px solid #758098; background: #182130; color: #d8deeb; font-size: 25px; line-height: 1; transition: background .2s, border-color .2s, color .2s; }
 .home-message-window { right: 14%; bottom: 11%; width: min(480px, 38vw); }
-.home-message-window p { margin: 0; padding: 25px 25px 16px; color: #bec5d1; font-size: 11px; line-height: 1.75; letter-spacing: .07em; }
-.home-message-window a { display: inline-flex; min-height: 44px; align-items: center; margin: 0 25px 12px; color: #94a9cd; font-size: 10px; letter-spacing: .11em; text-underline-offset: 4px; }
+.home-campaign { display: grid; gap: 6px; padding: 16px 24px; }
+.home-campaign-artist, .home-campaign-status { margin: 0; color: #bec5d1; font-size: 11px; line-height: 1.5; letter-spacing: .11em; }
+.home-campaign h2 { margin: 0; color: #e1e7f2; font-size: clamp(20px, 2.3vw, 32px); line-height: 1.2; }
+.home-campaign-status { display: flex; flex-wrap: wrap; align-items: center; gap: 0 16px; }
+.home-campaign a { display: inline-flex; min-height: 44px; align-items: center; color: #a8bcdd; text-underline-offset: 4px; }
 .home-desktop-hint { position: absolute; z-index: 4; left: 18px; bottom: 8px; margin: 0; color: #9aa2b0; font-size: 9px; letter-spacing: .14em; pointer-events: none; }
 .home-desktop .legal-footer { border-top: 0; }
 
@@ -169,20 +172,27 @@ body.home-desktop.src-os {
     .home-window { position: absolute; box-shadow: 5px 6px 0 rgb(0 0 0 / .28); }
     .home-window-titlebar { cursor: default; }
     .home-player-window { left: 3%; top: 16%; width: min(570px, calc(100% - 24px)); }
-    .home-directory-window,
-    .home-message-window { display: none; }
+    .home-directory-window { display: none; }
+    .home-message-window { right: 3%; bottom: 3%; width: min(360px, 94%); }
     .home-secondary-toggle:not([hidden]) { display: grid; }
     .home-player-window .compact-player { grid-template-columns: 130px minmax(0, 1fr); padding: 16px; }
     .home-player-art { width: 130px; height: 130px; }
     .home-directory { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 20px 12px; }
-    .home-message-window p { padding: 22px 20px 10px; }
-    .home-message-window a { margin-left: 20px; }
+    .home-campaign { padding: 10px 14px; }
     .home-desktop-hint { display: none; }
     .home-desktop > .legal-footer {
         flex: 0 0 43px; margin-bottom: 12px; padding: 0 12px;
         display: grid; place-items: center;
     }
     .home-desktop .copyright-policy { min-height: 0; padding-block: 7px; }
+}
+
+@media (max-width: 980px) and (max-height: 560px) {
+    .home-message-window { top: 0; bottom: auto; }
+    .home-message-window .home-window-titlebar { display: none; }
+    .home-campaign { grid-template-columns: minmax(0, 1fr) auto; gap: 3px 8px; padding: 4px 10px; }
+    .home-campaign h2 { font-size: 16px; }
+    .home-campaign-status { grid-column: 2; grid-row: 1 / 3; justify-content: end; gap: 0 8px; }
 }
 
 @media (max-width: 560px) {

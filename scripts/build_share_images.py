@@ -13,8 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 CARDS = [
     ('second-source', 'images/brand/src-icon-512.png', 'SECOND SOURCE', 'INDEPENDENT RECORD LABEL',
      'Music, images and audiovisual experiments.', 'Oslo, Norway'),
-    ('drip', 'images/drip_cover_front_2.webp', 'DRIP', 'MARTIN SOLLI / SRC001',
-     'Image / sound / interaction', 'SECOND SOURCE'),
+    ('drip', 'images/src001/inner_back_3.webp', 'DRIP', 'MARTIN SOLLI / SRC001',
+     'Spring 2027 / Vinyl & Digital', 'SECOND SOURCE'),
     ('flower', 'images/gallery/flower_4.webp', 'FLOWER', 'SOURCES / 01',
      'An image in fluid motion.', 'SECOND SOURCE'),
     ('merch', 'images/brand/src-icon-512.png', 'MERCH', 'SECOND SOURCE',
