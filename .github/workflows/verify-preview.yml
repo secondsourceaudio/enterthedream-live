@@ -33,7 +33,7 @@ jobs:
               page.evaluate("document.querySelector('audio').currentTime=62")
               page.mouse.move(0,1079)
               page.wait_for_function("document.querySelector('audio').currentTime>62.5 && [...document.querySelectorAll('.spectrum-band')].filter(e=>+e.style.getPropertyValue('--level')>.15).length>=7")
-              page.wait_for_load_state('networkidle')
+              assert page.evaluate('document.fonts.status') == 'loaded'
               geo=page.locator('.site-header,.home-window,.legal-footer').evaluate_all("els=>els.map(e=>[e.className,...['x','y','width','height'].map(k=>e.getBoundingClientRect()[k])])")
               print(geo,flush=True)
               assert len(geo)==5 and all(x>=-1 and y>=-1 and x+w<=1081 and y+h<=1081 for _,x,y,w,h in geo)
