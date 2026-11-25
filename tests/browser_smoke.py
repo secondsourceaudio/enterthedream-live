@@ -2196,7 +2196,7 @@ class WebsiteTests(unittest.TestCase):
                     link.click()
                     page.wait_for_url('**/about/')
                     expect(page.locator('h1')).to_have_text('ABOUT / CONTACT')
-                    expect(page.locator('.site-nav [aria-current="page"]')).to_have_text('ABOUT / CONTACT')
+                    expect(page.locator('.site-nav [aria-current="page"]')).to_have_accessible_name('ABOUT / CONTACT')
                     about = page.locator('.about-page')
                     expect(about.locator('.about-copy p').first).to_have_text(
                         'Second Source is an independent outlet for audio and visual experimentation, based in Oslo, Norway.')
@@ -2341,7 +2341,7 @@ class WebsiteTests(unittest.TestCase):
 
     def test_releases_navigation_shows_release_information(self):
         self.visit()
-        expect(self.page.locator('.site-nav a')).to_have_text(['RELEASES', 'SOURCES', 'MERCH', 'ABOUT / CONTACT', 'BANDCAMP'])
+        expect(self.page.locator('.site-nav a')).to_have_text(['RELEASES', 'SOURCES', 'MERCH', 'ABOUT / CONTACT', 'BANDCAMP'], use_inner_text=True)
         self.page.locator('.site-nav').get_by_role('link', name='RELEASES').click()
         self.page.wait_for_url('**/releases/')
         expect(self.page.locator('h1')).to_have_text('RELEASES')
@@ -2655,6 +2655,28 @@ class WebsiteTests(unittest.TestCase):
         finally:
             context.close()
 
+    def test_mobile_header_matches_home_on_all_pages(self):
+        for width in (320, 390, 844):
+            self.page.set_viewport_size({'width': width, 'height': 844})
+            baseline = None
+            for path in ('', 'releases/', 'sources/', 'merch/', 'about/', 'rights/', 'sources/flower/', '404.html'):
+                with self.subTest(width=width, path=path):
+                    self.page.goto(BASE_URL + '/' + path, wait_until='domcontentloaded')
+                    self.page.evaluate('document.fonts.ready')
+                    links = self.page.locator('.site-nav a:visible')
+                    expect(links).to_have_text(['RELEASES', 'SOURCES', 'MERCH', '?'], use_inner_text=True)
+                    expect(links.last).to_have_accessible_name('ABOUT / CONTACT')
+                    geometry = self.page.locator('.site-header, .site-logo, .site-nav a:visible').evaluate_all("""els => els.map(el => {
+                        const {x, y, width, height} = el.getBoundingClientRect();
+                        const css = getComputedStyle(el);
+                        return [x, y, width, height, css.padding, css.fontFamily, css.fontSize, css.letterSpacing];
+                    })""")
+                    if baseline is None:
+                        baseline = geometry
+                    self.assertEqual(geometry, baseline)
+                    for x, _, w, h, *_ in geometry[2:]:
+                        self.assertTrue(x >= 0 and x + w <= width and w >= 44 and h >= 44)
+
     def test_continuous_player_keeps_one_audio_session_and_respects_pause_and_close(self):
         serve_seekable_audio(self.page, "inner-passage.mp3")
         self.visit()
@@ -2761,8 +2783,8 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('meta[name="robots"]')).to_have_count(0)
         self.assertTrue(audio.evaluate('a => a === document.querySelector("audio") && !a.paused'))
 
-    def test_continuous_player_falls_back_to_a_real_page_when_soft_navigation_fails(self):
-        serve_seekable_audio(self.page)
+    def test_continuous_player_keeps_playing_when_soft_navigation_fails(self):
+        serve_seekable_audio(self.page, "inner-passage.mp3")
         self.visit()
         self.page.locator('[data-sound]').click()
         self.page.wait_for_function('window.SecondSourceExperience.soundAudible')
@@ -2774,10 +2796,11 @@ class WebsiteTests(unittest.TestCase):
                 route.continue_()
         self.page.route('**/merch/', respond)
         self.page.locator('.site-nav a[href="/merch/"]').click()
-        self.page.wait_for_url('**/merch/')
-        expect(self.page.get_by_role('heading', name='MERCH', exact=True)).to_be_visible()
-        self.assertFalse(self.page.evaluate('!!window.__persistentProof'))
-        expect(self.page.locator('audio')).to_have_count(0)
+        expect(self.page.locator('[data-status]')).to_contain_text('Page could not load')
+        self.assertTrue(self.page.evaluate('window.__persistentProof && !document.querySelector("audio").paused'))
+        self.page.unroute('**/merch/', respond)
+        self.page.locator('.site-nav a[href="/merch/"]').click()
+        expect(self.page.locator('[data-corner-player]')).to_be_visible()
 
     def test_continuous_player_fits_mobile_and_can_leave_fullscreen_from_index(self):
         serve_seekable_audio(self.page)

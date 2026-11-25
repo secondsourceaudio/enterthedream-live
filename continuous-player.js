@@ -4,7 +4,7 @@
  */
 (() => {
     'use strict';
-    if (!/^https?:$/.test(location.protocol) || location.pathname !== '/') return;
+    if (!/^https?:$/.test(location.protocol) || !['/', '/index.html'].includes(location.pathname)) return;
     const home = document.querySelector('main.landing-experiment');
     const space = home?.querySelector('[data-experience]');
     const audio = space?.querySelector('audio');
@@ -15,7 +15,7 @@
     const sound = player.querySelector('[data-sound]');
     const paths = new Set(['/', '/releases/', '/merch/', '/about/', '/rights/']);
     const metadataSelector = 'meta[name="description"], meta[name="robots"], meta[property^="og:"], meta[name^="twitter:"], link[rel="canonical"], script[type="application/ld+json"]';
-    const normalPath = path => path === '/index.html' ? '/' : path;
+    const normalPath = path => path.replace(/\/index\.html$/, '/').replace(/\/?$/, '/');
     const views = new Map();
     const styles = new Map([...document.querySelectorAll('link[rel="stylesheet"]')].map(link => [link.href, Promise.resolve()]));
     let enabled = false;
@@ -114,7 +114,7 @@
     async function getView(url, signal) {
         const path = normalPath(url.pathname);
         if (views.has(path)) return views.get(path);
-        const response = await fetch(url.href, {signal});
+        const response = await fetch(path, {signal});
         if (!response.ok) throw new Error('Page unavailable');
         const doc = new DOMParser().parseFromString(await response.text(), 'text/html');
         const main = doc.querySelector('main');
@@ -176,11 +176,14 @@
             if (request !== sequence) return;
             const path = normalPath(url.pathname);
             mount(view, path);
-            if (!pop) history.pushState({srcSession: true, srcScroll: 0}, '', path);
+            if (!pop) history.pushState({srcSession: true, srcScroll: 0}, '', path + url.search);
             window.scrollTo(0, pop ? scroll : 0);
             view.main.focus({preventScroll: true});
         } catch (error) {
-            if (error.name !== 'AbortError' && request === sequence) location.assign(url.href);
+            if (error.name !== 'AbortError' && request === sequence) {
+                if (audio.paused) location.assign(url.href);
+                else space.querySelector('[data-status]').textContent = 'Page could not load. Select the link again.';
+            }
         } finally {
             if (request === sequence) {
                 document.body.classList.remove('src-route-loading');
@@ -188,31 +191,35 @@
             }
         }
     }
-    audio.addEventListener('play', () => {
+    function enableSession() {
         if (!enabled) {
             enabled = true;
             history.replaceState({...history.state, srcSession: true, srcScroll: scrollY}, '');
             history.scrollRestoration = 'manual';
         }
+    }
+    audio.addEventListener('play', () => {
+        enableSession();
         dismissed = false;
         updateMini();
     });
     for (const event of ['pause', 'playing', 'loadedmetadata', 'error']) audio.addEventListener(event, updateMini);
     new MutationObserver(updateMini).observe(sound, {attributes: true, attributeFilter: ['disabled', 'aria-label']});
-    document.addEventListener('click', event => {
-        if (!enabled || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+    window.addEventListener('click', event => {
+        if ((!enabled && audio.paused) || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
         const link = event.target.closest('a[href]');
         if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
         const url = new URL(link.href, location.href);
-        if (url.origin !== location.origin || url.search || url.hash || !paths.has(normalPath(url.pathname))) return;
-        if (normalPath(url.pathname) === current) return;
+        if (url.origin !== location.origin || url.hash || !paths.has(normalPath(url.pathname))) return;
         event.preventDefault();
+        enableSession();
+        if (normalPath(url.pathname) === current && url.search === location.search) return;
         navigate(url);
     }, true);
     window.addEventListener('popstate', event => {
         if (!enabled) return;
         const url = new URL(location.href);
-        if (!event.state?.srcSession || url.search || url.hash || !paths.has(normalPath(url.pathname))) {
+        if (!event.state?.srcSession || url.hash || !paths.has(normalPath(url.pathname))) {
             location.reload();
             return;
         }
