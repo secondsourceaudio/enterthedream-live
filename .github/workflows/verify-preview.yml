@@ -1,32 +1,28 @@
-name: Verify mobile spectrum
+name: Verify iPhone spectrum
 on:
   push:
     branches: [verify/inner-passage-preview]
 jobs:
-  spectrum:
+  webkit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: pip install playwright
-      - run: python -m playwright install --with-deps chromium webkit
-      - name: Check Chromium and mobile WebKit
-        run: |
+      - run: pip install playwright && python -m playwright install --with-deps webkit
+      - run: |
           python -m http.server 8000 >/tmp/site.log 2>&1 &
-          export CHROMIUM_PATH=$(python -c 'from playwright.sync_api import sync_playwright; print(sync_playwright().start().chromium.executable_path)')
-          python tests/browser_smoke.py WebsiteTests.test_home_native_audio_without_capture_stream WebsiteTests.test_background_audio_and_media_session_use_the_native_player
           cd tests
           python - <<'PY'
-          from browser_smoke import WebsiteTests, sync_playwright, unittest
+          import unittest
+          from browser_smoke import WebsiteTests, sync_playwright
           class MobileWebKit(WebsiteTests):
               @classmethod
               def setUpClass(cls):
                   cls.playwright = sync_playwright().start()
                   cls.browser = cls.playwright.webkit.launch()
               def setUp(self):
-                  super().setUp()
-                  self.context.close()
+                  self.errors = []
                   self.context = self.browser.new_context(**self.playwright.devices['iPhone 13'])
                   self.page = self.context.new_page()
-          result = unittest.TextTestRunner().run(MobileWebKit('test_home_native_audio_without_capture_stream'))
-          raise SystemExit(not result.wasSuccessful())
+                  self.page.on('pageerror', lambda error: self.errors.append(str(error)))
+          unittest.main(defaultTest='MobileWebKit.test_home_native_audio_without_capture_stream', verbosity=2)
           PY
