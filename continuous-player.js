@@ -11,6 +11,7 @@
     const player = space?.querySelector('.compact-player');
     if (!audio || !player || audio.hasAttribute('data-audio-offline')) return;
     const playerSlot = player.parentElement;
+    const nextHomeControl = player.nextElementSibling;
     const sound = player.querySelector('[data-sound]');
     const paths = new Set(['/', '/releases/', '/merch/', '/about/', '/rights/']);
     const metadataSelector = 'meta[name="description"], meta[name="robots"], meta[property^="og:"], meta[name^="twitter:"], link[rel="canonical"], script[type="application/ld+json"]';
@@ -131,7 +132,7 @@
         for (const dialog of home.querySelectorAll('dialog[open]')) dialog.close();
         window.dispatchEvent(new Event('src:beforepagechange'));
         collapse();
-        if (path === '/') playerSlot.append(player);
+        if (path === '/') playerSlot.insertBefore(player, nextHomeControl);
         else detail.append(player);
         const oldMain = views.get(current).main;
         oldMain?.removeAttribute('aria-busy');
