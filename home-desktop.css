@@ -128,42 +128,6 @@ body.home-desktop.src-os {
     body.home-desktop { height: 100dvh; overflow: hidden; }
     .home-desktop .site-header,
     .home-desktop .landing-experiment { width: calc(100% - 24px); }
-    body.home-desktop.src-os .site-header {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr);
-        flex: 0 0 auto;
-        margin-top: 12px;
-        padding: 4px 8px 0;
-        row-gap: 0;
-    }
-    body.home-desktop.src-os .site-logo {
-        grid-column: 1;
-        justify-self: start;
-        width: auto;
-        min-height: 36px;
-        margin: 0;
-        padding-left: 4px;
-        justify-content: flex-start;
-    }
-    body.home-desktop.src-os .site-nav {
-        grid-column: 1 / -1;
-        position: static;
-        width: 100%;
-        margin: 0;
-        padding: 0 4px;
-        display: grid;
-        grid-template-columns: repeat(5, max-content);
-        justify-content: space-between;
-        gap: 0;
-        overflow: visible;
-        transform: none;
-    }
-    body.home-desktop.src-os .site-nav a {
-        min-width: 0;
-        min-height: 44px;
-        justify-content: center;
-        text-align: center;
-    }
     .home-desktop .landing-experiment { flex: 1; height: auto; min-height: 0; margin-bottom: 0; overflow: hidden; }
     .home-desktop .listening-space { position: absolute; inset: 0; display: block; width: auto; height: auto; padding: 0; gap: 0; overflow: hidden; }
     .home-desktop .visual-container { position: absolute; inset: 0; width: 100%; max-width: none; height: 100%; margin: 0; aspect-ratio: auto; }
@@ -190,7 +154,6 @@ body.home-desktop.src-os {
 
 @media (max-width: 560px) {
     .home-desktop .landing-experiment { width: 100%; border-inline: 0; }
-    body.home-desktop.src-os .site-nav { grid-template-columns: repeat(4, max-content); padding: 0 5px; }
     .home-menu-clock { display: none; }
     .home-desktop .listening-space { --home-window-scale: calc((100vw - 24px) / 570px); }
     .home-player-window {

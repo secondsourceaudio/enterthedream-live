@@ -314,6 +314,26 @@ body.src-os {
     .src-os .site-header,
     .src-os > main,
     .src-os > .legal-footer { width: min(100% - 24px, 760px); }
+    body.src-os .site-header {
+        flex: 0 0 auto;
+        grid-template-rows: 36px 44px;
+        margin-top: 12px;
+        padding: 4px 8px 0;
+    }
+    body.src-os .site-logo { min-height: 36px; margin: 0; padding-left: 4px; }
+    body.src-os .site-nav {
+        display: grid;
+        grid-template-columns: repeat(4, max-content);
+        justify-content: space-between;
+        width: 100%;
+        margin: 0;
+        padding: 0 5px;
+        gap: 0;
+    }
+    body.src-os .site-nav a { min-width: 44px; min-height: 44px; }
+    .src-os .site-nav a[href^="https://secondsource.bandcamp.com"],
+    .nav-about-label { display: none; }
+    .nav-about-short[hidden] { display: inline; }
     .src-os > .legal-footer { margin-bottom: 12px; }
 }
 
