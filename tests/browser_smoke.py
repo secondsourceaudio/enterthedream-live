@@ -951,6 +951,7 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator('[data-fluid-reset]')).to_be_disabled()
 
     def test_mobile_artwork_context_loss_and_restore(self):
+        serve_seekable_audio(self.page, "inner-passage.mp3")
         self.page.set_viewport_size({'width': 390, 'height': 844})
         self.visit()
         canvas = self.page.locator('#visual')
@@ -2417,6 +2418,7 @@ class WebsiteTests(unittest.TestCase):
                             self.assertLessEqual(box["x"] + box["width"], width)
 
     def test_home_mobile_shows_campaign_without_opening_player_controls(self):
+        serve_seekable_audio(self.page, "inner-passage.mp3")
         for width in [320, 390, 768]:
             with self.subTest(width=width):
                 self.page.set_viewport_size({"width": width, "height": 844})
@@ -2531,6 +2533,7 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator("html")).to_have_attribute("data-motion", "off")
 
     def test_webgl_unavailable_keeps_artwork_and_information(self):
+        serve_seekable_audio(self.page, "inner-passage.mp3")
         self.context.add_init_script("""
         const original = HTMLCanvasElement.prototype.getContext;
         HTMLCanvasElement.prototype.getContext = function(type, ...args) {
