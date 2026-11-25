@@ -2341,7 +2341,7 @@ class WebsiteTests(unittest.TestCase):
 
     def test_releases_navigation_shows_release_information(self):
         self.visit()
-        expect(self.page.locator('.site-nav a')).to_have_text(['RELEASES', 'SOURCES', 'MERCH', 'ABOUT / CONTACT', 'BANDCAMP'], use_inner_text=True)
+        expect(self.page.locator('.site-nav a')).to_have_text(['HOME', 'RELEASES', 'SOURCES', 'MERCH', '?', 'BANDCAMP'], use_inner_text=True)
         self.page.locator('.site-nav').get_by_role('link', name='RELEASES').click()
         self.page.wait_for_url('**/releases/')
         expect(self.page.locator('h1')).to_have_text('RELEASES')
@@ -2664,7 +2664,7 @@ class WebsiteTests(unittest.TestCase):
                     self.page.goto(BASE_URL + '/' + path, wait_until='domcontentloaded')
                     self.page.evaluate('document.fonts.ready')
                     links = self.page.locator('.site-nav a:visible')
-                    expect(links).to_have_text(['RELEASES', 'SOURCES', 'MERCH', '?'], use_inner_text=True)
+                    expect(links).to_have_text(['HOME', 'RELEASES', 'SOURCES', 'MERCH', '?'], use_inner_text=True)
                     expect(links.last).to_have_accessible_name('ABOUT / CONTACT')
                     geometry = self.page.locator('.site-header, .site-logo, .site-nav a:visible').evaluate_all("""els => els.map(el => {
                         const {x, y, width, height} = el.getBoundingClientRect();
