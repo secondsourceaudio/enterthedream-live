@@ -224,7 +224,7 @@ class WebsiteTests(unittest.TestCase):
                     self.assertGreater(audio.evaluate('a => a.duration'), 372)
                     expect(page.locator('.player-catalogue')).to_have_text('PRE-RELEASE')
                     expect(page.locator('.home-campaign time')).to_have_attribute('datetime', '2026-11-25')
-                    expect(page.locator('#home-campaign-title')).to_have_text('SRC.1 ONLINE')
+                    expect(page.locator('#home-campaign-title')).to_have_text('SRC ONLINE')
                     seek = page.locator('[data-seek]')
                     seek.fill('45')
                     page.wait_for_function("Math.abs(document.querySelector('audio').currentTime - 45) < 1")
@@ -270,7 +270,8 @@ class WebsiteTests(unittest.TestCase):
                     self.assertEqual(style, reference)
 
     def test_home_native_audio_without_capture_stream(self):
-        serve_seekable_audio(self.page)
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        serve_seekable_audio(self.page, "inner-passage.mp3")
         self.context.add_init_script("""(() => {
             Object.defineProperty(HTMLMediaElement.prototype, 'captureStream', {
                 configurable: true, value: undefined
@@ -290,6 +291,15 @@ class WebsiteTests(unittest.TestCase):
         self.assertFalse(self.page.locator('audio').evaluate('audio => audio.paused'))
         self.assertEqual(self.page.evaluate('window.__audioContextsCreated'), 0)
         self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundAudible'))
+        meter = self.page.locator('[data-spectrum]')
+        expect(meter).to_be_visible()
+        levels = "[...document.querySelectorAll('[data-spectrum] .spectrum-band')].map(b => +b.style.getPropertyValue('--level'))"
+        self.page.wait_for_function(f"() => ({levels}).some(v => v > .05)")
+        self.page.locator('audio').evaluate('audio => { audio.currentTime = 120; }')
+        before = self.page.evaluate(levels)
+        self.page.wait_for_function(f"before => ( {levels} ).some((v, i) => Math.abs(v - before[i]) > .05)", arg=before)
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function(f"() => ({levels}).every(v => v === 0)")
 
     def test_background_audio_and_media_session_use_the_native_player(self):
         serve_seekable_audio(self.page, "inner-passage.mp3")
@@ -2341,7 +2351,7 @@ class WebsiteTests(unittest.TestCase):
 
     def test_releases_navigation_shows_release_information(self):
         self.visit()
-        expect(self.page.locator('.site-nav a')).to_have_text(['HOME', 'RELEASES', 'SOURCES', 'MERCH', '?', 'BANDCAMP'], use_inner_text=True)
+        expect(self.page.locator('.site-nav a:visible')).to_have_text(['HOME', 'RELEASES', 'MERCH', '?', 'BANDCAMP'], use_inner_text=True)
         self.page.locator('.site-nav').get_by_role('link', name='RELEASES').click()
         self.page.wait_for_url('**/releases/')
         expect(self.page.locator('h1')).to_have_text('RELEASES')
@@ -2453,7 +2463,7 @@ class WebsiteTests(unittest.TestCase):
                 title = self.page.locator('#home-campaign-title')
                 expect(title).to_be_visible()
                 self.assertTrue(title.inner_text().strip())
-                expect(self.page.locator('.home-campaign')).to_have_text('SRC.1 ONLINE 25.11.26 / V1.0')
+                expect(self.page.locator('.home-campaign')).to_have_text('SRC ONLINE 25.11.26 / v1.0')
                 self.assertGreaterEqual(campaign['y'], player['bottom'])
                 self.assertLessEqual(campaign['bottom'], layout['stage']['bottom'])
                 toggle = self.page.locator('[data-home-secondary-toggle]')
@@ -2664,7 +2674,7 @@ class WebsiteTests(unittest.TestCase):
                     self.page.goto(BASE_URL + '/' + path, wait_until='domcontentloaded')
                     self.page.evaluate('document.fonts.ready')
                     links = self.page.locator('.site-nav a:visible')
-                    expect(links).to_have_text(['HOME', 'RELEASES', 'SOURCES', 'MERCH', '?'], use_inner_text=True)
+                    expect(links).to_have_text(['HOME', 'RELEASES', 'MERCH', '?'], use_inner_text=True)
                     expect(links.last).to_have_accessible_name('ABOUT / CONTACT')
                     geometry = self.page.locator('.site-header, .site-logo, .site-nav a:visible').evaluate_all("""els => els.map(el => {
                         const {x, y, width, height} = el.getBoundingClientRect();
@@ -2858,8 +2868,7 @@ class WebsiteTests(unittest.TestCase):
     def test_public_sources_navigation_and_old_room_links_do_not_autoplay(self):
         requests=[]
         self.page.on('request',lambda request: requests.append(request.url) if '/audio/' in request.url else None)
-        self.visit()
-        self.page.locator('.site-nav').get_by_role('link',name='SOURCES',exact=True).click()
+        self.visit('sources/')
         self.page.wait_for_url('**/sources/')
         expect(self.page.locator('h1')).to_have_text('SOURCES')
         expect(self.page.locator('meta[name="robots"]')).to_have_count(0)

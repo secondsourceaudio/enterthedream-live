@@ -85,7 +85,7 @@ body.home-desktop.src-os {
 .home-player-window .experience-tools { min-height: 0; }
 .home-player-window .experience-tools-status { min-height: 0; }
 .home-directory-window { right: 7%; top: 9%; width: min(440px, 34vw); }
-.home-directory { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; padding: 28px; }
+.home-directory { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; padding: 28px; }
 .home-directory a { display: flex; flex-direction: column; align-items: center; gap: 9px; color: #cdd4df; font-size: 10px; letter-spacing: .1em; text-decoration: none; }
 .home-directory a:hover .home-directory-icon { color: #fff; border-color: #aebbd2; background: #202c40; }
 .home-directory a:focus-visible { outline: 1px solid #dbe4f5; outline-offset: 6px; }
@@ -93,7 +93,7 @@ body.home-desktop.src-os {
 .home-message-window { right: 14%; bottom: 11%; width: min(480px, 38vw); }
 .home-campaign { display: grid; gap: 6px; padding: 16px 24px; }
 .home-campaign-artist, .home-campaign-status { margin: 0; color: #bec5d1; font-size: 11px; line-height: 1.5; letter-spacing: .11em; }
-.home-campaign h2 { margin: 0; color: #e1e7f2; font-size: clamp(20px, 2.3vw, 32px); line-height: 1.2; }
+.home-campaign h2 { margin: 0; color: #e1e7f2; font-size: clamp(16px, 1.84vw, 25.6px); line-height: 1.2; }
 .home-campaign-status { display: flex; flex-wrap: wrap; align-items: center; gap: 0 16px; }
 .home-campaign a { display: inline-flex; min-height: 44px; align-items: center; color: #a8bcdd; text-underline-offset: 4px; }
 .home-desktop-hint { position: absolute; z-index: 4; left: 18px; bottom: 8px; margin: 0; color: #9aa2b0; font-size: 9px; letter-spacing: .14em; pointer-events: none; }
@@ -139,7 +139,7 @@ body.home-desktop.src-os {
     .home-secondary-toggle:not([hidden]) { display: grid; }
     .home-player-window .compact-player { grid-template-columns: 130px minmax(0, 1fr); padding: 16px; }
     .home-player-art { width: 130px; height: 130px; }
-    .home-directory { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 20px 12px; }
+    .home-directory { padding: 20px 12px; }
     .home-campaign { padding: 10px 14px; }
     .home-desktop-hint { display: none; }
 }
@@ -148,7 +148,7 @@ body.home-desktop.src-os {
     .home-message-window { top: 0; bottom: auto; }
     .home-message-window .home-window-titlebar { display: none; }
     .home-campaign { grid-template-columns: minmax(0, 1fr) auto; gap: 3px 8px; padding: 4px 10px; }
-    .home-campaign h2 { font-size: 16px; }
+    .home-campaign h2 { font-size: 12.8px; }
     .home-campaign-status { grid-column: 2; grid-row: 1 / 3; justify-content: end; gap: 0 8px; }
 }
 

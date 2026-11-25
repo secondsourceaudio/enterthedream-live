@@ -1,59 +1,32 @@
-name: Capture square homepage
-on: [push]
-permissions:
-  contents: read
+name: Verify mobile spectrum
+on:
+  push:
+    branches: [verify/inner-passage-preview]
 jobs:
-  screenshot:
+  spectrum:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: pip install playwright pillow
-      - run: python -m playwright install --with-deps chromium
-      - run: |
-          cat >/tmp/serve.go <<'GO'
-          package main
-          import "net/http"
-          func main(){ panic(http.ListenAndServe("127.0.0.1:8099",http.FileServer(http.Dir(".")))) }
-          GO
-          go build -o /tmp/slide-server /tmp/serve.go
-          /tmp/slide-server &
+      - run: pip install playwright
+      - run: python -m playwright install --with-deps chromium webkit
+      - name: Check Chromium and mobile WebKit
+        run: |
+          python -m http.server 8000 >/tmp/site.log 2>&1 &
+          export CHROMIUM_PATH=$(python -c 'from playwright.sync_api import sync_playwright; print(sync_playwright().start().chromium.executable_path)')
+          python tests/browser_smoke.py WebsiteTests.test_home_native_audio_without_capture_stream WebsiteTests.test_background_audio_and_media_session_use_the_native_player
+          cd tests
           python - <<'PY'
-          from playwright.sync_api import sync_playwright, expect
-          from PIL import Image
-          import re
-          with sync_playwright() as p:
-              browser=p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader'])
-              page=browser.new_page(viewport={'width':2160,'height':2160},device_scale_factor=1)
-              page.goto('http://127.0.0.1:8099/')
-              page.evaluate('document.fonts.ready')
-              nav=page.get_by_role('navigation',name='Main navigation')
-              link=nav.get_by_role('link',name='ABOUT / CONTACT',exact=True)
-              home=nav.get_by_role('link',name='HOME',exact=True)
-              expect(home).to_have_attribute('aria-current','page')
-              expect(home).to_have_attribute('href','/')
-              expect(page.locator('.site-logo')).to_have_attribute('href','/')
-              expect(link).to_have_attribute('href','/about/')
-              expect(link).to_have_text('?',use_inner_text=True)
-              expect(nav.locator('a:visible')).to_have_text(['HOME','RELEASES','SOURCES','MERCH','?','BANDCAMP'],use_inner_text=True)
-              expect(page.locator('#visual')).to_have_class(re.compile('is-ready'))
-              expect(page.locator('[data-duration]')).to_have_text('6:13')
-              boxes=page.locator('.site-header, [data-home-window], .legal-footer')
-              assert boxes.count()==5
-              for el in boxes.all():
-                  expect(el).to_be_visible()
-                  b=el.bounding_box()
-                  assert 0<=b['x'] and b['x']+b['width']<=2160 and 0<=b['y'] and b['y']+b['height']<=2160,b
-              page.screenshot(path='/tmp/home.png')
-              with Image.open('/tmp/home.png') as im:
-                  assert im.size==(2160,2160)
-                  im.resize((1080,1080),Image.Resampling.LANCZOS).save('Second-Source-Slide-2.png')
-              link.click()
-              expect(page).to_have_url('http://127.0.0.1:8099/about/', timeout=30000)
+          from browser_smoke import WebsiteTests, sync_playwright, unittest
+          class MobileWebKit(WebsiteTests):
+              @classmethod
+              def setUpClass(cls):
+                  cls.playwright = sync_playwright().start()
+                  cls.browser = cls.playwright.webkit.launch()
+              def setUp(self):
+                  super().setUp()
+                  self.context.close()
+                  self.context = self.browser.new_context(**self.playwright.devices['iPhone 13'])
+                  self.page = self.context.new_page()
+          result = unittest.TextTestRunner().run(MobileWebKit('test_home_native_audio_without_capture_stream'))
+          raise SystemExit(not result.wasSuccessful())
           PY
-          export SITE_BASE_URL=http://127.0.0.1:8099
-          export CHROMIUM_PATH=$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path)')
-          python tests/browser_smoke.py WebsiteTests.test_mobile_header_matches_home_on_all_pages
-      - uses: actions/upload-artifact@v4
-        with:
-          name: instagram-slide-2
-          path: Second-Source-Slide-2.png
