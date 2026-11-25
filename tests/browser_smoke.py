@@ -270,7 +270,8 @@ class WebsiteTests(unittest.TestCase):
                     self.assertEqual(style, reference)
 
     def test_home_native_audio_without_capture_stream(self):
-        serve_seekable_audio(self.page)
+        self.page.set_viewport_size({"width": 390, "height": 844})
+        serve_seekable_audio(self.page, "inner-passage.mp3")
         self.context.add_init_script("""(() => {
             Object.defineProperty(HTMLMediaElement.prototype, 'captureStream', {
                 configurable: true, value: undefined
@@ -290,6 +291,15 @@ class WebsiteTests(unittest.TestCase):
         self.assertFalse(self.page.locator('audio').evaluate('audio => audio.paused'))
         self.assertEqual(self.page.evaluate('window.__audioContextsCreated'), 0)
         self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundAudible'))
+        meter = self.page.locator('[data-spectrum]')
+        expect(meter).to_be_visible()
+        levels = "[...document.querySelectorAll('[data-spectrum] .spectrum-band')].map(b => +b.style.getPropertyValue('--level'))"
+        self.page.wait_for_function(f"() => ({levels}).some(v => v > .05)")
+        self.page.locator('audio').evaluate('audio => { audio.currentTime = 120; }')
+        before = self.page.evaluate(levels)
+        self.page.wait_for_function(f"before => ( {levels} ).some((v, i) => Math.abs(v - before[i]) > .05)", arg=before)
+        self.page.locator('[data-sound]').click()
+        self.page.wait_for_function(f"() => ({levels}).every(v => v === 0)")
 
     def test_background_audio_and_media_session_use_the_native_player(self):
         serve_seekable_audio(self.page, "inner-passage.mp3")

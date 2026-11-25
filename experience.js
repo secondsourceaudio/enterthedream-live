@@ -80,6 +80,8 @@
     let rejectPlayback = null;
     const inertElements = new Map();
     const spectrumBands = [];
+    let recordedSpectrum = null;
+    let loadingSpectrum = false;
     let spectrumFrame = 0;
     let spectrumPaintTime = null;
     let spectrumVisible = true;
@@ -126,6 +128,15 @@
         connectAudio();
         if (context?.state === 'suspended') {
             try { await context.resume(); } catch { /* Native playback remains available. */ }
+        }
+        if (context?.state !== 'running' && spectrumElement?.dataset.spectrum &&
+            !recordedSpectrum && !loadingSpectrum) {
+            loadingSpectrum = true;
+            try {
+                const response = await fetch(spectrumElement.dataset.spectrum);
+                if (response.ok) recordedSpectrum = new Uint8Array(await response.arrayBuffer());
+            } catch { /* Later playback can retry the meter data. */ }
+            finally { loadingSpectrum = false; }
         }
         reconcileSpectrum();
     }
@@ -248,7 +259,7 @@
         }
     }
     function spectrumAllowed() {
-        return !!spectrumElement && !!analyser && context?.state === 'running' &&
+        return !!spectrumElement && (context?.state === 'running' || recordedSpectrum?.length) &&
             motionEnabled && spectrumVisible && !document.hidden && soundAudible();
     }
     function paintSpectrum(now) {
@@ -259,6 +270,8 @@
             spectrumPaintTime = now;
             const analysis = sampleAudio();
             const binWidth = analyser ? context.sampleRate / analyser.fftSize : 1;
+            // The recording stores 20 log-frequency bands every 100 ms, in dB + 100.
+            const frameOffset = Math.floor(audio.currentTime * 10) * spectrumBands.length;
             for (let index = 0; index < spectrumBands.length; index++) {
                 const band = spectrumBands[index];
                 let power = 0, count = 0;
@@ -269,7 +282,10 @@
                     const last = Math.min(spectrum.length - 1, Math.max(first, Math.ceil(high / binWidth) - 1));
                     for (let bin = first; bin <= last; bin++) { power += Math.pow(10, spectrum[bin] / 10); count++; }
                 }
-                const db = power > 0 ? 10 * Math.log10(power / Math.max(1, count)) + 20 * Math.log10(volume / .35) : -100;
+                const bandDb = analysis.active
+                    ? (power > 0 ? 10 * Math.log10(power / count) : -100)
+                    : (recordedSpectrum?.[frameOffset + index] ?? 0) - 100;
+                const db = bandDb + 20 * Math.log10(volume / .35);
                 const target = Math.max(0, Math.min(.98, (db + 70) / 60));
                 band.level += (target - band.level) * (1 - Math.exp(-dt / (target > band.level ? .025 : .12)));
                 if (band.level >= band.peak) { band.peak = band.level; band.hold = .18; }
