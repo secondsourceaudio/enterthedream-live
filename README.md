@@ -8,7 +8,7 @@ GitHub Pages and needs no build step or production dependencies.
 `/sources/` is the public listening section, linked as SOURCES in the main
 navigation and included in the sitemap. `/room/` redirects here, preserving query
 parameters and fragments. Its playlist currently pairs Ambient Tape 1
-with the dusk skyline. Sage Counsel remains on the homepage only. Tracks
+with the dusk skyline. The homepage player carries the current single. Tracks
 have default scenes, but the independent SOURCE 1 / DUSK and SOURCE 2 / NIGHT controls
 preserve the current music, playback position and paused state. There is no
 local-file picker.
@@ -129,14 +129,12 @@ Keep the homepage document title as `Second Source — Audio & Visual`.
 Update the image preload, both visual-panel images and the player image
 together. The player also supplies the title, artist and artwork for Media Session.
 
-Keep unreleased audio out of the public repository. In a local checkout, use
-the release master to test adding an MP3 `source` to `#experience-audio` and
-removing `data-audio-offline`. The published teaser has no source. At the
-official release, publish the MP3 and those HTML changes together. Leave
-autoplay and looping off. Replace the date with `OUT NOW` and add an anchor
-labelled `LISTEN ↗` within `.home-campaign-status` once a verified listening
-destination is available. Update the description, Open Graph and Twitter
-metadata and advance the home sitemap date.
+The exclusive preview plays the complete single from `/audio/inner-passage.mp3`
+after the listener presses Play. Keep the compressed MP3 on the site after
+release. For 27 November, change the fixed `PRE-RELEASE` label in the player
+and the dated campaign message to the release status. Add the verified
+distribution links to `.home-campaign-status`, then update the descriptions
+and the home sitemap date. Playback works independently of those links.
 
 The homepage uses `images/share/inner-passage.jpg`, a 1200 × 630 crop of
 the campaign artwork. For a future campaign, update both social image tags
