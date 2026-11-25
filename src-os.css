@@ -47,6 +47,12 @@ body.src-os {
     transform: translateX(-50%);
     flex-wrap: nowrap;
 }
+@media (min-width: 981px) {
+    /* Keep the desktop link footprint so the other navigation items stay aligned. */
+    .nav-about-label { visibility: hidden; }
+    .nav-about-short[hidden] { position: absolute; inset: 0; display: grid; place-items: center; }
+}
+
 .src-os-window-button {
     display: grid;
     place-items: center;

@@ -1,66 +1,46 @@
-name: Verify continuous playback
+name: Capture square homepage
 on: [push]
 permissions:
   contents: read
 jobs:
-  mobile-webkit:
+  screenshot:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+      - run: pip install playwright pillow
+      - run: python -m playwright install --with-deps chromium
       - run: |
-          python3 -m venv /tmp/pw
-          /tmp/pw/bin/pip install playwright pillow
-          /tmp/pw/bin/python -m playwright install --with-deps webkit
-      - run: |
-          python3 -m http.server 8099 --bind 127.0.0.1 &
-          /tmp/pw/bin/python - <<'PY'
+          python -m http.server 8099 --bind 127.0.0.1 >/tmp/http.log 2>&1 &
+          python - <<'PY'
           from playwright.sync_api import sync_playwright, expect
           from PIL import Image
-          from io import BytesIO
+          import re
           with sync_playwright() as p:
-              browser=p.webkit.launch()
-              page=browser.new_page(**p.devices['iPhone 13'])
-              page.goto('http://127.0.0.1:8099/index.html?utm_source=instagram&fbclid=test')
-              canvas=page.locator('#visual')
-              expect(canvas).to_have_class(__import__('re').compile('is-ready'),timeout=20000)
-              for _ in range(10):
-                  shot=Image.open(BytesIO(page.locator('#visual-container').screenshot())).convert('RGB')
-                  if max(shot.crop((0,0,shot.width,shot.height//8)).convert('L').getextrema()) > 10:
-                      break
-              else:
-                  raise AssertionError('Artwork remained dark across ten captures')
-              audio=page.locator('audio')
-              assert audio.count()==1 and audio.evaluate('a=>a.paused && !a.autoplay')
-              page.locator('[data-sound]').tap()
-              page.wait_for_function("document.querySelector('audio').currentTime > .5")
-              art=page.evaluate("navigator.mediaSession.metadata.artwork[0]")
-              assert art['sizes']=='512x512' and art['type']=='image/jpeg'
-              assert art['src']=='http://127.0.0.1:8099/images/share/inner-passage-512.jpg'
-              image=Image.open(BytesIO(page.request.get(art['src']).body()))
-              assert image.format=='JPEG' and image.size==(512,512)
-              page.evaluate("window.track = document.querySelector('audio'); window.pauses = 0; track.onpause = () => pauses++; window.meta = navigator.mediaSession.metadata")
-              docs=[]
-              page.on('request', lambda r: docs.append(r.url) if r.is_navigation_request() else None)
-              link=page.get_by_role('navigation',name='Main navigation').get_by_role('link',name='RELEASES',exact=True)
-              link.evaluate("a => a.setAttribute('href','/releases?fbclid=test')")
-              link.tap()
-              page.wait_for_url('**/releases/?fbclid=test')
-              assert not docs, docs
-              expect(page.locator('[data-corner-player]')).to_be_visible()
-              expect(page.locator('.release-cover')).to_have_attribute('src','/images/src001/inner_front.webp')
-              for tag in ['meta[property="og:image"]','meta[name="twitter:image"]']:
-                  assert page.locator(tag).get_attribute('content').endswith('/inner_front.webp')
-              page.go_back()
-              expect(canvas).to_be_visible()
-              page.go_forward()
-              expect(page.locator('[data-corner-player]')).to_be_visible()
-              page.locator('.site-logo').tap()
-              expect(canvas).to_be_visible()
-              assert page.evaluate("track === document.querySelector('audio') && !track.paused && !pauses && navigator.mediaSession.metadata === meta")
-              page.locator('.site-nav a[href="/sources/"]').tap()
-              page.wait_for_url('**/sources/')
-              assert page.locator('[data-corner-player]').count() == 0
-              assert page.locator('audio').evaluate('a=>a.paused && !a.currentSrc')
-              browser.close()
+              browser=p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader'])
+              page=browser.new_page(viewport={'width':2160,'height':2160},device_scale_factor=1)
+              page.goto('http://127.0.0.1:8099/')
+              page.evaluate('document.fonts.ready')
+              nav=page.get_by_role('navigation',name='Main navigation')
+              link=nav.get_by_role('link',name='ABOUT / CONTACT',exact=True)
+              expect(link).to_have_attribute('href','/about/')
+              expect(link).to_have_text('?',use_inner_text=True)
+              expect(nav.locator('a:visible')).to_have_text(['RELEASES','SOURCES','MERCH','?','BANDCAMP'],use_inner_text=True)
+              expect(page.locator('#visual')).to_have_class(re.compile('is-ready'))
+              expect(page.locator('[data-duration]')).to_have_text('6:13')
+              boxes=page.locator('.site-header, [data-home-window], .legal-footer')
+              assert boxes.count()==5
+              for el in boxes.all():
+                  expect(el).to_be_visible()
+                  b=el.bounding_box()
+                  assert 0<=b['x'] and b['x']+b['width']<=2160 and 0<=b['y'] and b['y']+b['height']<=2160,b
+              page.screenshot(path='/tmp/home.png')
+              with Image.open('/tmp/home.png') as im:
+                  assert im.size==(2160,2160)
+                  im.resize((1080,1080),Image.Resampling.LANCZOS).save('Second-Source-Slide-2.png')
+              link.click()
+              expect(page).to_have_url('http://127.0.0.1:8099/about/')
           PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: instagram-slide-2
+          path: Second-Source-Slide-2.png
