@@ -1,4 +1,4 @@
-name: Verify SRC homepage fixes
+name: Verify continuous playback
 on: [push]
 permissions:
   contents: read
@@ -14,7 +14,7 @@ jobs:
           python -m http.server 8099 --bind 127.0.0.1 >/tmp/server.log 2>&1 &
           export SITE_BASE_URL=http://127.0.0.1:8099
           export CHROMIUM_PATH=$(python -c 'from playwright.sync_api import sync_playwright; p=sync_playwright().start(); print(p.chromium.executable_path)')
-          python tests/browser_smoke.py WebsiteTests.test_home_exclusive_preview_on_desktop_and_mobile WebsiteTests.test_home_native_audio_without_capture_stream WebsiteTests.test_background_audio_and_media_session_use_the_native_player WebsiteTests.test_mobile_artwork_context_loss_and_restore WebsiteTests.test_webgl_unavailable_keeps_artwork_and_information WebsiteTests.test_home_mobile_shows_campaign_without_opening_player_controls
+          python tests/browser_smoke.py WebsiteTests.test_continuous_player_keeps_one_audio_session_and_respects_pause_and_close WebsiteTests.test_continuous_player_returns_to_visualizer_and_supports_browser_history WebsiteTests.test_home_mobile_shows_campaign_without_opening_player_controls
   mobile-webkit:
     runs-on: macos-latest
     timeout-minutes: 10
@@ -47,7 +47,22 @@ jobs:
               assert art['src']=='http://127.0.0.1:8099/images/share/inner-passage-512.jpg'
               image=Image.open(BytesIO(page.request.get(art['src']).body()))
               assert image.format=='JPEG' and image.size==(512,512)
-              page.locator('[data-sound]').tap()
-              assert audio.evaluate('a=>a.paused')
+              page.evaluate("window.track = document.querySelector('audio'); window.pauses = 0; track.onpause = () => pauses++; window.meta = navigator.mediaSession.metadata")
+              page.locator('.site-nav a[href="/releases/"]').tap()
+              expect(page.locator('[data-corner-player]')).to_be_visible()
+              expect(page.locator('.release-cover')).to_have_attribute('src','/images/src001/inner_front.webp')
+              for tag in ['meta[property="og:image"]','meta[name="twitter:image"]']:
+                  assert page.locator(tag).get_attribute('content').endswith('/inner_front.webp')
+              page.go_back()
+              expect(canvas).to_be_visible()
+              page.go_forward()
+              expect(page.locator('[data-corner-player]')).to_be_visible()
+              page.locator('.site-logo').tap()
+              expect(canvas).to_be_visible()
+              assert page.evaluate("track === document.querySelector('audio') && !track.paused && !pauses && navigator.mediaSession.metadata === meta")
+              page.locator('.site-nav a[href="/sources/"]').tap()
+              page.wait_for_url('**/sources/')
+              assert page.locator('[data-corner-player]').count() == 0
+              assert page.locator('audio').evaluate('a=>a.paused && !a.currentSrc')
               browser.close()
           PY
