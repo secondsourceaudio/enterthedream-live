@@ -38,7 +38,7 @@ jobs:
               page.evaluate("window.track = document.querySelector('audio'); window.pauses = 0; track.onpause = () => pauses++; window.meta = navigator.mediaSession.metadata")
               docs=[]
               page.on('request', lambda r: docs.append(r.url) if r.is_navigation_request() else None)
-              link=page.locator('.site-nav a[href="/releases/"]')
+              link=page.get_by_role('navigation',name='Main navigation').get_by_role('link',name='RELEASES',exact=True)
               link.evaluate("a => a.setAttribute('href','/releases?fbclid=test')")
               link.tap()
               page.wait_for_url('**/releases/?fbclid=test')
