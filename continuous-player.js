@@ -9,7 +9,7 @@
     const space = home?.querySelector('[data-experience]');
     const audio = space?.querySelector('audio');
     const player = space?.querySelector('.compact-player');
-    if (!audio || !player) return;
+    if (!audio || !player || audio.hasAttribute('data-audio-offline')) return;
     const playerSlot = player.parentElement;
     const sound = player.querySelector('[data-sound]');
     const paths = new Set(['/', '/releases/', '/merch/', '/about/', '/rights/']);
@@ -45,7 +45,7 @@
     const expand = corner.querySelector('[data-corner-expand]');
 
     function updateMini() {
-        const title = audio.dataset.trackTitle || player.querySelector('.player-track-name').textContent;
+        const title = player.querySelector('.player-track-name').textContent.trim();
         corner.querySelector('.src-corner-title').textContent = title;
         corner.querySelector('.src-corner-artist').textContent = player.querySelector('.player-artist').textContent;
         play.setAttribute('aria-label', sound.disabled ? 'Loading sound' : `${audio.paused ? 'Play' : 'Pause'} ${title}`);

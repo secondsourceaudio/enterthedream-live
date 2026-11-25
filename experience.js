@@ -6,8 +6,11 @@
     if (!space) return;
 
     const audio = space.querySelector('audio');
-    const audioIsOffline = () => !!audio?.hasAttribute("data-audio-offline");
-    const trackTitle = audio?.dataset.trackTitle || "Sage Counsel";
+    const audioIsOffline = () => !!audio && (audio.hasAttribute("data-audio-offline") ||
+        !(audio.getAttribute("src") || audio.querySelector("source[src]")));
+    const trackTitle = space.querySelector(".player-track-name")?.textContent.trim() || "Sound";
+    const trackArtist = space.querySelector(".player-artist")?.textContent.trim() || "Second Source";
+    const trackArtwork = space.querySelector(".home-player-art");
     const soundButton = space.querySelector("[data-sound]");
     const compactSound = soundButton?.hasAttribute("data-compact-sound");
     const muteButton = space.querySelector("[data-mute]");
@@ -132,21 +135,22 @@
         if (!audio) return;
         if (audioIsOffline()) {
             soundButton.setAttribute("aria-pressed", "false");
-            soundButton.setAttribute("aria-label", "Audio offline");
-            soundButton.title = "Audio offline";
+            const label = `${trackTitle} is not yet available`;
+            soundButton.setAttribute("aria-label", label);
+            soundButton.title = label;
             soundButton.disabled = true;
             soundButton.querySelector("[data-play-symbol]")?.setAttribute("data-state", "play");
             space.classList.remove("sound-is-on");
             if (muteButton) {
                 muteButton.disabled = true;
                 muteButton.setAttribute("aria-pressed", "false");
-                muteButton.setAttribute("aria-label", "Audio offline");
-                muteButton.title = "Audio offline";
+                muteButton.setAttribute("aria-label", "Mute (unavailable before release)");
+                muteButton.title = "Mute (unavailable before release)";
                 muteButton.querySelector("[data-mute-symbol]")?.setAttribute("data-state", "sound");
             }
             if (volumeInput) volumeInput.disabled = true;
             if (seekInput) seekInput.disabled = true;
-            if (playerState) playerState.textContent = "OFFLINE";
+            if (playerState) playerState.textContent = "PRE-RELEASE";
             reconcileSpectrum();
             return;
         }
@@ -365,6 +369,7 @@
     });
     window.addEventListener('pageshow', resumeInteractiveAudio);
     audio?.addEventListener("error", () => {
+        if (audioIsOffline()) return;
         if (rejectPlayback) rejectPlayback(new Error("Sound could not load"));
         audio.pause();
         status.textContent = "Sound could not load. Select the sound button to try again.";
@@ -384,17 +389,12 @@
         } catch { /* Media Session support is partial in some browsers. */ }
     }
 
-    if ('mediaSession' in navigator && window.MediaMetadata && audio) {
+    if ('mediaSession' in navigator && window.MediaMetadata && audio && !audioIsOffline()) {
         try {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: trackTitle,
-                artist: 'Second Source',
-                album: 'SRC Player',
-                artwork: [{
-                    src: new URL('/images/brand/src-icon-512.png', location.origin).href,
-                    sizes: '512x512',
-                    type: 'image/png'
-                }]
+                artist: trackArtist,
+                artwork: trackArtwork ? [{ src: trackArtwork.src }] : []
             });
             navigator.mediaSession.setActionHandler('play', async () => {
                 try {
@@ -481,9 +481,15 @@
         updateVisualizer();
         window.dispatchEvent(new Event('experience:visualchange'));
         window.dispatchEvent(new Event('resize'));
-        if (announce) status.textContent = mode === 'visualizer'
-            ? 'Visualizer selected. Play the track to start automatic flow.'
-            : `${mode === 'fluid' ? 'Fluid' : 'Whirl'} selected.`;
+        if (announce) {
+            if (mode === 'visualizer') {
+                status.textContent = audioIsOffline()
+                    ? 'Visualizer selected.'
+                    : 'Visualizer selected. Play the track to start automatic flow.';
+            } else {
+                status.textContent = `${mode === 'fluid' ? 'Fluid' : 'Whirl'} selected.`;
+            }
+        }
     }
     for (const button of modeButtons) button.addEventListener('click', () => {
         if (button.dataset.visualMode !== visualMode) selectVisualMode(button.dataset.visualMode);
@@ -653,6 +659,7 @@
         get visualizerEnabled() { return visualMode === 'visualizer' && motionEnabled; },
         get soundPlaying() { return !!audio && !audio.paused; },
         get soundAudible() { return soundAudible(); },
+        get audioOffline() { return audioIsOffline(); },
         get playbackTime() { return audio?.currentTime || 0; },
         get shareTime() { return pendingStartTime ?? audio?.currentTime ?? 0; },
         get secondsPerBar() {

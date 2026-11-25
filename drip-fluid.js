@@ -597,9 +597,10 @@ SOFTWARE.
             const returningNow = returning();
             const visualizing = experience.visualMode === 'visualizer';
             const audible = experience.soundAudible;
-            const advance = !visualizing || audible || returningNow;
+            const canFlow = audible || experience.audioOffline;
+            const advance = !visualizing || canFlow || returningNow;
             autoRest = Math.max(0, autoRest - dt);
-            if (!audible) autoAmount = 0;
+            if (!canFlow) autoAmount = 0;
             if (dt > 0 && advance) {
                 const signal = experience.sampleAudio();
                 const bass = signal.bass;
@@ -608,7 +609,7 @@ SOFTWARE.
                 // is limited by musical time, independently of the fluid frame rate.
                 if (previousPlaybackTime !== null && playbackTime < previousPlaybackTime - .1) lastDripTime = -Infinity;
                 previousPlaybackTime = playbackTime;
-                const automatic = experience.visualizerEnabled && audible && !returningNow && !autoRest;
+                const automatic = experience.visualizerEnabled && canFlow && !returningNow && !autoRest;
                 autoAmount += ((automatic ? 1 : 0) - autoAmount) * (1 - Math.exp(-dt * 3));
                 for (const drip of drips) {
                     if (drip.age >= 0) drip.age += dt;
@@ -627,7 +628,7 @@ SOFTWARE.
                 const twist = automatic ? autoAmount * currents[0].spin * (.06 + signal.mid * .1) : 0;
                 dance.twist += (twist - dance.twist) * (1 - Math.exp(-dt / .18));
                 if (automatic) {
-                    // Random currents run with audible playback; pause and mute freeze the field.
+                    // Silent currents also run in the pre-release preview.
                     const strength = autoAmount * (190 + bass * 210 + signal.level * 40 + signal.mid * 35);
                     const response = 1 - Math.exp(-dt * (.34 + bass * .26));
                     for (const current of currents) {

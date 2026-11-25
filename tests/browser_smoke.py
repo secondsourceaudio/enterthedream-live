@@ -5,6 +5,7 @@ Requires Python Playwright and Chromium. SITE_BASE_URL and CHROMIUM_PATH
 override the local server URL and browser executable.
 """
 import os
+import re
 from pathlib import Path
 import unittest
 from urllib.parse import urlsplit
@@ -35,6 +36,24 @@ WebGLRenderingContext.prototype.drawArrays = function (...args) {
 """
 
 
+def prepare_home_audio_fixture(page, filename):
+    """Exercise release-day playback with published fixture audio."""
+    def respond(route):
+        response = route.fetch()
+        html = response.text()
+        html = re.sub(
+            r'<audio id="experience-audio"[^>]*>.*?</audio>',
+            f'<audio id="experience-audio" preload="metadata" playsinline>'
+            f'<source src="/audio/{filename}" type="audio/mpeg"></audio>',
+            html,
+            flags=re.S,
+            count=1,
+        )
+        route.fulfill(response=response, body=html)
+
+    page.route(re.compile(rf"^{re.escape(BASE_URL)}/(?:index\.html)?(?:\?.*)?$"), respond)
+
+
 def serve_seekable_audio(page, filename="src_player_ambient_2_192.mp3"):
     """Model GitHub Pages' byte-range support, absent from Python's dev server."""
     data = (Path(__file__).resolve().parents[1] / "audio" / filename).read_bytes()
@@ -55,6 +74,8 @@ def serve_seekable_audio(page, filename="src_player_ambient_2_192.mp3"):
             route.fulfill(status=200, headers=headers, body=data)
 
     page.route("**/audio/" + filename, respond)
+    if filename == "src_player_ambient_2_192.mp3":
+        prepare_home_audio_fixture(page, filename)
 
 
 def serve_sources_audio(page):
@@ -144,7 +165,7 @@ class WebsiteTests(unittest.TestCase):
         self.page.wait_for_function("document.querySelector('#visual').classList.contains('is-ready') && window.__drawCalls > 0")
         self.assertTrue(all(url.endswith("/audio/src_player_ambient_2_192.mp3") for url in audio_requests))
         expect(self.page.locator("[data-sound]")).to_have_attribute("aria-label",
-            "Play SRC Player Ambient 2")
+            "Play Inner Passage")
         audio = self.page.locator("audio")
         self.assertTrue(audio.evaluate("a => a.paused"))
         art = self.page.locator("#visual-container")
@@ -187,6 +208,44 @@ class WebsiteTests(unittest.TestCase):
 
     def test_landing_sound_and_actual_audio_reactivity(self):
         self.check_study("index.html")
+
+    def test_home_prerelease_has_no_audio_and_visual_modes_are_available(self):
+        media = []
+        self.page.on('request', lambda request: media.append(request.url)
+                     if request.resource_type == 'media' else None)
+        self.visit()
+        if not self.page.locator('.home-campaign time').count():
+            self.skipTest('The homepage campaign is live.')
+        expect(self.page.locator('[data-player-state]')).to_have_text('PRE-RELEASE')
+        for control in ['data-sound', 'data-mute', 'data-volume', 'data-seek']:
+            expect(self.page.locator(f'[{control}]')).to_be_disabled()
+        expect(self.page.locator('#experience-audio source, #experience-audio[src]')).to_have_count(0)
+        for mode in ['fluid', 'visualizer', 'whirl']:
+            self.page.locator(f'[data-visual-mode="{mode}"]').click()
+            expect(self.page.locator('[data-experience]')).to_have_attribute('data-active-visual', mode)
+        self.assertEqual(media, [])
+        self.assertFalse(self.page.locator('audio').evaluate('audio => audio.loop || !!audio.error'))
+
+    def test_legal_footer_is_consistent_on_public_pages(self):
+        paths = ['', 'releases/', 'sources/', 'sources/flower/', 'merch/', 'about/', 'rights/', '404.html']
+        for width in [390, 1440]:
+            self.page.set_viewport_size({'width': width, 'height': 1000})
+            reference = None
+            for path in paths:
+                with self.subTest(width=width, path=path):
+                    self.visit(path or 'index.html')
+                    footer = self.page.locator('.legal-footer')
+                    expect(footer).to_contain_text('© 2026 SECOND SOURCE')
+                    expect(footer.get_by_role('link', name='RIGHTS & USAGE')).to_have_attribute('href', '/rights/')
+                    style = footer.evaluate("""footer => {
+                        const frame = getComputedStyle(footer);
+                        const text = getComputedStyle(footer.querySelector('.copyright-line'));
+                        return [frame.height, frame.borderTopWidth, frame.borderBottomColor,
+                            text.fontFamily, text.fontSize, text.fontWeight, text.letterSpacing, text.color];
+                    }""")
+                    if reference is None:
+                        reference = style
+                    self.assertEqual(style, reference)
 
     def test_home_audio_plays_without_web_audio_analysis(self):
         serve_seekable_audio(self.page)
@@ -242,8 +301,8 @@ class WebsiteTests(unittest.TestCase):
             window.MediaMetadata = class { constructor(data) { Object.assign(this, data); } };
         })();""")
         self.visit()
-        self.assertEqual(self.page.evaluate('navigator.mediaSession.metadata.title'), 'SRC Player Ambient 2')
-        self.assertEqual(self.page.evaluate('navigator.mediaSession.metadata.artist'), 'Second Source')
+        self.assertEqual(self.page.evaluate('navigator.mediaSession.metadata.title'), 'Inner Passage')
+        self.assertEqual(self.page.evaluate('navigator.mediaSession.metadata.artist'), 'Martin Solli')
         self.assertEqual(self.page.evaluate('Object.keys(window.__mediaHandlers).sort()'), ['pause', 'play'])
 
         self.page.locator('[data-sound]').click()
@@ -2242,7 +2301,6 @@ class WebsiteTests(unittest.TestCase):
             context.close()
 
     def test_releases_navigation_shows_release_information(self):
-        serve_seekable_audio(self.page)
         self.visit()
         expect(self.page.locator('.site-nav a')).to_have_text(['RELEASES', 'SOURCES', 'MERCH', 'ABOUT / CONTACT', 'BANDCAMP'])
         self.page.locator('.site-nav').get_by_role('link', name='RELEASES').click()
@@ -2321,7 +2379,6 @@ class WebsiteTests(unittest.TestCase):
                             self.assertLessEqual(box["x"] + box["width"], width)
 
     def test_home_mobile_shows_campaign_without_opening_player_controls(self):
-        serve_seekable_audio(self.page, "src_player_ambient_2_192.mp3")
         for width in [320, 390, 768]:
             with self.subTest(width=width):
                 self.page.set_viewport_size({"width": width, "height": 844})
@@ -2378,7 +2435,6 @@ class WebsiteTests(unittest.TestCase):
                 expect(toggle).to_have_attribute('aria-expanded', 'true')
 
     def test_home_info_dialog_keeps_only_essential_copy(self):
-        serve_seekable_audio(self.page)
         self.visit()
         self.page.locator('[data-info]').click()
         dialog = self.page.locator('#experience-info')
@@ -2387,14 +2443,13 @@ class WebsiteTests(unittest.TestCase):
         expect(dialog.locator('h2')).to_have_text('SECOND SOURCE')
         expect(dialog.locator('p').last).to_have_text('Interactive audio / visual system.')
         expect(dialog.locator('dt')).to_have_text(['SOUND', 'CONTROLS'])
-        expect(dialog.locator('dd').first).to_have_text('SECOND SOURCE / AMBIENT 2')
+        expect(dialog.locator('dd').first).to_have_text('MARTIN SOLLI / INNER PASSAGE')
         expect(dialog.locator('dd').last).to_contain_text('DRAG / MOVE')
         expect(dialog.locator('dd').last).to_contain_text('R / RESET')
         expect(dialog.locator('dd').last).to_contain_text('F / FULLSCREEN')
         expect(dialog.locator('[data-shortcuts-toggle], [data-glitch-toggle], .src-window-help')).to_have_count(0)
 
     def test_home_visual_modes_fill_the_desktop_without_a_matte(self):
-        serve_seekable_audio(self.page)
         self.visit()
         stage = self.page.locator('.listening-space').bounding_box()
 
@@ -2418,6 +2473,7 @@ class WebsiteTests(unittest.TestCase):
                 self.assertEqual(panel.evaluate("element => getComputedStyle(element, '::after').display"), 'none')
 
     def test_audio_failure_can_retry(self):
+        serve_seekable_audio(self.page)
         self.page.route("**/audio/**", lambda route: route.abort())
         self.visit()
         self.page.locator("[data-sound]").click()
@@ -2437,6 +2493,7 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator("#experience-info")).to_be_visible()
 
     def test_storage_unavailable_does_not_break_controls(self):
+        serve_seekable_audio(self.page)
         self.context.add_init_script("Object.defineProperty(window, 'localStorage', {get() {throw new Error('Blocked');}});")
         self.visit()
         self.page.locator("[data-volume]").fill("0.6")
