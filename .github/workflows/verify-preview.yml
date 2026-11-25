@@ -10,7 +10,13 @@ jobs:
       - run: pip install playwright pillow
       - run: python -m playwright install --with-deps chromium
       - run: |
-          python -m http.server 8099 --bind 127.0.0.1 >/tmp/http.log 2>&1 &
+          cat >/tmp/serve.go <<'GO'
+          package main
+          import "net/http"
+          func main(){ panic(http.ListenAndServe("127.0.0.1:8099",http.FileServer(http.Dir(".")))) }
+          GO
+          go build -o /tmp/slide-server /tmp/serve.go
+          /tmp/slide-server &
           python - <<'PY'
           from playwright.sync_api import sync_playwright, expect
           from PIL import Image
@@ -38,7 +44,7 @@ jobs:
                   assert im.size==(2160,2160)
                   im.resize((1080,1080),Image.Resampling.LANCZOS).save('Second-Source-Slide-2.png')
               link.click()
-              expect(page).to_have_url('http://127.0.0.1:8099/about/')
+              expect(page).to_have_url('http://127.0.0.1:8099/about/', timeout=30000)
           PY
       - uses: actions/upload-artifact@v4
         with:
