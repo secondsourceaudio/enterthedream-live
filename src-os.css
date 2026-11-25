@@ -47,6 +47,10 @@ body.src-os {
     transform: translateX(-50%);
     flex-wrap: nowrap;
 }
+/* Temporarily omit Sources from the menus while preserving direct access. */
+.src-os .site-nav a[href="/sources/"],
+.src-os .home-directory a[href="/sources/"] { display: none; }
+
 .src-os-window-button {
     display: grid;
     place-items: center;
@@ -323,7 +327,7 @@ body.src-os {
     body.src-os .site-logo { min-height: 36px; margin: 0; padding-left: 4px; }
     body.src-os .site-nav {
         display: grid;
-        grid-template-columns: repeat(5, max-content);
+        grid-template-columns: repeat(4, max-content);
         justify-content: space-between;
         width: 100%;
         margin: 0;
@@ -367,7 +371,7 @@ body.src-os {
     .src-os .site-nav a[href^="https://secondsource.bandcamp.com"] { display: none; }
     .src-os .site-nav {
         display: grid;
-        grid-template-columns: repeat(5, max-content);
+        grid-template-columns: repeat(4, max-content);
         justify-content: space-between;
         gap: 0;
         padding-inline: 5px;

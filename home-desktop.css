@@ -85,7 +85,7 @@ body.home-desktop.src-os {
 .home-player-window .experience-tools { min-height: 0; }
 .home-player-window .experience-tools-status { min-height: 0; }
 .home-directory-window { right: 7%; top: 9%; width: min(440px, 34vw); }
-.home-directory { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; padding: 28px; }
+.home-directory { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; padding: 28px; }
 .home-directory a { display: flex; flex-direction: column; align-items: center; gap: 9px; color: #cdd4df; font-size: 10px; letter-spacing: .1em; text-decoration: none; }
 .home-directory a:hover .home-directory-icon { color: #fff; border-color: #aebbd2; background: #202c40; }
 .home-directory a:focus-visible { outline: 1px solid #dbe4f5; outline-offset: 6px; }
@@ -139,7 +139,7 @@ body.home-desktop.src-os {
     .home-secondary-toggle:not([hidden]) { display: grid; }
     .home-player-window .compact-player { grid-template-columns: 130px minmax(0, 1fr); padding: 16px; }
     .home-player-art { width: 130px; height: 130px; }
-    .home-directory { grid-template-columns: repeat(4, minmax(0, 1fr)); padding: 20px 12px; }
+    .home-directory { padding: 20px 12px; }
     .home-campaign { padding: 10px 14px; }
     .home-desktop-hint { display: none; }
 }
