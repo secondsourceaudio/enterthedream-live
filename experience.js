@@ -10,7 +10,6 @@
         !(audio.getAttribute("src") || audio.querySelector("source[src]")));
     const trackTitle = space.querySelector(".player-track-name")?.textContent.trim() || "Sound";
     const trackArtist = space.querySelector(".player-artist")?.textContent.trim() || "Second Source";
-    const trackArtwork = space.querySelector(".home-player-art");
     const soundButton = space.querySelector("[data-sound]");
     const compactSound = soundButton?.hasAttribute("data-compact-sound");
     const muteButton = space.querySelector("[data-mute]");
@@ -61,7 +60,6 @@
     let glitchEnabled = false;
     let context = null;
     let analyser = null;
-    let outputGain = null;
     let analysisStream = null;
     let analysisSource = null;
     let frequencies = null;
@@ -90,8 +88,7 @@
         if (!audio) return;
         // Keep ordinary playback on the media element so it can continue when
         // a mobile browser suspends Web Audio in the background.
-        if (outputGain) outputGain.gain.value = volume;
-        else audio.volume = volume;
+        audio.volume = volume;
         volumeInput.value = volume;
         volumeInput.setAttribute("aria-valuetext", `${Math.round(volume * 100)} percent`);
         volumeOutput.textContent = `${Math.round(volume * 100)}%`;
@@ -101,29 +98,16 @@
         if (context || !audio || document.hidden) return;
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         const capture = audio.captureStream || audio.mozCaptureStream;
-        if (!AudioContext) return;
+        if (!AudioContext || !capture) return;
         let candidate = null;
         try {
-            const stream = capture?.call(audio);
-            if (capture && !stream?.getAudioTracks().length) return;
+            const stream = capture.call(audio);
+            if (!stream?.getAudioTracks().length) return;
             candidate = new AudioContext();
             const candidateAnalyser = candidate.createAnalyser();
             candidateAnalyser.fftSize = 2048;
             candidateAnalyser.smoothingTimeConstant = 0.45;
-            let source;
-            if (stream) {
-                source = candidate.createMediaStreamSource(stream);
-            } else {
-                // Safari lacks captureStream. Use the same analyser and route audio
-                // through a gain node so the volume slider also works on iOS.
-                const gain = candidate.createGain();
-                gain.gain.value = volume;
-                gain.connect(candidate.destination);
-                source = candidate.createMediaElementSource(audio);
-                source.connect(gain);
-                audio.volume = 1;
-                outputGain = gain;
-            }
+            const source = candidate.createMediaStreamSource(stream);
             source.connect(candidateAnalyser);
             context = candidate;
             analyser = candidateAnalyser;
@@ -346,10 +330,6 @@
         try {
             if (audio.error || audio.networkState === audio.NETWORK_NO_SOURCE) audio.load();
             // Call play inside the gesture, before awaiting anything (Safari).
-            if (!(audio.captureStream || audio.mozCaptureStream)) {
-                connectAudio();
-                if (context?.state === 'suspended') context.resume().catch(() => {});
-            }
             const playback = audio.play();
             await Promise.race([playback, failed]);
             hasStarted = true;
@@ -377,7 +357,7 @@
     });
     document.addEventListener('visibilitychange', async () => {
         if (document.hidden) {
-            if (!outputGain && context?.state === 'running') {
+            if (context?.state === 'running') {
                 try { await context.suspend(); } catch { /* The browser may manage this itself. */ }
             }
             reconcileSpectrum();
@@ -410,11 +390,14 @@
 
     if ('mediaSession' in navigator && window.MediaMetadata && audio && !audioIsOffline()) {
         try {
-            navigator.mediaSession.metadata = new MediaMetadata({
+            const metadata = new MediaMetadata({
                 title: trackTitle,
                 artist: trackArtist,
-                artwork: trackArtwork ? [{ src: trackArtwork.src }] : []
+                artwork: audio.dataset.artwork ? [{src: new URL(audio.dataset.artwork, location.href).href, sizes: "512x512", type: "image/jpeg"}] : []
             });
+            const setMetadata = () => { navigator.mediaSession.metadata = metadata; };
+            setMetadata();
+            audio.addEventListener('play', setMetadata);
             navigator.mediaSession.setActionHandler('play', async () => {
                 try {
                     await audio.play();
@@ -690,6 +673,16 @@
         useStaticArtwork(mode = visualMode) {
             unavailableModes.add(rendererKey(mode));
             updateMotion();
+        },
+        // Check the first opaque artwork frame before covering the static image.
+        hasArtworkFrame(gl) {
+            if (gl.isContextLost() || gl.getError() !== gl.NO_ERROR) return false;
+            const pixel = new Uint8Array(4);
+            return [.5, .25, .75].some(point => {
+                gl.readPixels(Math.floor(gl.drawingBufferWidth * point),
+                    Math.floor(gl.drawingBufferHeight * point), 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+                return pixel[0] + pixel[1] + pixel[2] > 0;
+            });
         },
         sampleAudio,
         sampleBass() { return sampleAudio().bass; },

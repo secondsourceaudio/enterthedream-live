@@ -464,7 +464,7 @@ if (gl) {
                     vec2 direction = delta / max(distance, 0.0001);
                     float radius = age * 0.29;
                     float wavefront = distance - radius;
-                    float packet = exp(-pow(wavefront / 0.055, 2.0));
+                    float packet = exp(-wavefront * wavefront / (0.055 * 0.055));
                     float life = exp(-age * 0.65)
                         * (1.0 - smoothstep(2.4, 3.8, age));
                     // Alternating crests and troughs refract the image both ways.
@@ -676,8 +676,6 @@ if (gl) {
         updateCoverScale();
 
         imageReady = true;
-
-        canvas.classList.add("is-ready");
     }
 
 
@@ -832,6 +830,7 @@ if (gl) {
         /* Tells the browser we want the context back. */
         event.preventDefault();
 
+        canvas.classList.remove("is-ready");
         glActive = false;
         imageReady = false;
     });
@@ -1501,6 +1500,7 @@ if (gl) {
 
         if (canvas.width !== width || canvas.height !== height) {
 
+            canvas.classList.remove("is-ready");
             canvas.width = width;
             canvas.height = height;
 
@@ -1684,6 +1684,10 @@ if (gl) {
             gl.uniform4fv(uniforms.drips, dripData);
 
             gl.drawArrays(gl.TRIANGLES, 0, 6);
+            if (!canvas.classList.contains("is-ready") && canvas.width && canvas.height) {
+                if (window.SecondSourceExperience.hasArtworkFrame(gl)) canvas.classList.add("is-ready");
+                else glActive = false;
+            }
         }
     }
 

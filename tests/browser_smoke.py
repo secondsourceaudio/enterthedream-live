@@ -223,7 +223,8 @@ class WebsiteTests(unittest.TestCase):
                     self.assertTrue(audio.evaluate('a => a.paused && !a.autoplay && !a.loop'))
                     self.assertGreater(audio.evaluate('a => a.duration'), 372)
                     expect(page.locator('.player-catalogue')).to_have_text('PRE-RELEASE')
-                    expect(page.locator('.home-campaign time')).to_have_attribute('datetime', '2026-11-27')
+                    expect(page.locator('.home-campaign time')).to_have_attribute('datetime', '2026-11-25')
+                    expect(page.locator('#home-campaign-title')).to_have_text('SRC.1 ONLINE')
                     seek = page.locator('[data-seek]')
                     seek.fill('45')
                     page.wait_for_function("Math.abs(document.querySelector('audio').currentTime - 45) < 1")
@@ -268,7 +269,7 @@ class WebsiteTests(unittest.TestCase):
                         reference = style
                     self.assertEqual(style, reference)
 
-    def test_home_audio_analysis_without_capture_stream(self):
+    def test_home_native_audio_without_capture_stream(self):
         serve_seekable_audio(self.page)
         self.context.add_init_script("""(() => {
             Object.defineProperty(HTMLMediaElement.prototype, 'captureStream', {
@@ -287,12 +288,11 @@ class WebsiteTests(unittest.TestCase):
         self.page.locator('[data-sound]').click()
         self.page.wait_for_function("document.querySelector('audio').currentTime > .25")
         self.assertFalse(self.page.locator('audio').evaluate('audio => audio.paused'))
-        self.page.wait_for_function('window.SecondSourceExperience.sampleBass() > .01')
-        self.assertEqual(self.page.evaluate('window.__audioContextsCreated'), 1)
+        self.assertEqual(self.page.evaluate('window.__audioContextsCreated'), 0)
         self.assertTrue(self.page.evaluate('window.SecondSourceExperience.soundAudible'))
 
     def test_background_audio_and_media_session_use_the_native_player(self):
-        serve_seekable_audio(self.page)
+        serve_seekable_audio(self.page, "inner-passage.mp3")
         self.context.add_init_script("""(() => {
             const Native = window.AudioContext;
             window.__analysisContexts = [];
@@ -325,6 +325,9 @@ class WebsiteTests(unittest.TestCase):
         self.visit()
         self.assertEqual(self.page.evaluate('navigator.mediaSession.metadata.title'), 'Inner Passage')
         self.assertEqual(self.page.evaluate('navigator.mediaSession.metadata.artist'), 'Martin Solli')
+        self.assertEqual(self.page.evaluate('navigator.mediaSession.metadata.artwork'), [
+            {'src': BASE_URL + '/images/share/inner-passage-512.jpg', 'sizes': '512x512', 'type': 'image/jpeg'}
+        ])
         self.assertEqual(self.page.evaluate('Object.keys(window.__mediaHandlers).sort()'), ['pause', 'play'])
 
         self.page.locator('[data-sound]').click()
@@ -384,8 +387,7 @@ class WebsiteTests(unittest.TestCase):
         self.page.evaluate("window.dispatchEvent(new Event('pagehide'))")
         self.assertFalse(self.page.evaluate('window.SecondSourceExperience.soundPlaying'))
         self.assertEqual(self.page.evaluate('window.SecondSourceExperience.sampleBass()'), 0)
-        self.page.wait_for_function('window.SecondSourceExperience.sampleBass() > .01')
-        self.assertEqual(self.page.evaluate('window.__audioContextsCreated'), 1)
+        self.assertEqual(self.page.evaluate('window.__audioContextsCreated'), 0)
         self.assertFalse(any('/audio/' in url or 'flower-tone.js' in url for url in requests))
 
     def test_silent_flower_keeps_info_available_without_webgl(self):
@@ -947,6 +949,20 @@ class WebsiteTests(unittest.TestCase):
         self.wait_for_frames(6)
         self.assertEqual(self.page.evaluate('window.__drawsByCanvas'), paused)
         expect(self.page.locator('[data-fluid-reset]')).to_be_disabled()
+
+    def test_mobile_artwork_context_loss_and_restore(self):
+        serve_seekable_audio(self.page, "inner-passage.mp3")
+        self.page.set_viewport_size({'width': 390, 'height': 844})
+        self.visit()
+        canvas = self.page.locator('#visual')
+        expect(canvas).to_have_class(re.compile('is-ready'))
+        self.page.evaluate("""window.loseWhirl = document.querySelector('#visual')
+            .getContext('webgl').getExtension('WEBGL_lose_context'); loseWhirl.loseContext()""")
+        expect(canvas).not_to_have_class(re.compile('is-ready'))
+        expect(canvas).to_have_css('opacity', '0')
+        expect(self.page.locator('#fallback-image')).to_be_visible()
+        self.page.evaluate('loseWhirl.restoreContext()')
+        expect(canvas).to_have_class(re.compile('is-ready'))
 
     def test_front_fluid_unavailable_keeps_whirl_usable(self):
         self.page.add_init_script("""(() => {
@@ -2402,6 +2418,7 @@ class WebsiteTests(unittest.TestCase):
                             self.assertLessEqual(box["x"] + box["width"], width)
 
     def test_home_mobile_shows_campaign_without_opening_player_controls(self):
+        serve_seekable_audio(self.page, "inner-passage.mp3")
         for width in [320, 390, 768]:
             with self.subTest(width=width):
                 self.page.set_viewport_size({"width": width, "height": 844})
@@ -2437,16 +2454,7 @@ class WebsiteTests(unittest.TestCase):
                 expect(title).to_be_visible()
                 self.assertTrue(title.inner_text().strip())
                 status = self.page.locator('.home-campaign-status')
-                if status.locator('time').count():
-                    expect(status.locator('time')).to_be_visible()
-                    expect(status.locator('a')).to_have_count(0)
-                else:
-                    expect(status).to_contain_text('OUT NOW')
-                    listen = status.get_by_role('link', name='LISTEN', exact=False)
-                    expect(listen.first).to_be_visible()
-                    for link in listen.all():
-                        self.assertEqual(urlsplit(link.get_attribute('href')).scheme, 'https')
-                        self.assertGreaterEqual(link.bounding_box()['height'], 44)
+                expect(status).to_have_text('- EXCLUSIVE AUDIO PREVIEW')
                 self.assertGreaterEqual(campaign['y'], player['bottom'])
                 self.assertLessEqual(campaign['bottom'], layout['stage']['bottom'])
                 toggle = self.page.locator('[data-home-secondary-toggle]')
@@ -2525,6 +2533,7 @@ class WebsiteTests(unittest.TestCase):
         expect(self.page.locator("html")).to_have_attribute("data-motion", "off")
 
     def test_webgl_unavailable_keeps_artwork_and_information(self):
+        serve_seekable_audio(self.page, "inner-passage.mp3")
         self.context.add_init_script("""
         const original = HTMLCanvasElement.prototype.getContext;
         HTMLCanvasElement.prototype.getContext = function(type, ...args) {
