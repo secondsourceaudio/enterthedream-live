@@ -3,6 +3,26 @@ on:
   push:
     branches: [verify/inner-passage-preview]
 jobs:
+  verify-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install playwright && python -m playwright install --with-deps chromium webkit
+      - name: Check preview playback in Chromium and mobile WebKit
+        run: |
+          python -m http.server 8000 --bind 127.0.0.1 > /tmp/preview-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          curl --fail --silent --retry 10 --retry-connrefused http://127.0.0.1:8000/ -o /dev/null
+          CHROMIUM_PATH="$(python -c 'from playwright.sync_api import sync_playwright; p = sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
+          export CHROMIUM_PATH
+          python tests/browser_smoke.py \
+            WebsiteTests.test_home_exclusive_preview_on_desktop_and_mobile \
+            WebsiteTests.test_background_audio_and_media_session_use_the_native_player \
+            WebsiteTests.test_home_mobile_shows_campaign_without_opening_player_controls
+          SITE_TEST_BROWSER=mobile-webkit python tests/browser_smoke.py \
+            WebsiteTests.test_home_native_audio_without_capture_stream
   capture:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -15,7 +35,7 @@ jobs:
           with sync_playwright() as p:
               b=p.chromium.launch(args=['--use-angle=swiftshader','--enable-unsafe-swiftshader'])
               page=b.new_page(viewport={'width':1080,'height':1080},device_scale_factor=2)
-              page.goto('https://www.enterthedream.org/',wait_until='networkidle')
+              page.goto('https://www.enterthedream.org/',wait_until='domcontentloaded')
               page.evaluate("""()=>{let rules=[...document.styleSheets].flatMap(s=>[...s.cssRules]);let tablet=rules.find(r=>r.conditionText==='(max-width: 1360px)' && r.cssText.includes('.src-os-clock'));if(!tablet)throw Error('missing desktop breakpoint');tablet.media.mediaText='not all';}""")
               page.add_style_tag(content="""
                 body.home-desktop.src-os {height:100dvh;min-height:0;margin:0;padding:0;display:flex;flex-direction:column}

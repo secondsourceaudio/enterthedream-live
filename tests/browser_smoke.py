@@ -86,11 +86,15 @@ class WebsiteTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.playwright = sync_playwright().start()
-        cls.browser = cls.playwright.chromium.launch(
-            executable_path=os.environ.get("CHROMIUM_PATH", "/usr/bin/chromium"),
-            headless=True,
-            args=["--no-sandbox", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
-        )
+        cls.mobile_webkit = os.environ.get("SITE_TEST_BROWSER") == "mobile-webkit"
+        if cls.mobile_webkit:
+            cls.browser = cls.playwright.webkit.launch()
+        else:
+            cls.browser = cls.playwright.chromium.launch(
+                executable_path=os.environ.get("CHROMIUM_PATH", "/usr/bin/chromium"),
+                headless=True,
+                args=["--no-sandbox", "--use-angle=swiftshader", "--enable-unsafe-swiftshader"],
+            )
 
     @classmethod
     def tearDownClass(cls):
@@ -98,7 +102,11 @@ class WebsiteTests(unittest.TestCase):
         cls.playwright.stop()
 
     def setUp(self):
-        self.context = self.browser.new_context(viewport={"width": 1440, "height": 1000})
+        context_options = (
+            self.playwright.devices["iPhone 13"] if self.mobile_webkit
+            else {"viewport": {"width": 1440, "height": 1000}}
+        )
+        self.context = self.browser.new_context(**context_options)
         self.context.add_init_script(DRAW_COUNTER)
         self.page = self.context.new_page()
         self.page.set_default_timeout(10000)
@@ -113,7 +121,7 @@ class WebsiteTests(unittest.TestCase):
         self.assertEqual(self.errors, [], "Browser or HTTP errors")
 
     def visit(self, path="index.html"):
-        response = self.page.goto(f"{BASE_URL}/{PAGE_ROUTES.get(path, path)}", wait_until="networkidle")
+        response = self.page.goto(f"{BASE_URL}/{PAGE_ROUTES.get(path, path)}", wait_until="domcontentloaded")
         self.assertEqual(response.status, 200)
         self.page.evaluate("document.fonts.ready")
 
