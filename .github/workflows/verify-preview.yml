@@ -6,23 +6,34 @@ jobs:
   verify-preview:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
     steps:
       - uses: actions/checkout@v4
-      - run: python -m pip install playwright && python -m playwright install --with-deps chromium webkit
-      - name: Check preview playback in Chromium and mobile WebKit
+      - name: Install Playwright browser
+        timeout-minutes: 4
+        run: python -m pip install playwright && python -m playwright install --with-deps ${{ matrix.browser }}
+      - name: Check preview playback
+        env:
+          PREVIEW_BROWSER: ${{ matrix.browser }}
         run: |
           python -m http.server 8000 --bind 127.0.0.1 > /tmp/preview-http.log 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid"' EXIT
           curl --fail --silent --retry 10 --retry-connrefused http://127.0.0.1:8000/ -o /dev/null
-          CHROMIUM_PATH="$(python -c 'from playwright.sync_api import sync_playwright; p = sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
-          export CHROMIUM_PATH
-          python tests/browser_smoke.py \
-            WebsiteTests.test_home_exclusive_preview_on_desktop_and_mobile \
-            WebsiteTests.test_background_audio_and_media_session_use_the_native_player \
-            WebsiteTests.test_home_mobile_shows_campaign_without_opening_player_controls
-          SITE_TEST_BROWSER=mobile-webkit python tests/browser_smoke.py \
-            WebsiteTests.test_home_native_audio_without_capture_stream
+          if [[ "$PREVIEW_BROWSER" == webkit ]]; then
+            SITE_TEST_BROWSER=mobile-webkit python tests/browser_smoke.py \
+              WebsiteTests.test_home_native_audio_without_capture_stream
+          else
+            CHROMIUM_PATH="$(python -c 'from playwright.sync_api import sync_playwright; p = sync_playwright().start(); print(p.chromium.executable_path); p.stop()')"
+            export CHROMIUM_PATH
+            python tests/browser_smoke.py \
+              WebsiteTests.test_home_exclusive_preview_on_desktop_and_mobile \
+              WebsiteTests.test_background_audio_and_media_session_use_the_native_player \
+              WebsiteTests.test_home_mobile_shows_campaign_without_opening_player_controls
+          fi
   capture:
     runs-on: ubuntu-latest
     timeout-minutes: 5
