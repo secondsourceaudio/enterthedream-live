@@ -2351,6 +2351,7 @@ class WebsiteTests(unittest.TestCase):
             context.close()
 
     def test_releases_navigation_shows_release_information(self):
+        serve_seekable_audio(self.page, "inner-passage.mp3")
         self.visit()
         expect(self.page.locator('.site-nav a:visible')).to_have_text(['HOME', 'RELEASES', 'MERCH', '?', 'BANDCAMP'], use_inner_text=True)
         self.page.locator('.site-nav').get_by_role('link', name='RELEASES').click()
@@ -2370,6 +2371,8 @@ class WebsiteTests(unittest.TestCase):
         expect(album.locator('.release-artist')).to_have_text('MARTIN SOLLI')
         expect(album.locator('.release-season')).to_have_text('SPRING 2027')
         expect(album.locator('.release-availability')).to_have_text('VINYL / DIGITAL')
+        album.locator('.release-title').scroll_into_view_if_needed()
+        self.assertTrue(self.page.locator('main').evaluate('main => main.scrollWidth <= main.clientWidth + 1'))
         expect(self.page.locator('[data-post-release]')).to_have_count(3)
         self.assertTrue(self.page.locator('[data-post-release]').evaluate_all(
             'sections => sections.every(section => section.hidden)'))
