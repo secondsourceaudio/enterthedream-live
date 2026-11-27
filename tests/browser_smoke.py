@@ -209,7 +209,7 @@ class WebsiteTests(unittest.TestCase):
     def test_landing_sound_and_actual_audio_reactivity(self):
         self.check_study("index.html")
 
-    def test_home_exclusive_preview_on_desktop_and_mobile(self):
+    def test_home_current_release_on_desktop_and_mobile(self):
         for width, mobile in [(1440, False), (390, True)]:
             with self.subTest(mobile=mobile):
                 context = self.browser.new_context(viewport={'width': width, 'height': 900},
@@ -222,9 +222,10 @@ class WebsiteTests(unittest.TestCase):
                     page.wait_for_function("Number.isFinite(document.querySelector('audio').duration)")
                     self.assertTrue(audio.evaluate('a => a.paused && !a.autoplay && !a.loop'))
                     self.assertGreater(audio.evaluate('a => a.duration'), 372)
-                    expect(page.locator('.player-catalogue')).to_have_text('PRE-RELEASE')
-                    expect(page.locator('.home-campaign time')).to_have_attribute('datetime', '2026-11-25')
-                    expect(page.locator('#home-campaign-title')).to_have_text('SRC ONLINE')
+                    expect(page.locator('.player-catalogue')).to_have_text('OUT NOW')
+                    expect(page.locator('.home-campaign-artist')).to_have_text('MARTIN SOLLI')
+                    expect(page.locator('#home-campaign-title')).to_have_text('INNER PASSAGE')
+                    expect(page.locator('.home-campaign-status')).to_contain_text('OUT NOW')
                     seek = page.locator('[data-seek]')
                     seek.fill('45')
                     page.wait_for_function("Math.abs(document.querySelector('audio').currentTime - 45) < 1")
@@ -2463,7 +2464,7 @@ class WebsiteTests(unittest.TestCase):
                 title = self.page.locator('#home-campaign-title')
                 expect(title).to_be_visible()
                 self.assertTrue(title.inner_text().strip())
-                expect(self.page.locator('.home-campaign')).to_have_text('SRC ONLINE 25.11.26 / v1.0')
+                expect(self.page.locator('.home-campaign-status')).to_contain_text('OUT NOW')
                 self.assertGreaterEqual(campaign['y'], player['bottom'])
                 self.assertLessEqual(campaign['bottom'], layout['stage']['bottom'])
                 toggle = self.page.locator('[data-home-secondary-toggle]')

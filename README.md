@@ -129,12 +129,11 @@ Keep the homepage document title as `Second Source — Audio & Visual`.
 Update the image preload, both visual-panel images and the player image
 together. The player also supplies the title, artist and artwork for Media Session.
 
-The exclusive preview plays the complete single from `/audio/inner-passage.mp3`
-after the listener presses Play. Keep the compressed MP3 on the site after
-release. For 27 November, change the fixed `PRE-RELEASE` label in the player
-and the dated campaign message to the release status. Add the verified
-distribution links to `.home-campaign-status`, then update the descriptions
-and the home sitemap date. Playback works independently of those links.
+The player plays the full single from `/audio/inner-passage.mp3` after the
+listener presses Play. Keep the player badge and the campaign message in sync
+when switching a campaign from pre-release to live. Add verified distribution
+links to `.home-campaign-status` when available, update the descriptions, and
+advance the home sitemap date. Playback works independently of those links.
 
 The homepage uses `images/share/inner-passage.jpg`, a 1200 × 630 crop of
 the campaign artwork. For a future campaign, update both social image tags
