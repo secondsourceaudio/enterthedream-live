@@ -41,7 +41,11 @@
 .release-description p { margin: 0 0 12px; }
 .release-description p:last-child { margin-bottom: 0; }
 .release-availability { margin: 14px 0 0; color: #aaa; font-size: var(--font-small); line-height: 1.8; letter-spacing: .1em; }
+.release-entry + .release-entry { margin-top: 16px; }
+.release-single .release-details,
 .release-prerelease .release-details { align-self: center; }
+.release-links { display: flex; flex-wrap: wrap; gap: 0 16px; margin-top: 6px; }
+.release-links a { display: inline-flex; align-items: center; min-height: 44px; color: #a8bcdd; font-size: var(--font-small); letter-spacing: .1em; text-underline-offset: 4px; }
 .release-announcement { margin-top: 22px; padding-top: 16px; border-top: 1px solid #292929; }
 .release-season { margin: 0; color: #dce2ee; font-size: clamp(17px, 2vw, 24px); line-height: 1.25; letter-spacing: .08em; }
 .release-tracklist,
@@ -61,7 +65,12 @@
 .release-credit-list dd { margin: 0; }
 
 @media (min-width: 981px) and (min-height: 700px) {
+    .release-single .release-details,
     .release-prerelease .release-details { grid-column: 2 / -1; }
+}
+
+@media (min-width: 981px) and (min-height: 900px) {
+    #main-content.releases-page { flex-shrink: 1; }
 }
 
 @media (min-width: 501px) {
