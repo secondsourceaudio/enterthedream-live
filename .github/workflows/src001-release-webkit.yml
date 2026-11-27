@@ -1,0 +1,64 @@
+name: Verify Inner Passage mobile WebKit
+on:
+  push:
+    branches: [verify/src001-release-webkit]
+permissions:
+  contents: read
+jobs:
+  webkit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m pip install playwright && python -m playwright install --with-deps webkit
+      - name: Check mobile catalogue, spectrum and native audio
+        run: |
+          python -m http.server 8000 --bind 127.0.0.1 >/tmp/src001-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          curl --fail --silent --retry 10 --retry-connrefused http://127.0.0.1:8000/ -o /dev/null
+          PYTHONPATH=tests python - <<'PY'
+          from playwright.sync_api import expect, sync_playwright
+          from browser_smoke import BASE_URL, serve_seekable_audio
+
+          bandcamp = 'https://secondsource.bandcamp.com/track/inner-passage'
+          with sync_playwright() as p:
+              browser = p.webkit.launch()
+              page = browser.new_page(**p.devices['iPhone 13'])
+              errors = []
+              page.on('pageerror', lambda error: errors.append(str(error)))
+              serve_seekable_audio(page, 'inner-passage.mp3')
+              page.goto(BASE_URL, wait_until='domcontentloaded')
+              expect(page.locator('.home-campaign-status')).to_contain_text('OUT NOW')
+              expect(page.locator('.home-campaign-links a')).to_have_attribute('href', bandcamp)
+              expect(page.locator('.site-nav a[href="/sources/"]')).to_be_hidden()
+              assert page.locator('.home-campaign-links a').bounding_box()['height'] >= 44
+              assert page.locator('audio').evaluate('a => a.paused && !a.loop && !a.autoplay')
+              page.locator('[data-sound]').tap()
+              page.wait_for_function("document.querySelector('audio').currentTime > .25")
+              page.wait_for_function("Array.from(document.querySelectorAll('.spectrum-band')).some(e => +e.style.getPropertyValue('--level') > .05)")
+              before = page.locator('audio').evaluate('a => a.currentTime')
+              page.evaluate("""() => {
+                  Object.defineProperty(document, 'hidden', {configurable: true, get: () => true});
+                  document.dispatchEvent(new Event('visibilitychange'));
+              }""")
+              page.wait_for_function("before => document.querySelector('audio').currentTime > before + .25", arg=before)
+              page.evaluate("""() => {
+                  delete document.hidden;
+                  document.dispatchEvent(new Event('visibilitychange'));
+                  window.releaseAudio = document.querySelector('audio');
+              }""")
+              page.locator('.site-nav a[href="/releases/"]').tap()
+              page.wait_for_url('**/releases/')
+              expect(page.locator('#inner-passage time')).to_have_text('27.11.2026')
+              expect(page.locator('#inner-passage .release-links a')).to_have_attribute('href', bandcamp)
+              expect(page.locator('.release-prerelease .release-season')).to_have_text('SPRING 2027')
+              expect(page.locator('.release-tracklist')).to_be_hidden()
+              expect(page.locator('.release-credits')).to_be_hidden()
+              page.locator('#release-drip-title').scroll_into_view_if_needed()
+              assert page.evaluate("document.querySelector('audio') === window.releaseAudio && !window.releaseAudio.paused")
+              assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
+              assert not errors, errors
+              print('Mobile WebKit layout, spectrum, simulated background and continuous playback passed.')
+              browser.close()
+          PY
